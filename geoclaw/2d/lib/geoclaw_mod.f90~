@@ -77,7 +77,7 @@ contains
         endif
         inquire(file=file_name,exist=found_file)
         if (.not. found_file) then
-            print *, 'You must provide a file ', file_name
+            print *, 'You must provide a file ', fname
             stop
         endif
 
@@ -186,7 +186,7 @@ contains
         implicit none
 
         ! Input arguments
-        character*25, intent(in), optional :: fname
+        character*25, optional, intent(in) :: fname
 
         ! Locals
         integer, parameter :: iunit = 127
@@ -194,14 +194,12 @@ contains
         character*25 :: file_name
         logical :: found_file
 
-
         write(GEO_PARM_UNIT,*) ' '
         write(GEO_PARM_UNIT,*) '--------------------------------------------'
         write(GEO_PARM_UNIT,*) 'SET FLOW GRADES:'
         write(GEO_PARM_UNIT,*) '------------'
 
         ! Read user parameters from setflowgrades.data
-
         if (present(fname)) then
             file_name = fname
         else
@@ -209,12 +207,12 @@ contains
         endif
         inquire(file=file_name,exist=found_file)
         if (.not. found_file) then
-            print *, 'You must provide a file ', file_name
-            print *, 'Or comment out call set_flow_grades in setprob'
+            print *, 'You must provide a file ', fname
+            print *, 'Or comment out call setflowgrades in setprob'
             stop
         endif
 
-        call opendatafile(iunit, file_name)
+        call opendatafile(iunit, fname)
 
         read(iunit,*) mflowgrades
 

@@ -13,7 +13,7 @@ import traceback
 
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize 
 
 plotter = 'matplotlib'
 if plotter == 'matplotlib':
@@ -34,7 +34,7 @@ try:
     from numpy import ma
 except:
     print "*** Error: problem importing masked array module ma"
-
+    
 
 
 #==========================================
@@ -53,7 +53,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
     if plotdata.mode() == 'iplotclaw':
         pylab.ion()
-
+        
     try:
         plotfigure_dict = plotdata.plotfigure_dict
     except:
@@ -85,7 +85,7 @@ def plotframe(frameno, plotdata, verbose=False):
     current_data.t = t
 
 
-    # call beforeframe if present, which might define additional
+    # call beforeframe if present, which might define additional 
     # attributes in current_data or otherwise set up plotting for this
     # frame.
 
@@ -107,7 +107,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
     # iterate over each single plot that makes up this frame:
     # -------------------------------------------------------
-
+ 
     if plotdata._mode == 'iplotclaw':
         print '    Plotting Frame %s at t = %s' % (frameno,t)
         requested_fignos = plotdata.iplotclaw_fignos
@@ -121,13 +121,13 @@ def plotframe(frameno, plotdata, verbose=False):
     plotdata = set_outdirs(plotdata)  # set _outdirs attribute to be list of
                                       # all outdirs for all items
 
-    # loop over figures to appear for this frame:
+    # loop over figures to appear for this frame: 
     # -------------------------------------------
 
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         if (not plotfigure._show) or (plotfigure.type != 'each_frame'):
-            continue  # skip to next figure
+            continue  # skip to next figure 
 
         figno = plotfigure.figno
         #print '+++ Figure: ',figname,figno
@@ -140,7 +140,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
         if not plotfigure.kwargs.has_key('facecolor'):
             # use Clawpack's default bg color (tan)
-            plotfigure.kwargs['facecolor'] = '#ffeebb'
+            plotfigure.kwargs['facecolor'] = '#ffeebb'   
 
         # create figure and set handle:
         plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
@@ -176,8 +176,8 @@ def plotframe(frameno, plotdata, verbose=False):
             pylab.hold(True)
 
 
-            # NOTE: This was rearranged December 2009 to
-            # loop over grids first and then over plotitems so that
+            # NOTE: This was rearranged December 2009 to 
+            # loop over grids first and then over plotitems so that 
             # finer grids will plot over coarser grids of other items.
             # Needed in particular if masked arrays are used, e.g. if
             # two different items do pcolor plots with different color maps
@@ -210,7 +210,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
                 # loop over grids:
                 # ----------------
-
+    
                 for gridno in range(len(framesoln.grids)):
                     #print '+++ gridno = ',gridno
                     grid = framesoln.grids[gridno]
@@ -219,12 +219,12 @@ def plotframe(frameno, plotdata, verbose=False):
                     current_data.aux = grid.aux
                     current_data.xlower = grid.dimensions[0].lower
                     current_data.xupper = grid.dimensions[0].upper
-
+    
                     # loop over items:
                     # ----------------
-
+    
                     for itemname in plotaxes._itemnames:
-
+                        
                         plotitem = plotaxes.plotitem_dict[itemname]
                         #print '+++ %s: %s' % (itemname,plotitem.outdir)
 
@@ -238,7 +238,7 @@ def plotframe(frameno, plotdata, verbose=False):
                             #print '+++           plotdata.outdir=',plotdata.outdir
                             #print '+++                    outdir=',outdir
                             continue
-
+                            
 
                         ndim = plotitem.ndim
 
@@ -253,17 +253,17 @@ def plotframe(frameno, plotdata, verbose=False):
                         if plotitem._show and show_this_level:
                             cmd = 'output = plotitem%s(framesoln,plotitem,\
                                     current_data,gridno)'  % ndim
-
+    
                             try:
                                 exec(cmd)
                                 if output: current_data = output
-                                if verbose:
+                                if verbose:  
                                         print '      Plotted  plotitem ', itemname
                             except:
                                 print '*** Error in plotframe: problem calling plotitem%s' % ndim
                                 traceback.print_exc()
                                 return None
-
+    
                     # end of loop over plotitems
                 # end of loop over grids
             # end of loop over outdirs
@@ -327,7 +327,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
 
             # end of loop over plotaxes
-
+            
         # end of loop over plotfigures
 
 
@@ -356,7 +356,7 @@ def plotframe(frameno, plotdata, verbose=False):
     if verbose:
         print '    Done with plotframe for frame %i at time %g' % (frameno,t)
 
-
+    
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != 'iplotclaw') & plotdata.printfigs:
         # iterate over all figures that are to be printed:
@@ -371,7 +371,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
 
 
-
+    
 #==================================================================
 def plotitem1(framesoln, plotitem, current_data, gridno):
 #==================================================================
@@ -390,7 +390,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     plotfigure = plotitem._plotfigure
     plotaxes = plotitem._plotaxes
 
-    # the following plot parameters should be set and independent of
+    # the following plot parameters should be set and independent of 
     # which AMR level a grid is on:
 
     plot_params = """
@@ -420,7 +420,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     # plot_type was requested:
 
     plot_params = """
-             plot_var  aftergrid  plotstyle color kwargs
+             plot_var  aftergrid  plotstyle color kwargs 
              plot_var2 fill_where map_2d_to_1d plot_show
              """.split()
 
@@ -441,7 +441,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     if pp_plot_type == '1d':
         pp_plot_type = '1d_plot'  # '1d' is deprecated
-
+    
     if pp_plot_type in ['1d_plot', '1d_semilogy']:
         thisgridvar = get_gridvar(grid,pp_plot_var,1,current_data)
         xc_center = thisgridvar.xc_center   # cell centers
@@ -452,7 +452,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     elif pp_plot_type == '1d_fill_between':
         try: pylab.fill_between
-        except:
+        except: 
             print "*** This version of pylab is missing fill_between"
             print "*** Reverting to 1d_plot"
             pp_plot_type = '1d_plot'
@@ -500,7 +500,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         gaugesoln = plotdata.getgauge(pp_gaugeno)
         xc_center = None
         xc_edge = None
-
+        
 
     elif pp_plot_type == '1d_empty':
         pp_plot_var = 0  # shouldn't be used but needed below *FIX*
@@ -562,7 +562,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
                   % pp_fill_where
 
         else:
-            plotcommand = "pobj=pylab.fill_between(X_center,var,var2,**pp_kwargs)"
+            plotcommand = "pobj=pylab.fill_between(X_center,var,var2,**pp_kwargs)" 
         if pp_plot_show:
             exec(plotcommand)
 
@@ -585,7 +585,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             print "Warning: t out of range"
         pylab.plot([t], [qt], 'ro')
 
-
+        
 
     elif pp_plot_type == '1d_empty':
         # no plot to create (user might make one in afteritem or
@@ -629,7 +629,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
 
     return current_data
-
+    
 
 #==================================================================
 def plotitem2(framesoln, plotitem, current_data, gridno):
@@ -652,7 +652,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     plotfigure = plotitem._plotfigure
     plotaxes = plotitem._plotaxes
 
-    # The following plot parameters should be set and independent of
+    # The following plot parameters should be set and independent of 
     # which AMR level a grid is on:
 
     plot_params = """
@@ -684,7 +684,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     # plot_type was requested:
 
     plot_params = """
-             plot_var  aftergrid  kwargs
+             plot_var  aftergrid  kwargs 
              gridlines_show  gridlines_color  grid_bgcolor
              gridedges_show  gridedges_color  add_colorbar
              pcolor_cmap  pcolor_cmin  pcolor_cmax
@@ -693,7 +693,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
              contour_colors   contour_cmap  contour_show
              schlieren_cmap  schlieren_cmin schlieren_cmax
              quiver_coarsening  quiver_var_x  quiver_var_y  quiver_key_show
-             quiver_key_scale  quiver_key_label_x  quiver_key_label_y
+             quiver_key_scale  quiver_key_label_x  quiver_key_label_y  
              quiver_key_scale  quiver_key_units  quiver_key_kwargs
              """.split()
 
@@ -717,7 +717,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     # turn grid background color into a colormap for use with pcolor cmd:
     pp_grid_bgcolormap = colormaps.make_colormap({0.: pp_grid_bgcolor, \
                                              1.: pp_grid_bgcolor})
-
+    
     thisgridvar = get_gridvar(grid,pp_plot_var,2,current_data)
 
     xc_center = thisgridvar.xc_center   # cell centers (on mapped grid)
@@ -748,7 +748,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
 
     if ma.isMaskedArray(var):
-        # If var is a masked array: plotting should work ok unless all
+        # If var is a masked array: plotting should work ok unless all 
         # values are masked, in which case pcolor complains and there's
         # no need to try to plot.  Check for this case...
         var_all_masked = (ma.count(var) == 0)
@@ -763,7 +763,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
         if pp_gridlines_show:
             pcolor_cmd += ", edgecolors=pp_gridlines_color"
-        else:
+        else: 
             pcolor_cmd += ", shading='flat'"
 
         pcolor_cmd += ", **pp_kwargs)"
@@ -774,7 +774,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
             if (pp_pcolor_cmin not in ['auto',None]) and \
                      (pp_pcolor_cmax not in ['auto',None]):
-                pylab.clim(pp_pcolor_cmin, pp_pcolor_cmax)
+                pylab.clim(pp_pcolor_cmin, pp_pcolor_cmax) 
         else:
             #print '*** Not doing pcolor on totally masked array'
             pass
@@ -796,7 +796,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             if pp_gridlines_show:
                 # This draws grid for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
-                # seem to be an easy way to do this.
+                # seem to be an easy way to do this. 
                 pobj = pylab.plot(X_edge, Y_edge, color=pp_gridlines_color)
                 pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_gridlines_color)
 
@@ -819,13 +819,13 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
                 pp_contour_levels = pylab.linspace(pp_contour_min, \
                        pp_contour_max, pp_contour_nlevels)
-                levels_set = True
+                levels_set = True 
 
 
         if pp_gridlines_show:
             pobj = pylab.pcolormesh(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color)
-        elif pp_grid_bgcolor is not 'w':
+        elif pp_grid_bgcolor is not 'w': 
             pobj = pylab.pcolormesh(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors='None')
         pylab.hold(True)
@@ -857,7 +857,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             pobj = pylab.pcolormesh(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, edgecolors=pp_gridlines_color,\
                     shading='faceted')
-        else:
+        else: 
             pobj = pylab.pcolormesh(X_edge, Y_edge, pylab.zeros(var.shape), \
                     cmap=pp_grid_bgcolormap, shading='flat')
 
@@ -872,7 +872,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
         if pp_gridlines_show:
             pcolor_cmd += ", edgecolors=pp_gridlines_color"
-        else:
+        else: 
             pcolor_cmd += ", edgecolors='None'"
 
         pcolor_cmd += ", **pp_kwargs)"
@@ -882,7 +882,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
             if (pp_schlieren_cmin not in ['auto',None]) and \
                      (pp_schlieren_cmax not in ['auto',None]):
-                pylab.clim(pp_schlieren_cmin, pp_schlieren_cmax)
+                pylab.clim(pp_schlieren_cmin, pp_schlieren_cmax) 
 
     elif pp_plot_type == '2d_quiver':
         if pp_quiver_coarsening > 0:
@@ -926,7 +926,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             Y1 = Y_edge[i,:]
             pylab.plot(X1, Y1, pp_gridedges_color)
         for i in [0, X_edge.shape[1]-1]:
-            X1 = X_edge[:,i]
+            X1 = X_edge[:,i] 
             Y1 = Y_edge[:,i]
             pylab.plot(X1, Y1, pp_gridedges_color)
 
@@ -976,9 +976,9 @@ def get_gridvar(grid, plot_var, ndim, current_data):
 
     #grid.compute_physical_coordinates()
     #grid.compute_computational_coordinates()
-
+    
     if ndim == 1:
-
+    
         # +++ until bug in solution.py fixed.
         xc_center = grid.c_center[0]
         xc_edge = grid.c_edge[0]
@@ -987,7 +987,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
         current_data.x = xc_center
         current_data.dx = grid.d[0]
 
-
+    
         if isinstance(plot_var, int):
             var = grid.q[:,plot_var]
         else:
@@ -997,7 +997,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
             except:
                 print '*** Error applying function plot_var = ',plot_var
                 traceback.print_exc()
-                return
+                return  
 
         thisgridvar = Data()
         thisgridvar.var = var
@@ -1006,7 +1006,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
         thisgridvar.mx = grid.dimensions[0].n
 
         # end of 1d case
-
+    
     elif ndim == 2:
         # +++ until bug in solution.py fixed.
         #xc_center, yc_center = grid.c_center
@@ -1026,7 +1026,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
             except:
                 print '*** Error applying function plot_var = ',plot_var
                 traceback.print_exc()
-                return
+                return 
 
         thisgridvar = Data()
         thisgridvar.var = var
@@ -1048,18 +1048,18 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
-.
+.  
     If fname is nonempty it is used as the filename, with extension
     determined by format if it does not already have a valid extension.
 
     If fname=='' then save to file frame000NfigJ.ext  where N is the frame
     number frameno passed in, J is the figure number figno passed in,
-    and the extension ext is determined by format.
+    and the extension ext is determined by format.  
     If figno='' then the figJ part is omitted.
     """
 
     if fname == '':
-        fname = 'frame' + str(frameno).rjust(4,'0')
+        fname = 'frame' + str(frameno).rjust(4,'0') 
         if isinstance(figno,int):
             fname = fname + 'fig%s' % figno
     splitfname = os.path.splitext(fname)
@@ -1088,7 +1088,7 @@ def printframes(plotdata=None, verbose=True):
     between them.  These will all be in directorey plotdata.plotdir.
 
     The ClawPlotData object plotdata will be initialized by a call to
-    function setplot unless plotdata.setplot=False.
+    function setplot unless plotdata.setplot=False.  
 
     If plotdata.setplot=True then it is assumed that the current directory
     contains a module setplot.py that defines this function.
@@ -1107,7 +1107,7 @@ def printframes(plotdata=None, verbose=True):
     if not sys.modules.has_key('matplotlib'):
         print '*** Error: matplotlib not found, no plots will be done'
         return plotdata
-
+        
     if not isinstance(plotdata,ClawPlotData):
         print '*** Error, plotdata must be an object of type ClawPlotData'
         return plotdata
@@ -1149,7 +1149,7 @@ def printframes(plotdata=None, verbose=True):
         if (figno in fignos) and plotdata.plotfigure_dict[figname]._show:
             fignos_to_show.append(figno)
     fignos = fignos_to_show
-
+        
 
     rootdir = os.getcwd()
 
@@ -1196,7 +1196,7 @@ def printframes(plotdata=None, verbose=True):
             print "  or use overwrite=True in call to printframes"
             return plotdata
 
-
+    
     # Create each of the figures
     #---------------------------
 
@@ -1217,11 +1217,11 @@ def printframes(plotdata=None, verbose=True):
         fortfile[frameno] = file
         for figno in fignos:
             pngfile[frameno,figno] = 'frame' + file[-4:] + 'fig%s.png' % figno
-
+    
     if len(fortfile) == 0:
         print '*** No fort.q files found in directory ', os.getcwd()
         return plotdata
-
+    
     # Discard frames that are not from latest run, based on
     # file modification time:
     framenos = only_most_recent(framenos, plotdata.outdir)
@@ -1238,7 +1238,7 @@ def printframes(plotdata=None, verbose=True):
         fignames[figno] = figname
 
 
-
+    
     # Make png files by calling plotframe:
     # ------------------------------------
 
@@ -1268,11 +1268,11 @@ def printframes(plotdata=None, verbose=True):
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
-
+    
 
     # Movie:
     #-------
-
+    
     if plotdata.gif_movie:
         print 'Making gif movies.  This may take some time....'
         for figno in fignos:
@@ -1282,7 +1282,7 @@ def printframes(plotdata=None, verbose=True):
                 print '    Created moviefig%s.gif' % figno
             except:
                 print '*** Error creating moviefig%s.gif' % figno
-
+    
     os.chdir(rootdir)
 
     # print out pointers to html index page:
@@ -1317,7 +1317,7 @@ def var_limits(plotdata,vars,padding=0.1):
     y-axis limits for plots.
 
     vars is a list of variables to return the limits for.
-    Each element of the list can be a number, indicating the
+    Each element of the list can be a number, indicating the 
     corresponding element of the q vector, or a function that should
     be applied to q to obtain the value of interest.  In other words,
     any valid plot_var attribute of a ClawPlotItem object.
@@ -1325,13 +1325,13 @@ def var_limits(plotdata,vars,padding=0.1):
     If vars=='all', use vars=[0,1,...] over all components of q.
     *** not implemented yet ***
 
-    Returns: varmin, varmax, varlim,
+    Returns: varmin, varmax, varlim,  
     each is a dictionary with keys consisting by the elements of vars.
 
-    For each var in vars,
+    For each var in vars, 
       varmin[var] is the minimum of var over all frames,
       varmax[var] is the maximum of var over all frames,
-      varlim[var] is of the form [v1, v2] suitable to use as the
+      varlim[var] is of the form [v1, v2] suitable to use as the 
             ylimits attritube of an object of class ClawPlotAxes with
                 v1 = vmin - padding*(vmax-vmin)
                 v2 = vmax + padding*(vmax-vmin)
@@ -1351,7 +1351,7 @@ def var_limits(plotdata,vars,padding=0.1):
         varlim[var] = [v1,v2]
 
     return varmin,varmax,varlim
-
+        
 
 #------------------------------------------------------------------
 def var_minmax(plotdata,framenos,vars):
@@ -1362,7 +1362,7 @@ def var_minmax(plotdata,framenos,vars):
     in the most recent computation.
 
     vars is a list of variables to return the min and max for.
-    Each element of the list can be a number, indicating the
+    Each element of the list can be a number, indicating the 
     corresponding element of the q vector, or a function that should
     be applied to q to obtain the value of interest.  In other words,
     any valid plot_var attribute of a ClawPlotItem object.
@@ -1370,19 +1370,19 @@ def var_minmax(plotdata,framenos,vars):
     If vars=='all', use vars=[0,1,...] over all components of q.
     *** not implemented yet ***
 
-    Returns (varmin, varmax) where varmin and varmax are each
-    dictionaries with keys given by the variables.
+    Returns (varmin, varmax) where varmin and varmax are each 
+    dictionaries with keys given by the variables.  
 
     For each var in vars, varmin[var] and varmax[var] are dictionaries, with
     keys given by frame numbers in framenos.
-
+    
     Also varmin[var]['all'] and varmax[var]['all'] are the min and max of
     variable var over all frames considered.
 
     For example if vars = [0,'machnumber'] then
        varmin[0][3] is the minimum of q[0] (the first component of the
            solution vector q) over all grids in frame 3.
-       varmin['machnumber']['all'] is the minimum of machnumber
+       varmin['machnumber']['all'] is the minimum of machnumber 
            over all grids in all frames.
 
     """
@@ -1442,7 +1442,7 @@ def var_minmax(plotdata,framenos,vars):
                 varmax[var]['all'] = max(varmax[var]['all'], \
                                          varmax[var][frameno])
     return (varmin, varmax)
-
+        
 
 
 #------------------------------------------------------------------
@@ -1452,7 +1452,7 @@ def only_most_recent(framenos,outdir='.',verbose=True):
     """
     Filter the list framenos of frame numbers and return a new
     list that only contains the ones from the most recent run.
-    This is determined by comparing modification times of
+    This is determined by comparing modification times of 
     fort.q files.
 
     Returns the filtered list.
@@ -1472,12 +1472,12 @@ def only_most_recent(framenos,outdir='.',verbose=True):
     for file in glob.glob('fort.q*'):
         frameno = int(file[7:10])
         fortfile[frameno] = file
-
+    
     if len(fortfile) == 0:
         print '*** No fort.q files found in directory ', os.getcwd()
         framenos = []
         return framenos
-
+    
     # Figure out which files are from latest run:
     numframes = 0
     mtime = 0
@@ -1492,7 +1492,7 @@ def only_most_recent(framenos,outdir='.',verbose=True):
         if mtime < mtimeprev-delaytime:
             break
         numframes = numframes + 1
-
+    
     newframes = framekeys[:numframes]
     if (numframes < len(framekeys)) & verbose:
         print '*** Frames %s and above appear to be from an old run' \
@@ -1531,7 +1531,7 @@ def call_setplot(setplot, plotdata, verbose=True):
 
     if setplot is True:
         # indicates we should import setplot.py from current directory
-        # and the setplot function is in this module.
+        # and the setplot function is in this module.  
         setplot = 'setplot.py'
 
     if isinstance(setplot,str):
@@ -1593,7 +1593,7 @@ def call_setplot(setplot, plotdata, verbose=True):
         plotdata = setplot(plotdata)
         if verbose:
             print 'Executed setplot successfully'
-    except:
+    except: 
         print '*** Error in call_setplot: Problem executing function setplot'
         raise Exception('Error executing setplot function')
         return plotdata
@@ -1603,7 +1603,7 @@ def call_setplot(setplot, plotdata, verbose=True):
         print '*** Did you forget the "return plotdata" statement?'
         raise
         return plotdata
-
+    
     return plotdata
 
 #------------------------------------------------------------------
@@ -1617,7 +1617,7 @@ def clawpack_header():
 def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
 #------------------------------------------------------------------
     """
-    Input:
+    Input: 
       solution: object of class ClawSolution with 2d computed solution
 
       reference: object of class ClawSolution with 1d reference solution
@@ -1649,7 +1649,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
         #grid.compute_physical_coordinates()
         X_center, Y_center = grid.p_center
         X_edge, Y_edge = grid.p_center
-
+    
         if isinstance(var_2d, int):
             q = grid.q[:,:,var_2d]
         else:
@@ -1658,8 +1658,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
             except:
                 print '*** Error applying function plot_var = ',plot_var
                 traceback.print_exc()
-                return
-
+                return 
+        
         xs1, qs1 = map_2d_to_1d(q, X_center, Y_center, t)
 
         if hasattr(reference,'grids'):
@@ -1681,8 +1681,8 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
                 qref = var_1d(refgrid.q, xref, t)
             except:
                 print '*** Error applying function var_1d'
-                return
-
+                return 
+            
         qint1 = interp(xs1, xref, qref)
 
         xs[gridno] = xs1
@@ -1694,7 +1694,7 @@ def errors_2d_vs_1d(solution,reference,var_2d,var_1d,map_2d_to_1d):
         #pdb.set_trace()
 
     return errmax, xs, qs, qint
-
+        
 
 
 #------------------------------------------------------------------
@@ -1718,20 +1718,20 @@ def set_show(plotdata):
             for plotaxes in plotfigure.plotaxes_dict.itervalues():
                 plotaxes._show = False
                 if plotaxes.show:
-                    # Loop through plotitems checking each item to see if it
+                    # Loop through plotitems checking each item to see if it 
                     # should be shown
                     for plotitem in plotaxes.plotitem_dict.itervalues():
                         plotitem._show = plotitem.show
                         if plotitem.show:
                             plotaxes._show = True
                             plotfigure._show = True
-                    # Check to see if the axes are supposed to be empty or
+                    # Check to see if the axes are supposed to be empty or 
                     # something may be in the afteraxes function
                     if not plotaxes._show:
                         if plotaxes.afteraxes is not None or plotaxes.type == 'empty':
                             plotaxes._show = True
                             plotfigure._show = True
-
+                
     return plotdata
 
 #------------------------------------------------------------------
@@ -1761,6 +1761,6 @@ def set_outdirs(plotdata):
                     outdir = plotdata.outdir
                 if outdir not in outdir_list:
                     outdir_list.append(outdir)
-
+                
     plotdata._outdirs = outdir_list
     return plotdata

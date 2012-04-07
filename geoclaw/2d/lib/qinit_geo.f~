@@ -5,8 +5,8 @@ c     =====================================================
      &                   dx,dy,q,maux,aux)
 c     =====================================================
 c
-c      # Set initial sea level flat unless mqinitfiles>0, in which case
-c      # an initial perturbation of the q(i,j,iqinit) is specified and has
+c      # Set initial sea level flat unless iqinit = 1, in which case
+c      # an initial perturbation of the q(i,j,1) is specified and has
 c      # been strored in qinitwork.
 
 
@@ -40,6 +40,7 @@ c
             xinthi  = min(xhigher,xhiqinit(mf))
             istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
             iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
+
 
             yintlow = max(ylower,ylowqinit(mf))
             yinthi  = min(yhigher,yhiqinit(mf))

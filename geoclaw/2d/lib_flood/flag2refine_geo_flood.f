@@ -32,9 +32,6 @@ c for tsunami modeling.
 
 c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c
-      use geoclaw_module
-      use topo_module
-
       implicit double precision (a-h, o-z)
 
       dimension   q(1-mbc:mx+mbc,1-mbc:my+mbc,meqn)
@@ -44,8 +41,11 @@ c
       external  allowflag
       logical shoreregion,wave,shoreline,land,river,ocean
 
+      include 'geo.i'
+      include 'topo.i'
       include 'regions.i'
       include 'qinit.i'
+      include 'flowgrades.i'
 
 c     # loop over interior points on this grid:
 

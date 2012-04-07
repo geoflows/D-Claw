@@ -1192,17 +1192,6 @@ class ClawRunData(Data):
             self.add_attribute('geodata', geodata)
             self.datalist.append(geodata)
 
-        elif pkg.lower() in ['digclaw']:
-            self.add_attribute('xclawcmd', 'digclaw')
-
-            # Required data set for basic run parameters:
-            clawdata = AmrclawInputData(ndim)
-            self.add_attribute('clawdata', clawdata)
-            self.datalist.append(clawdata)
-            geodata = DigclawInputData(ndim)
-            self.add_attribute('geodata', geodata)
-            self.datalist.append(geodata)
-
         elif pkg.lower() in ['sharpclaw']:
             self.add_attribute('xclawcmd', 'xsclaw')
 
@@ -1448,37 +1437,4 @@ class GeoclawInputData(Data):
         for flowgrade in self.flowgrades:
             file.write(4*"%g  " % tuple(flowgrade) +"\n")
         file.close()
-
-class DigclawInputData(GeoclawInputData):
-    r"""
-    Object that will be written out to the various GeoClaw & data files.
-    """
-    def __init__(self, ndim):
-        super(GeoclawInputData,self).__init__()
-
-        # Set default values:
-        self.add_attribute('rho_s',   2700.0)#, 'solid grain density (kg/m^3)')
-        self.add_attribute('rho_f',   1000.0)#, 'pore-fluid density  (kg/m^3)')
-        self.add_attribute('grav',    9.81)#,   'gravitational acceleration magnitude (m/s^2)')
-        self.add_attribute('phi_bed', 40.)#,    'basal friction angle (degrees)')
-        self.add_attribute('phi_int', 40.)#,    'internal friction angle (degrees)')
-        self.add_attribute('delta',   0.01)#,  'characteristic grain diameter (m)')
-        self.add_attribute('mu',      0.001)#,  'viscosity of pore-fluid (Pa-s)')
-        self.add_attribute('alpha_c', 1.0)#,    'debris compressibility constant (#)')
-        self.add_attribute('m_crit',  0.62)#,   'critical state value of m (#)')
-        self.add_attribute('c1',      1.0)#,    'dilation coefficient 1 (#)')
-        self.add_attribute('m0',      0.52)#,   'initial solid volume fraction (#)')
-        self.add_attribute('dudx_eps',1.0)#,    'dudx below this amount scales kappa linearly between min and max values of the otherwise step function')
-        self.add_attribute('phys_tol',1.e-3)#,  'minimum depth considered for model applicability. Values below have statically set values')
-
-
-    def write(self):
-
-        print 'Creating data file setdig.data'
-        # open file and write a warning header:
-        file = open_datafile('setdig.data')
-        data_write(file, self, 'rho_s')
-        data_write(file, self, 'rho_f')
-        file.close()
-
 

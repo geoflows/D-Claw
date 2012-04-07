@@ -5,19 +5,19 @@ c=========================================================================
 c
 c     Read initial perturbation from setqinit.data
 c
-c     For problems where h = q(i,j,1) is depth of fluid, initialized to
+c     For problems where h = q(i,j,1) is depth of fluid, initialized to 
 c     sealevel in qinit.
 c
 c     If iqinit = 0, no initial perturbation to sealevel.
 c
 c     If iqinit = 1,2 or 3 initial perturbation is read in.
 c     Then the qinit file should have 3 columns:
-c             x   y  z  if icoordsys = 1
-c            lat lon  z if icoordsys = 2
+c              x   y  z  if icoordsys = 1 
+c            lat lon  z if icoordsys = 2 
 
 c     If iqinit = 4, file defines eta, and h =q(i,j,1)= max(eta-b,0).
 c
-c     Longitude and latitude advance in the standard GIS way from
+c     Longitude and latitude advance in the standard GIS way from 
 c     upper left corner across in x and then down in y.
 
 
@@ -74,7 +74,7 @@ c===================Check qinit Memory=============================
           write(*,*) 'in qinit.i, then recompile'
           Stop
         else
-          write(parmunit,*)
+          write(parmunit,*) 
      &        '  qinit space allocated:' ,maxqinitsize
           write(parmunit,*) '  qinit space used:',mqinit
         endif
