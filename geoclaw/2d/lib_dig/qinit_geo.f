@@ -5,13 +5,14 @@ c     =====================================================
      &                   dx,dy,q,maux,aux)
 c     =====================================================
 c
-c      # Set initial sea level flat unless iqinit = 1, in which case
-c      # an initial perturbation of the q(i,j,1) is specified and has
+c      # Set initial sea level flat unless mqinitfiles>0, in which case
+c      # an initial perturbation of the q(i,j,iqinit) is specified and has
 c      # been strored in qinitwork.
 
 
       use geoclaw_module
       use qinit_module
+      use digclaw_module
 
       implicit double precision (a-h,o-z)
       dimension q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
@@ -23,8 +24,9 @@ c      # been strored in qinitwork.
          do j=1-mbc,my+mbc
              y = ylower + (j-0.5d0)*dy
              q(i,j,1)=dmax1(0.d0,sealevel-aux(i,j,1))
-             q(i,j,2)=0.d0
-             q(i,j,3)=0.d0
+             do m=2,meqn
+               q(i,j,m)=0.d0
+             enddo
          enddo
       enddo
 c
@@ -40,7 +42,6 @@ c
             xinthi  = min(xhigher,xhiqinit(mf))
             istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
             iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
-
 
             yintlow = max(ylower,ylowqinit(mf))
             yinthi  = min(yhigher,yhiqinit(mf))
@@ -76,11 +77,9 @@ c
      &                     ,1)
                      dq=dq/((xipc-ximc)*(yjpc-yjmc)*aux(i,j,2))
 
-                     if (iqinit(mf).lt.4) then
-                        if (aux(i,j,1).le.0.d0) then
-                           q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
-                        endif
-                     elseif (iqinit(mf).eq.4) then
+                     if (iqinit(mf).le.meqn) then
+                        q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
+                     else
                         q(i,j,1) = max(dq-aux(i,j,1),0.d0)
                      endif
 c
@@ -90,6 +89,32 @@ c
             enddo
          endif
       enddo
+
+      do i=1-mbc,mx+mbc
+         do j=1-mbc,my+mbc
+            q(i,j,4) = m0*q(i,j,1)
+         enddo
+      enddo
+
+c=============== Pressure initialization for Mobilization Modeling======
+
+      if (init_ptype.eq.1) then
+         call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+     &                     q,maux,aux)
+         do i=1-mbc,mx+mbc
+            do j=1-mbc,my+mbc
+               q(i,j,5) = init_pmin_ratio*rho_f*grav*q(i,j,1)
+            enddo
+         enddo
+         p_initialized = 1
+      elseif (init_ptype.eq.0) then
+         do i=1-mbc,mx+mbc
+            do j=1-mbc,my+mbc
+               q(i,j,5) = rho_f*grav*q(i,j,1)
+            enddo
+         enddo
+         p_initialized = 1
+      endif
 
       return
       end

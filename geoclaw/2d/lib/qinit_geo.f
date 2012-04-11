@@ -75,11 +75,9 @@ c
      &                     ,1)
                      dq=dq/((xipc-ximc)*(yjpc-yjmc)*aux(i,j,2))
 
-                     if (iqinit(mf).lt.4) then
-                        if (aux(i,j,1).le.0.d0) then
-                           q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
-                        endif
-                     elseif (iqinit(mf).eq.4) then
+                     if (iqinit(mf).le.meqn) then
+                        q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
+                     else
                         q(i,j,1) = max(dq-aux(i,j,1),0.d0)
                      endif
 c

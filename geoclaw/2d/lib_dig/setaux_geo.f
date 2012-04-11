@@ -15,7 +15,8 @@ c
 
       use geoclaw_module
       use topo_module
-      
+      use digclaw_module
+
       implicit double precision (a-h,o-z)
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
@@ -66,6 +67,20 @@ c     	      # or set-up your own topo
                endif
             enddo
          enddo
+
+      do ma=4,maux
+         do j=1-mbc,my+mbc
+            do i=1-mbc,mx+mbc
+               aux(i,j,ma) = 0.d0
+            enddo
+         enddo
+      enddo
+
+      do j=1-mbc,my+mbc
+         do i=1-mbc,mx+mbc
+            aux(i,j,i_phi) = phi_bed
+         enddo
+      enddo
 
       return
 

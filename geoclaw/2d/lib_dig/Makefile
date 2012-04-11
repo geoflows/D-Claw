@@ -20,60 +20,23 @@ CLAWMAKE = $(CLAW)/util/Makefile.common
 FC ?= gfortran44   # default if not set as environment variable
 
 # Add any desired compiler flags such as -g here:
-FFLAGS ?= -O2 
+FFLAGS ?= -O2
 
-GEOCLAW_LIB = $(shell pwd)
-CLAW_LIB = $(CLAW)/amrclaw/2d/lib/
-
+DIGCLAW_LIB = $(shell pwd)
+GEOCLAW_LIB = $(CLAW)/geoclaw/2d/lib
 CLAW_SOURCES = \
   $(GEOCLAW_LIB)/geoclaw_mod.f90 \
+  $(DIGCLAW_LIB)/digclaw_mod.f90 \
   $(GEOCLAW_LIB)/topo_mod.f90 \
   $(GEOCLAW_LIB)/dtopo_mod.f90 \
-  $(GEOCLAW_LIB)/allowflag_geo.f \
-  $(GEOCLAW_LIB)/amr2ez_geo.f \
-  $(GEOCLAW_LIB)/b4step2_geo.f \
-  $(GEOCLAW_LIB)/bc2amr_geo.f \
-  $(GEOCLAW_LIB)/bilinearintegral_geo.f \
-  $(GEOCLAW_LIB)/cellgridintegrate_geo.f \
-  $(GEOCLAW_LIB)/dumpgauge_geo.f \
-  $(GEOCLAW_LIB)/fgridinterp_geo.f \
-  $(GEOCLAW_LIB)/fgridout_geo.f \
-  $(GEOCLAW_LIB)/filpatch_geo.f \
-  $(GEOCLAW_LIB)/filval_geo.f \
-  $(GEOCLAW_LIB)/flag2refine_geo.f \
-  $(GEOCLAW_LIB)/flux2fw_geo.f \
-  $(GEOCLAW_LIB)/gfixup_geo.f \
-  $(GEOCLAW_LIB)/ginit_geo.f \
-  $(GEOCLAW_LIB)/movetopo_geo.f \
-  $(GEOCLAW_LIB)/qad_geo.f \
-  $(GEOCLAW_LIB)/qinit_geo.f \
-  $(GEOCLAW_LIB)/readqinit_geo.f \
-  $(GEOCLAW_LIB)/riemannsolvers_geo.f \
-  $(GEOCLAW_LIB)/rpn2ez_fast_geo.f \
-  $(GEOCLAW_LIB)/rpn2ez_geo.f \
-  $(GEOCLAW_LIB)/rpn2ez_ptwise_geo.f \
-  $(GEOCLAW_LIB)/rpn2_geo.f \
-  $(GEOCLAW_LIB)/rpt2_geo.f \
-  $(GEOCLAW_LIB)/rpt2_ptwise_geo.f \
-  $(GEOCLAW_LIB)/setaux_geo.f \
-  $(GEOCLAW_LIB)/setdambreak_geo.f \
-  $(GEOCLAW_LIB)/setfixedgrids_geo.f \
-  $(GEOCLAW_LIB)/setgauges_geo.f \
-  $(GEOCLAW_LIB)/setgrd_geo.f \
-  $(GEOCLAW_LIB)/setprob_geo.f \
-  $(GEOCLAW_LIB)/setqinit_geo.f \
-  $(GEOCLAW_LIB)/setregions_geo.f \
-  $(GEOCLAW_LIB)/src1d_geo.f \
-  $(GEOCLAW_LIB)/src2_geo.f \
-  $(GEOCLAW_LIB)/step2_geo.f \
-  $(GEOCLAW_LIB)/stepgrid_geo.f \
-  $(GEOCLAW_LIB)/tick_geo.f \
-  $(GEOCLAW_LIB)/topointegral_geo.f \
-  $(GEOCLAW_LIB)/upbnd_geo.f \
-  $(GEOCLAW_LIB)/update_geo.f \
-  $(GEOCLAW_LIB)/valout_geo.f \
-  $(GEOCLAW_LIB)/getmaxspeed_geo.f
-
+  $(GEOCLAW_LIB)/qinit_mod.f90 \
+  $(DIGCLAW_LIB)/setaux_geo.f \
+  $(DIGCLAW_LIB)/qinit_geo.f \
+  $(DIGCLAW_LIB)/rpn2ez_geo.f \
+  $(DIGCLAW_LIB)/riemannsolvers_geo.f \
+  $(DIGCLAW_LIB)/rpt2_geo.f \
+  $(DIGCLAW_LIB)/src2_geo.f \
+  $(DIGCLAW_LIB)/src1d_geo.f
 
 default: .objs
 

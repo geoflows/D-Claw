@@ -1199,9 +1199,12 @@ class ClawRunData(Data):
             clawdata = AmrclawInputData(ndim)
             self.add_attribute('clawdata', clawdata)
             self.datalist.append(clawdata)
-            geodata = DigclawInputData(ndim)
+            geodata = GeoclawInputData(ndim)
             self.add_attribute('geodata', geodata)
             self.datalist.append(geodata)
+            digdata = DigclawInputData(ndim)
+            self.add_attribute('digdata', digdata)
+            self.datalist.append(digdata)
 
         elif pkg.lower() in ['sharpclaw']:
             self.add_attribute('xclawcmd', 'xsclaw')
@@ -1449,36 +1452,58 @@ class GeoclawInputData(Data):
             file.write(4*"%g  " % tuple(flowgrade) +"\n")
         file.close()
 
-class DigclawInputData(GeoclawInputData):
+class DigclawInputData(Data):
     r"""
     Object that will be written out to the various GeoClaw & data files.
     """
     def __init__(self, ndim):
-        super(GeoclawInputData,self).__init__()
+        super(DigclawInputData,self).__init__()
 
         # Set default values:
-        self.add_attribute('rho_s',   2700.0)#, 'solid grain density (kg/m^3)')
-        self.add_attribute('rho_f',   1000.0)#, 'pore-fluid density  (kg/m^3)')
-        self.add_attribute('grav',    9.81)#,   'gravitational acceleration magnitude (m/s^2)')
-        self.add_attribute('phi_bed', 40.)#,    'basal friction angle (degrees)')
-        self.add_attribute('phi_int', 40.)#,    'internal friction angle (degrees)')
-        self.add_attribute('delta',   0.01)#,  'characteristic grain diameter (m)')
-        self.add_attribute('mu',      0.001)#,  'viscosity of pore-fluid (Pa-s)')
-        self.add_attribute('alpha_c', 1.0)#,    'debris compressibility constant (#)')
-        self.add_attribute('m_crit',  0.62)#,   'critical state value of m (#)')
-        self.add_attribute('c1',      1.0)#,    'dilation coefficient 1 (#)')
-        self.add_attribute('m0',      0.52)#,   'initial solid volume fraction (#)')
-        self.add_attribute('dudx_eps',1.0)#,    'dudx below this amount scales kappa linearly between min and max values of the otherwise step function')
-        self.add_attribute('phys_tol',1.e-3)#,  'minimum depth considered for model applicability. Values below have statically set values')
+        self.add_attribute('rho_s',   2700.0, 'solid grain density (kg/m^3)')
+        self.add_attribute('rho_f',   1000.0, 'pore-fluid density  (kg/m^3)')
+        self.add_attribute('grav',    9.81,   'gravitational acceleration magnitude (m/s^2)')
+        self.add_attribute('phi_bed', 40.,    'basal friction angle (degrees)')
+        self.add_attribute('phi_int', 40.,    'internal friction angle (degrees)')
+        self.add_attribute('delta',   0.01,  'characteristic grain diameter (m)')
+        self.add_attribute('mu',      0.001,  'viscosity of pore-fluid (Pa-s)')
+        self.add_attribute('alpha_c', 1.0,    'debris compressibility constant (#)')
+        self.add_attribute('m_crit',  0.62,   'critical state value of m (#)')
+        self.add_attribute('c1',      1.0,    'dilation coefficient 1 (#)')
+        self.add_attribute('m0',      0.52,   'initial solid volume fraction (#)')
+        self.add_attribute('dudx_eps',1.0,    'dudx below this amount scales kappa linearly between min and max values of the otherwise step function')
+        self.add_attribute('phys_tol',1.e-3,  'minimum depth considered for model applicability. Values below have statically set values')
 
+        self.add_attribute('init_ptype', 0, '0 = hydrostatic pore-pressure, 1 = find minimum failure pressure, 2= rise pressure with time')
+        self.add_attribute('init_pmax_ratio', 1.0, 'pressure will rise to \rho g cos (theta) h init_pmax_ratio*minimum failure pressure ratio')
+        self.add_attribute('init_ptf', 1.95, 'if init_ptype=2 pressure will rise until t = init_ptf')
 
     def write(self):
 
         print 'Creating data file setdig.data'
         # open file and write a warning header:
         file = open_datafile('setdig.data')
-        data_write(file, self, 'rho_s')
-        data_write(file, self, 'rho_f')
+        data_write(file, self, 'rho_s',    'solid grain density (kg/m^3)')
+        data_write(file, self, 'rho_f',    'pore-fluid density  (kg/m^3)')
+        data_write(file, self, 'grav',     'gravitational acceleration  (m/s^2)')
+        data_write(file, self, 'phi_bed',  'basal friction angle (degrees)')
+        data_write(file, self, 'phi_int',  'internal friction angle (degrees)')
+        data_write(file, self, 'delta',    'characteristic grain diameter (m)')
+        data_write(file, self, 'mu',       'viscosity of pore-fluid (Pa-s)')
+        data_write(file, self, 'alpha_c',  'debris compressibility constant (#)')
+        data_write(file, self, 'm_crit',   'critical state value of m (#)')
+        data_write(file, self, 'c1',       'dilation coefficient 1 (#)')
+        data_write(file, self, 'm0',       'initial solid volume fraction (#)')
+        data_write(file, self, 'dudx_eps', 'dudx below this amount scales kappa linearly between min and max values of the otherwise step function')
+        data_write(file, self, 'phys_tol', 'minimum depth considered for model applicability. Values below have statically set values')
+        file.close()
+
+        print 'Creating data file setpinit.data'
+        # open file and write a warning header:
+        file = open_datafile('setpinit.data')
+        data_write(file, self, 'init_ptype', '0 = hydrostatic pore-pressure, 1 = find minimum failure pressure, 2= rise pressure with time')
+        data_write(file, self, 'init_pmax_ratio', 'pressure will rise to \rho g  h init_pmax_ratio*minimum failure pressure ratio')
+        data_write(file, self, 'init_ptf', 'if init_ptype=2 pressure will rise until t = init_ptf')
         file.close()
 
 
