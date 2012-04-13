@@ -23,20 +23,21 @@ module digclaw_module
     double precision :: rho_s,rho_f,phi_bed,phi_int,delta,kappita,mu,alpha
     double precision :: m_crit,m_min,m_eqn0,c1,m0,dudx_eps,phys_tol
 
-    integer init_htype,init_ptype,p_initialized
+    integer init_ptype,p_initialized
     double precision init_pmax_ratio,init_ptf,init_pmin_ratio
 
-    integer, parameter ::  i_S =4
-    integer, parameter ::  i_rho = 5
-    integer, parameter ::  i_tanpsi = 6
-    integer, parameter ::  i_D = 7
-    integer, parameter ::  i_tau = 8
-    integer, parameter ::  i_kappa = 9
-    integer, parameter ::  i_phi = 10
-    integer, parameter ::  i_sigbed = 11
-    integer, parameter ::  i_theta = 12
-    integer, parameter ::  i_kperm = 13
-    integer, parameter ::  i_alpha = 14
+    integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
+    integer, parameter ::  i_phi    = i_dig
+    integer, parameter ::  i_rho    = i_dig+1
+    integer, parameter ::  i_tanpsi = i_dig+2
+    integer, parameter ::  i_D      = i_dig+3
+    integer, parameter ::  i_tau    = i_dig+4
+    integer, parameter ::  i_kappa  = i_dig+5
+    integer, parameter ::  i_S      = i_dig+6
+    integer, parameter ::  i_sigbed = i_dig+7
+    integer, parameter ::  i_theta  = i_dig+8
+    integer, parameter ::  i_kperm  = i_dig+9
+    integer, parameter ::  i_alpha  = i_dig+10
     integer, parameter ::  DIG_PARM_UNIT = 78
 
 
@@ -119,9 +120,6 @@ contains
          write(DIG_PARM_UNIT,*) '    dudx_eps:', dudx_eps
          write(DIG_PARM_UNIT,*) '    phys_tol:', phys_tol
 
-
-
-
    end subroutine set_dig
 
     ! ========================================================================
@@ -163,12 +161,12 @@ contains
          endif
 
          call opendatafile(iunit, file_name)
-         read(iunit,*) init_htype
          read(iunit,*) init_ptype
          read(iunit,*) init_pmax_ratio
          read(iunit,*) init_ptf
-         if (init_ptype.gt.0) p_initialized = 0
          close(unit=iunit)
+
+         p_initialized = 0
          init_pmin_ratio = 1.d0
 
 
@@ -180,7 +178,7 @@ contains
    !  Determines minimum pore pressure for mobilization
    ! ========================================================================
 
-      subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
+   subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
       implicit none
 
@@ -250,7 +248,7 @@ contains
            !determine pressure min ratio
             forcemag = abs(grav*(b_r-b_l)*h -0.5d0*grav*(h_r**2 - h_l**2))
 
-            pcrit = rho*h*grav - rho*forcemag/(dx*tan(phi))
+            pcrit = rho*h*grav - rho*forcemag/(dy*tan(phi))
             pcrit = max(pcrit,0.0)
             init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*grav*h))
             init_pmin_ratio = max(init_pmin_ratio,0.d0)
@@ -258,11 +256,258 @@ contains
          enddo
       enddo
 
-
-
    end subroutine calc_pmin
 
 
+   !====================================================================
+   !subroutine admissibleq
+   !accept solution q, return q in admissible space
+   !====================================================================
+
+   subroutine admissibleq(h,hu,hv,hm,p,u,v,m)
+
+      !Input
+      double precision :: h,hu,hv,hm,p,u,v,m
+
+      !Locals
+      double precision :: mlo,mhi,hlo,pmax,phi,plo,rho,dry_tol
+
+      dry_tol = drytolerance
+
+
+      if (h.le.dry_tol) then
+         h = max(0.d0,h)
+         hu = 0.d0
+         hv = 0.d0
+         hm = h*m0
+         p  = h*rho_f*grav
+         u = 0.d0
+         m = m0
+         return
+      endif
+
+      hlo = 2.d0*dry_tol
+      if (h.lt.hlo) then
+         h = (h**2 + hlo**2)/(2.d0*hlo)
+      endif
+
+      u = hu/h
+      v = hv/h
+      m = hm/h
+      m = min(m,1.d0)
+      m = max(m,0.d0)
+
+      mlo = m_min
+      mhi = 1.d0 - 0.5d0*mlo
+      if (m.le.mlo) then
+         m = (m**2 + mlo**2)/(2.d0*mlo)
+         hm = h*m
+      elseif (m.ge.mhi) then
+         m = 1.d0 - ((1.d0-mhi)**2 + (1.d0-m)**2)/(2.d0*(1.d0-mhi))
+         hm = h*m
+      endif
+
+      rho = (rho_s*m + (1.d0-m)*rho_f)
+      pmax = rho*grav*h
+      p = min(pmax,p)
+      p = max(0.d0,p)
+      plo = phys_tol*rho*h*grav
+      phi = pmax - plo
+      if (p.lt.plo) then
+         p = (p**2 + plo**2)/(2.d0*plo)
+      elseif (p.gt.phi) then
+         p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
+      endif
+
+      return
+
+   end subroutine admissibleq
+
+   !====================================================================
+   ! subroutine auxeval: evaluates the auxiliary variables as functions
+   !                     of the solution vector q
+   !====================================================================
+
+   subroutine auxeval(h,u,v,m,p,phi_bed,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+
+      implicit none
+
+      !i/o
+      double precision, intent(in)  :: h,u,v,m,p,pm,phi_bed
+      double precision, intent(out) :: S,rho,tanpsi,D,tau,kappa
+      double precision, intent(out) :: sigbed,kperm,compress
+
+      !local
+      double precision m_eqn,vnorm,g
+
+
+      g=grav
+      vnorm = sqrt(u**2 + v**2)
+      rho = rho_s*m + rho_f*(1.d0-m)
+      sigbed = max(0.d0,rho*g*h - p)
+      if (h*sigbed.gt.0.d0) then
+         !Note: m_eqn = m_crit/(1+sqrt(N))
+         !From Boyer et. al.
+         !and N = mu*venorm/(h*sigbed)
+         S = mu*abs(vnorm)/(h*sigbed)
+         m_eqn = sqrt(h*sigbed)*m_crit/(sqrt(h*sigbed)+ sqrt(mu*abs(vnorm)))
+      else
+         S = 0.d0
+         m_eqn=0.d0
+      endif
+      tanpsi = c1*(m-m_eqn)
+      tau = max(0.d0,sigbed*tan(phi_bed)+ atan(tanpsi))
+      !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+      kperm = kappita**2*exp(max(0.d0,m-m_min)/(-0.03))/40.0
+      compress = alpha/((m)*(sigbed + 1.d5))
+      if (p_initialized.gt.0.and.h.gt.0.d0) then
+         D = (2.d0*kperm/(h*mu))*(rho_f*g*h - p)
+      else
+         D = 0.d0
+      endif
+      !kappa: earth pressure coefficient
+      !if (phi_int.eq.phi_bed) then
+      !   sqrtarg = 0.d0
+      !else
+      !   sqrtarg = 1.d0-(cos(phi_int)**2)*(1.d0 + tan(phi_bed)**2)
+      !endif
+
+      !kappa = (2.d0 - pm*2.d0*sqrt(sqrtarg))/(cos(phi_int)**2)
+      !kappa = kappa - 1.d0
+      kappa = 1.d0
+
+   end subroutine auxeval
+
+
+
+   !====================================================================
+   !subroutine psieval: evaluate the source term
+   !====================================================================
+
+   subroutine psieval(tau,rho,D,tanpsi,kperm,compress,h,u,m,psi)
+
+      implicit none
+
+      !i/o
+      double precision, intent(out) :: psi(4)
+      double precision, intent(in)  :: tau,rho,D,tanpsi,kperm,compress
+      double precision, intent(in)  :: h,u,m
+
+      !local
+      double precision :: taushear,zeta,drytol
+
+      drytol = drytolerance
+
+      taushear = (tau/rho)*sign(1.d0,u)
+
+      if (h.gt.drytol) then
+         taushear = taushear + (1.d0-m)*mu*u/(h*rho)
+      endif
+
+      if (h.gt.drytol) then
+         psi(1) =  D*(rho-rho_f)/rho
+         psi(2) =  - taushear + u*D*(rho-rho_f)/rho
+         psi(3) =  -D*m*(rho_f/rho)
+         psi(4) = - 3.d0*abs(u)*tanpsi/(h*compress*(1.d0+kperm))
+      else
+         psi(1) = 0.d0
+         psi(2) = 0.d0
+         psi(3) = 0.d0
+         psi(4) = 0.d0
+      endif
+
+   end subroutine psieval
+
+   !====================================================================
+   ! subroutine calcaux: calculate all auxiliary variables
+   !====================================================================
+
+   subroutine calcaux(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
+
+      implicit none
+
+      !i/o
+      double precision :: q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
+      double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
+      double precision, intent(in) :: xlower,ylower,dx,dy
+      integer, intent(in) :: maxmx,maxmy,mx,my,meqn,mbc,maux
+
+      !local
+      double precision :: h,u,v,m,pbed,rho,S,m_eqn,tanpsi,phi,compress,pms
+      double precision :: kperm,tau,up,um,dudx,dudy,div,pm,kappa,D,theta,g
+      double precision :: sigbed,dry_tol
+      integer :: i,j,ma,ibc
+
+      g= grav
+      dry_tol = drytolerance
+
+      do i=1,mx
+         do j=1,my
+            phi = aux(i,j,i_phi)
+            call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m)
+            h=q(i,j,1)
+            if (h.le.dry_tol) then
+               aux(i,j,i_S) = 0.d0
+               aux(i,j,i_rho) = 0.d0
+               aux(i,j,i_tanpsi) = 0.d0
+               aux(i,j,i_D) = 0.d0
+               aux(i,j,i_tau) = 0.d0
+               aux(i,j,i_kappa) = 1.d0
+               aux(i,j,i_sigbed) = 0.d0
+               aux(i,j,i_kperm) = 0.d0
+               aux(i,j,i_alpha) = 0.d0
+               cycle
+            endif
+            pbed = q(i,j,5)
+
+            if (q(i,j,1).gt.0.d0.and.q(i-1,j,1).gt.0.d0) then
+               dudx = (q(i,j,2)/q(i,j,1) - q(i-1,j,2)/q(i-1,j,1))/dx
+            else
+               dudx = 0.d0
+            endif
+            if (q(i,j,1).gt.0.d0.and.q(i-1,j-1,1).gt.0.d0) then
+               dudy = (q(i,j,2)/q(i,j,1) - q(i-1,j,2)/q(i-1,j,1))/dy
+            else
+               dudy = 0.d0
+            endif
+            div = dudx + dudy
+            pm = sign(1.d0,div)
+
+            call auxeval(h,u,v,m,pbed,kappa,S,rho,tanpsi,D,tau,phi,sigbed,kperm,compress,pm)
+
+            aux(i,j,i_S) = S
+            aux(i,j,i_rho) = rho
+            aux(i,j,i_tanpsi) = tanpsi
+            aux(i,j,i_D) = D
+            aux(i,j,i_tau) = tau
+            aux(i,j,i_kappa) = kappa
+            aux(i,j,i_sigbed) = sigbed
+            aux(i,j,i_kperm) = kperm
+            aux(i,j,i_alpha) = compress
+
+         enddo
+      enddo
+
+      !right and left boundary
+      do j=1,my
+         do ma = i_dig,maux
+            do ibc=1,mbc
+               aux(1-ibc,j,ma) = aux(1,j,ma)
+               aux(mx+ibc,j,ma) = aux(mx,j,ma)
+            enddo
+         enddo
+      enddo
+      !top and bottom boundary
+      do i=1,mx
+         do ma = i_dig,maux
+            do ibc=1,mbc
+               aux(i,1-ibc,ma) = aux(i,1,ma)
+               aux(i,my+ibc,ma) = aux(i,my,ma)
+            enddo
+         enddo
+      enddo
+
+   end subroutine calcaux
 
 
 end module digclaw_module

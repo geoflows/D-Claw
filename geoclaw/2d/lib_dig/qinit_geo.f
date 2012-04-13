@@ -18,7 +18,8 @@ c      # been strored in qinitwork.
       dimension q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
 
-
+      !note: this is not necessary for debris flows, but initializing
+      ! q to zero, before reading mqinit files is, so this remains.
       do i=1-mbc,mx+mbc
          x = xlower + (i-0.5d0)*dx
          do j=1-mbc,my+mbc
@@ -98,9 +99,12 @@ c
 
 c=============== Pressure initialization for Mobilization Modeling======
 
-      if (init_ptype.eq.1) then
+      if (init_ptype.gt.0) then
          call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
      &                     q,maux,aux)
+      endif
+
+      if (init_ptype.eq.1) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
                q(i,j,5) = init_pmin_ratio*rho_f*grav*q(i,j,1)
@@ -115,6 +119,7 @@ c=============== Pressure initialization for Mobilization Modeling======
          enddo
          p_initialized = 1
       endif
+
 
       return
       end

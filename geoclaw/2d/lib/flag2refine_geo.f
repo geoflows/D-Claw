@@ -31,6 +31,7 @@ c
       use geoclaw_module
       use topo_module
       use dtopo_module
+      use qinit_module
 
       implicit double precision (a-h, o-z)
 
@@ -42,7 +43,6 @@ c
       logical shoreregion,wave
 
       include 'regions.i'
-      include 'qinit.i'
 
 c     # loop over interior points on this grid:
 
@@ -109,17 +109,18 @@ c           # force refinement to level minleveldtopo
                 endif
          enddo
 
-
-         if (iqinit.gt.0 .and. t.eq.0.d0) then
-c           # check if we're in the region where initial perturbation is
-c           # specified and need to force refinement:
-            if (level.lt.minlevelqinit.and.
-     &              x2.gt.xlowqinit.and.x1.lt.xhiqinit.and.
-     &              y2.gt.ylowqinit.and.y1.lt.yhiqinit) then
-                amrflags(i,j)=DOFLAG
+         do m=1,mqinitfiles
+            if (t.eq.0.d0) then
+c              # check if we're in the region where initial perturbation is
+c              # specified and need to force refinement:
+               if (level.lt.minlevelqinit(m).and.
+     &              x2.gt.xlowqinit(m).and.x1.lt.xhiqinit(m).and.
+     &              y2.gt.ylowqinit(m).and.y1.lt.yhiqinit(m)) then
+                  amrflags(i,j)=DOFLAG
                 go to 100 !# flagged, so no need to check anything else
                 endif
              endif
+         enddo
 
 c        -----------------------------------------------------------------
 

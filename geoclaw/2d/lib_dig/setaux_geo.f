@@ -63,24 +63,17 @@ c           # for lat-lon grid on sphere:
 
             else
                aux(i,j,1) = 0.d0
-c     	      # or set-up your own topo
+c               # or set-up your own topo
                endif
             enddo
          enddo
-
-      do ma=4,maux
-         do j=1-mbc,my+mbc
-            do i=1-mbc,mx+mbc
-               aux(i,j,ma) = 0.d0
-            enddo
-         enddo
-      enddo
 
       do j=1-mbc,my+mbc
          do i=1-mbc,mx+mbc
             aux(i,j,i_phi) = phi_bed
          enddo
       enddo
+
 
       return
 

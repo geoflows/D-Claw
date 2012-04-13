@@ -16,11 +16,11 @@ c     # is also called from errf1.
       use geoclaw_module
       use topo_module
       use dtopo_module
+      use qinit_module
 
       implicit double precision (a-h,o-z)
 
       include 'regions.i'
-      include 'qinit.i'
 
 c========================================================================
 
@@ -73,15 +73,17 @@ c          endif
         endif
       enddo
 
-      if (t.eq.0.d0 .and. iqinit.gt.0) then
-        if (x.gt.xlowqinit.and.x.lt.xhiqinit.and.
-     &	    y.gt.ylowqinit.and.y.lt.yhiqinit) then
-     		if (level.lt.maxlevelqinit) then
-                  allowflag=.true.
-                  go to 900  !# no need to check anything else
-                  endif
-        endif
-      endif
+      do m=1,mqinitfiles
+         if (t.eq.0.d0) then
+            if (x.gt.xlowqinit(m).and.x.lt.xhiqinit(m).and.
+     &	     y.gt.ylowqinit(m).and.y.lt.yhiqinit(m)) then
+     		        if (level.lt.maxlevelqinit(m)) then
+                     allowflag=.true.
+                     go to 900  !# no need to check anything else
+                 endif
+            endif
+         endif
+      enddo
 
   900 continue
       return

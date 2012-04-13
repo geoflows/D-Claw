@@ -17,7 +17,7 @@ c
       dimension   aux(mitot,mjtot,naux), auxc(mic,mjc,naux)
 
       double precision coarseval(3)
-      logical fineflag(3)
+      logical fineflag(5)
 
 
 c
@@ -124,8 +124,9 @@ c     #prepare slopes - use min-mod limiters
                finemass = finemass + val(ifine,jfine,1)
                if (val(ifine,jfine,1).le.toldry) then
                   fineflag(1) = .true.
-                  val(ifine,jfine,2)=0.d0
-                  val(ifine,jfine,3)=0.d0
+                  do ivar = 2,nvar
+                     val(ifine,jfine,ivar)=0.d0
+                  enddo
                   endif
                enddo
             enddo
