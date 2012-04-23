@@ -17,6 +17,7 @@ c=========================================================================
       call set_qinit        !# specifies file(s) for initial conditions
       call set_topo         !# specifies topography (bathymetry) files
       call set_dtopo        !# specifies moving topo 'dtopo' from earthquake
+      call set_dig
       call set_pinit
       call setregions       !# specifies where refinement is allowed/forced
       call setgauges        !# locations of measuring gauges

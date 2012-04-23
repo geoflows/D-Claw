@@ -20,24 +20,14 @@ module digclaw_module
     ! ========================================================================
     ! General digclaw parameters
     ! ========================================================================
-    double precision :: rho_s,rho_f,phi_bed,phi_int,delta,kappita,mu,alpha
-    double precision :: m_crit,m_min,m_eqn0,c1,m0,dudx_eps,phys_tol
+    double precision :: rho_s,rho_f,phi_bed,phi_int,delta,kappita
+    double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
 
     integer init_ptype,p_initialized
     double precision init_pmax_ratio,init_ptf,init_pmin_ratio
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
-    integer, parameter ::  i_rho    = i_dig+1
-    integer, parameter ::  i_tanpsi = i_dig+2
-    integer, parameter ::  i_D      = i_dig+3
-    integer, parameter ::  i_tau    = i_dig+4
-    integer, parameter ::  i_kappa  = i_dig+5
-    integer, parameter ::  i_S      = i_dig+6
-    integer, parameter ::  i_sigbed = i_dig+7
-    integer, parameter ::  i_theta  = i_dig+8
-    integer, parameter ::  i_kperm  = i_dig+9
-    integer, parameter ::  i_alpha  = i_dig+10
     integer, parameter ::  DIG_PARM_UNIT = 78
 
 
@@ -61,13 +51,6 @@ contains
          character*25 :: file_name
          logical :: found_file
 
-
-         open(unit=DIG_PARM_UNIT,file='fort.dig',status="unknown",action="write")
-
-         write(DIG_PARM_UNIT,*) ' '
-         write(DIG_PARM_UNIT,*) '--------------------------------------------'
-         write(DIG_PARM_UNIT,*) 'SETDIG:'
-         write(DIG_PARM_UNIT,*) '---------'
 
          deg2rad = pi/180.d0
 
@@ -96,29 +79,32 @@ contains
          read(iunit,*) mu
          read(iunit,*) alpha
          read(iunit,*) m_crit
-         read(iunit,*) m_min
-         read(iunit,*) m_eqn0
          read(iunit,*) c1
          read(iunit,*) m0
          read(iunit,*) dudx_eps
          read(iunit,*) phys_tol
          close(iunit)
 
+         open(unit=DIG_PARM_UNIT,file='fort.dig',status="unknown",action="write")
+
+         write(DIG_PARM_UNIT,*) ' '
+         write(DIG_PARM_UNIT,*) '--------------------------------------------'
+         write(DIG_PARM_UNIT,*) 'SETDIG:'
+         write(DIG_PARM_UNIT,*) '---------'
          write(DIG_PARM_UNIT,*) '    rho_s:',rho_s
          write(DIG_PARM_UNIT,*) '    rho_f:',rho_f
-         write(DIG_PARM_UNIT,*) '    phi_bed:', phi_bed
-         write(DIG_PARM_UNIT,*) '    phi_int:', phi_int
+         write(DIG_PARM_UNIT,*) '    phi_bed:', phi_bed/deg2rad
+         write(DIG_PARM_UNIT,*) '    phi_int:', phi_int/deg2rad
          write(DIG_PARM_UNIT,*) '    delta:', delta
          write(DIG_PARM_UNIT,*) '    kappita:', kappita
          write(DIG_PARM_UNIT,*) '    mu:', mu
          write(DIG_PARM_UNIT,*) '    alpha:', alpha
          write(DIG_PARM_UNIT,*) '    m_crit:', m_crit
-         write(DIG_PARM_UNIT,*) '    m_min:', m_min
-         write(DIG_PARM_UNIT,*) '    m_eqn0:', m_eqn0
          write(DIG_PARM_UNIT,*) '    c1:', c1
          write(DIG_PARM_UNIT,*) '    m0:', m0
          write(DIG_PARM_UNIT,*) '    dudx_eps:', dudx_eps
          write(DIG_PARM_UNIT,*) '    phys_tol:', phys_tol
+
 
    end subroutine set_dig
 
@@ -138,14 +124,6 @@ contains
         integer, parameter :: iunit = 127
         character*25 :: file_name
         logical :: found_file
-
-
-         open(unit=DIG_PARM_UNIT,file='fort.geo',status="unknown",action="write")
-
-         write(DIG_PARM_UNIT,*) ' '
-         write(DIG_PARM_UNIT,*) '--------------------------------------------'
-         write(DIG_PARM_UNIT,*) 'SETPINIT:'
-         write(DIG_PARM_UNIT,*) '---------'
 
 
          ! Read user parameters from setgeo.data
@@ -168,6 +146,17 @@ contains
 
          p_initialized = 0
          init_pmin_ratio = 1.d0
+
+
+         write(DIG_PARM_UNIT,*) ' '
+         write(DIG_PARM_UNIT,*) '--------------------------------------------'
+         write(DIG_PARM_UNIT,*) 'SETPINIT:'
+         write(DIG_PARM_UNIT,*) '---------'
+         write(DIG_PARM_UNIT,*) '    init_ptype:',init_ptype
+         write(DIG_PARM_UNIT,*) '    init_pmax_ratio:',init_pmax_ratio
+         write(DIG_PARM_UNIT,*) '    init_ptf:',init_ptf
+         close(DIG_PARM_UNIT)
+
 
 
    end subroutine set_pinit
@@ -266,29 +255,40 @@ contains
 
    subroutine admissibleq(h,hu,hv,hm,p,u,v,m)
 
+      implicit none
+
       !Input
       double precision :: h,hu,hv,hm,p,u,v,m
 
       !Locals
-      double precision :: mlo,mhi,hlo,pmax,phi,plo,rho,dry_tol
+      double precision :: mlo,mhi,hlo,pmax,phi,plo,rho,dry_tol,m_min
 
       dry_tol = drytolerance
 
-
       if (h.le.dry_tol) then
-         h = max(0.d0,h)
+         h = 0.d0
          hu = 0.d0
          hv = 0.d0
-         hm = h*m0
-         p  = h*rho_f*grav
+         hm = 0.d0
+         p  = 0.d0
          u = 0.d0
+         v = 0.d0
          m = m0
          return
       endif
 
       hlo = 2.d0*dry_tol
+
       if (h.lt.hlo) then
          h = (h**2 + hlo**2)/(2.d0*hlo)
+         hu = 0.d0
+         hv = 0.d0
+         hm = h*m0
+         p  = h*rho_f*grav
+         u = 0.d0
+         v = 0.d0
+         m = m0
+         return
       endif
 
       u = hu/h
@@ -297,8 +297,9 @@ contains
       m = min(m,1.d0)
       m = max(m,0.d0)
 
-      mlo = m_min
-      mhi = 1.d0 - 0.5d0*mlo
+      mlo = 1.d-3
+      mhi = 1.d0 - mlo
+
       if (m.le.mlo) then
          m = (m**2 + mlo**2)/(2.d0*mlo)
          hm = h*m
@@ -311,7 +312,7 @@ contains
       pmax = rho*grav*h
       p = min(pmax,p)
       p = max(0.d0,p)
-      plo = phys_tol*rho*h*grav
+      plo = rho_f*dry_tol*grav
       phi = pmax - plo
       if (p.lt.plo) then
          p = (p**2 + plo**2)/(2.d0*plo)
@@ -338,30 +339,32 @@ contains
       double precision, intent(out) :: sigbed,kperm,compress
 
       !local
-      double precision m_eqn,vnorm,g
+      double precision m_eqn,vnorm,g,sigbedc,sqrtarg
 
 
       g=grav
-      vnorm = sqrt(u**2 + v**2)
+      vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_f*(1.d0-m)
       sigbed = max(0.d0,rho*g*h - p)
-      if (h*sigbed.gt.0.d0) then
+      sigbedc = (rho-rho_f)*grav*h**2
+      if (sigbedc.gt.0.d0) then
          !Note: m_eqn = m_crit/(1+sqrt(N))
          !From Boyer et. al.
          !and N = mu*venorm/(h*sigbed)
-         S = mu*abs(vnorm)/(h*sigbed)
-         m_eqn = sqrt(h*sigbed)*m_crit/(sqrt(h*sigbed)+ sqrt(mu*abs(vnorm)))
+         !S = mu*abs(vnorm)/(h*sigbed)
+         S = mu*dabs(vnorm)/(h*sigbedc)
+         m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(300.d0*mu*dabs(vnorm)))
       else
          S = 0.d0
          m_eqn=0.d0
       endif
       tanpsi = c1*(m-m_eqn)
-      tau = max(0.d0,sigbed*tan(phi_bed)+ atan(tanpsi))
-      !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
-      kperm = kappita**2*exp(max(0.d0,m-m_min)/(-0.03))/40.0
+      tau = max(0.d0,sigbed*tan(phi_bed + atan(tanpsi)))
+      kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+      !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
       if (p_initialized.gt.0.and.h.gt.0.d0) then
-         D = (2.d0*kperm/(h*mu))*(rho_f*g*h - p)
+         D = (kperm/(h*mu))*(rho_f*g*h - p)
       else
          D = 0.d0
       endif
@@ -394,21 +397,17 @@ contains
       double precision, intent(in)  :: h,u,m
 
       !local
-      double precision :: taushear,zeta,drytol
+      double precision :: taushear,drytol
 
       drytol = drytolerance
 
-      taushear = (tau/rho)*sign(1.d0,u)
+      taushear = (tau/rho)*dsign(1.d0,u)
 
-      if (h.gt.drytol) then
-         taushear = taushear + (1.d0-m)*mu*u/(h*rho)
-      endif
-
-      if (h.gt.drytol) then
+      if (h.gt.drytol.and.p_initialized.eq.1) then
          psi(1) =  D*(rho-rho_f)/rho
-         psi(2) =  - taushear + u*D*(rho-rho_f)/rho
-         psi(3) =  -D*m*(rho_f/rho)
-         psi(4) = - 3.d0*abs(u)*tanpsi/(h*compress*(1.d0+kperm))
+         psi(2) =  u*D*(rho-rho_f)/rho
+         psi(3) = -D*m*(rho_f/rho)
+         psi(4) = 0.d0
       else
          psi(1) = 0.d0
          psi(2) = 0.d0
@@ -425,6 +424,17 @@ contains
    subroutine calcaux(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
       implicit none
+
+      integer, parameter ::  i_rho    = i_dig+1
+      integer, parameter ::  i_tanpsi = i_dig+2
+      integer, parameter ::  i_D      = i_dig+3
+      integer, parameter ::  i_tau    = i_dig+4
+      integer, parameter ::  i_kappa  = i_dig+5
+      integer, parameter ::  i_S      = i_dig+6
+      integer, parameter ::  i_sigbed = i_dig+7
+      integer, parameter ::  i_theta  = i_dig+8
+      integer, parameter ::  i_kperm  = i_dig+9
+      integer, parameter ::  i_alpha  = i_dig+10
 
       !i/o
       double precision :: q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)

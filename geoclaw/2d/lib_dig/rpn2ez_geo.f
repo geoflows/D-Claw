@@ -51,16 +51,18 @@ c
       double precision wall(3),fw(5,3),sw(3),wave(5,3)
       double precision lamL(3),lamR(3),beta(3)
       logical entropy(3)
-      logical harten,rare1,rare2,wallprob
+      logical rare1,rare2,wallprob,drystate
+      logical entropycorr1,entropycorr2
 
-      double precision drytol,g,gmod
-      double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL,phiR,phiL
+      double precision drytol,g,gmod,veltol
+      double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
       double precision pR,pL,hmL,hmR,mL,mR,phi_bedL,phi_bedR
-      double precision bR,bL,sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
-      double precision hstar,hstartest,hstarHLL,sLtest,sRtest,s1m,s2m
+      double precision hstar,hstartest,s1m,s2m,bL,bR
       double precision dxdc,dx,pm
       double precision sigbed,SN,rho,kappa,kperm,compress,tau,D,tanpsi
       double precision gamma,eps
+      double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
+      double precision phiL,phiR,sE1,sE2
 
 
 
@@ -70,19 +72,27 @@ c
       g=grav
       drytol=drytolerance
 
+      !set to true to use an entropy correction
+      entropycorr1 = .false.  !Harten (bound nonlinear waves away from s=0)
+      entropycorr2 = .false. !Harten-Hyman (split expansion shocks) not recommended
+
+      !near-zero velocity tolerance
+      veltol = 1.d-3
+
       !loop through Riemann problems at each grid cell
       do i=2-mbc,mx+mbc
 
 !-----------------------Initializing-----------------------------------
-         !inform of a bad riemann problem from the start
-         if((qr(i-1,1).lt.0.d0).or.(ql(i,1) .lt. 0.d0)) then
-            write(*,*) 'Negative input: hl,hr,i=',qr(i-1,1),ql(i,1),i
-         endif
+         !inform of a bad Riemann problem from the start
+c         if((qr(i-1,1).lt.0.d0).or.(ql(i,1) .lt. 0.d0)) then
+c            write(*,*) 'Negative input: hl,hr,i=',qr(i-1,1),ql(i,1),i
+c         endif
 
          !Initialize Riemann problem for grid interface
          do mw=1,mwaves
             s(i,mw)=0.d0
             sw(mw) = 0.d0
+            entropy(mw)=.false.
             do m=1,meqn
                fwave(i,m,mw)=0.d0
                wave(m,mw) = 0.d0
@@ -90,9 +100,10 @@ c
             enddo
          enddo
 
-         do m=1,3
-            entropy(m)=.false.
-         enddo
+         !skip problem if in a completely dry area
+         if (qr(i-1,1).le.2.d0*drytol.and.ql(i,1).le.2.d0*drytol) then
+            go to 30
+         endif
 
 c        !set normal direction
          if (ixy.eq.1) then
@@ -105,23 +116,13 @@ c        !set normal direction
             dx = dycom
          endif
 
-         !zero (small) negative values if they exist
-         if (qr(i-1,1).lt.0.d0) then
-            do m=1,meqn
-               qr(i-1,m)=0.d0
-            enddo
-         endif
+         !zero (small) negative values if they exist and set velocities
+         call admissibleq(ql(i,1),ql(i,mhu),ql(i,nhv),
+     &            ql(i,4),ql(i,5),uR,vR,mR)
 
-         if (ql(i,1).lt.0.d0) then
-            do m=1,meqn
-               ql(i,m)=0.d0
-            enddo
-         endif
+         call admissibleq(qr(i-1,1),qr(i-1,mhu),qr(i-1,nhv),
+     &            qr(i-1,4),qr(i-1,5),uL,vL,mL)
 
-         !skip problem if in a completely dry area
-         if (qr(i-1,1).le.drytol.and.ql(i,1).le.drytol) then
-            go to 30
-         endif
 
          !Riemann problem variables
          hL = qr(i-1,1)
@@ -139,54 +140,36 @@ c        !set normal direction
          phi_bedL = auxr(i-1,i_phi)
          phi_bedR = auxl(i,i_phi)
 
-         !check for wet/dry boundary
-         if (hR.gt.drytol) then
-            uR=huR/hR
-            vR=hvR/hR
-            mR=hmR/hR
-            phiR = 0.5d0*g*hR**2 + huR**2/hR
-         else
-            uR = 0.d0
-            vR = 0.d0
-            mR = 0.d0
-            phiR = 0.d0
-         endif
-
-         if (hL.gt.drytol) then
-            uL=huL/hL
-            vL=hvL/hL
-            mL=hmL/hL
-            phiL = 0.5d0*g*hL**2 + huL**2/hL
-         else
-            uL=0.d0
-            vL=0.d0
-            mL=0.d0
-            phiL = 0.d0
-         endif
-
-         wall(1) = 1.d0
-         wall(2) = 1.d0
-         wall(3) = 1.d0
+         !test for wall problem vs. inundation problem
+         do mw=1,mwaves
+            wall(mw) = 1.d0
+         enddo
+         drystate=.false.
          wallprob = .false.
          if (hR.le.drytol) then
+            drystate=.true.
             call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,
-     &                                  rare1,rare2,1,drytol,g)
+     &                                 rare1,rare2,1,drytol,g)
             hstartest=max(hL,hstar)
             if (hstartest+bL.lt.bR) then !right state should become ghost values that mirror left for wall problem
 c                bR=hstartest+bL
                wall(2)=0.d0
                wall(3)=0.d0
-               wallprob = .true.
+               wallprob=.true.
                hR=hL
                huR=-huL
+               hvR=hvL
+               hmR=hmL
                bR=bL
-               phiR=phiL
                uR=-uL
                vR=vL
-            elseif (hL+bL.lt.bR) then
-               bR=hL+bL
+               mR=mL
+               pR=pL
+            !elseif (hL+bL.lt.bR) then
+               !bR=hL+bL
             endif
          elseif (hL.le.drytol) then ! right surface is lower than left topo
+            drystate=.true.
             call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,
      &                                  rare1,rare2,1,drytol,g)
             hstartest=max(hR,hstar)
@@ -194,21 +177,24 @@ c                bR=hstartest+bL
 c               bL=hstartest+bR
                wall(1)=0.d0
                wall(2)=0.d0
-               wallprob = .true.
+               wallprob=.true.
                hL=hR
                huL=-huR
+               hvL=hvR
+               hmL=hmR
+               mL = mR
                bL=bR
-               phiL=phiR
                uL=-uR
                vL=vR
-            elseif (hR+bR.lt.bL) then
-               bL=hR+bR
+               pL=pR
+            !elseif (hR+bR.lt.bL) then
+               !bL=hR+bR
             endif
          endif
 
 c=================begin digclaw-auxset =================================
 
-         pm = sign(1.d0,uR-uL)
+         pm = dsign(1.d0,uR-uL)
 
          if (hL.gt.drytol.and.hR.gt.drytol) then
             !this is a completely wet 'normal' Riemann problem
@@ -227,49 +213,103 @@ c=================begin digclaw-auxset =================================
 
          gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
          eps = gamma + (1.d0-gamma)*kappa
-         gmod = grav
+         gmod = grav*eps
 c================end digclaw-aux========================================
 
+         !modify for inundation problem
+c         if (hR.lt.drytol) then
+c            sw(1) = sL
+c            sw(3) = uL + 2.d0*sqrt(gmod*hL*eps)
+c            sw(2) = 0.5d0*(sw(1)+sw(3))
+c         endif
+c         if (hL.lt.drytol) then
+c            sw(1) = uR - 2.d0*sqrt(gmod*hR*eps)
+c            sw(3) = sR
+c            sw(2) = 0.5d0*(sw(1)+sw(3))
+c         endif
 
-         !determine wave speeds
-         sL=uL-sqrt(gmod*hL*eps) ! 1 wave speed of left state
-         sR=uR+sqrt(gmod*hR*eps) ! 2 wave speed of right state
-         uhat=(sqrt(hL)*uL + sqrt(hR)*uR)/(sqrt(hR)+sqrt(hL)) ! Roe average
-         chat=sqrt(gmod*0.5d0*(hR+hL)*eps) ! Roe average
-         sRoe1=uhat-chat ! Roe wave speed 1 wave
-         sRoe2=uhat+chat ! Roe wave speed 2 wave
-
-         sE1 = min(sL,sRoe1) ! Eindfeldt speed 1 wave
-         sE2 = max(sR,sRoe2) ! Eindfeldt speed 2 wave
-
-         !--------------------end initializing...finally----------
-         !solve Riemann problem.
-
-         sw(1) = sRoe1
-         sw(3) = sRoe2
-         sw(2) = uhat
-
-         if (hR.lt.drytol) then
-            sw(3) = uL + 2.d0*sqrt(gmod*hL)
-         endif
-         if (hL.lt.drytol) then
-            sw(1) = uR - 2.d0*sqrt(gmod*hR)
-         endif
-
-         call riemann_dig2_conservative(meqn,mwaves,hL,hR,huL,huR,
-     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uhat,uL,uR,vL,vR,mL,mR,
+         !-- solve Riemann problem
+         call riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
+     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,gmod,dx,sw,fw,wave)
+     &         gamma,gmod,dx,veltol,sw,fw,wave)
 
+
+c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
+c     &        huR,hvL,hvR,bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,
+c     &                                    drytolerance,gmod,sw,fw)
+
+         !----Harten entropy fix for near zero-speed nonlinear waves
+         ! Note: this might change near zero-speed shocks as well
+         ! smoothed absolute value function between veltol and 2*veltol
+c         if (entropycorr1) then
+c            if (abs(sw(1)).le.2.d0*veltol) then
+c              sw(1) = dsign((sw(1)**2 + (2.d0*veltol)**2)/(4.d0*veltol)
+c     &                     ,sw(1))
+c            endif
+
+c            if (abs(sw(3)).le.2.d0*veltol) then
+c              sw(3) = dsign((sw(3)**2 + (2.d0*veltol)**2)/(4.d0*veltol)
+c     &                     ,sw(3))
+c            endif
+c         endif
+
+         !--------------------------------------------------------------
 
 c        !eliminate ghost fluxes for wall
-         do mw=1,3
+         do mw=1,mwaves
             sw(mw)=sw(mw)*wall(mw)
             do m=1,meqn
                fw(m,mw)=fw(m,mw)*wall(mw)
             enddo
          enddo
 
+         !Entropy correction (Harten-Hyman) for nonlinear waves---------
+c         if (entropycorr1.and.entropycorr2.and.(.not.drystate)) then
+c            h1M =  max(hL  + wave(1,1),0.d0)
+c            h2M =  max(hR  - wave(1,3),0.d0)
+c            hu1M = huL + wave(2,1)
+c            hu2M = huR - wave(2,3)
+c            if (h1M.gt.drytol) then
+c               u1M = hu1M/h1M
+c            else
+c               u1M = 0.d0
+c            endif
+c            if (h2M.gt.drytol) then
+c               u2M = hu2M/h2M
+c            else
+c               u2M = 0.d0
+c            endif
+            !s1M = u1M - sqrt(gmod*h1M*eps)
+            !s2M = u2M + sqrt(gmod*h2M*eps)
+
+c            heL = max(hL + bL - max(bL,bR),0.d0)
+c            heR = max(hR + bR - max(bL,bR),0.d0)
+
+c            call riemanntype(heL,heR,uL,uR,hstar,s1M,s2M,
+c     &                                 rare1,rare2,1,drytol,g)
+
+c            if (sL.lt.-0.5d0*veltol.and.s1M.gt.0.5d0*veltol) then
+c               entropy(1) = .true.
+c               beta(1) = max(0.d0,s1M-sw(1))/(s1M - sL)
+c               lamL(1) = sL
+c               lamR(1) = s1M
+c               do m=1,meqn
+c                  fw(m,1) = fw(m,1)/sw(1)
+c               enddo
+c            endif
+c            if (sR.gt.0.5d0*veltol.and.s2M.lt.-0.5d0*veltol) then
+c               entropy(3) = .true.
+c               beta(3) = max(0.d0,sR-sw(3))/(sR - s2M)
+c               lamL(3) = s2M
+c               lamR(3) = sR
+c               do m=1,meqn
+c                  fw(m,3) = fw(m,3)/sw(3)
+c               enddo
+c            endif
+c         endif
+
+c=======================================================================
          do mw=1,mwaves
             s(i,mw)=sw(mw)
             fwave(i,1,mw)=fw(1,mw)
@@ -279,14 +319,9 @@ c        !eliminate ghost fluxes for wall
             fwave(i,5,mw) = fw(5,mw)
          enddo
 
- 30      continue
-      enddo
-
 
 c==========Capacity for mapping from latitude longitude to physical space====
-
         if (mcapa.gt.0) then
-         do i=2-mbc,mx+mbc
           if (ixy.eq.1) then
              dxdc=(Rearth*pi/180.d0)
           else
@@ -294,39 +329,40 @@ c==========Capacity for mapping from latitude longitude to physical space====
           endif
 
           do mw=1,mwaves
-c             if (s(i,mw) .gt. 316.d0) then
-c               # shouldn't happen unless h > 10 km!
-c                write(6,*) 'speed > 316: i,mw,s(i,mw): ',i,mw,s(i,mw)
-c                endif
+             !if (s(i,mw) .gt. 316.d0) then
+               ! shouldn't happen unless h > 10 km!
+              !  write(6,*) 'speed > 316: i,mw,s(i,mw): ',i,mw,s(i,mw)
+              !  endif
              s(i,mw)=dxdc*s(i,mw)
              do m=1,meqn
                fwave(i,m,mw)=dxdc*fwave(i,m,mw)
              enddo
           enddo
-         enddo
         endif
 
-c===============================================================================
-
-
 c============= compute fluctuations=============================================
-         do i=1-mbc,mx+mbc
-            do m=1,meqn
-               amdq(i,m)=0.0d0
-               apdq(i,m)=0.0d0
-               do  mw=1,mwaves
-                  if (s(i,mw).lt.0.d0) then
-                     amdq(i,m)=amdq(i,m) + fwave(i,m,mw)
-                  elseif (s(i,mw).gt.0.d0) then
-                     apdq(i,m)=apdq(i,m) + fwave(i,m,mw)
-                  else
+ 30      continue
+         do m=1,meqn
+            amdq(i,m) = 0.d0
+            apdq(i,m) = 0.d0
+            do  mw=1,mwaves
+               if (s(i,mw).lt.0.d0.and.(.not.entropy(mw))) then
+                  amdq(i,m) = amdq(i,m) + fwave(i,m,mw)
+               elseif (s(i,mw).gt.0.d0.and.(.not.entropy(mw))) then
+                  apdq(i,m) = apdq(i,m) + fwave(i,m,mw)
+               elseif (entropy(mw)) then !note fwave has already been divided by s
+                  amdq(i,m) = amdq(i,m) +
+     &               beta(mw)*lamL(mw)*fwave(i,m,mw)
+                  apdq(i,m) = apdq(i,m) +
+     &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
+               else
                   amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
                   apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
-                  endif
-               enddo
+               endif
             enddo
          enddo
 
+      enddo !-- end loop on i
 
       return
       end subroutine
