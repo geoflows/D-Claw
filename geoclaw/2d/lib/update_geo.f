@@ -14,9 +14,9 @@ c
 
       include  "call.i"
 
-      double precision husum(4)
-      double precision huc(4)
-      double precision huf(4)
+      double precision husum(5)
+      double precision huc(5)
+      double precision huf(5)
 
       integer listgrids(numgrids(level))
 
@@ -148,7 +148,7 @@ c     and is never increased given an increase in mass
       etasum = 0.d0
       hsum = 0.d0
       do ivar=2,nvar
-         husum(ivar-1) = 0.d0
+         husum(ivar) = 0.d0
       enddo
 
 
@@ -166,7 +166,7 @@ c     and is never increased given an increase in mass
             hf = alloc(iaddf(iff+ico-1,jff+jco-1,1))*capa
             bf = alloc(iaddftopo(iff+ico-1,jff+jco-1))*capa
             do ivar=2,nvar
-               huf(ivar-1)= alloc(iaddf(iff+ico-1,jff+jco-1,ivar))*capa
+               huf(ivar)= alloc(iaddf(iff+ico-1,jff+jco-1,ivar))*capa
             enddo
 
             if (hf .gt. drytol) then
@@ -175,13 +175,13 @@ c     and is never increased given an increase in mass
             else
                etaf = 0.d0
                do ivar=2,nvar
-                  huf(ivar-1)=0.d0
+                  huf(ivar)=0.d0
                enddo
                endif
 
                hsum   = hsum + hf
                do ivar=2,nvar
-                  husum(ivar-1)  = husum(ivar-1) + huf(ivar-1)
+                  husum(ivar)  = husum(ivar) + huf(ivar)
                enddo
                etasum = etasum + etaf
             enddo
@@ -193,12 +193,12 @@ c     and is never increased given an increase in mass
 *         hc=max(etaav-bc*capac,0.d0) !tsunamiclaw method
          hc=min(hav,(max(etaav-bc*capac,0.d0)))
          do ivar=2,nvar
-            huc(ivar-1)=(min(hav,hc)/hsum)*husum(ivar-1)
+            huc(ivar)=(min(hav,hc)/hsum)*husum(ivar)
          enddo
       else
          hc=0.d0
          do ivar=2,nvar
-            huc(ivar-1)=0.d0
+            huc(ivar)=0.d0
          enddo
          endif
 
@@ -206,7 +206,7 @@ c     # set h on coarse grid based on surface, not conservative near shoreline
 
       alloc(iadd(i,j,1)) = hc/capac
       do ivar=2,nvar
-         alloc(iadd(i,j,ivar)) = huc(ivar-1)/capac
+         alloc(iadd(i,j,ivar)) = huc(ivar)/capac
       enddo
 c
       if (uprint) write(outunit,103)(alloc(iadd(i,j,ivar)),

@@ -74,7 +74,7 @@ c          endif
       enddo
 
       do m=1,mqinitfiles
-         if (t.eq.0.d0) then
+         if (abs(t).lt.1.d0) then
             if (x.gt.xlowqinit(m).and.x.lt.xhiqinit(m).and.
      &	     y.gt.ylowqinit(m).and.y.lt.yhiqinit(m)) then
      		        if (level.lt.maxlevelqinit(m)) then

@@ -202,7 +202,7 @@ c          # array tout is set below after reading t0
            tfinalout = tout(nout)  ! last output time
 
 c          # adjust if tfinalout is not exactly tfinal:
-           teps = 1.d-5 * (tfinal - t0)  
+           teps = 1.d-5 * (tfinal - t0)
            if (tfinalout .gt. tfinal-teps) then
 c             # if it's just slightly less, push up to tfinal:
               tfinalout = tfinal

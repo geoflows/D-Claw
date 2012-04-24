@@ -110,7 +110,7 @@ c           # force refinement to level minleveldtopo
          enddo
 
          do m=1,mqinitfiles
-            if (t.eq.0.d0) then
+            if (abs(t).lt.1.d0) then
 c              # check if we're in the region where initial perturbation is
 c              # specified and need to force refinement:
                if (level.lt.minlevelqinit(m).and.

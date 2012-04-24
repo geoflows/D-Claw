@@ -53,6 +53,7 @@ c     call is sufficient.
 
 c    :::  mcapa  is the capacity function index
 
+
       if (naux .eq. 0) then
 c     if (mcapa .eq. 0) then
         if (xperdom .or. yperdom .or. spheredom) then
@@ -207,7 +208,6 @@ c     #prepare slopes - use min-mod limiters
 
          enddo !end of coarse loop
          enddo !end of coarse loop
-
 c
 c      if (mcapa .ne. 0) then
 c        call fixcapaq(val,aux,mitot,mjtot,valc,auxc,mic,mjc,

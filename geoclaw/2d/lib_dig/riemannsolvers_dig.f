@@ -165,9 +165,9 @@ c     !find bounds in case of critical state resonance, or negative states
      &         + u*(pR-pL)
 
 *     !determine the source term
-      do m=1,4
-            psi(m)=0.d0
-      enddo
+c      do m=1,4
+c            psi(m)=0.d0
+c      enddo
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
       del(1) = del(1) - dx*psi(1)

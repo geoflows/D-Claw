@@ -42,10 +42,10 @@ c          each step) to keep track of when that level should
 c          have its error estimated and finer levels should be regridded.
 c ::::::::::::::::::::::::::::::::::::;::::::::::::::::::::::::::
 c
-      integer verbosity_regrid     
+      integer verbosity_regrid
 c     # Eventually add this to new input params?
 c     # For now use verbosity, or set to 0 to suppress printing regrid info:
-      verbosity_regrid = method(4) 
+      verbosity_regrid = method(4)
 
       ncycle         = nstart
       call setbestsrc()     ! need at very start of run, including restart
@@ -204,7 +204,7 @@ c          MJB: modified to check level where new grids start, which is lbase+1
                  do levnew = lbase+1,lfine
                      write(6,1006) intratx(levnew-1),intraty(levnew-1),
      &                             kratio(levnew-1),levnew
- 1006                format('   Refinement ratios...  in x:', i3, 
+ 1006                format('   Refinement ratios...  in x:', i3,
      &                 '  in y:',i3,'  in t:',i3,' for level ',i4)
                  end do
 
@@ -276,7 +276,7 @@ c                   adjust time steps for this and finer levels
                  write(6,*)"   new ntogo dt ",ntogo(level),possk(level)
                     go to 106
                  endif
-                 if (ntogo(level) .gt. 100) then
+                 if (ntogo(level) .gt. 1000) then
                      write(6,*) "**** Too many dt reductions ****"
                      write(6,*) "**** Stopping calculation   ****"
                      write(6,*) "Writing checkpoint file ..."
@@ -300,7 +300,7 @@ c
           ncycle  = ncycle + 1
           call conck(1,nvar,time,rest)
 
-       if ((ichkpt.gt.0 .and. mod(ncycle,ichkpt).eq.0) 
+       if ((ichkpt.gt.0 .and. mod(ncycle,ichkpt).eq.0)
      &      .or. dumpchk) then
                 call check(ncycle,time,nvar,naux)
        endif
@@ -310,7 +310,7 @@ c
          if (printout) call outtre(mstart,.true.,nvar,naux)
        endif
 
-      if ( .not. vtime) go to 201   
+      if ( .not. vtime) go to 201
 c
 c      ## adjust time steps if variable time step and/or variable refinement ratios in time
 c
@@ -337,7 +337,7 @@ c             ! use same alg. as when setting refinement when first make new fin
                possk(i)    = possk(i-1)/kratio(i-1)        ! set exact timestep on this level
            endif
  125    continue
-        
+
       endif
 
  201  go to 20

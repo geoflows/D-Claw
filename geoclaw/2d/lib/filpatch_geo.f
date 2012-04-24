@@ -345,7 +345,7 @@ c        ! determine momentum
                flag = flaguse(iff,jf)
                if (flag .eq. 0.0) then
                   if (.not.(fineflag(ivalc(ic,jc,1)))) then
-*                    !this is a normal wet cell. intepolate normally
+*                    !this is a normal wet cell. interpolate normally
                      hvf = valcrse(ivalc(ic,jc,ivar))
      &                   + eta1*slopex(icrse(ic,jc))
      &                   + eta2*slopey(icrse(ic,jc))

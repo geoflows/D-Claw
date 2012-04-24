@@ -75,7 +75,7 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                endif
             enddo
             surface = alloc(iadd(i,j,1)) + alloc(iaddaux(i,j,1))
-            write(matunit1,109) (alloc(iadd(i,j,ivar)), ivar=1,nvar),
+            write(matunit1,109) (alloc(iadd(i,j,ivar)), ivar=1,3), !,nvar
      &         surface
          enddo
          write(matunit1,*) ' '
@@ -95,7 +95,8 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
 
 c     # nvar+1 variable printed since surface also printed
 
-      write(matunit2,1000) time,nvar+1,ngrids,3,2
+      !write(matunit2,1000) time,nvar+1,ngrids,3,2
+      write(matunit2,1000) time,3+1,ngrids,3,2
  1000 format(e18.8,'    time', /,
      &       i5,'                 meqn'/,
      &       i5,'                 ngrids'/,
