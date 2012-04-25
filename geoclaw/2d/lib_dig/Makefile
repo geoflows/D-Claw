@@ -30,14 +30,14 @@ CLAW_SOURCES = \
   $(GEOCLAW_LIB)/topo_mod.f90 \
   $(GEOCLAW_LIB)/dtopo_mod.f90 \
   $(GEOCLAW_LIB)/qinit_mod.f90 \
+  $(DIGCLAW_LIB)/setprob_geo.f \
   $(DIGCLAW_LIB)/b4step2_geo.f \
   $(DIGCLAW_LIB)/setaux_geo.f \
   $(DIGCLAW_LIB)/qinit_geo.f \
   $(DIGCLAW_LIB)/rpn2ez_geo.f \
   $(DIGCLAW_LIB)/riemannsolvers_dig.f \
   $(DIGCLAW_LIB)/rpt2_geo.f \
-  $(DIGCLAW_LIB)/src2_geo.f \
-  $(DIGCLAW_LIB)/src1d_geo.f
+  $(DIGCLAW_LIB)/src2_geo.f
 
 default: .objs
 

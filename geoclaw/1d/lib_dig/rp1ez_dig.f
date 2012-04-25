@@ -3,10 +3,6 @@ c =====================================================================
      &             fwave,s,amdq,apdq)
 c =====================================================================
 c
-c     # solve Riemann problems for the 1D shallow water equations
-c     # with source-term resulting from variable topography b(x,t)
-c     #   (h)_t + (u h)_x = 0
-c     #   (uh)_t + (uuh + 0.5*gh**2)_x = -g*h*b_x
 c
 c
 c     # On input,
@@ -204,6 +200,7 @@ c
          enddo
 
          !Entropy correction -------------------------------------------
+
          s1L = sL
          s2R = sR
 
