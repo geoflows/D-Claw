@@ -35,7 +35,7 @@ CLAW_SOURCES = \
   $(DIGCLAW_LIB)/setaux_geo.f \
   $(DIGCLAW_LIB)/qinit_geo.f \
   $(DIGCLAW_LIB)/rpn2ez_geo.f \
-  $(DIGCLAW_LIB)/riemannsolvers_dig.f \
+  $(DIGCLAW_LIB)/riemannsolvers_geo.f \
   $(DIGCLAW_LIB)/rpt2_geo.f \
   $(DIGCLAW_LIB)/src2_geo.f
 
