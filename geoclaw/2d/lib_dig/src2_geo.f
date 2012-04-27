@@ -62,7 +62,7 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
             p_eq = p_hydro
      &       - 3.d0*mu*dabs(u)*tanpsi/(zeta*kperm*compress*(1.d0+kappa))
-            p_eq = max(p_eq,p_hydro)
+            p_eq = max(p_eq,0.d0)
             p_eq = min(p_eq,p_litho)
 
             p = p_eq + (p-p_eq)*dexp(krate*dt)
