@@ -68,6 +68,7 @@ c-----------------------------------------------------------------------
          u = uhat
          mbar = mR
       endif
+      u = sw(2)
 
       call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
      &                                          1,drytolerance,gmod)

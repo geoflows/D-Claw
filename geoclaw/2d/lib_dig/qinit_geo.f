@@ -18,13 +18,13 @@ c      # been strored in qinitwork.
       dimension q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
 
-      !note: this is not necessary for debris flows, but initializing
+      ! depth set for sealevel. For debris flows can be used for a lake
       ! q to zero, before reading mqinit files is, so this remains.
       do i=1-mbc,mx+mbc
          x = xlower + (i-0.5d0)*dx
          do j=1-mbc,my+mbc
              y = ylower + (j-0.5d0)*dy
-             q(i,j,1)=dmax1(0.d0,sealevel-aux(i,j,1))
+             q(i,j,1) = max(0.d0,sealevel-aux(i,j,1))
              do m=2,meqn
                q(i,j,m)=0.d0
              enddo

@@ -280,14 +280,14 @@ contains
       hlo = 2.d0*dry_tol
 
       if (h.lt.hlo) then
+         u = 0.d0!hu/h
+         v = 0.d0!hv/h
+         m = m0!hm/m
          h = (h**2 + hlo**2)/(2.d0*hlo)
-         hu = 0.d0
-         hv = 0.d0
-         hm = h*m0
          p  = h*rho_f*grav
-         u = 0.d0
-         v = 0.d0
-         m = m0
+         hu = 0.d0!h*u
+         hv = 0.d0!h*v
+         hm = 0.d0!h*m
          return
       endif
 
@@ -363,7 +363,7 @@ contains
       kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
-      if (p_initialized.gt.0.and.h.gt.0.d0) then
+      if (p_initialized.gt.0.and.h*mu.gt.0.d0) then
          D = (kperm/(h*mu))*(rho_f*g*h - p)
       else
          D = 0.d0

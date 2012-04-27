@@ -12,7 +12,7 @@ c
 
 c     write(*,*) 'Checking for NANs at ichecknan = ',ichecknan
 c     write(*,*) '  maxmx = ',maxmx,'  maxmy = ',maxmy,'  meqn = ',meqn
-      
+
       do i=1-mbc,mx+mbc
         do j=1-mbc,my+mbc
           do m=1,meqn
@@ -30,7 +30,7 @@ c             # true if q(i,j,m) = NAN
         enddo
 c
 c     # uncomment the next line if desired when debugging:
-c     write(*,*) 'No NANs at ichecknan = ',ichecknan,' at t = ',t
+c      write(*,*) 'No NANs at ichecknan = ',ichecknan,' at t = ',t
 
       return
       end

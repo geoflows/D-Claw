@@ -1,5 +1,5 @@
 """
-file: topotools.py 
+file: topotools.py
 
    Provides several useful functions
    for manipulating topography data.
@@ -26,7 +26,7 @@ Contains:
    swapheader
 
 Authors: Dave George and Randy LeVeque
- 
+
 """
 
 import numpy as np
@@ -49,18 +49,18 @@ Rearth = 6367.5e3  # average of polar and equatorial radii
 
 def get_topo(topo_fname, remote_directory, force=None):
     """
-    Download a topo file from the web, provided the file does not 
+    Download a topo file from the web, provided the file does not
     already exist locally.
 
     remote_directory should be a URL.  For GeoClaw data it may be a
     subdirectory of  http://kingkong.amath.washington.edu/topo/
     See that website for a list of archived topo datasets.
-    
+
     If force==False then prompt the user to make sure it's ok to download,
     with option to first get small file of metadata.
 
     If force==None then check for environment variable CLAW_TOPO_DOWNLOAD
-    and if this exists use its value.  This is useful for the script 
+    and if this exists use its value.  This is useful for the script
     python/run_examples.py that runs all examples so it won't stop to prompt.
     """
     import urllib
@@ -130,17 +130,17 @@ def get_topo(topo_fname, remote_directory, force=None):
 
 #==========================================================================
 def topo1writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints):
-    """ 
+    """
     Function topo1writer will write out the topofiles by evaluating the
     function topo on the grid specified by the other parameters.
 
     Assumes topo can be called on arrays X,Y produced by np.meshgrid.
 
-    Output file is of "topotype1," which we use to refer to a file with 
+    Output file is of "topotype1," which we use to refer to a file with
     (x,y,z) values on each line, progressing from upper left corner across
     rows, then down.
     """
- 
+
     fout=open(outfile, 'w')
     dx = (xupper-xlower)/(nxpoints-1)
     dy = (yupper-ylower)/(nypoints-1)
@@ -149,7 +149,7 @@ def topo1writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints):
     y = np.linspace(ylower,yupper,nypoints)
     X,Y = np.meshgrid(x,y)
     Z = topo(X,Y).T
-    
+
 
     for jj in xrange(0,nypoints):
         y = yupper - jj*dy
@@ -157,7 +157,7 @@ def topo1writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints):
             x =  xlower + i*dx
             j = nypoints - 1 - jj
             z = Z[i,j]
-            fout.write("%22.15e  %22.15e  %22.15e\n" % (x,y,z)) 
+            fout.write("%22.15e  %22.15e  %22.15e\n" % (x,y,z))
 
     fout.close
     print "Created file ",outfile
@@ -166,15 +166,15 @@ def topo1writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints):
 #==========================================================================
 def topo2writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints, \
                  nodata_value=-99999):
-    """ 
+    """
     Function topo2writer will write out the topofiles by evaluating the
     function topo on the grid specified by the other parameters.
 
     Assumes topo can be called on arrays X,Y produced by np.meshgrid.
 
-    Output file is of "topotype2," which we use to refer to a file with a 
+    Output file is of "topotype2," which we use to refer to a file with a
     header and one z value of topography per row in the file
-    
+
     Header is of the form:
     # ---------------------------
     # integer   ncols   (= nxpoints)
@@ -186,7 +186,7 @@ def topo2writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints, \
     # -----------------------------
     """
 
- 
+
     # note: for topotype2, dx=dy=cellsize
     dx = (xupper-xlower)/(nxpoints-1)
     dy = (yupper-ylower)/(nypoints-1)
@@ -213,12 +213,12 @@ def topo2writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints, \
     y = np.linspace(ylower,yupper,nypoints)
     X,Y = np.meshgrid(x,y)
     Z = topo(X,Y).T
-    
+
 
     for jj in xrange(0,nrows):
         for i in xrange(0,ncols):
             j = nypoints - 1 - jj
-            fout.write("%22.15e\n" % Z[i,j]) 
+            fout.write("%22.15e\n" % Z[i,j])
 
     fout.close
     print "Created file ",outfile
@@ -229,7 +229,7 @@ def gcdist(x1,y1,x2,y2,Rsphere=Rearth,units='degrees'):
     """
     Compute the great circle distance on the earth between points
     (x1,y1) and (x2,y2), where:
-    x = longitude, y = latitude 
+    x = longitude, y = latitude
     """
     from numpy import pi,sin,cos,arccos,arcsin,sqrt
     if units=='degrees':
@@ -253,7 +253,7 @@ def gcdist(x1,y1,x2,y2,Rsphere=Rearth,units='degrees'):
 
     d = Rsphere * dsigma
     return d
-    
+
 #==========================================================
 def dx_from_gcdist(d,x1,y1,y2,Rsphere=Rearth,units='degrees'):
     """

@@ -83,7 +83,7 @@ c        common  /calloc/   alloc(memsize)
 c      Dynamic memmory
        double precision, pointer, dimension(:) :: alloc
        common /calloc/ alloc, memsize
-       
+
 
 c
 c      ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -161,7 +161,7 @@ c      ::::  common for debugging flags (verbose output)
        common /bugflags/ dprint, eprint, edebug, gprint, nprint, pprint,
      .                   rprint, sprint, tprint, uprint
 
-c 
+c
 c      ::::  common for conservation check
       common /ctstart/ tstart
       common /comconck/ tmass0
