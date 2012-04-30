@@ -61,7 +61,7 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             p_hydro = h*rho_f*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
             p_eq = p_hydro
-     &       - 3.d0*mu*dabs(u)*tanpsi/(zeta*kperm*compress*(1.d0+kappa))
+     &    -3.d0*mu*dabs(vnorm)*tanpsi/(zeta*kperm*compress*(1.d0+kappa))
             p_eq = max(p_eq,0.d0)
             p_eq = min(p_eq,p_litho)
 
@@ -103,7 +103,7 @@ c     &                  sigbed,kperm,compress,pm)
                hv = 0.d0
             endif
 
-            call admissibleq(h,hu,hv,hm,p,u,v,m)
+            !call admissibleq(h,hu,hv,hm,p,u,v,m)
             !call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
 c     &                  sigbed,kperm,compress,pm)
 
