@@ -347,13 +347,14 @@ contains
       rho = rho_s*m + rho_f*(1.d0-m)
       sigbed = max(0.d0,rho*g*h - p)
       sigbedc = (rho-rho_f)*grav*h**2
+      !sigbedc = sigbed
       if (sigbedc.gt.0.d0) then
          !Note: m_eqn = m_crit/(1+sqrt(N))
          !From Boyer et. al.
          !and N = mu*venorm/(h*sigbed)
          !S = mu*abs(vnorm)/(h*sigbed)
          S = mu*dabs(vnorm)/(h*sigbedc)
-         m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(300.d0*mu*dabs(vnorm)))
+         m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(mu*dabs(vnorm)))
       else
          S = 0.d0
          m_eqn=0.d0
