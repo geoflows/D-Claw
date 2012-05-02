@@ -69,6 +69,9 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             !integrate pressure source term
             call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
+            !integrate shear-induced dilatancy
+            p = p - dt*3.d0*dabs(vnorm)*tanpsi/(h*compress*(1.d0+kappa))
+
             zeta = 6.d0/(compress*h*(1.d0+kappa))  +
      &        1.5d0*(rho-rho_f)*rho_f*gmod/(6.d0*rho)
 
@@ -77,7 +80,7 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             p_hydro = h*rho_f*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
             p_eq = p_hydro
-     &    -3.d0*mu*dabs(vnorm)*tanpsi/(zeta*kperm*compress*(1.d0+kappa))
+
             !p_eq = max(p_eq,0.d0)
             !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*dexp(krate*dt)

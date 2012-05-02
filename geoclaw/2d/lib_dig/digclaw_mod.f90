@@ -355,12 +355,13 @@ contains
          !S = mu*abs(vnorm)/(h*sigbed)
          S = mu*dabs(vnorm)/(h*sigbedc)
          m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(mu*dabs(vnorm)))
+         m_eqn = dmax1(m_eqn,0.5*m_crit)
       else
          S = 0.d0
          m_eqn=0.d0
       endif
       tanpsi = c1*(m-m_eqn)
-      tau = max(0.d0,sigbed*tan(phi_bed + atan(tanpsi)))
+      tau = max(0.d0,sigbed*tan(phi_bed) + atan(tanpsi)))
       kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
