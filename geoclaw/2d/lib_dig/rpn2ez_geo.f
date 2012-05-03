@@ -101,7 +101,7 @@ c         endif
          enddo
 
          !skip problem if in a completely dry area
-         if (qr(i-1,1).le.2.d0*drytol.and.ql(i,1).le.2.d0*drytol) then
+         if (qr(i-1,1).le.drytol.and.ql(i,1).le.drytol) then
             go to 30
          endif
 
@@ -139,6 +139,8 @@ c        !set normal direction
          bR = auxl(i,1)
          phi_bedL = auxr(i-1,i_phi)
          phi_bedR = auxl(i,i_phi)
+         phiR = 0.5d0*g*hR**2 + hR*uR**2
+         phiL = 0.5d0*g*hL**2 + hL*uL**2
 
          !test for wall problem vs. inundation problem
          do mw=1,mwaves

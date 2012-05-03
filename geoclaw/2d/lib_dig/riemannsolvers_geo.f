@@ -68,13 +68,13 @@ c-----------------------------------------------------------------------
          u = uhat
          mbar = mR
       endif
-      u = sw(2)
 
       call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
      &                                          1,drytolerance,gmod)
       sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
       sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
       sw(2) = 0.5d0*(sw(3)+sw(1))
+      u = sw(2)
 
       delb=bR-bL
 
@@ -147,7 +147,7 @@ c     !find bounds in case of critical state resonance, or negative states
       R(3,1) = gamma*rho*grav
 
       R(0,2) = kappa-1.d0
-      R(1,2) = uhat*(kappa-1.d0)
+      R(1,2) = sw(2)*(kappa-1.d0)
       R(2,2) = (kappa-1.d0)*sw(2)**2
       R(3,2) = kappa*rho*grav
 
@@ -162,8 +162,7 @@ c     !find bounds in case of critical state resonance, or negative states
       del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
      &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
       del(2) = del(2) + (1.d0-kappa)*(pR-pL)/rho
-      del(3) = -rho*u*grav*gamma*(hR-hL) + rho*grav*gamma*(huR-huL)
-     &         + u*(pR-pL)
+      del(3) = pR - pL
 
 *     !determine the source term
 c      do m=1,4
@@ -195,27 +194,26 @@ c      enddo
       enddo
       call gaussj(A,4,4,beta,1,4,1)
 
-      do m=1,3
-         mp=m
-         if (m.eq.3) mp = 5
-         do mw=1,3
-            fw(mp,mw) = beta(mw)*R(m,mw)
+      do mw=1,3
+         do m=1,2
+            fw(m,mw) = beta(mw)*R(m,mw)
          enddo
+            fw(5,mw)  = sw(mw)*beta(mw)*R(3,mw)
       enddo
 
       !corrector wave
       fw(2,2) = fw(2,2) + beta(0)
 
       !waves and fwaves for delta hum
-      fw(4,1) = beta(1)*mL
-      fw(4,3) = beta(3)*mR
-      fw(4,2) = hmR*uR-hmL*uL - mL*beta(1)- mR*beta(3)-dx*psi(3)
+      fw(4,1) = fw(1,1)*mL
+      fw(4,3) = fw(1,3)*mR
+      fw(4,2) = hmR*uR-hmL*uL - fw(4,1)- fw(4,3)-dx*psi(3)
 
       !waves and fwaves for delta huv
 
-      fw(3,1) = beta(1)*vL
-      fw(3,3) = beta(3)*vR
-      fw(3,2) = hvR*uR - hvL*uL -beta(1)*vL - beta(3)*vR
+      fw(3,1) = fw(1,1)*vL
+      fw(3,3) = fw(1,3)*vR
+      fw(3,2) = hvR*uR - hvL*uL - fw(3,1) - fw(3,3)
 
       return
       end !subroutine riemann_dig2_aug_sswave

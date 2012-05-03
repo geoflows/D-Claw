@@ -24,7 +24,7 @@ c =========================================================
 c
 
 c     # check for NANs in solution:
-c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
+c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
       if(p_initialized.eq.0) return
       gmod=grav
@@ -34,7 +34,6 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
       coeff = coeffmanning
       tol = 1.d-30  !# to prevent divide by zero in gamma
 
-      !Pressure relaxation ---------------------------------------------
 
       do i=1,mx
          do j=1,my
@@ -56,14 +55,16 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             hu = hu*dexp(-(1.d0-m)*mu*dt/h**2)
             hv = hv*dexp(-(1.d0-m)*mu*dt/h**2)
 
+
             if (hu*q(i,j,2).le.0.d0) then
                hu = 0.d0
             endif
             if (hv*q(i,j,3).le.0.d0) then
                hv = 0.d0
             endif
-            vnorm = dsqrt(u**2 + v**2)
+
             call admissibleq(h,hu,hv,hm,p,u,v,m)
+            vnorm = dsqrt(u**2 + v**2)
 
 
             !integrate pressure source term
@@ -75,7 +76,7 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             zeta = 6.d0/(compress*h*(1.d0+kappa))  +
      &        1.5d0*(rho-rho_f)*rho_f*gmod/(6.d0*rho)
 
-            krate=-zeta*kperm/(h*mu)
+            krate=-zeta*kperm/(h*dmax1(mu,1.d-16))
 
             p_hydro = h*rho_f*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
@@ -84,7 +85,6 @@ c     call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             !p_eq = max(p_eq,0.d0)
             !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*dexp(krate*dt)
-
 
             !integrate solid volume source term
             !krate = -rho_f*D/(rho*h)
