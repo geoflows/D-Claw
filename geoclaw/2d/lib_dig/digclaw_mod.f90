@@ -277,7 +277,7 @@ contains
          return
       endif
 
-      hlo = dry_tol
+      hlo = phys_tol
 
       if (h.lt.hlo) then
          u = 0.d0!hu/h
@@ -312,7 +312,7 @@ contains
       pmax = rho*grav*h
       p = min(pmax,p)
       p = max(0.d0,p)
-      plo = rho_f*dry_tol*grav
+      plo = rho_f*dry_tol*grav*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
          p = (p**2 + plo**2)/(2.d0*plo)
@@ -355,10 +355,10 @@ contains
          !S = mu*abs(vnorm)/(h*sigbed)
          S = mu*dabs(vnorm)/(h*sigbedc)
          m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(mu*dabs(vnorm)))
-         m_eqn = dmax1(m_eqn,0.5*m_crit)
+         m_eqn = dmax1(m_eqn,m_crit/(1.d0 + sqrt(2.d0)))
       else
          S = 0.d0
-         m_eqn=0.d0
+         m_eqn= 0.d0
       endif
       tanpsi = c1*(m-m_eqn)
       tau = max(0.d0,sigbed*tan(phi_bed + atan(tanpsi)))

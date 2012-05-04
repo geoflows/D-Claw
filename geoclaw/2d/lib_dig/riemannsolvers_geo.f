@@ -28,18 +28,19 @@ c-----------------------------------------------------------------------
 
 *     !local
       integer m,mw,ks,mp
-      double precision h,u,mbar
+      double precision h,u,v,mbar
       double precision det1,det2,det3,detR
       double precision R(0:3,0:3),A(4,4),del(0:3)
       double precision beta(0:3),betas(4)
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol2
-      double precision hstarHLL,deldelh
+      double precision hstarHLL,deldelh,drytol
       logical sonic,rare1,rare2
 
       veltol2=0.d0
       criticaltol=1.d-6
+      drytol=phys_tol
 
       !determine wave speeds
       sL=uL-dsqrt(gmod*hL) ! 1 wave speed of left state
@@ -55,26 +56,29 @@ c-----------------------------------------------------------------------
       sw(3) = sE2
       sw(2) = 0.5d0*(sw(1)+sw(3))!uhat
 
-      if (hL.ge.drytolerance.and.hR.ge.drytolerance) then
+      if (hL.ge.drytol.and.hR.ge.drytol) then
          h = 0.5d0*(hL + hR)
          u = uhat
+         v = 0.5d0*(vL + vR)
          mbar = 0.5d0*(mL + mR)
-      elseif (hL.ge.drytolerance) then
+      elseif (hL.ge.drytol) then
          h = hL
          u = uhat
+         v = vL
          mbar = mL
       else
          h = hR
          u = uhat
+         v = vR
          mbar = mR
       endif
 
       call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
-     &                                          1,drytolerance,gmod)
+     &                                          1,drytol,gmod)
       sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
       sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
       sw(2) = 0.5d0*(sw(3)+sw(1))
-      u = sw(2)
+      !u = sw(2)
 
       delb=bR-bL
 
@@ -126,14 +130,6 @@ c     !find bounds in case of critical state resonance, or negative states
          deldelh = max(deldelh,hstarHLL*(sE2-sE1)/sE2)
       endif
 
-      !determine del
-      del(0) = hR-hL
-      del(1) = huR - huL
-      del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
-     &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
-      del(2) = del(2) + (1.d0-kappa)*(pR-pL)/rho
-      del(3) = -rho*u*grav*gamma*(hR-hL) + rho*grav*gamma*(huR-huL)
-     &         + u*(pR-pL)
 
 *     !determine R
       R(0,0) = 0.d0
@@ -157,7 +153,7 @@ c     !find bounds in case of critical state resonance, or negative states
       R(3,3) = gamma*rho*grav
 
       !determine del
-      del(0) = hR-hL - deldelh
+      del(0) = hR- hL - deldelh
       del(1) = huR - huL
       del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
      &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
@@ -165,9 +161,6 @@ c     !find bounds in case of critical state resonance, or negative states
       del(3) = pR - pL
 
 *     !determine the source term
-c      do m=1,4
-c            psi(m)=0.d0
-c      enddo
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
       del(1) = del(1) - dx*psi(1)
@@ -213,7 +206,7 @@ c      enddo
 
       fw(3,1) = fw(1,1)*vL
       fw(3,3) = fw(1,3)*vR
-      fw(3,2) = hvR*uR - hvL*uL - fw(3,1) - fw(3,3)
+      fw(3,2) = hvR*uR-hvL*uL -fw(3,1) -fw(3,3) -dx*D*v*(rho-rho_f)/rho
 
       return
       end !subroutine riemann_dig2_aug_sswave
