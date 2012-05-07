@@ -42,20 +42,6 @@ c-----------------------------------------------------------------------
       criticaltol=1.d-6
       drytol=phys_tol
 
-      !determine wave speeds
-      sL=uL-dsqrt(gmod*hL) ! 1 wave speed of left state
-      sR=uR+dsqrt(gmod*hR) ! 2 wave speed of right state
-      uhat=(dsqrt(hL)*uL + dsqrt(hR)*uR)/(dsqrt(hR)+dsqrt(hL)) ! Roe average
-      chat=dsqrt(gmod*0.5d0*(hR+hL)) ! Roe average
-      sRoe1=uhat-chat ! Roe wave speed 1 wave
-      sRoe2=uhat+chat ! Roe wave speed 2 wave
-
-      sE1 = min(sL,sRoe1) ! Eindfeldt speed 1 wave
-      sE2 = max(sR,sRoe2) ! Eindfeldt speed 2 wave
-      sw(1) = sE1
-      sw(3) = sE2
-      sw(2) = 0.5d0*(sw(1)+sw(3))!uhat
-
       if (hL.ge.drytol.and.hR.ge.drytol) then
          h = 0.5d0*(hL + hR)
          u = uhat
@@ -73,11 +59,27 @@ c-----------------------------------------------------------------------
          mbar = mR
       endif
 
+      !determine wave speeds
+      sL=uL-dsqrt(gmod*hL) ! 1 wave speed of left state
+      sR=uR+dsqrt(gmod*hR) ! 2 wave speed of right state
+      uhat=(dsqrt(hL)*uL + dsqrt(hR)*uR)/(dsqrt(hR)+dsqrt(hL)) ! Roe average
+      chat=dsqrt(gmod*0.5d0*(hR+hL)) ! Roe average
+      sRoe1=uhat-chat ! Roe wave speed 1 wave
+      sRoe2=uhat+chat ! Roe wave speed 2 wave
+
+      sE1 = min(sL,sRoe1) ! Eindfeldt speed 1 wave
+      sE2 = max(sR,sRoe2) ! Eindfeldt speed 2 wave
+      sw(1) = sE1
+      sw(3) = sE2
+      !sw(2) = 0.5d0*(sw(1)+sw(3))!uhat
+
+
       call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
      &                                          1,drytol,gmod)
       sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
       sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
-      sw(2) = 0.5d0*(sw(3)+sw(1))
+      !sw(2) = 0.5d0*(sw(3)+sw(1))
+      sw(2) = uhat
       !u = sw(2)
 
       delb=bR-bL
@@ -280,7 +282,8 @@ c-----------------------------------------------------------------------
 
       sw(1) = sE1
       sw(3) = sE2
-      sw(2) = 0.5d0*(sw(1)+sw(3))!uhat
+      !sw(2) = 0.5d0*(sw(1)+sw(3))!uhat
+      sw(2) = uhat
 
       !determine Riemann speeds
       heL = max(hL + bL - max(bL,bR),0.d0)
