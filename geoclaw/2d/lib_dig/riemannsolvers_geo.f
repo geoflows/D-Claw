@@ -142,17 +142,17 @@ c     !find bounds in case of critical state resonance, or negative states
       R(0,1) = 1.d0
       R(1,1) = sw(1)
       R(2,1) = sw(1)**2
-      R(3,1) = gamma*rho*grav
+      R(3,1) = gamma*rho*grav*h
 
       R(0,2) = kappa-1.d0
       R(1,2) = sw(2)*(kappa-1.d0)
       R(2,2) = (kappa-1.d0)*sw(2)**2
-      R(3,2) = kappa*rho*grav
+      R(3,2) = kappa*rho*grav*h
 
       R(0,3) = 1.d0
       R(1,3) = sw(3)
       R(2,3) = sw(3)**2
-      R(3,3) = gamma*rho*grav
+      R(3,3) = gamma*rho*grav*h
 
       !determine del
       del(0) = hR- hL - deldelh
