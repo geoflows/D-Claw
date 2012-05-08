@@ -214,7 +214,7 @@ c=================begin digclaw-auxset =================================
          endif
 
          gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
-         eps = gamma + (1.d0-gamma)*kappa
+         eps = kappa + (1.d0-kappa)*gamma
          gmod = grav*eps
 c================end digclaw-aux========================================
 

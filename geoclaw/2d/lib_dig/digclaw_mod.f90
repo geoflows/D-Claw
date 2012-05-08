@@ -371,14 +371,14 @@ contains
          D = 0.d0
       endif
       !kappa: earth pressure coefficient
-      !if (phi_int.eq.phi_bed) then
-      !   sqrtarg = 0.d0
-      !else
-      !   sqrtarg = 1.d0-(cos(phi_int)**2)*(1.d0 + tan(phi_bed)**2)
-      !endif
+      if (phi_int.eq.phi_bed) then
+         sqrtarg = 0.d0
+      else
+         sqrtarg = 1.d0-(cos(phi_int)**2)*(1.d0 + tan(phi_bed)**2)
+      endif
 
-      !kappa = (2.d0 - pm*2.d0*sqrt(sqrtarg))/(cos(phi_int)**2)
-      !kappa = kappa - 1.d0
+      kappa = (2.d0 - pm*2.d0*sqrt(sqrtarg))/(cos(phi_int)**2)
+      kappa = kappa - 1.d0
       kappa = 1.d0
 
    end subroutine auxeval
