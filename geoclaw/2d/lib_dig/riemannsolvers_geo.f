@@ -165,8 +165,8 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
-      del(1) = del(1) - dx*psi(1)
-      del(3) = del(3) - dx*psi(4)
+      del(1) = del(1) - 0.5d0*psi(1)*dx
+      del(3) = del(3) - 0.5d0*psi(4)*dx
       if (dabs(u).gt.veltol2) then
          del(2) = del(2) -source2dx - dx*psi(2)
       else
@@ -202,13 +202,13 @@ c     !find bounds in case of critical state resonance, or negative states
       !waves and fwaves for delta hum
       fw(4,1) = fw(1,1)*mL
       fw(4,3) = fw(1,3)*mR
-      fw(4,2) = hmR*uR-hmL*uL - fw(4,1)- fw(4,3)-dx*psi(3)
+      fw(4,2) = hmR*uR-hmL*uL - fw(4,1)- fw(4,3)-0.5d0*psi(3)*dx
 
       !waves and fwaves for delta huv
 
       fw(3,1) = fw(1,1)*vL
       fw(3,3) = fw(1,3)*vR
-      fw(3,2) = hvR*uR-hvL*uL -fw(3,1) -fw(3,3) -dx*D*v*(rho-rho_f)/rho
+      fw(3,2) = hvR*uR-hvL*uL -fw(3,1) -fw(3,3)
 
       return
       end !subroutine riemann_dig2_aug_sswave
