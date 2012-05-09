@@ -4,10 +4,21 @@ c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,gmod,dx,veltol,sw,fw,w)
+     &         gamma,gmod,dx,sw,fw,w)
 
+      !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
       ! this is for 2d version
+      !
+      !           for information contact
+      !           David George <dgeorge@uw.edu
+      !
+      ! This solver is an extension of that described in:
+      ! J. Comput. Phys. (6): 3089-3113, March 2008
+      ! Augmented Riemann Solvers for the Shallow Equations,
+      !                   with Steady States and Inundation
+      ! David L George
+      !-----------------------------------------------------------------
 
       use geoclaw_module
       use digclaw_module
@@ -20,7 +31,7 @@ c-----------------------------------------------------------------------
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
       double precision kappa,rho,kperm,compress,tanpsi,D,tau
-      double precision gamma,gmod,dx,veltol
+      double precision gamma,gmod,dx
 
       double precision fw(meqn,mwaves),w(meqn,mwaves)
       double precision sw(mwaves)
@@ -177,6 +188,7 @@ c     !find bounds in case of critical state resonance, or negative states
             del(2)=0.d0
          endif
       endif
+
 
 *     !R beta = del
 *     !gauss routine replaces del with beta and R with it's inverse
