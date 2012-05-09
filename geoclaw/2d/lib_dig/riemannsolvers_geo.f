@@ -171,7 +171,7 @@ c     !find bounds in case of critical state resonance, or negative states
       del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
      &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
       del(2) = del(2) + (1.d0-kappa)*h*(pR-pL)/rho
-      del(3) = pR - pL
+      del(3) = pR - pL - gamma*rho*grav*deldelh
 
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)

@@ -276,7 +276,7 @@ c                   adjust time steps for this and finer levels
                  write(6,*)"   new ntogo dt ",ntogo(level),possk(level)
                     go to 106
                  endif
-                 if (ntogo(level) .gt. 1000) then
+                 if (ntogo(level) .gt. 10000) then
                      write(6,*) "**** Too many dt reductions ****"
                      write(6,*) "**** Stopping calculation   ****"
                      write(6,*) "Writing checkpoint file ..."
