@@ -52,7 +52,7 @@ c
       double precision lamL(3),lamR(3),beta(3)
       logical entropy(3)
       logical rare1,rare2,wallprob,drystate
-      logical entropycorr1,entropycorr2
+      !logical entropycorr1,entropycorr2
 
       double precision drytol,g,gmod,veltol
       double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
@@ -73,8 +73,8 @@ c
       drytol=phys_tol
 
       !set to true to use an entropy correction
-      entropycorr1 = .false.  !Harten (bound nonlinear waves away from s=0)
-      entropycorr2 = .false. !Harten-Hyman (split expansion shocks) not recommended
+      !entropycorr1 = .false.  !Harten (bound nonlinear waves away from s=0)
+      !entropycorr2 = .false. !Harten-Hyman (split expansion shocks) not recommended
 
       !near-zero velocity tolerance
       veltol = 1.d-3
@@ -234,27 +234,14 @@ c         endif
          call riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,gmod,dx,veltol,sw,fw,wave)
+     &         gamma,gmod,dx,sw,fw,wave)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
 c     &        huR,hvL,hvR,bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,
 c     &                                    drytolerance,gmod,sw,fw)
 
-         !----Harten entropy fix for near zero-speed nonlinear waves
-         ! Note: this might change near zero-speed shocks as well
-         ! smoothed absolute value function between veltol and 2*veltol
-c         if (entropycorr1) then
-c            if (abs(sw(1)).le.2.d0*veltol) then
-c              sw(1) = dsign((sw(1)**2 + (2.d0*veltol)**2)/(4.d0*veltol)
-c     &                     ,sw(1))
-c            endif
 
-c            if (abs(sw(3)).le.2.d0*veltol) then
-c              sw(3) = dsign((sw(3)**2 + (2.d0*veltol)**2)/(4.d0*veltol)
-c     &                     ,sw(3))
-c            endif
-c         endif
 
          !--------------------------------------------------------------
 
@@ -358,8 +345,8 @@ c============= compute fluctuations=============================================
                   apdq(i,m) = apdq(i,m) +
      &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
                else
-                  !amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
-                  !apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
+c                  amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
+c                  apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
                endif
             enddo
          enddo
