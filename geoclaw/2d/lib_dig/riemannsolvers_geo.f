@@ -142,24 +142,24 @@ c     !find bounds in case of critical state resonance, or negative states
       R(0,1) = 1.d0
       R(1,1) = sw(1)
       R(2,1) = sw(1)**2
-      R(3,1) = gamma*rho*grav*h
+      R(3,1) = gamma*rho*grav
 
       R(0,2) = kappa-1.d0
       R(1,2) = sw(2)*(kappa-1.d0)
       R(2,2) = (kappa-1.d0)*sw(2)**2
-      R(3,2) = kappa*rho*grav*h
+      R(3,2) = kappa*rho*grav
 
       R(0,3) = 1.d0
       R(1,3) = sw(3)
       R(2,3) = sw(3)**2
-      R(3,3) = gamma*rho*grav*h
+      R(3,3) = gamma*rho*grav
 
       !determine del
       del(0) = hR- hL - deldelh
       del(1) = huR - huL
       del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
      &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
-      del(2) = del(2) + (1.d0-kappa)*(pR-pL)/rho
+      del(2) = del(2) + (1.d0-kappa)*h*(pR-pL)/rho
       del(3) = pR - pL
 
 *     !determine the source term
@@ -217,7 +217,7 @@ c-----------------------------------------------------------------------
       subroutine riemann_dig2_sswave(meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,gmod,dx,veltol,sw,fw,w)
+     &         gamma,gmod,dx,sw,fw,w)
 
       ! solve the dig Riemann problem for debris flow eqn
       ! this is for 2d version
@@ -233,7 +233,7 @@ c-----------------------------------------------------------------------
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
       double precision kappa,rho,kperm,compress,tanpsi,D,tau
-      double precision gamma,gmod,dx,veltol
+      double precision gamma,gmod,dx
 
       double precision fw(meqn,mwaves),w(meqn,mwaves)
       double precision sw(mwaves)
@@ -297,8 +297,6 @@ c-----------------------------------------------------------------------
 
       sw(1) = min(sw(1),seL)
       sw(3) = max(sw(3),seR)
-      sw(2) = 0.5d0*(sw(3)+sw(1))
-
 
       !determine delq
       delq(1) = hR-hL

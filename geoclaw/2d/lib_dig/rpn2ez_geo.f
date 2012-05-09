@@ -234,7 +234,7 @@ c         endif
          call riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,gmod,dx,veltol,sw,fw,wave)
+     &         gamma,gmod,dx,sw,fw,wave)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
