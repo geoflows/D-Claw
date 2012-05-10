@@ -185,7 +185,9 @@ c     !find bounds in case of critical state resonance, or negative states
             del(2)=dsign(dabs(dabs(del(2)-source2dx)
      &                   -dabs(dx*tau/rho)),del(2)-source2dx)
          else
+            del(0)=0.d0
             del(2)=0.d0
+            del(3)=0.d0
          endif
       endif
 
