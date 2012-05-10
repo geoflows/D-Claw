@@ -24,7 +24,7 @@ c      # been strored in qinitwork.
          x = xlower + (i-0.5d0)*dx
          do j=1-mbc,my+mbc
              y = ylower + (j-0.5d0)*dy
-             q(i,j,1) = max(0.d0,sealevel-aux(i,j,1))
+             q(i,j,1) = dmax1(0.d0,sealevel-aux(i,j,1))
              do m=2,meqn
                q(i,j,m)=0.d0
              enddo
@@ -39,13 +39,13 @@ c
          if ((xlower.le.xhiqinit(mf).and.xhigher.ge.xlowqinit(mf)).and.
      &      (ylower.le.yhiqinit(mf).and.yhigher.ge.ylowqinit(mf))) then
 
-            xintlow = max(xlower,xlowqinit(mf))
-            xinthi  = min(xhigher,xhiqinit(mf))
+            xintlow = dmax1(xlower,xlowqinit(mf))
+            xinthi  = dmin1(xhigher,xhiqinit(mf))
             istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
             iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
 
-            yintlow = max(ylower,ylowqinit(mf))
-            yinthi  = min(yhigher,yhiqinit(mf))
+            yintlow = dmax1(ylower,ylowqinit(mf))
+            yinthi  = dmin1(yhigher,yhiqinit(mf))
             jstart  = int(0.5 + (yintlow-ylower)/dy)
             jend    = max(my,int(1.0 + (yinthi-ylower)/dy))
 
@@ -62,12 +62,12 @@ c
      &               .and.yjp.gt.ylowqinit(mf)
      &               .and.yjm.lt.yhiqinit(mf)) then
 
-                     xipc=min(xip,xhiqinit(mf))
-                     ximc=max(xim,xlowqinit(mf))
+                     xipc=dmin1(xip,xhiqinit(mf))
+                     ximc=dmax1(xim,xlowqinit(mf))
                      xc=0.5d0*(xipc+ximc)
 
-                     yjpc=min(yjp,yhiqinit(mf))
-                     yjmc=max(yjm,ylowqinit(mf))
+                     yjpc=dmin1(yjp,yhiqinit(mf))
+                     yjmc=dmax1(yjm,ylowqinit(mf))
                      yc=0.5d0*(yjmc+yjpc)
 
                      dq = topointegral(ximc,xc,xipc,yjmc,yc,yjpc,
@@ -81,7 +81,7 @@ c
                      if (iqinit(mf).le.meqn) then
                         q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
                      else
-                        q(i,j,1) = max(dq-aux(i,j,1),0.d0)
+                        q(i,j,1) = dmax1(dq-aux(i,j,1),0.d0)
                      endif
 c
                   endif

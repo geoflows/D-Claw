@@ -60,6 +60,8 @@ c
       double precision hstar,hstartest,s1m,s2m,bL,bR
       double precision dxdc,dx,pm
       double precision sigbed,SN,rho,kappa,kperm,compress,tau,D,tanpsi
+      double precision rhoL,kpermL,compressL,tauL,DL,tanpsiL
+      double precision rhoR,kpermR,compressR,tauR,DR,tanpsiR
       double precision gamma,eps
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
       double precision phiL,phiR,sE1,sE2
@@ -152,7 +154,7 @@ c        !set normal direction
             drystate=.true.
             call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,
      &                                 rare1,rare2,1,drytol,g)
-            hstartest=max(hL,hstar)
+            hstartest=dmax1(hL,hstar)
             if (hstartest+bL.lt.bR) then !right state should become ghost values that mirror left for wall problem
 c                bR=hstartest+bL
                wall(2)=0.d0
@@ -174,7 +176,7 @@ c                bR=hstartest+bL
             drystate=.true.
             call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,
      &                                  rare1,rare2,1,drytol,g)
-            hstartest=max(hR,hstar)
+            hstartest=dmax1(hR,hstar)
             if (hstartest+bR.lt.bL) then  !left state should become ghost values that mirror right
 c               bL=hstartest+bR
                wall(1)=0.d0
@@ -200,9 +202,15 @@ c=================begin digclaw-auxset =================================
 
          if (hL.gt.drytol.and.hR.gt.drytol) then
             !this is a completely wet 'normal' Riemann problem
-            call auxeval(0.5d0*(hL+hR),0.5d0*(uL+uR),0.5d0*(vL+vR),
-     &         0.5d0*(mL+mR),0.5d0*(pL+pR),0.5d0*(phi_bedL+phi_bedR),
-     &         kappa,SN,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            call auxeval(hR,uR,vR,mR,pR,phi_bedR,
+     &        kappa,SN,rhoR,tanpsi,DR,tauR,sigbed,kpermR,compressR,pm)
+            call auxeval(hL,uL,vL,mL,pL,phi_bedL,
+     &        kappa,SN,rhoL,tanpsi,DL,tauL,sigbed,kpermL,compressL,pm)
+            D = 0.5d0*(DL + DR)
+            compress = 0.5d0*(compressL + compressR)
+            kperm = 0.5d0*(kpermR + kpermL)
+            tau = 0.5d0*(tauL + tauR)
+            rho = 0.5d0*(rhoR + rhoL)
          elseif (hR.gt.drytol) then
             !inundation problem
             call auxeval(hR,uR,vR,mR,pR,phi_bedR,

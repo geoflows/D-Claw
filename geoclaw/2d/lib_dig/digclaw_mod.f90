@@ -294,29 +294,29 @@ contains
       u = hu/h
       v = hv/h
       m = hm/h
-      m = min(m,1.d0)
-      m = max(m,0.d0)
 
       mlo = 1.d-3
       mhi = 1.d0 - mlo
 
       if (m.le.mlo) then
+         m = dmax1(m,0.d0)
          m = (m**2 + mlo**2)/(2.d0*mlo)
          hm = h*m
       elseif (m.ge.mhi) then
+         m = dmin1(m,1.d0)
          m = 1.d0 - ((1.d0-mhi)**2 + (1.d0-m)**2)/(2.d0*(1.d0-mhi))
          hm = h*m
       endif
 
       rho = (rho_s*m + (1.d0-m)*rho_f)
       pmax = rho*grav*h
-      p = min(pmax,p)
-      p = max(0.d0,p)
       plo = rho_f*dry_tol*grav*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
+         p = dmax1(0.d0,p)
          p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
+         p = dmin1(pmax,p)
          p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
       endif
 
@@ -345,7 +345,7 @@ contains
       g=grav
       vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_f*(1.d0-m)
-      sigbed = max(0.d0,rho*g*h - p)
+      sigbed = dmax1(0.d0,rho*g*h - p)
       sigbedc = (rho-rho_f)*grav*h**2
       !sigbedc = sigbed
       if (sigbedc.gt.0.d0) then
@@ -355,29 +355,30 @@ contains
          !S = mu*abs(vnorm)/(h*sigbed)
          S = mu*dabs(vnorm)/(h*sigbedc)
          m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(mu*dabs(vnorm)))
-         m_eqn = dmax1(m_eqn,m_crit/(1.d0 + sqrt(2.d0)))
+         m_eqn = dmax1(m_eqn,m_crit/(1.d0 + dsqrt(2.d0)))
       else
          S = 0.d0
          m_eqn= 0.d0
       endif
       tanpsi = c1*(m-m_eqn)
-      tau = max(0.d0,sigbed*tan(phi_bed + atan(tanpsi)))
+      tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
       kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
       if (p_initialized.gt.0.and.h*mu.gt.0.d0) then
-         D = (kperm/(h*mu))*(rho_f*g*h - p)
+         D = (kperm/(h*mu))*(rho_f*grav*h - p)
       else
          D = 0.d0
       endif
+
       !kappa: earth pressure coefficient
       if (phi_int.eq.phi_bed) then
          sqrtarg = 0.d0
       else
-         sqrtarg = 1.d0-(cos(phi_int)**2)*(1.d0 + tan(phi_bed)**2)
+         sqrtarg = 1.d0-(dcos(phi_int)**2)*(1.d0 + dtan(phi_bed)**2)
       endif
 
-      kappa = (2.d0 - pm*2.d0*sqrt(sqrtarg))/(cos(phi_int)**2)
+      kappa = (2.d0 - pm*2.d0*dsqrt(sqrtarg))/(dcos(phi_int)**2)
       kappa = kappa - 1.d0
       kappa = 1.d0
 
