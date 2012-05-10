@@ -41,17 +41,21 @@ c-----------------------------------------------------------------------
       integer m,mw,ks,mp
       double precision h,u,v,mbar
       double precision det1,det2,det3,detR
-      double precision R(0:3,0:3),A(4,4),del(0:3)
-      double precision beta(0:3),betas(4)
+      double precision R(0:4,0:4),A(5,5),del(0:4)
+      double precision beta(0:4),betas(4)
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
-      double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol2
+      double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
       double precision hstarHLL,deldelh,drytol
       logical sonic,rare1,rare2
+      logical entropycorr1
 
+      veltol1=1.d-6
       veltol2=0.d0
       criticaltol=1.d-6
       drytol=phys_tol
+
+      entropycorr1 = .false.
 
       if (hL.ge.drytol.and.hR.ge.drytol) then
          h = 0.5d0*(hL + hR)
@@ -91,7 +95,18 @@ c-----------------------------------------------------------------------
       sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
       !sw(2) = 0.5d0*(sw(3)+sw(1))
       sw(2) = uhat
-      !u = sw(2)
+
+      !----Harten entropy fix for near zero-speed nonlinear waves
+      ! Note: this might change near zero-speed shocks as well
+      ! smoothed absolute value function between veltol and 2*veltol
+      if (entropycorr1) then
+         do mw=1,mwaves
+            if (dabs(sw(mw)).le.2.d0*veltol1) then
+              sw(mw) = dsign((sw(mw)**2 + (2.d0*veltol1)**2)/
+     &            (4.d0*veltol1),sw(mw))
+            endif
+         enddo
+      endif
 
       delb=bR-bL
 
@@ -149,21 +164,32 @@ c     !find bounds in case of critical state resonance, or negative states
       R(1,0) = 0.d0
       R(2,0) = 1.d0
       R(3,0) = 0.d0
+      R(4,0) = 0.d0
 
       R(0,1) = 1.d0
       R(1,1) = sw(1)
       R(2,1) = sw(1)**2
       R(3,1) = gamma*rho*grav
+      R(4,1) = gamma*rho*grav*sw(1)
+
 
       R(0,2) = kappa-1.d0
       R(1,2) = sw(2)*(kappa-1.d0)
       R(2,2) = (kappa-1.d0)*sw(2)**2
       R(3,2) = kappa*rho*grav
+      R(4,2) = kappa*rho*grav*sw(2)
 
       R(0,3) = 1.d0
       R(1,3) = sw(3)
       R(2,3) = sw(3)**2
       R(3,3) = gamma*rho*grav
+      R(4,3) = gamma*rho*grav*sw(3)
+
+      R(0,4) = 0.d0
+      R(1,4) = 0.d0
+      R(2,4) = 0.d0
+      R(3,4) = 0.d0
+      R(4,4) = 1.d0
 
       !determine del
       del(0) = hR- hL - deldelh
@@ -172,12 +198,16 @@ c     !find bounds in case of critical state resonance, or negative states
      &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
       del(2) = del(2) + (1.d0-kappa)*h*(pR-pL)/rho
       del(3) = pR - pL - gamma*rho*grav*deldelh
+      del(4) = -gamma*rho*grav*u*(hR-hL) + gamma*rho*grav*del(1)
+     &         + u*(pR-pL)
+
 
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
       del(1) = del(1) - 0.5d0*psi(1)*dx
       del(3) = del(3) - 0.5d0*psi(4)*dx
+
       if (dabs(u).gt.veltol2) then
          del(2) = del(2) -source2dx - dx*psi(2)
       else
@@ -190,39 +220,46 @@ c     !find bounds in case of critical state resonance, or negative states
             del(3)=0.d0
          endif
       endif
+      del(1) = del(1) - 0.5d0*dx*psi(1)
+      del(4) = del(4) - 0.5d0*dx*psi(4)
 
 
 *     !R beta = del
 *     !gauss routine replaces del with beta and R with it's inverse
       !want to keep R, so replacing with A
-      do mw=0,3
+      do mw=0,4
          beta(mw) = del(mw)
-         do m=0,4
+         do m=0,5
             A(m+1,mw+1)=R(m,mw)
          enddo
       enddo
-      call gaussj(A,4,4,beta,1,4,1)
+      call gaussj(A,5,5,beta,1,5,1)
 
       do mw=1,3
          do m=1,2
             fw(m,mw) = beta(mw)*R(m,mw)
          enddo
-            fw(5,mw)  = sw(mw)*beta(mw)*R(3,mw)
+            !fw(5,mw)  = sw(mw)*beta(mw)*R(3,mw)
+            fw(5,mw)  = beta(mw)*R(4,mw)
       enddo
 
       !corrector wave
       fw(2,2) = fw(2,2) + beta(0)
+      fw(5,2) = fw(5,2) + beta(4)
 
       !waves and fwaves for delta hum
       fw(4,1) = fw(1,1)*mL
       fw(4,3) = fw(1,3)*mR
       fw(4,2) = hmR*uR-hmL*uL - fw(4,1)- fw(4,3)-0.5d0*psi(3)*dx
 
+
+
       !waves and fwaves for delta huv
 
       fw(3,1) = fw(1,1)*vL
       fw(3,3) = fw(1,3)*vR
       fw(3,2) = hvR*uR-hvL*uL -fw(3,1) -fw(3,3)
+
 
       return
       end !subroutine riemann_dig2_aug_sswave
