@@ -265,6 +265,235 @@ c     !find bounds in case of critical state resonance, or negative states
       end !subroutine riemann_dig2_aug_sswave
 
 c-----------------------------------------------------------------------
+
+c-----------------------------------------------------------------------
+      subroutine riemann_dig2_aug_sswave_p(meqn,mwaves,hL,hR,huL,huR,
+     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
+     &         kappa,rho,kperm,compress,tanpsi,D,tau,
+     &         gamma,gmod,dx,sw,fw,w)
+
+      !-----------------------------------------------------------------
+      ! solve the dig Riemann problem for debris flow eqn
+      ! this is for 2d version
+      !
+      !           for information contact
+      !           David George <dgeorge@uw.edu
+      !
+      ! This solver is an extension of that described in:
+      ! J. Comput. Phys. (6): 3089-3113, March 2008
+      ! Augmented Riemann Solvers for the Shallow Equations,
+      !                   with Steady States and Inundation
+      ! David L George
+      !-----------------------------------------------------------------
+
+      use geoclaw_module
+      use digclaw_module
+
+      implicit none
+
+*     !i/o
+      integer meqn,mwaves
+
+      double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
+      double precision bL,bR,uL,uR,vL,vR,mL,mR
+      double precision kappa,rho,kperm,compress,tanpsi,D,tau
+      double precision gamma,gmod,dx
+
+      double precision fw(meqn,mwaves),w(meqn,mwaves)
+      double precision sw(mwaves)
+      double precision psi(4)
+
+*     !local
+      integer m,mw,ks,mp
+      double precision h,u,v,mbar
+      double precision det1,det2,det3,detR
+      double precision R(0:3,0:3),A(4,4),del(0:3)
+      double precision beta(0:3),betas(4)
+      double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
+      double precision delb,s1m,s2m,hm,heL,heR,criticaltol
+      double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol2
+      double precision hstarHLL,deldelh,drytol
+      logical sonic,rare1,rare2
+
+      veltol2=0.d0
+      criticaltol=1.d-6
+      drytol=phys_tol
+
+      if (hL.ge.drytol.and.hR.ge.drytol) then
+         h = 0.5d0*(hL + hR)
+         u = uhat
+         v = 0.5d0*(vL + vR)
+         mbar = 0.5d0*(mL + mR)
+      elseif (hL.ge.drytol) then
+         h = hL
+         u = uhat
+         v = vL
+         mbar = mL
+      else
+         h = hR
+         u = uhat
+         v = vR
+         mbar = mR
+      endif
+
+      !determine wave speeds
+      sL=uL-dsqrt(gmod*hL) ! 1 wave speed of left state
+      sR=uR+dsqrt(gmod*hR) ! 2 wave speed of right state
+      uhat=(dsqrt(hL)*uL + dsqrt(hR)*uR)/(dsqrt(hR)+dsqrt(hL)) ! Roe average
+      chat=dsqrt(gmod*0.5d0*(hR+hL)) ! Roe average
+      sRoe1=uhat-chat ! Roe wave speed 1 wave
+      sRoe2=uhat+chat ! Roe wave speed 2 wave
+
+      sE1 = min(sL,sRoe1) ! Eindfeldt speed 1 wave
+      sE2 = max(sR,sRoe2) ! Eindfeldt speed 2 wave
+      sw(1) = sE1
+      sw(3) = sE2
+      !sw(2) = 0.5d0*(sw(1)+sw(3))!uhat
+
+
+      call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
+     &                                          1,drytol,gmod)
+      sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
+      sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
+      !sw(2) = 0.5d0*(sw(3)+sw(1))
+      sw(2) = uhat
+      !u = sw(2)
+
+      delb=bR-bL
+
+      !determine ss-wave
+      hbar =  0.5d0*(hL+hR)
+      s1s2bar = 0.25d0*(uL+uR)**2- gmod*hbar
+      s1s2tilde= max(0.d0,uL*uR) - gmod*hbar
+
+c     !find if sonic problem
+      sonic=.false.
+      if (dabs(s1s2bar).le.criticaltol) sonic=.true.
+      if (s1s2bar*s1s2tilde.le.criticaltol) sonic=.true.
+      if (s1s2bar*sE1*sE2.le.criticaltol) sonic = .true.
+      if (min(dabs(sE1),dabs(sE2)).lt.criticaltol) sonic=.true.
+      if (sE1.lt.0.d0.and.s1m.gt.0.d0) sonic = .true.
+      if (sE2.gt.0.d0.and.s2m.lt.0.d0) sonic = .true.
+      if ((uL+dsqrt(gmod*hL))*(uR+dsqrt(gmod*hR)).lt.0.d0) sonic=.true.
+      if ((uL-dsqrt(gmod*hL))*(uR-dsqrt(gmod*hR)).lt.0.d0) sonic=.true.
+
+      if (sonic) then
+         source2dx = -grav*hbar*delb
+      else
+         source2dx = -delb*grav*hbar*s1s2tilde/s1s2bar
+      endif
+
+      source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
+      source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
+      if (dabs(u).le.veltol2) then
+         source2dx=-h*grav*delb
+      endif
+
+c     !find bounds in case of critical state resonance, or negative states
+c     !find jump in h, deldelh
+      hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
+      if (sonic) then
+         deldelh =  -delb
+      else
+         deldelh = delb*gmod*hbar/s1s2bar
+      endif
+c     !find bounds in case of critical state resonance, or negative states
+      if (sE1.lt.-criticaltol.and.sE2.gt.criticaltol) then
+         deldelh = min(deldelh,hstarHLL*(sE2-sE1)/sE2)
+         deldelh = max(deldelh,hstarHLL*(sE2-sE1)/sE1)
+      elseif (sE1.ge.criticaltol) then
+         deldelh = min(deldelh,hstarHLL*(sE2-sE1)/sE1)
+         deldelh = max(deldelh,-hL)
+      elseif (sE2.le.-criticaltol) then
+         deldelh = min(deldelh,hR)
+         deldelh = max(deldelh,hstarHLL*(sE2-sE1)/sE2)
+      endif
+
+
+*     !determine R
+      R(0,0) = 0.d0
+      R(1,0) = 0.d0
+      R(2,0) = 1.d0
+      R(3,0) = 0.d0
+
+      R(0,1) = 1.d0
+      R(1,1) = sw(1)
+      R(2,1) = sw(1)**2
+      R(3,1) = gamma*rho*grav
+
+      R(0,2) = kappa-1.d0
+      R(1,2) = sw(2)*(kappa-1.d0)
+      R(2,2) = (kappa-1.d0)*sw(2)**2
+      R(3,2) = kappa*rho*grav
+
+      R(0,3) = 1.d0
+      R(1,3) = sw(3)
+      R(2,3) = sw(3)**2
+      R(3,3) = gamma*rho*grav
+
+      !determine del
+      del(0) = hR- hL - deldelh
+      del(1) = huR - huL
+      del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
+     &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
+      del(2) = del(2) + (1.d0-kappa)*h*(pR-pL)/rho
+      del(3) = pR - pL - gamma*rho*grav*deldelh
+
+*     !determine the source term
+      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
+
+      del(1) = del(1) - 0.5d0*psi(1)*dx
+      del(3) = del(3) - 0.5d0*psi(4)*dx
+      if (dabs(u).gt.veltol2) then
+         del(2) = del(2) -source2dx - dx*psi(2)
+      else
+         if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
+            del(2)=dsign(dabs(dabs(del(2)-source2dx)
+     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
+         else
+            del(0)=0.d0
+            del(2)=0.d0
+            del(3)=0.d0
+         endif
+      endif
+
+
+*     !R beta = del
+*     !gauss routine replaces del with beta and R with it's inverse
+      !want to keep R, so replacing with A
+      do mw=0,3
+         beta(mw) = del(mw)
+         do m=0,4
+            A(m+1,mw+1)=R(m,mw)
+         enddo
+      enddo
+      call gaussj(A,4,4,beta,1,4,1)
+
+      do mw=1,3
+         do m=1,2
+            fw(m,mw) = beta(mw)*R(m,mw)
+         enddo
+            fw(5,mw)  = sw(mw)*beta(mw)*R(3,mw)
+      enddo
+
+      !corrector wave
+      fw(2,2) = fw(2,2) + beta(0)
+
+      !waves and fwaves for delta hum
+      fw(4,1) = fw(1,1)*mL
+      fw(4,3) = fw(1,3)*mR
+      fw(4,2) = hmR*uR-hmL*uL - fw(4,1)- fw(4,3)-0.5d0*psi(3)*dx
+
+      !waves and fwaves for delta huv
+
+      fw(3,1) = fw(1,1)*vL
+      fw(3,3) = fw(1,3)*vR
+      fw(3,2) = hvR*uR-hvL*uL -fw(3,1) -fw(3,3)
+
+      return
+      end !subroutine riemann_dig2_aug_sswave_p
+
+
       subroutine riemann_dig2_sswave(meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
