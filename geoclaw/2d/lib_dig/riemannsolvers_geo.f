@@ -185,7 +185,7 @@ c     !find bounds in case of critical state resonance, or negative states
       del(2) = hR*uR**2 + 0.5d0*kappa*grav*hR**2 -
      &      (hL*uL**2 + 0.5d0*kappa*grav*hL**2)
       del(2) = del(2) + (1.d0-kappa)*h*(pR-pL)/rho
-      del(3) = pR - pL- gamma*rho*grav*deldelh
+      del(3) = pR - pL - gamma*rho*grav*deldelh
       del(4) = -gamma*rho*grav*u*(hR-hL) + gamma*rho*grav*del(1)
      &         + u*(pR-pL)
 
@@ -199,7 +199,9 @@ c     !find bounds in case of critical state resonance, or negative states
             del(2)=dsign(dabs(dabs(del(2)-source2dx)
      &                   -dabs(dx*tau/rho)),del(2)-source2dx)
          else
+            del(0)=0.d0
             del(2)=0.d0
+            del(3)=0.d0
          endif
       endif
       del(1) = del(1) - 0.5d0*dx*psi(1)
