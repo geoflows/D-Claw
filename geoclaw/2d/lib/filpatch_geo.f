@@ -207,13 +207,32 @@ c       interpolate back up
             enddo
 
 *           !find interpolation slope for eta = q(:,1)+ aux(:,1)
+            etalevel = sealevel
+            do i=-1,1
+               if (valcrse(ivalc(ic+i,jc,1)).ge.toldry) then
+                  etalevel = dmax1(etalevel,
+     &            valcrse(ivalc(ic+i,jc,1))+  auxcrse(iauxc(ic+i,jc)))
+               endif
+            enddo
+            do j=-1,1
+               if (valcrse(ivalc(ic,jc+j,1)).ge.toldry) then
+                  etalevel = dmax1(etalevel,
+     &            valcrse(ivalc(ic,jc+j,1))+  auxcrse(iauxc(ic,jc+j)))
+               endif
+            enddo
+            do i=-1,1
+               if (valcrse(ivalc(ic+i,jc,1)).ge.toldry) then
+                  etalevel = dmax1(etalevel,
+     &            valcrse(ivalc(ic+i,jc,1))+  auxcrse(iauxc(ic+i,jc)))
+               endif
+            enddo
             do i=-1,1
                etacrse(icrse(ic+i,jc)) = valcrse(ivalc(ic+i,jc,1))
      &            +  auxcrse(iauxc(ic+i,jc))
                if (valcrse(ivalc(ic+i,jc,1)).lt.toldry) then
-                  etacrse(icrse(ic+i,jc)) = sealevel
-                  endif
-               enddo
+                  etacrse(icrse(ic+i,jc)) = etalevel
+               endif
+            enddo
             s1 = etacrse(icrse(ic,jc))- etacrse(icrse(ic-1,jc))
             s2 = etacrse(icrse(ic+1,jc))- etacrse(icrse(ic,jc))
             if (s1*s2.le.0) then
@@ -226,9 +245,9 @@ c       interpolate back up
                etacrse(icrse(ic,jc+j)) = valcrse(ivalc(ic,jc+j,1))
      &            +  auxcrse(iauxc(ic,jc+j))
                if (valcrse(ivalc(ic,jc+j,1)).lt.toldry) then
-                  etacrse(icrse(ic,jc+j)) = sealevel
-                  endif
-               enddo
+                  etacrse(icrse(ic,jc+j)) = etalevel
+               endif
+            enddo
             s1 = etacrse(icrse(ic,jc))- etacrse(icrse(ic,jc-1))
             s2 = etacrse(icrse(ic,jc+1))- etacrse(icrse(ic,jc))
             if (s1*s2.le.0) then

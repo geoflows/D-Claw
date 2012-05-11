@@ -88,12 +88,24 @@ c     #prepare slopes - use min-mod limiters
       do i=2, mic-1
          fineflag(1) = .false.
 *        !interpolate eta to find depth---------------------------------------
+         etalevel = sealevel
+         do ii=-1,1
+            if (valc(i+ii,j,1).gt.toldry) then
+               etalevel = dmax1(etalevel,valc(i+ii,j,1)+ auxc(i+ii,j,1))
+            endif
+         enddo
+         do jj=-1,1
+            coarseval(2+jj) = valc(i,j+jj,1)+ auxc(i,j+jj,1)
+            if (valc(i,j+jj,1).gt.toldry) then
+               etalevel = dmax1(etalevel,valc(i,j+jj,1)+ auxc(i,j+jj,1))
+            endif
+         enddo
          do ii=-1,1
             coarseval(2+ii) = valc(i+ii,j,1)+ auxc(i+ii,j,1)
             if (valc(i+ii,j,1).le.toldry) then
-               coarseval(2+ii)=sealevel
-               endif
-            enddo
+               coarseval(2+ii)=etalevel
+            endif
+         enddo
          s1p=coarseval(3)-coarseval(2)
          s1m=coarseval(2)-coarseval(1)
          slopex=dmin1(dabs(s1p),dabs(s1m))*dsign(1.d0,
@@ -102,9 +114,9 @@ c     #prepare slopes - use min-mod limiters
          do jj=-1,1
             coarseval(2+jj) = valc(i,j+jj,1)+ auxc(i,j+jj,1)
             if (valc(i,j+jj,1).le.toldry) then
-               coarseval(2+jj)=sealevel
-               endif
-            enddo
+               coarseval(2+jj)=etalevel
+            endif
+         enddo
          s1p=coarseval(3)-coarseval(2)
          s1m=coarseval(2)-coarseval(1)
          slopey=dmin1(dabs(s1p),dabs(s1m))*dsign(1.d0,
