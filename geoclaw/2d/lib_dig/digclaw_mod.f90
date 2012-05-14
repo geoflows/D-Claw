@@ -366,7 +366,7 @@ contains
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
       if (p_initialized.gt.0.and.h*mu.gt.0.d0) then
-         D = (kperm/(mu))*(rho_f*grav - p/h)
+         D = (kperm/(mu*h))*(rho_f*grav*h - p)
       else
          D = 0.d0
       endif

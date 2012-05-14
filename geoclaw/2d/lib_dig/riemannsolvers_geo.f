@@ -134,9 +134,9 @@ c     !find if sonic problem
 
       source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
       source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
-      if (dabs(u).le.veltol2) then
-         source2dx=-h*grav*delb
-      endif
+c      if (dabs(u).le.veltol2) then
+c         source2dx=-h*grav*delb
+c      endif
 
 c     !find bounds in case of critical state resonance, or negative states
 c     !find jump in h, deldelh

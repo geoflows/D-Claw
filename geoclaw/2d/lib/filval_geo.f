@@ -214,8 +214,10 @@ c     #prepare slopes - use min-mod limiters
                   area = dble(lratiox*lratioy)
                   dividemass = max(finemass,valc(i,j,1))
                   Vnew = area*valc(i,j,ivar)/dividemass
-                  Vnew = dmax1(velmin,Vnew)
-                  Vnew = dmin1(velmax,Vnew)
+                  if (ivar.gt.3) then
+                     Vnew = dmax1(velmin,Vnew)
+                     Vnew = dmin1(velmax,Vnew)
+                  endif
                   do ico = 1,lratiox
                      do jco = 1,lratioy
                         jfine = (j-2)*lratioy + nghost + jco

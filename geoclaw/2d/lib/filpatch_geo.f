@@ -410,8 +410,10 @@ c        ! determine momentum
                            dividemass = max(hcrse,hfineave)
                            hfine = valbig(iff+nrowst-1,jf+ncolst-1,1)
                            Vnew = valcrse(ivalc(ic,jc,ivar))/dividemass
-                           Vnew = dmax1(velmin(icrse(ic,jc)),Vnew)
-                           Vnew = dmin1(velmax(icrse(ic,jc)),Vnew)
+                           if (ivar.gt.3) then
+                              Vnew = dmax1(velmin(icrse(ic,jc)),Vnew)
+                              Vnew = dmin1(velmax(icrse(ic,jc)),Vnew)
+                           endif
                            valbig(iff+nrowst-1,jf+ncolst-1,ivar) =
      &                           Vnew*valbig(iff+nrowst-1,jf+ncolst-1,1)
                         else
