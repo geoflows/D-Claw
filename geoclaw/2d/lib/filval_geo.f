@@ -8,6 +8,7 @@ c
      4                  sp_over_h)
 
       use geoclaw_module
+      use digclaw_module
 
       implicit double precision (a-h,o-z)
 
@@ -166,7 +167,15 @@ c     #prepare slopes - use min-mod limiters
                else
                   velmax = 0.d0
                   velmin = 0.d0
+                  if (ivar.eq.4) then
+                     velmax=m0
+                     velmin=m0
+                  elseif (ivar.eq.5) then
+                     velmax = rho_f*grav
+                     velmin = rho_f*grav
                   endif
+               endif
+
                do ii = -1,1,2
                   if (valc(i+ii,j,1).gt.toldry) then
                      vel = valc(i+ii,j,ivar)/valc(i+ii,j,1)
@@ -174,7 +183,7 @@ c     #prepare slopes - use min-mod limiters
                      velmin = min(vel,velmin)
                      endif
                   if (valc(i,j+ii,1).gt.toldry) then
-                     vel = valc(i,j,ivar)/valc(i,j+ii,1)
+                     vel = valc(i,j+ii,ivar)/valc(i,j+ii,1)
                      velmax = max(vel,velmax)
                      velmin = min(vel,velmin)
                      endif
@@ -205,7 +214,8 @@ c     #prepare slopes - use min-mod limiters
                   area = dble(lratiox*lratioy)
                   dividemass = max(finemass,valc(i,j,1))
                   Vnew = area*valc(i,j,ivar)/dividemass
-
+                  Vnew = dmax1(velmin,Vnew)
+                  Vnew = dmin1(velmax,Vnew)
                   do ico = 1,lratiox
                      do jco = 1,lratioy
                         jfine = (j-2)*lratioy + nghost + jco

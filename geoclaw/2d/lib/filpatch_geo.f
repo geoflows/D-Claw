@@ -20,6 +20,7 @@ c
 c :::::::::::::::::::::::::::::::::::::::;:::::::::::::::::::::::;
 
       use geoclaw_module
+      use digclaw_module
 
       implicit double precision (a-h,o-z)
 
@@ -326,7 +327,14 @@ c        ! determine momentum
                else
                   velmax(icrse(ic,jc)) = 0.d0
                   velmin(icrse(ic,jc)) = 0.d0
+                  if (ivar.eq.4) then
+                     velmax(icrse(ic,jc)) = m0
+                     velmin(icrse(ic,jc)) = m0
+                  elseif (ivar.eq.5) then
+                     velmax(icrse(ic,jc)) = grav*rho_f
+                     velmin(icrse(ic,jc)) = grav*rho_f
                   endif
+               endif
 
 *              !look for bounds on velocity to avoid generating new extrema
 *              !necessary since interpolating momentum linearly
@@ -402,6 +410,8 @@ c        ! determine momentum
                            dividemass = max(hcrse,hfineave)
                            hfine = valbig(iff+nrowst-1,jf+ncolst-1,1)
                            Vnew = valcrse(ivalc(ic,jc,ivar))/dividemass
+                           Vnew = dmax1(velmin(icrse(ic,jc)),Vnew)
+                           Vnew = dmin1(velmax(icrse(ic,jc)),Vnew)
                            valbig(iff+nrowst-1,jf+ncolst-1,ivar) =
      &                           Vnew*valbig(iff+nrowst-1,jf+ncolst-1,1)
                         else

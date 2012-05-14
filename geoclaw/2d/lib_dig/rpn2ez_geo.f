@@ -224,6 +224,11 @@ c=================begin digclaw-auxset =================================
          gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
          eps = kappa + (1.d0-kappa)*gamma
          gmod = grav*eps
+
+c         if (abs(D).gt.0.d0) then
+c            write(*,*) 't,D',tcom,D
+c         endif
+
 c================end digclaw-aux========================================
 
          !modify for inundation problem
