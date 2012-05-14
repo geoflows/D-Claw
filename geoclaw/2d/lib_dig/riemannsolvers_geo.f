@@ -218,7 +218,6 @@ c     !find bounds in case of critical state resonance, or negative states
          endif
       endif
       del(1) = del(1) - 0.5d0*dx*psi(1)
-      del(3) = del(3) - 0.5d0*dx*psi(3)
       del(4) = del(4) - 0.5d0*dx*psi(4)
 
 *     !R beta = del
