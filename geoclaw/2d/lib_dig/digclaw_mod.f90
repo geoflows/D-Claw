@@ -145,7 +145,7 @@ contains
          close(unit=iunit)
 
          p_initialized = 0
-         init_pmin_ratio = 1.d0
+         init_pmin_ratio = 1.d16
 
 
          write(DIG_PARM_UNIT,*) ' '
@@ -180,8 +180,13 @@ contains
 
       !Locals
       double precision forcemag,pcrit,rho,h,h_r,h_l,b_r,b_l,dry_tol,phi
+      double precision tanpsi
       integer :: i,j
 
+      if (init_ptype.eq.2) then
+         init_pmin_ratio = 1.0d0
+         return
+      endif
       dry_tol = drytolerance
 
       do i=2-mbc,mx+mbc
@@ -192,8 +197,10 @@ contains
             b_l = aux(i-1,j,1)
             phi = 0.5d0*(aux(i-1,j,i_phi)+ aux(i,j,i_phi))
             rho = m0*rho_s + (1.d0-m0)*rho_f
+            tanpsi = c1*(m0 - m_crit)
+            phi = dmax1(0.d0,phi + datan(tanpsi))
 
-            if (h_l.le.dry_tol.and.h_r.le.dry_tol) then
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
                cycle
             endif
 
@@ -206,7 +213,7 @@ contains
             endif
 
             !determine pressure min ratio
-            forcemag = abs(grav*(b_r-b_l)*h -0.5d0*grav*(h_r**2 - h_l**2))
+            forcemag = abs(grav*(b_r-b_l)*h + 0.5d0*grav*(h_r**2 - h_l**2))
 
             pcrit = rho*h*grav - rho*forcemag/(dx*tan(phi))
             pcrit = max(pcrit,0.0)
@@ -222,7 +229,7 @@ contains
             phi = 0.5d0*(aux(i,j-1,i_phi)+ aux(i,j,i_phi))
             rho = m0*rho_s + (1.d0-m0)*rho_f
 
-            if (h_l.le.dry_tol.and.h_r.le.dry_tol) then
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
                cycle
             endif
 
@@ -235,7 +242,7 @@ contains
             endif
 
            !determine pressure min ratio
-            forcemag = abs(grav*(b_r-b_l)*h -0.5d0*grav*(h_r**2 - h_l**2))
+            forcemag = abs(grav*(b_r-b_l)*h + 0.5d0*grav*(h_r**2 - h_l**2))
 
             pcrit = rho*h*grav - rho*forcemag/(dy*tan(phi))
             pcrit = max(pcrit,0.0)
@@ -365,7 +372,9 @@ contains
       kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
-      if (p_initialized.gt.0.and.h*mu.gt.0.d0) then
+      if (p_initialized.le.0.and.dabs(vnorm).le.0.d0) then
+         D = 0.d0
+      elseif (h*mu.gt.0.d0) then
          D = (kperm/(mu*h))*(rho_f*grav*h - p)
       else
          D = 0.d0

@@ -26,7 +26,6 @@ c
 c     # check for NANs in solution:
 c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
-      if(p_initialized.eq.0) return
       gmod=grav
       pm=1.d0
 
@@ -66,6 +65,7 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             call admissibleq(h,hu,hv,hm,p,u,v,m)
             vnorm = dsqrt(u**2 + v**2)
 
+            if (p_initialized.eq.0.and.dabs(vnorm).le.0.d0) cycle
 
             !integrate pressure source term
             call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,

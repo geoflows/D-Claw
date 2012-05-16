@@ -248,10 +248,7 @@ c     !find bounds in case of critical state resonance, or negative states
       fw(4,3) = fw(1,3)*mR
       fw(4,2) = hmR*uR-hmL*uL - fw(4,1)- fw(4,3)-0.5d0*psi(3)*dx
 
-
-
       !waves and fwaves for delta huv
-
       fw(3,1) = fw(1,1)*vL
       fw(3,3) = fw(1,3)*vR
       fw(3,2) = hvR*uR-hvL*uL -fw(3,1) -fw(3,3)

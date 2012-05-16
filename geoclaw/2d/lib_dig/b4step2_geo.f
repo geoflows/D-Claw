@@ -63,7 +63,7 @@ c=============mobilization =============================================
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
                if (q(i,j,1).le.drytolerance) cycle
-               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
+c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
                q(i,j,5) = q(i,j,5) +
      &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
      &            rho_f*grav*q(i,j,1)
@@ -75,9 +75,9 @@ c=============mobilization =============================================
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
               if (q(i,j,1).le.drytolerance) cycle
-              if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
-              q(i,j,5) = init_pmax_ratio*init_pmin_ratio*
-     &            rho_f*grav*q(i,j,1)
+c              if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
+              q(i,j,5) = dmax1(q(i,j,5),init_pmax_ratio*init_pmin_ratio*
+     &            rho_f*grav*q(i,j,1))
                call admissibleq(
      &         q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv)
             enddo
