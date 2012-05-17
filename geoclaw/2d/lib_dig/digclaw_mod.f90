@@ -372,7 +372,7 @@ contains
       kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
-      if (p_initialized.le.0.and.dabs(vnorm).le.0.d0) then
+      if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
       elseif (h*mu.gt.0.d0) then
          D = (kperm/(mu*h))*(rho_f*grav*h - p)
@@ -409,21 +409,21 @@ contains
       double precision, intent(in)  :: h,u,m
 
       !local
-      double precision :: taushear,drytol
+      double precision :: taushear,drytol,vnorm
 
       drytol = drytolerance
 
       taushear = (tau/rho)*dsign(1.d0,u)
-
-      if (h.gt.drytol.and.p_initialized.eq.1) then
-         psi(1) =  D*(rho-rho_f)/rho
-         psi(2) =  u*D*(rho-rho_f)/rho
-         psi(3) = -D*m*(rho_f/rho)
-         psi(4) = 0.d0
-      else
+      vnorm = dabs(u)
+      if (h.lt.drytol) then
          psi(1) = 0.d0
          psi(2) = 0.d0
          psi(3) = 0.d0
+         psi(4) = 0.d0
+      else
+         psi(1) =  D*(rho-rho_f)/rho
+         psi(2) =  u*D*(rho-rho_f)/rho
+         psi(3) = -D*m*(rho_f/rho)
          psi(4) = 0.d0
       endif
 

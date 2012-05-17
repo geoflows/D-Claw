@@ -49,6 +49,10 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             !integrate momentum source term
             call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
+
+            vnorm = dsqrt(u**2 + v**2)
+            if (p_initialized.eq.0.and.vnorm.le.0.d0) cycle
+
             hu = hu -dsign(tau/rho,hu)*dt
             hv = hv -dsign(tau/rho,hv)*dt
             hu = hu*dexp(-(1.d0-m)*mu*dt/h**2)
@@ -63,9 +67,6 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             endif
 
             call admissibleq(h,hu,hv,hm,p,u,v,m)
-            vnorm = dsqrt(u**2 + v**2)
-
-            if (p_initialized.eq.0.and.dabs(vnorm).le.0.d0) cycle
 
             !integrate pressure source term
             call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
