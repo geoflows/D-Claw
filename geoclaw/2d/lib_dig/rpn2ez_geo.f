@@ -54,7 +54,7 @@ c
       logical rare1,rare2,wallprob,drystate
       !logical entropycorr1,entropycorr2
 
-      double precision drytol,g,gmod,veltol
+      double precision drytol,gmod,veltol
       double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
       double precision pR,pL,hmL,hmR,mL,mR,phi_bedL,phi_bedR
       double precision hstar,hstartest,s1m,s2m,bL,bR
@@ -71,7 +71,7 @@ c
       common /cmcapa/  mcapa
       common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
 
-      g=grav
+      gmod=grav
       drytol=phys_tol
 
       !set to true to use an entropy correction
@@ -141,8 +141,8 @@ c        !set normal direction
          bR = auxl(i,1)
          phi_bedL = auxr(i-1,i_phi)
          phi_bedR = auxl(i,i_phi)
-         phiR = 0.5d0*g*hR**2 + hR*uR**2
-         phiL = 0.5d0*g*hL**2 + hL*uL**2
+         phiR = 0.5d0*gmod*hR**2 + hR*uR**2
+         phiL = 0.5d0*gmod*hL**2 + hL*uL**2
 
          !test for wall problem vs. inundation problem
          do mw=1,mwaves
@@ -153,7 +153,7 @@ c        !set normal direction
          if (hR.le.drytol) then
             drystate=.true.
             call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,
-     &                                 rare1,rare2,1,drytol,g)
+     &                                 rare1,rare2,1,drytol,gmod)
             hstartest=dmax1(hL,hstar)
             if (hstartest+bL.lt.bR) then !right state should become ghost values that mirror left for wall problem
 c                bR=hstartest+bL
@@ -175,7 +175,7 @@ c                bR=hstartest+bL
          elseif (hL.le.drytol) then ! right surface is lower than left topo
             drystate=.true.
             call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,
-     &                                  rare1,rare2,1,drytol,g)
+     &                                  rare1,rare2,1,drytol,gmod)
             hstartest=dmax1(hR,hstar)
             if (hstartest+bR.lt.bL) then  !left state should become ghost values that mirror right
 c               bL=hstartest+bR
@@ -223,7 +223,7 @@ c=================begin digclaw-auxset =================================
 
          gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
          eps = kappa + (1.d0-kappa)*gamma
-         gmod = grav*eps
+
 
 c         if (abs(D).gt.0.d0) then
 c            write(*,*) 't,D',tcom,D
@@ -247,7 +247,7 @@ c         endif
          call riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,gmod,dx,sw,fw,wave)
+     &         gamma,eps,dx,sw,fw,wave)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,

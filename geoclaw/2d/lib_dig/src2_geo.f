@@ -16,7 +16,7 @@ c =========================================================
       integer maxmx,maxmy,meqn,mbc,mx,my,maux
 
       !local
-      double precision g,gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
+      double precision gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
       double precision cx,cy,pdh,vnorm
@@ -26,10 +26,10 @@ c
 c     # check for NANs in solution:
 c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
-      gmod=grav
+
       pm=1.d0
 
-      g=grav
+      gmod=grav
       coeff = coeffmanning
       tol = 1.d-30  !# to prevent divide by zero in gamma
 
@@ -121,7 +121,8 @@ c                 # apply friction source term only in shallower water
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
-                     gamma= dsqrt(hu**2 + hv**2)*(g*coeff**2)/(h**(7/3))
+                     gamma= dsqrt(hu**2 + hv**2)*
+     &                  (gmod*coeff**2)/(h**(7/3))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
                      q(i,j,3)= q(i,j,3)/dgamma

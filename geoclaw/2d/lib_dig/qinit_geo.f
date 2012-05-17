@@ -18,6 +18,8 @@ c      # been strored in qinitwork.
       dimension q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
 
+      gmod = grav
+
       ! depth set for sealevel. For debris flows can be used for a lake
       ! q to zero, before reading mqinit files is, so this remains.
       do i=1-mbc,mx+mbc
@@ -107,14 +109,14 @@ c=============== Pressure initialization for Mobilization Modeling======
       if (init_ptype.eq.1) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
-               q(i,j,5) = init_pmin_ratio*rho_f*grav*q(i,j,1)
+               q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
             enddo
          enddo
          p_initialized = 1
       elseif (init_ptype.eq.0) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
-               q(i,j,5) = rho_f*grav*q(i,j,1)
+               q(i,j,5) = rho_f*gmod*q(i,j,1)
             enddo
          enddo
          p_initialized = 1

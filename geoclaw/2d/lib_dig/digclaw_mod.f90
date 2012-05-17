@@ -179,9 +179,11 @@ contains
       integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
 
       !Locals
-      double precision forcemag,pcrit,rho,h,h_r,h_l,b_r,b_l,dry_tol,phi
-      double precision tanpsi
+      double precision :: forcemag,pcrit,rho,h,h_r,h_l,b_r,b_l,dry_tol,phi
+      double precision :: tanpsi,gmod
       integer :: i,j
+
+      gmod = grav
 
       if (init_ptype.eq.2) then
          init_pmin_ratio = 1.0d0
@@ -213,11 +215,11 @@ contains
             endif
 
             !determine pressure min ratio
-            forcemag = abs(grav*(b_r-b_l)*h + 0.5d0*grav*(h_r**2 - h_l**2))
+            forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
 
-            pcrit = rho*h*grav - rho*forcemag/(dx*tan(phi))
+            pcrit = rho*h*gmod - rho*forcemag/(dx*tan(phi))
             pcrit = max(pcrit,0.0)
-            init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*grav*h))
+            init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*gmod*h))
             init_pmin_ratio = max(init_pmin_ratio,0.d0)
 
             !repeat for y-Riemann problems
@@ -242,11 +244,11 @@ contains
             endif
 
            !determine pressure min ratio
-            forcemag = abs(grav*(b_r-b_l)*h + 0.5d0*grav*(h_r**2 - h_l**2))
+            forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
 
-            pcrit = rho*h*grav - rho*forcemag/(dy*tan(phi))
+            pcrit = rho*h*gmod - rho*forcemag/(dy*tan(phi))
             pcrit = max(pcrit,0.0)
-            init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*grav*h))
+            init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*gmod*h))
             init_pmin_ratio = max(init_pmin_ratio,0.d0)
 
          enddo
@@ -268,8 +270,9 @@ contains
       double precision :: h,hu,hv,hm,p,u,v,m
 
       !Locals
-      double precision :: mlo,mhi,hlo,pmax,phi,plo,rho,dry_tol,m_min
+      double precision :: mlo,mhi,hlo,pmax,phi,plo,rho,dry_tol,m_min,gmod
 
+      gmod = grav
       dry_tol = drytolerance
 
       if (h.le.dry_tol) then
@@ -291,7 +294,7 @@ contains
          v = 0.d0!hv/h
          m = m0!hm/m
          h = (h**2 + hlo**2)/(2.d0*hlo)
-         p  = h*rho_f*grav
+         p  = h*rho_f*gmod
          hu = 0.d0!h*u
          hv = 0.d0!h*v
          hm = 0.d0!h*m
@@ -316,8 +319,8 @@ contains
       endif
 
       rho = (rho_s*m + (1.d0-m)*rho_f)
-      pmax = rho*grav*h
-      plo = rho_f*dry_tol*grav*dry_tol
+      pmax = rho*gmod*h
+      plo = rho_f*dry_tol*gmod*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
          p = dmax1(0.d0,p)
@@ -346,14 +349,14 @@ contains
       double precision, intent(out) :: sigbed,kperm,compress
 
       !local
-      double precision m_eqn,vnorm,g,sigbedc,sqrtarg
+      double precision m_eqn,vnorm,gmod,sigbedc,sqrtarg
 
 
-      g=grav
+      gmod=grav
       vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_f*(1.d0-m)
-      sigbed = dmax1(0.d0,rho*g*h - p)
-      sigbedc = (rho-rho_f)*grav*h**2
+      sigbed = dmax1(0.d0,rho*gmod*h - p)
+      sigbedc = (rho-rho_f)*gmod*h**2
       !sigbedc = sigbed
       if (sigbedc.gt.0.d0) then
          !Note: m_eqn = m_crit/(1+sqrt(N))
@@ -375,7 +378,7 @@ contains
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
       elseif (h*mu.gt.0.d0) then
-         D = (kperm/(mu*h))*(rho_f*grav*h - p)
+         D = (kperm/(mu*h))*(rho_f*gmod*h - p)
       else
          D = 0.d0
       endif

@@ -25,7 +25,7 @@ c     Also calls movetopo if topography might be moving.
 
 
 c=====================Parameters===========================================
-
+      gmod = grav
 
 c     # check for NANs in solution:
 
@@ -66,7 +66,7 @@ c=============mobilization =============================================
 c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
                q(i,j,5) = q(i,j,5) +
      &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
-     &            rho_f*grav*q(i,j,1)
+     &            rho_f*gmod*q(i,j,1)
                call admissibleq(
      &         q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv)
             enddo
@@ -77,7 +77,7 @@ c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
               if (q(i,j,1).le.drytolerance) cycle
 c              if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
               q(i,j,5) = dmax1(q(i,j,5),init_pmax_ratio*init_pmin_ratio*
-     &            rho_f*grav*q(i,j,1))
+     &            rho_f*gmod*q(i,j,1))
                call admissibleq(
      &         q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv)
             enddo
