@@ -30,6 +30,7 @@ CLAW_SOURCES = \
   $(GEOCLAW_LIB)/topo_mod.f90 \
   $(GEOCLAW_LIB)/dtopo_mod.f90 \
   $(GEOCLAW_LIB)/qinit_mod.f90 \
+  $(GEOCLAW_LIB)/auxinit_mod.f90 \
   $(DIGCLAW_LIB)/setprob_geo.f \
   $(DIGCLAW_LIB)/b4step2_geo.f \
   $(DIGCLAW_LIB)/setaux_geo.f \

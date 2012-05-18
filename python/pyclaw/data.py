@@ -1400,6 +1400,23 @@ class GeoclawInputData(Data):
             file.write("%3i %3i %3i %3i \n" % tuple(tfile[:-1]))
         file.close()
 
+        print 'Creating data file setauxinit.data'
+        # open file and write a warning header:
+        file = open_datafile('setauxinit.data')
+        # self.iauxinit tells which component of q is perturbed!
+        self.nauxinits = len(self.auxinitfiles)
+        data_write(file, self, 'nauxinits')
+        data_write(file, self, None)
+        for tfile in self.auxinitfiles:
+            try:
+                fname = "'%s'" % os.path.abspath(tfile[-1])
+            except:
+                print "*** Error: file not found: ",tfile[-1]
+                raise MissingFile("file not found")
+            file.write("\n%s  \n" % fname)
+            file.write("%3i %3i %3i %3i \n" % tuple(tfile[:-1]))
+        file.close()
+
         make_setgauges_datafile(self)
 
 #        print 'Creating data file setgauges.data'
@@ -1476,6 +1493,7 @@ class DigclawInputData(Data):
         self.add_attribute('init_ptype', 0, '0 = hydrostatic pore-pressure, 1 = find minimum failure pressure, 2= rise pressure with time')
         self.add_attribute('init_pmax_ratio', 1.0, 'pressure will rise to \rho g cos (theta) h init_pmax_ratio*minimum failure pressure ratio')
         self.add_attribute('init_ptf', 1.95, 'if init_ptype=2 pressure will rise until t = init_ptf')
+
 
     def write(self):
 
