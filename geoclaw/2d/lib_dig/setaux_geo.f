@@ -80,7 +80,6 @@ c     --------------integrate auxinit files if they exist---------------
       yhigher = ylower + (my-0.5d0)*dy
 
       do mf =1,mauxinitfiles
-         aux(i,j,iauxinit(mf)) = 0.d0
          if ((xlower.le.xhiauxinit(mf).and.
      &                  xhigher.ge.xlowauxinit(mf)).and.
      &                  (ylower.le.yhiauxinit(mf).and.
