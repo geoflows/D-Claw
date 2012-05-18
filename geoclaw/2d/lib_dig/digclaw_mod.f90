@@ -23,11 +23,12 @@ module digclaw_module
     double precision :: rho_s,rho_f,phi_bed,phi_int,delta,kappita
     double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
 
-    integer init_ptype,p_initialized
+    integer init_ptype,p_initialized,bed_normal
     double precision init_pmax_ratio,init_ptf,init_pmin_ratio
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
+    integer, parameter ::  i_theta  = i_dig + 1
     integer, parameter ::  DIG_PARM_UNIT = 78
 
 
@@ -83,6 +84,7 @@ contains
          read(iunit,*) m0
          read(iunit,*) dudx_eps
          read(iunit,*) phys_tol
+         read(iunit,*) bed_normal
          close(iunit)
 
          open(unit=DIG_PARM_UNIT,file='fort.dig',status="unknown",action="write")

@@ -66,19 +66,25 @@ c           # for lat-lon grid on sphere:
                aux(i,j,1) = 0.d0
 c               # or set-up your own topo
             endif
+c        #------- zero aux variables that will be set by files
+            do mf = 1,mauxinitfiles
+               aux(i,j,iauxinit(mf)) = 0.d0
             enddo
+
          enddo
+      enddo
+
 
 c     --------------integrate auxinit files if they exist---------------
       xhigher = xlower + (mx-0.5d0)*dx
       yhigher = ylower + (my-0.5d0)*dy
 
       do mf =1,mauxinitfiles
-
-         if ((xlower.le.xhiauxinit(mf).and.xhigher.ge.xlowauxinit(mf))
-     &      .and.
-     &      (ylower.le.yhiauxinit(mf).and.yhigher.ge.ylowauxinit(mf)))
-     &      then
+         aux(i,j,iauxinit(mf)) = 0.d0
+         if ((xlower.le.xhiauxinit(mf).and.
+     &                  xhigher.ge.xlowauxinit(mf)).and.
+     &                  (ylower.le.yhiauxinit(mf).and.
+     &                  yhigher.ge.ylowauxinit(mf))) then
 
             xintlow = dmax1(xlower,xlowauxinit(mf))
             xinthi  = dmin1(xhigher,xhiauxinit(mf))
@@ -99,11 +105,11 @@ c     --------------integrate auxinit files if they exist---------------
                   yjm = y - 0.5d0*dy
                   yjp = y + 0.5d0*dy
 
-                  if (xip.gt.xlowauxinit(mf).and.xim.lt.xhiauxinit(mf)
-     &               .and.yjp.gt.ylowauxinit(mf)
-     &               .and.yjm.lt.yhiauxinit(mf)) then
+                  if (xip.gt.xlowauxinit(mf)
+     &                     .and.xim.lt.xhiauxinit(mf)
+     &                     .and.yjp.gt.ylowauxinit(mf)
+     &                     .and.yjm.lt.yhiauxinit(mf)) then
 
-                     aux(i,j,iauxinit(mf)) = 0.d0
                      xipc=dmin1(xip,xhiauxinit(mf))
                      ximc=dmax1(xim,xlowauxinit(mf))
                      xc=0.5d0*(xipc+ximc)
@@ -112,23 +118,20 @@ c     --------------integrate auxinit files if they exist---------------
                      yjmc=dmax1(yjm,ylowauxinit(mf))
                      yc=0.5d0*(yjmc+yjpc)
 
-                     daux = topointegral(ximc,xc,xipc,yjmc,yc,yjpc,
-     &                  xlowauxinit(mf),ylowauxinit(mf),
-     &                  dxauxinit(mf),dyauxinit(mf),
-     &                  mxauxinit(mf),myauxinit(mf),
-     &                  auxinitwork
-     &                  (i0auxinit(mf):i0auxinit(mf)+mauxinit(mf)-1)
-     &                     ,1)
+                     daux =topointegral(ximc,xc,xipc,yjmc,yc,yjpc,
+     &                        xlowauxinit(mf),ylowauxinit(mf),
+     &                        dxauxinit(mf),dyauxinit(mf),
+     &                        mxauxinit(mf),myauxinit(mf),
+     &                        auxinitwork
+     &                      (i0auxinit(mf):i0auxinit(mf)+mauxinit(mf)-1)
+     &                        ,1)
                      daux=daux/((xipc-ximc)*(yjpc-yjmc)*aux(i,j,2))
                      aux(i,j,iauxinit(mf)) = aux(i,j,iauxinit(mf))+daux
-
                   endif
-           if (aux(i,j,i_phi).ne.40.d0) write(*,*) 'phi:',aux(i,j,i_phi)
                enddo
             enddo
          endif
       enddo
-
 
       do mf = 1,mauxinitfiles
          if (iauxinit(mf).eq.i_phi) return

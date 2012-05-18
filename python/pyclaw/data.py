@@ -1493,7 +1493,7 @@ class DigclawInputData(Data):
         self.add_attribute('init_ptype', 0, '0 = hydrostatic pore-pressure, 1 = find minimum failure pressure, 2= rise pressure with time')
         self.add_attribute('init_pmax_ratio', 1.0, 'pressure will rise to \rho g cos (theta) h init_pmax_ratio*minimum failure pressure ratio')
         self.add_attribute('init_ptf', 1.95, 'if init_ptype=2 pressure will rise until t = init_ptf')
-
+        self.add_attribute('bed_normal', 0,  'bed_normal =1 requires theta in aux. for slope in one direction')
 
     def write(self):
 
@@ -1513,6 +1513,7 @@ class DigclawInputData(Data):
         data_write(file, self, 'm0',       'initial solid volume fraction (#)')
         data_write(file, self, 'dudx_eps', 'dudx below this amount scales kappa linearly between min and max values of the otherwise step function')
         data_write(file, self, 'phys_tol', 'minimum depth considered for model applicability. Values below have statically set values')
+        data_write(file, self, 'bed_normal', 'bed_normal = 1 requires theta in aux for slope in one direction')
         file.close()
 
         print 'Creating data file setpinit.data'
