@@ -1,10 +1,10 @@
 
 
 c-----------------------------------------------------------------------
-      subroutine riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
+      subroutine riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,eps,dx,sw,fw,w)
+     &         theta,gamma,eps,dx,sw,fw,w)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -26,12 +26,12 @@ c-----------------------------------------------------------------------
       implicit none
 
 *     !i/o
-      integer meqn,mwaves
+      integer ixy,meqn,mwaves
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
       double precision kappa,rho,kperm,compress,tanpsi,D,tau
-      double precision gamma,eps,dx
+      double precision theta,gamma,eps,dx
 
       double precision fw(meqn,mwaves),w(meqn,mwaves)
       double precision sw(mwaves)
@@ -55,8 +55,8 @@ c-----------------------------------------------------------------------
       criticaltol=1.d-6
       drytol=drytolerance
 
-      gmod = grav
-      geps = grav*eps
+      gmod = grav*dcos(theta)
+      geps = gmod*eps
 
       entropycorr1 = .false.
 
@@ -135,6 +135,10 @@ c     !find if sonic problem
 
       source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
       source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
+
+      if (ixy.eq.1) source2dx = source2dx + dx*h*grav*dsin(theta)
+c      write(*,*) 'theta,hL,hR',theta,hL,hR
+
 c      if (dabs(u).le.veltol2) then
 c         source2dx=-h*gmod*delb
 c      endif

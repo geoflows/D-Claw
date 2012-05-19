@@ -126,6 +126,7 @@ c     --------------integrate auxinit files if they exist---------------
      &                        ,1)
                      daux=daux/((xipc-ximc)*(yjpc-yjmc)*aux(i,j,2))
                      aux(i,j,iauxinit(mf)) = aux(i,j,iauxinit(mf))+daux
+               !write(*,*) 'theta,i,mx,j,my',aux(i,j,i_theta),i,mx,j,my
                   endif
                enddo
             enddo
