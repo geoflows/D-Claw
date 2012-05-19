@@ -76,31 +76,31 @@ c        #------- zero aux variables that will be set by files
 
 
 c     --------------integrate auxinit files if they exist---------------
-      xhigher = xlower + (mx-0.5d0)*dx
-      yhigher = ylower + (my-0.5d0)*dy
+      xhigher = xlow + (mx-0.5d0)*dx
+      yhigher = ylow + (my-0.5d0)*dy
 
       do mf =1,mauxinitfiles
-         if ((xlower.le.xhiauxinit(mf).and.
+         if ((xlow.le.xhiauxinit(mf).and.
      &                  xhigher.ge.xlowauxinit(mf)).and.
-     &                  (ylower.le.yhiauxinit(mf).and.
+     &                  (ylow.le.yhiauxinit(mf).and.
      &                  yhigher.ge.ylowauxinit(mf))) then
 
-            xintlow = dmax1(xlower,xlowauxinit(mf))
+            xintlow = dmax1(xlow,xlowauxinit(mf))
             xinthi  = dmin1(xhigher,xhiauxinit(mf))
-            istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
-            iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
+            istart  = min(1,int(0.5 + (xintlow-xlow)/dx))
+            iend    = max(mx,int(1.0 + (xinthi-xlow)/dx))
 
-            yintlow = dmax1(ylower,ylowauxinit(mf))
+            yintlow = dmax1(ylow,ylowauxinit(mf))
             yinthi  = dmin1(yhigher,yhiauxinit(mf))
-            jstart  = int(0.5 + (yintlow-ylower)/dy)
-            jend    = max(my,int(1.0 + (yinthi-ylower)/dy))
+            jstart  = int(0.5 + (yintlow-ylow)/dy)
+            jend    = max(my,int(1.0 + (yinthi-ylow)/dy))
 
             do i=istart,iend
-               x = xlower + (i-0.5d0)*dx
+               x = xlow + (i-0.5d0)*dx
                xim = x - 0.5d0*dx
                xip = x + 0.5d0*dx
                do j=jstart,jend
-                  y = ylower + (j-0.5d0)*dy
+                  y = ylow + (j-0.5d0)*dy
                   yjm = y - 0.5d0*dy
                   yjp = y + 0.5d0*dy
 
