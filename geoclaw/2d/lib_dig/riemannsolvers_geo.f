@@ -137,7 +137,6 @@ c     !find if sonic problem
       source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
 
       if (ixy.eq.1) source2dx = source2dx + dx*h*grav*dsin(theta)
-c      write(*,*) 'theta,hL,hR',theta,hL,hR
 
 c      if (dabs(u).le.veltol2) then
 c         source2dx=-h*gmod*delb
@@ -162,7 +161,6 @@ c     !find bounds in case of critical state resonance, or negative states
          deldelh = min(deldelh,hR)
          deldelh = max(deldelh,hstarHLL*(sE2-sE1)/sE2)
       endif
-
 
 *     !determine R
       R(0,0) = 0.d0
@@ -210,20 +208,24 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
+      del(1) = del(1) - 0.5d0*dx*psi(1)
+      del(2) = del(2) - dx*psi(2)
+      del(4) = del(4) - 0.5d0*dx*psi(4)
+
       if (dabs(u).gt.veltol2) then
-         del(2) = del(2) -source2dx - dx*psi(2)
+         del(2) = del(2) -source2dx
       else
          if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
             del(2)=dsign(dabs(dabs(del(2)-source2dx)
      &                   -dabs(dx*tau/rho)),del(2)-source2dx)
          else
             del(0)=0.d0
+            del(1)=0.d0
             del(2)=0.d0
             del(3)=0.d0
          endif
       endif
-      del(1) = del(1) - 0.5d0*dx*psi(1)
-      del(4) = del(4) - 0.5d0*dx*psi(4)
+
 
 *     !R beta = del
 *     !gauss routine replaces del with beta and R with it's inverse
@@ -655,10 +657,10 @@ c  On output a is replaced by it's inverse, and b replaced by x.
 
       SUBROUTINE gaussj(a,n,np,b,m,mp)
       INTEGER m,mp,n,np,NMAX
-      REAL a(np,np),b(np,mp)
+      DOUBLE PRECISION a(np,np),b(np,mp)
       PARAMETER (NMAX=50)
       INTEGER i,icol,irow,j,k,l,ll,indxc(NMAX),indxr(NMAX),ipiv(NMAX)
-      REAL big,dum,pivinv
+      DOUBLE PRECISION big,dum,pivinv
       do 11 j=1,n
         ipiv(j)=0
 11    continue
