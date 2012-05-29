@@ -61,16 +61,15 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             if (vnorm.gt.1.d-16) then
                hu = hu -dsign(tau/rho,hu)*dt
                hv = hv -dsign(tau/rho,hv)*dt
+               if (hu*q(i,j,2).le.0.d0) then
+                  hu = 0.d0
+               endif
+               if (hv*q(i,j,3).le.0.d0) then
+                  hv = 0.d0
+               endif
             endif
             hu = hu*dexp(-(1.d0-m)*mu*dt/h**2)
             hv = hv*dexp(-(1.d0-m)*mu*dt/h**2)
-
-            if (hu*q(i,j,2).le.0.d0) then
-               hu = 0.d0
-            endif
-            if (hv*q(i,j,3).le.0.d0) then
-               hv = 0.d0
-            endif
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
 
