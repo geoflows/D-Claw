@@ -184,7 +184,7 @@ contains
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
 
       if (h.le.dry_tol) then
-         h = 0.d0
+         h = dmax1(0.d0,h)
          hu = 0.d0
          hv = 0.d0
          hm = 0.d0

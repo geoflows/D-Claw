@@ -232,10 +232,6 @@ c=================begin digclaw-auxset =================================
          eps = kappa + (1.d0-kappa)*gamma
 
 
-c         if (abs(D).gt.0.d0) then
-c            write(*,*) 't,D',tcom,D
-c         endif
-
 c================end digclaw-aux========================================
 
          !modify for inundation problem

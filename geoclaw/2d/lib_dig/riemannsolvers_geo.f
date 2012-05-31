@@ -208,11 +208,7 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
-      del(1) = del(1) - 0.5d0*dx*psi(1)
-      del(2) = del(2) - dx*psi(2)
-      del(4) = del(4) - 0.5d0*dx*psi(4)
-
-      if (dabs(uL**2+uR**2).gt.veltol2) then
+      if (dabs(u).gt.veltol2) then
          del(2) = del(2) -source2dx
       else
          if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
@@ -223,8 +219,16 @@ c     !find bounds in case of critical state resonance, or negative states
             del(1)=0.d0
             del(2)=0.d0
             del(3)=0.d0
+            psi(1)=0.d0
+            psi(2)=0.d0
+            psi(3)=0.d0
+            psi(4)=0.d0
          endif
       endif
+
+      del(1) = del(1) - 0.5d0*dx*psi(1)
+      del(2) = del(2) - dx*psi(2)
+      del(4) = del(4) - 0.5d0*dx*psi(4)
 
 
 *     !R beta = del

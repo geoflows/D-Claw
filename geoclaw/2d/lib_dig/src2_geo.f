@@ -58,12 +58,15 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             vnorm = dsqrt(u**2 + v**2)
             if (p_initialized.eq.0.and.vnorm.le.0.d0) cycle
 
-            if (vnorm.gt.1.d-16) then
+            if (dabs(u).gt.0.d0) then
                hu = hu -dsign(tau/rho,hu)*dt
-               hv = hv -dsign(tau/rho,hv)*dt
                if (hu*q(i,j,2).le.0.d0) then
                   hu = 0.d0
                endif
+            endif
+
+            if (dabs(v).gt.0.d0) then
+               hv = hv -dsign(tau/rho,hv)*dt
                if (hv*q(i,j,3).le.0.d0) then
                   hv = 0.d0
                endif
