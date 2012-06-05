@@ -73,29 +73,33 @@ c-----------------------------------------------------------------------
       sw(1) = sE1
       sw(3) = sE2
 
+      call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
+     &                                          1,drytol,gmod)
+      sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
+      sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
+
       if (hL.ge.drytol.and.hR.ge.drytol) then
          h = 0.5d0*(hL + hR)
          u = uhat
          v = 0.5d0*(vL + vR)
          mbar = 0.5d0*(mL + mR)
+         sw(2) = uhat
       elseif (hL.ge.drytol) then
          h = hL
          u = uhat
          v = vL
          mbar = mL
+         sw(2) = sw(3)
       else
          h = hR
          u = uhat
          v = vR
          mbar = mR
+         sw(2) = sw(1)
       endif
 
 
-      call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
-     &                                          1,drytol,gmod)
-      sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
-      sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
-      sw(2) = 0.5d0*(sw(1)+sw(3)) !uhat
+
 
       !----Harten entropy fix for near zero-speed nonlinear waves
       ! Note: this might change near zero-speed shocks as well
@@ -136,11 +140,11 @@ c     !find if sonic problem
       source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
       source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
 
-      if (ixy.eq.1) source2dx = source2dx + dx*h*grav*dsin(theta)
+      if (dabs(u).le.veltol2) then
+         source2dx=-hbar*gmod*delb
+      endif
 
-c      if (dabs(u).le.veltol2) then
-c         source2dx=-h*gmod*delb
-c      endif
+      if (ixy.eq.1) source2dx = source2dx + dx*hbar*grav*dsin(theta)
 
 c     !find bounds in case of critical state resonance, or negative states
 c     !find jump in h, deldelh
@@ -208,7 +212,7 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
-      if (dabs(uL**2 + uR**2).gt.veltol2) then
+      if (dabs(u).gt.veltol2) then
          del(2) = del(2) -source2dx
       else
          if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
@@ -216,7 +220,7 @@ c     !find bounds in case of critical state resonance, or negative states
      &                   -dabs(dx*tau/rho)),del(2)-source2dx)
          else
             del(0)=0.d0
-            del(1)=0.d0
+            del(1)=0.d0!huR-huL
             del(2)=0.d0
             del(3)=0.d0
             psi(1)=0.d0
