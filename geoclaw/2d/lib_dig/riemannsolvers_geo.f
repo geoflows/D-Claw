@@ -95,7 +95,7 @@ c-----------------------------------------------------------------------
      &                                          1,drytol,gmod)
       sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
       sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
-      sw(2) = uhat
+      sw(2) = 0.5d0*(sw(1)+sw(3)) !uhat
 
       !----Harten entropy fix for near zero-speed nonlinear waves
       ! Note: this might change near zero-speed shocks as well
@@ -208,7 +208,7 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
-      if (dabs(u).gt.veltol2) then
+      if (dabs(uL**2 + uR**2).gt.veltol2) then
          del(2) = del(2) -source2dx
       else
          if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then

@@ -176,6 +176,7 @@ c                bR=hstartest+bL
                vR=vL
                mR=mL
                pR=pL
+               theta = 0.d0
             !elseif (hL+bL.lt.bR) then
                !bR=hL+bL
             endif
@@ -198,6 +199,7 @@ c               bL=hstartest+bR
                uL=-uR
                vL=vR
                pL=pR
+               theta = 0.d0
             !elseif (hR+bR.lt.bL) then
                !bL=hR+bR
             endif
