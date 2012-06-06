@@ -220,7 +220,7 @@ c     !find bounds in case of critical state resonance, or negative states
      &                   -dabs(dx*tau/rho)),del(2)-source2dx)
          else
             del(0)=0.d0
-            del(1)=0.d0!huR-huL
+            del(1)=0.d0
             del(2)=0.d0
             del(3)=0.d0
             psi(1)=0.d0
