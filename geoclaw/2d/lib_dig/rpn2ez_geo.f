@@ -72,7 +72,7 @@ c
       common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
 
       gmod=grav
-      drytol=phys_tol
+      drytol=drytolerance
 
       !set to true to use an entropy correction
       !entropycorr1 = .false.  !Harten (bound nonlinear waves away from s=0)

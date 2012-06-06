@@ -289,20 +289,6 @@ contains
          return
       endif
 
-      hlo = phys_tol
-
-      if (h.lt.hlo) then
-         u = 0.d0!hu/h
-         v = 0.d0!hv/h
-         m = m0!hm/m
-         h = (h**2 + hlo**2)/(2.d0*hlo)
-         p  = h*rho_f*gmod
-         hu = 0.d0!h*u
-         hv = 0.d0!h*v
-         hm = 0.d0!h*m
-         return
-      endif
-
       u = hu/h
       v = hv/h
       m = hm/h
