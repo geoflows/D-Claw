@@ -184,7 +184,7 @@ contains
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
 
       if (h.le.dry_tol) then
-         h = 0.d0!dmax1(0.d0,h)
+         h = 0.d0
          hu = 0.d0
          hv = 0.d0
          hm = 0.d0
@@ -192,20 +192,6 @@ contains
          u = 0.d0
          v = 0.d0
          m = m0
-         return
-      endif
-
-      hlo = phys_tol
-
-      if (h.lt.hlo.and..false.) then
-         u = 0.d0!hu/h
-         v = 0.d0!hv/h
-         m = m0!hm/m
-         h = (h**2 + hlo**2)/(2.d0*hlo)
-         p  = h*rho_f*gmod
-         hu = 0.d0!h*u
-         hv = 0.d0!h*v
-         hm = 0.d0!h*m
          return
       endif
 

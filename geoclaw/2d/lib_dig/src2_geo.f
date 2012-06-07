@@ -19,7 +19,7 @@ c =========================================================
       double precision gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision cx,cy,pdh,vnorm,theta
+      double precision cx,cy,pdh,vnorm,hvnorm,theta
       integer i,j
 c
 
@@ -56,23 +56,15 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
      &                  sigbed,kperm,compress,pm)
 
             vnorm = dsqrt(u**2 + v**2)
+            hvnorm = h*vnorm
             if (p_initialized.eq.0.and.vnorm.le.0.d0) cycle
 
-            if (dabs(u).gt.0.d0) then
-               hu = hu -dsign(tau/rho,hu)*dt
-               if (hu*q(i,j,2).le.0.d0) then
-                  hu = 0.d0
-               endif
+            if (vnorm.gt.0.d0) then
+               hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
+               hvnorm = hvnorm*dexp(-(1.d0-m)*mu*dt/h**2)
+               hu = hvnorm*u/vnorm
+               hv = hvnorm*v/vnorm
             endif
-
-            if (dabs(v).gt.0.d0) then
-               hv = hv -dsign(tau/rho,hv)*dt
-               if (hv*q(i,j,3).le.0.d0) then
-                  hv = 0.d0
-               endif
-            endif
-            hu = hu*dexp(-(1.d0-m)*mu*dt/h**2)
-            hv = hv*dexp(-(1.d0-m)*mu*dt/h**2)
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
 
@@ -109,7 +101,7 @@ c     &                  sigbed,kperm,compress,pm)
             q(i,j,2) = hu
             q(i,j,3) = hv
             q(i,j,4) = hm
-            q(i,j,5) = p!h*pdh
+            q(i,j,5) = p
 
          enddo
       enddo

@@ -74,32 +74,27 @@ c-----------------------------------------------------------------------
       sw(3) = sE2
 
       call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
-     &                                          1,drytol,gmod)
+     &                                          1,drytol,geps)
       sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
       sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
+      sw(2) = 0.5d0*(sw(3)+sw(1))
 
       if (hL.ge.drytol.and.hR.ge.drytol) then
          h = 0.5d0*(hL + hR)
          u = uhat
          v = 0.5d0*(vL + vR)
          mbar = 0.5d0*(mL + mR)
-         sw(2) = uhat
       elseif (hL.ge.drytol) then
          h = hL
          u = uhat
          v = vL
          mbar = mL
-         sw(2) = sw(3)
       else
          h = hR
          u = uhat
          v = vR
          mbar = mR
-         sw(2) = sw(1)
       endif
-
-
-
 
       !----Harten entropy fix for near zero-speed nonlinear waves
       ! Note: this might change near zero-speed shocks as well
@@ -212,12 +207,13 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
       call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
 
-      if (dabs(u).gt.veltol2) then
+      if (dabs(uR**2+uL**2).gt.veltol2) then
          del(2) = del(2) -source2dx
       else
          if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
-            del(2)=dsign(dabs(dabs(del(2)-source2dx)
-     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
+c            del(2)=dsign(dabs(dabs(del(2)-source2dx)
+c     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
+            del(2) = del(2) -source2dx
          else
             del(0)=0.d0
             del(1)=0.d0
