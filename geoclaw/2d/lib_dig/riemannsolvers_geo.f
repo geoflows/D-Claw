@@ -277,8 +277,8 @@ c     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
       enddo
 
       !corrector wave
-      fw(2,2) = fw(2,2) + beta(0)
-      fw(5,2) = fw(5,2) + beta(4)
+      fw(2,2) = fw(2,2) + beta(0)*R(2,0)
+      fw(5,2) = fw(5,2) + beta(4)*R(4,4)
 
       !waves and fwaves for delta hum
       fw(4,1) = fw(1,1)*mL
