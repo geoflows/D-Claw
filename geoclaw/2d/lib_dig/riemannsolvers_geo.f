@@ -47,8 +47,9 @@ c-----------------------------------------------------------------------
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
       double precision hstarHLL,deldelh,drytol,gmod,geps
+      double precision raremin,raremax,rare1st,rare2st,sdelta
       logical sonic,rare1,rare2
-      logical entropycorr1
+      logical rarecorrectortest,rarecorrector
 
       veltol1=1.d-6
       veltol2=0.d0
@@ -58,7 +59,7 @@ c-----------------------------------------------------------------------
       gmod = grav*dcos(theta)
       geps = gmod*eps
 
-      entropycorr1 = .false.
+      rarecorrectortest = .true.
 
       !determine wave speeds
       sL=uL-dsqrt(geps*hL) ! 1 wave speed of left state
@@ -96,16 +97,32 @@ c-----------------------------------------------------------------------
          mbar = mR
       endif
 
-      !----Harten entropy fix for near zero-speed nonlinear waves
-      ! Note: this might change near zero-speed shocks as well
-      ! smoothed absolute value function between veltol and 2*veltol
-      if (entropycorr1) then
-         do mw=1,mwaves
-            if (dabs(sw(mw)).le.2.d0*veltol1) then
-              sw(mw) = dsign((sw(mw)**2 + (2.d0*veltol1)**2)/
-     &            (4.d0*veltol1),sw(mw))
+      hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
+c     !determine the middle entropy corrector wave------------------------
+      rarecorrector=.false.
+      if (rarecorrectortest) then
+         sdelta=sw(3)-sw(1)
+         raremin = 0.5d0
+         raremax = 0.9d0
+         if (rare1.and.sE1*s1m.lt.0.d0) raremin=0.2d0
+         if (rare2.and.sE2*s2m.lt.0.d0) raremin=0.2d0
+         if (rare1.or.rare2) then
+            !see which rarefaction is larger
+            rare1st=3.d0*(dsqrt(geps*hL)-dsqrt(geps*hm))
+            rare2st=3.d0*(dsqrt(geps*hR)-dsqrt(geps*hm))
+            if (max(rare1st,rare2st).gt.raremin*sdelta.and.
+     &         max(rare1st,rare2st).lt.raremax*sdelta) then
+                  rarecorrector=.true.
+               if (rare1st.gt.rare2st) then
+                  sw(2)=s1m
+               elseif (rare2st.gt.rare1st) then
+                  sw(2)=s2m
+               else
+                  sw(2)=0.5d0*(s1m+s2m)
+               endif
             endif
-         enddo
+         endif
+         if (hstarHLL.lt.min(hL,hR)/5.d0) rarecorrector=.false.
       endif
 
       delb=bR-bL
@@ -143,7 +160,7 @@ c     !find if sonic problem
 
 c     !find bounds in case of critical state resonance, or negative states
 c     !find jump in h, deldelh
-      hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
+
       if (sonic) then
          deldelh =  -delb
       else
@@ -192,6 +209,20 @@ c     !find bounds in case of critical state resonance, or negative states
       R(2,4) = 0.d0
       R(3,4) = 0.d0
       R(4,4) = 1.d0
+
+      if (rarecorrector) then
+         R(0,0) = 1.d0
+         R(1,0) = sw(2)
+         R(2,0) = sw(3)**2
+         R(3,0) = gamma*rho*gmod
+         R(4,0) = 0.d0
+
+         R(0,4) = 1.d0
+         R(1,4) = sw(2)
+         R(2,4) = 0.d0
+         R(3,4) = gamma*rho*gmod
+         R(4,4) = gamma*rho*gmod*sw(2)
+      endif
 
       !determine del
       del(0) = hR- hL - deldelh
