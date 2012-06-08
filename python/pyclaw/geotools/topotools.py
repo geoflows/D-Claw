@@ -309,12 +309,12 @@ def scatter2gridded (scatterdatafile=" ",boundarydatafile=" ", headerfile=" ", o
     # Input data==========================:
     # read scattered data
     fin=open(scatterdatafile,'r')
-    a=fromfile(fin,sep=" ",count=-1,dtype=float)
+    a=np.fromfile(fin,sep=" ",count=-1,dtype=float)
     fin.close
     #read boundary data ie: points specifying a quadrilateral bounding the scattered data if it is needed
     if boundarydatafile !=" " :
         fin=open(boundarydatafile,'r')
-        b=fromfile(fin,sep=" ",count=-1,dtype=float)
+        b=np.fromfile(fin,sep=" ",count=-1,dtype=float)
         fin.close
         a=np.hstack((a,b))
     #reshape data into (#pts , 3) array

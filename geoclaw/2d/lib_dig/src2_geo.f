@@ -87,14 +87,17 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*dexp(krate*dt)
 
-            !integrate solid volume source term
-            !krate = -rho_f*D/(rho*h)
-            !hm = hm*dexp(krate*dt)
 
-            !call admissibleq(h,hu,hv,hm,p,u,v,m)
-            !call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
-c     &                  sigbed,kperm,compress,pm)
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
+     &                  sigbed,kperm,compress,pm)
 
+
+            krate = D*(rho-rho_f)/rho
+            hu = hu*dexp(dt*krate/h)
+            hv = hv*dexp(dt*krate/h)
+            hm = hm*dexp(-dt*D*rho_f/(h*rho))
+            h = h + krate*dt
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             q(i,j,1) = h

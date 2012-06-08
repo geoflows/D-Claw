@@ -363,8 +363,8 @@ c============= compute fluctuations=============================================
                   apdq(i,m) = apdq(i,m) +
      &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
                else
-c                  amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
-c                  apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
+                  amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
+                  apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
                endif
             enddo
          enddo

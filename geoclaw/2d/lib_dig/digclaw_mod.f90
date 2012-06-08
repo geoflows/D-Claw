@@ -312,7 +312,7 @@ contains
 
       taushear = (tau/rho)*dsign(1.d0,u)
       vnorm = dabs(u)
-      if (h.lt.drytol) then
+      if (h.lt.drytol.or..true.) then
          psi(1) = 0.d0
          psi(2) = 0.d0
          psi(3) = 0.d0

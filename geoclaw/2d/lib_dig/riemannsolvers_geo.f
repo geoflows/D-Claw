@@ -218,11 +218,7 @@ c     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
             del(0)=0.d0
             del(1)=0.d0
             del(2)=0.d0
-            del(3)=0.d0
-            psi(1)=0.d0
-            psi(2)=0.d0
-            psi(3)=0.d0
-            psi(4)=0.d0
+            !del(3)=0.d0
          endif
       endif
 
