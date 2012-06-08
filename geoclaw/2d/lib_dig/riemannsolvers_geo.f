@@ -213,7 +213,7 @@ c     !find bounds in case of critical state resonance, or negative states
       if (rarecorrector) then
          R(0,0) = 1.d0
          R(1,0) = sw(2)
-         R(2,0) = sw(3)**2
+         R(2,0) = sw(2)**2
          R(3,0) = gamma*rho*gmod
          R(4,0) = 0.d0
 
