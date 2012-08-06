@@ -278,7 +278,7 @@ def dx_from_gcdist(d,x1,y1,y2,Rsphere=Rearth,units='degrees'):
 
 
 #==============================================================================================
-def scatter2gridded (scatterdatafile=" ",boundarydatafile=" ", headerfile=" ", outputfile=" "):
+def scatter2gridded (scatterdatafile=" ",boundarydatafile=" ", headerfile=" ", outputfile=" ",interp="nn"):
 
     """
     scatter2gridded (scatterdatafile=" ",boundarydatafile=" ", headerfile=" ", outputfile=" "):
@@ -336,7 +336,7 @@ def scatter2gridded (scatterdatafile=" ",boundarydatafile=" ", headerfile=" ", o
 
     X,Y=np.meshgrid(xgrid,ygrid)
 
-    Z = pylab.griddata(a[:,0],a[:,1],a[:,2],X,Y)
+    Z = pylab.griddata(a[:,0],a[:,1],a[:,2],X,Y,interp)
     Y=np.flipud(Y)
     Z=np.flipud(Z)
 #    pyplot.contour(X,Y,Z)

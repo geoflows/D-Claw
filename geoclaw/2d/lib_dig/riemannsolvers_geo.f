@@ -59,7 +59,7 @@ c-----------------------------------------------------------------------
       gmod = grav*dcos(theta)
       geps = gmod*eps
 
-      rarecorrectortest = .true.
+      rarecorrectortest = .false.
 
       !determine wave speeds
       sL=uL-dsqrt(geps*hL) ! 1 wave speed of left state
