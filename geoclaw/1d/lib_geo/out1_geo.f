@@ -21,11 +21,11 @@ c
       character*10 fname1, fname2, fname3
       logical outaux
 
-      outaux = .false.
+      outaux = .true.
 c
 c     # Write the results to the file fort.q<iframe>
 c     # Use format required by matlab script  plotclaw1.m
-c     # The same format is used by the amrclaw package.  
+c     # The same format is used by the amrclaw package.
 c     # Here it's adapted to output just the single grid.
 c
 c     # first create the file name and open file
@@ -77,7 +77,7 @@ c
       write(50,*) ' '
 
 
-      if (outaux) then 
+      if (outaux) then
 c        # also output the aux arrays:
          open(unit=70,file=fname3,status='unknown',form='formatted')
          write(70,1001) mptr,level,mx

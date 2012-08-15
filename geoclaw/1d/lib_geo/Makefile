@@ -1,50 +1,48 @@
-#
-#	Makefile for the geoclaw 1d library code:
-#
-#	To compile the claw1 library files type:  make lib
-#       (from the this sub-directory)
-#
-#	To compile a single file.f type:	  make file.o
-#
-#
-# Set your environment compiler $FC and compiler flags $FFLAGS
-LFLAGS = $(FFLAGS) -O
-LINK   = $(FC)
 
-# Or comment above, uncomment below to use some defaults
-#LFLAGS =  -funroll-loops -finline-functions -fdefault-real-8
-#LINK = gfortran
+# Library version of Makefile
+# ---------------------------
 
-# Build rules
-%.o : %.f ; $(LINK) $(LFLAGS) -c $< -o $@
+# Only "make .objs" and "make .htmls" are useful in this directory.
 
-LIBOBJECTS = \
-  $(GEOCLAW)/1d/lib/bc1_geo.o \
-  $(GEOCLAW)/1d/lib/b4step1_geo.o \
-  $(GEOCLAW)/1d/lib/novaccum1_geo.o \
-  $(GEOCLAW)/1d/lib/src1_geo.o \
-  $(GEOCLAW)/1d/lib/out1_geo.o \
-  $(GEOCLAW)/1d/lib/rp1_geo.o \
-  $(GEOCLAW)/1d/lib/riemannsolvers_geo.o \
-  $(GEOCLAW)/1d/lib/rp1ez_geo.o \
-  $(GEOCLAW)/1d/lib/step1fw_geo.o \
-  $(GEOCLAW)/1d/lib/claw1.o \
+# Makefile for Clawpack code in this directory.
+# This version only sets the local files and frequently changed
+# options, and then includes the standard makefile pointed to by CLAWMAKE.
+CLAWMAKE = $(CLAW)/util/Makefile.common
+
+# See the above file for details and a list of make options, or type
+#   make .help
+# at the unix prompt.
 
 
-# make list of .o files required from the sources above:
-LIBSOURCES = $(subst .o,.f, $(LIBOBJECTS))
+# Environment variable FC should be set to fortran compiler, e.g. gfortran
+FC ?= gfortran   # default if not set as environment variable
+# Add any desired compiler flags such as -g here:
+FFLAGS ?=
 
-lib: $(LIBOBJECTS)
+CLAW_LIB = $(shell pwd)
 
-backup : $(LIBSOURCES)
-	cat $(LIBSOURCES) > library.`date +%y%m%d`
+CLAW_SOURCES = \
+  $(CLAW_LIB)/gauges_mod.f90 \
+  $(CLAW_LIB)/setprob_geo.f \
+  $(CLAW_LIB)/setswparams_geo.f \
+  $(CLAW_LIB)/bc1_geo.f \
+  $(CLAW_LIB)/b4step1_geo.f \
+  $(CLAW_LIB)/novaccum1_geo.f \
+  $(CLAW_LIB)/src1_geo.f \
+  $(CLAW_LIB)/out1_geo.f \
+  $(CLAW_LIB)/riemannsolvers_geo.f \
+  $(CLAW_LIB)/rp1ez_geo.f \
+  $(CLAW_LIB)/rp1_geo.f \
+  $(CLAW_LIB)/opendatafile_geo.f \
+  $(CLAW_LIB)/step1fw_geo.f \
 
-clean:
-	-rm -f $(LIBOBJECTS)
+default: .objs
 
-new:
-				make clean
-				make lib
+
+#-------------------------------------------------------------------
+# Include Makefile containing standard definitions and make options:
+include $(CLAWMAKE)
 
 
 ### DO NOT remove this line - make depends on it ###
+
