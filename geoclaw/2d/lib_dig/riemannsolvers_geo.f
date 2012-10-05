@@ -3,8 +3,7 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         theta,gamma,eps,dx,sw,fw,w)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -30,8 +29,8 @@ c-----------------------------------------------------------------------
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
-      double precision kappa,rho,kperm,compress,tanpsi,D,tau
-      double precision theta,gamma,eps,dx
+      double precision thetaL,thetaR,phiL,phiR,dx
+
 
       double precision fw(meqn,mwaves),w(meqn,mwaves)
       double precision sw(mwaves)
@@ -43,11 +42,15 @@ c-----------------------------------------------------------------------
       double precision det1,det2,det3,detR
       double precision R(0:4,0:4),A(5,5),del(0:4)
       double precision beta(0:4),betas(4)
+      double precision rho,rhoL,rhoR,tauL,tauR
+      double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pm
+      double precision theta,gamma,eps
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
       double precision hstarHLL,deldelh,drytol,gmod,geps
       double precision raremin,raremax,rare1st,rare2st,sdelta
+      double precision source2dxL,source2dxR
       logical sonic,rare1,rare2
       logical rarecorrectortest,rarecorrector
 
@@ -56,10 +59,27 @@ c-----------------------------------------------------------------------
       criticaltol=1.d-6
       drytol=drytolerance
 
+      rarecorrectortest = .false.
+
+      do m=1,4
+         psi(m) = 0.d0
+      enddo
+
+      pm = dsign(1.d0,uR-uL)
+
+      call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
+     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
+
+      call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
+     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
+
+      rho = 0.5d0*(rhoL + rhoR)
+      theta = 0.5d0*(thetaL + thetaR)
+      gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
+      eps = kappa + (1.d0-kappa)*gamma
+
       gmod = grav*dcos(theta)
       geps = gmod*eps
-
-      rarecorrectortest = .false.
 
       !determine wave speeds
       sL=uL-dsqrt(geps*hL) ! 1 wave speed of left state
@@ -156,8 +176,6 @@ c     !find if sonic problem
          source2dx=-hbar*gmod*delb
       endif
 
-      if (ixy.eq.1) source2dx = source2dx + dx*hbar*grav*dsin(theta)
-
 c     !find bounds in case of critical state resonance, or negative states
 c     !find jump in h, deldelh
 
@@ -236,26 +254,49 @@ c     !find bounds in case of critical state resonance, or negative states
 
 
 *     !determine the source term
-      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
+c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
+      source2dxL = source2dx
+      source2dxR = source2dx
+
+
+      if (ixy.eq.1) then
+         source2dxL =source2dxL + dx*hL*grav*dsin(thetaL)
+         source2dxR =source2dxR + dx*hR*grav*dsin(thetaR)
+         source2dx = source2dx + dx*hbar*grav*dsin(theta)
+      endif
 
       if (dabs(uR**2+uL**2).gt.veltol2) then
          del(2) = del(2) -source2dx
       else
-         if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
+         if ((dabs(del(2)-source2dx).ge.dabs(dx*tauL/rhoL)).and.
+     &         (dabs(del(2)-source2dx).ge.dabs(dx*tauR/rhoR))) then
 c            del(2)=dsign(dabs(dabs(del(2)-source2dx)
 c     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
+            if (.false.) then
+            write(*,*) '-----------------------------------------'
+            write(*,*) 'thetaL,thetaR',thetaL,thetaR
+            write(*,*) 'ixy',ixy
+            write(*,*) 'Now: hL,hR,uL,uR:',hL,hR,uL,uR
+            write(*,*) 'bl,br',bL,bR
+            write(*,*) 'norm:', uR**2 + uL**2
+            write(*,*) 'srcL,src,srcR',source2dxL,source2dx,source2dxR
+            write(*,*) 'pL,pR,friction',pL,pR,dx*tauL/rhoL,dx*tauR/rhoR
+            write(*,*) 'prat',pL/(rho_f*gmod*hL),pR/(rho_f*hR*gmod)
+            write(*,*) '----------------------------------------------'
+            endif
             del(2) = del(2) -source2dx
          else
             del(0)=0.d0
             del(1)=0.d0
             del(2)=0.d0
-            !del(3)=0.d0
+            del(3)=0.d0
+            !write(*,*) 'del:',(del(m),m=0,4)
          endif
       endif
 
-      del(1) = del(1) - 0.5d0*dx*psi(1)
-      del(2) = del(2) - dx*psi(2)
-      del(4) = del(4) - 0.5d0*dx*psi(4)
+c      del(1) = del(1) - 0.5d0*dx*psi(1)
+c      del(2) = del(2) - dx*psi(2)
+c      del(4) = del(4) - 0.5d0*dx*psi(4)
 
 
 *     !R beta = del

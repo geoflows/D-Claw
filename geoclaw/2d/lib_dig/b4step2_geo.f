@@ -74,6 +74,10 @@ c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
      &            rho_f*gmod*q(i,j,1)
                call admissibleq(
      &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
+c               if (t.gt.9.) then
+c               write(*,*) 't prat:',t/init_ptf,
+c     &            (1./init_pmin_ratio)*q(i,j,5)/(rho_f*gmod*q(i,j,1))
+c               endif
             enddo
          enddo
       elseif (t.gt.init_ptf) then

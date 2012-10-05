@@ -48,6 +48,7 @@ c     !find limits of integral (this should already be true?)
       bilinearintegral = (0.5d0*(a*sumxi + b*sumeta)
      &                     + 0.25d0*c*sumxi*sumeta + d)*area
 
+
       return
 
       end function

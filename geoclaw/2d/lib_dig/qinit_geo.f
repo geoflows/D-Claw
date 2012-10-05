@@ -43,13 +43,13 @@ c
 
             xintlow = dmax1(xlower,xlowqinit(mf))
             xinthi  = dmin1(xhigher,xhiqinit(mf))
-            istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
-            iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
+            istart  = max(1-mbc,int(0.5 + (xintlow-xlower)/dx))
+            iend    = min(mx+mbc,int(1.0 + (xinthi-xlower)/dx))
 
             yintlow = dmax1(ylower,ylowqinit(mf))
             yinthi  = dmin1(yhigher,yhiqinit(mf))
-            jstart  = int(0.5 + (yintlow-ylower)/dy)
-            jend    = max(my,int(1.0 + (yinthi-ylower)/dy))
+            jstart  = max(1-mbc,int(0.5 + (yintlow-ylower)/dy))
+            jend    = min(my+mbc,int(1.0 + (yinthi-ylower)/dy))
 
             do i=istart,iend
                x = xlower + (i-0.5d0)*dx
