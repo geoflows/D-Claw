@@ -15,7 +15,8 @@ c
 
       use geoclaw_module
       use topo_module
-      
+      use auxinit_module
+
       implicit double precision (a-h,o-z)
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
@@ -50,22 +51,86 @@ c           # for lat-lon grid on sphere:
             else
                aux(i,j,2) = 1.d0
                aux(i,j,3) = 1.d0
-	            endif
+            endif
 
             if (mtopofiles.gt.0) then
                topoint=0.d0
                call cellgridintegrate(topoint,xim,xcell,xip,yjm,ycell,
-     &	        yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
-     &	        mxtopo,mytopo,mtopo,i0topo,mtopoorder,
-     &	        mtopofiles,mtoposize,topowork)
+     &           yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
+     &           mxtopo,mytopo,mtopo,i0topo,mtopoorder,
+     &           mtopofiles,mtoposize,topowork)
                aux(i,j,1) = topoint/(dx*dy*aux(i,j,2))
 
             else
                aux(i,j,1) = 0.d0
-c     	      # or set-up your own topo
-               endif
+c               # or set-up your own topo
+            endif
+c        #------- zero aux variables that will be set by files
+            do mf = 1,mauxinitfiles
+               aux(i,j,iauxinit(mf)) = 0.d0
             enddo
+
          enddo
+      enddo
+
+
+c     --------------integrate auxinit files if they exist---------------
+      xhigher = xlow + (mx-0.5d0)*dx
+      yhigher = ylow + (my-0.5d0)*dy
+
+      do mf =1,mauxinitfiles
+         if ((xlow.le.xhiauxinit(mf).and.
+     &                  xhigher.ge.xlowauxinit(mf)).and.
+     &                  (ylow.le.yhiauxinit(mf).and.
+     &                  yhigher.ge.ylowauxinit(mf))) then
+
+            xintlow = dmax1(xlow,xlowauxinit(mf))
+            xinthi  = dmin1(xhigher,xhiauxinit(mf))
+            istart  = max(1-mbc,int(0.5 + (xintlow-xlow)/dx))
+            iend    = min(mx+mbc,int(1.0 + (xinthi-xlow)/dx))
+
+            yintlow = dmax1(ylow,ylowauxinit(mf))
+            yinthi  = dmin1(yhigher,yhiauxinit(mf))
+            jstart  = max(1-mbc,int(0.5 + (yintlow-ylow)/dy))
+            jend    = min(my+mbc,int(1.0 + (yinthi-ylow)/dy))
+
+            do i=istart,iend
+               x = xlow + (i-0.5d0)*dx
+               xim = x - 0.5d0*dx
+               xip = x + 0.5d0*dx
+               do j=jstart,jend
+                  y = ylow + (j-0.5d0)*dy
+                  yjm = y - 0.5d0*dy
+                  yjp = y + 0.5d0*dy
+
+                  if (xip.gt.xlowauxinit(mf)
+     &                     .and.xim.lt.xhiauxinit(mf)
+     &                     .and.yjp.gt.ylowauxinit(mf)
+     &                     .and.yjm.lt.yhiauxinit(mf)) then
+
+                     xipc=dmin1(xip,xhiauxinit(mf))
+                     ximc=dmax1(xim,xlowauxinit(mf))
+                     xc=0.5d0*(xipc+ximc)
+
+                     yjpc=dmin1(yjp,yhiauxinit(mf))
+                     yjmc=dmax1(yjm,ylowauxinit(mf))
+                     yc=0.5d0*(yjmc+yjpc)
+
+                     daux =topointegral(ximc,xc,xipc,yjmc,yc,yjpc,
+     &                        xlowauxinit(mf),ylowauxinit(mf),
+     &                        dxauxinit(mf),dyauxinit(mf),
+     &                        mxauxinit(mf),myauxinit(mf),
+     &                        auxinitwork
+     &                      (i0auxinit(mf):i0auxinit(mf)+mauxinit(mf)-1)
+     &                        ,1)
+                     daux=daux/((xipc-ximc)*(yjpc-yjmc)*aux(i,j,2))
+                     aux(i,j,iauxinit(mf)) = aux(i,j,iauxinit(mf))+daux
+                  endif
+               enddo
+            enddo
+         endif
+      enddo
+
 
       return
 
