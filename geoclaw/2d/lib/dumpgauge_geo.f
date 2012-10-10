@@ -25,7 +25,7 @@ c
          endif
 
 
-      istart = bsearch(mptr) 
+      istart = bsearch(mptr)
       if (istart .lt. 1) return      !this grid not used
 
 c     # this stuff the same for all gauges on this grid
@@ -55,7 +55,7 @@ c
         ycent  = ylow + (jindex-.5)*hy
         xoff   = (xgauge(i)-xcent)/hx
         yoff   = (ygauge(i)-ycent)/hy
-        if (xoff .lt. 0. .or. xoff .gt. 1. or. 
+        if (xoff .lt. 0. .or. xoff .gt. 1. or.
      .	    yoff .lt. 0. .or. yoff .gt. 1.) then
 	       write(6,*)" BIG PROBLEM in DUMPGAUGE", i
         endif
@@ -82,16 +82,16 @@ c         # contains gauge rather than interpolating.
              topo = aux(icell,jcell,1)
              enddo
          else
-c         ## straightforward linear interp 
+c         ## straightforward linear interp
           do ivar = 1, nvar
-             var(ivar) = (1.d0-xoff)*(1.d0-yoff)*q(iindex,jindex,ivar) 
+             var(ivar) = (1.d0-xoff)*(1.d0-yoff)*q(iindex,jindex,ivar)
      .             + xoff*(1.d0-yoff)*q(iindex+1,jindex,ivar)
-     .             + (1.d0-xoff)*yoff*q(iindex,jindex+1,ivar) 
+     .             + (1.d0-xoff)*yoff*q(iindex,jindex+1,ivar)
      .             + xoff*yoff*q(iindex+1,jindex+1,ivar)
             end do
-          topo = (1.d0-xoff)*(1.d0-yoff)*aux(iindex,jindex,1) 
+          topo = (1.d0-xoff)*(1.d0-yoff)*aux(iindex,jindex,1)
      .             + xoff*(1.d0-yoff)*aux(iindex+1,jindex,1)
-     .             + (1.d0-xoff)*yoff*aux(iindex,jindex+1,1) 
+     .             + (1.d0-xoff)*yoff*aux(iindex,jindex+1,1)
      .             + xoff*yoff*aux(iindex+1,jindex+1,1)
         endif
 
@@ -103,7 +103,7 @@ c         ## straightforward linear interp
 100     format(i8,i5,15e15.7)
 
  10     continue
- 
+
  99   return
       end
 c
@@ -132,13 +132,13 @@ c # for debugging, initialize sources to 0 then check that all set
          mbestsrc(i) = 0
       end do
 
- 
-      do 20 lev = 1, lfine  
+
+      do 20 lev = 1, lfine
           mptr = lstart(lev)
  5        do 10 i = 1, mgauges
-            if ((xgauge(i) .ge. rnode(cornxlo,mptr)) .and.    
-     .          (xgauge(i) .le. rnode(cornxhi,mptr)) .and.    
-     .          (ygauge(i) .ge. rnode(cornylo,mptr)) .and.  
+            if ((xgauge(i) .ge. rnode(cornxlo,mptr)) .and.
+     .          (xgauge(i) .le. rnode(cornxhi,mptr)) .and.
+     .          (ygauge(i) .ge. rnode(cornylo,mptr)) .and.
      .          (ygauge(i) .le. rnode(cornyhi,mptr)) )
      .      mbestsrc(i) = mptr
  10       continue
@@ -149,7 +149,7 @@ c # for debugging, initialize sources to 0 then check that all set
 
 
       do i = 1, mgauges
-        if (mbestsrc(i) .eq. 0) 
+        if (mbestsrc(i) .eq. 0)
      .      write(6,*)"ERROR in setting grid src for gauge data",i
       end do
 
@@ -197,4 +197,4 @@ c
 
  99   return
       end
-	 
+
