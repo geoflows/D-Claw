@@ -58,13 +58,10 @@ c
       double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
       double precision pR,pL,hmL,hmR,mL,mR,phi_bedL,phi_bedR
       double precision hstar,hstartest,s1m,s2m,bL,bR
-      double precision dxdc,dx,pm
-      double precision sigbed,SN,rho,kappa,kperm,compress,tau,D,tanpsi
-      double precision rhoL,kpermL,compressL,tauL,DL,tanpsiL
-      double precision rhoR,kpermR,compressR,tauR,DR,tanpsiR
-      double precision gamma,eps
+      double precision dxdc,dx
+      double precision theta,thetaL,thetaR
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
-      double precision phiL,phiR,sE1,sE2
+      double precision sE1,sE2
 
 
 
@@ -118,12 +115,23 @@ c        !set normal direction
             dx = dycom
          endif
 
+         if (bed_normal.eq.1) then
+            thetaL = auxr(i-1,i_theta)
+            thetaR = auxl(i,i_theta)
+            theta = 0.5d0*(thetaL+thetaR)
+            gmod = grav*dcos(0.5d0*(thetaL+thetaR))
+         else
+            thetaL = 0.d0
+            thetaR = 0.d0
+            theta = 0.d0
+         endif
+
          !zero (small) negative values if they exist and set velocities
          call admissibleq(ql(i,1),ql(i,mhu),ql(i,nhv),
-     &            ql(i,4),ql(i,5),uR,vR,mR)
+     &            ql(i,4),ql(i,5),uR,vR,mR,thetaR)
 
          call admissibleq(qr(i-1,1),qr(i-1,mhu),qr(i-1,nhv),
-     &            qr(i-1,4),qr(i-1,5),uL,vL,mL)
+     &            qr(i-1,4),qr(i-1,5),uL,vL,mL,thetaL)
 
 
          !Riemann problem variables
@@ -141,8 +149,6 @@ c        !set normal direction
          bR = auxl(i,1)
          phi_bedL = auxr(i-1,i_phi)
          phi_bedR = auxl(i,i_phi)
-         phiR = 0.5d0*gmod*hR**2 + hR*uR**2
-         phiL = 0.5d0*gmod*hL**2 + hL*uL**2
 
          !test for wall problem vs. inundation problem
          do mw=1,mwaves
@@ -169,6 +175,8 @@ c                bR=hstartest+bL
                vR=vL
                mR=mL
                pR=pL
+               thetaL = 0.d0
+               thetaR = 0.d0
             !elseif (hL+bL.lt.bR) then
                !bR=hL+bL
             endif
@@ -191,6 +199,8 @@ c               bL=hstartest+bR
                uL=-uR
                vL=vR
                pL=pR
+               thetaL = 0.d0
+               thetaR = 0.d0
             !elseif (hR+bR.lt.bL) then
                !bL=hR+bR
             endif
@@ -198,36 +208,30 @@ c               bL=hstartest+bR
 
 c=================begin digclaw-auxset =================================
 
-         pm = dsign(1.d0,uR-uL)
-
-         if (hL.gt.drytol.and.hR.gt.drytol) then
-            !this is a completely wet 'normal' Riemann problem
-            call auxeval(hR,uR,vR,mR,pR,phi_bedR,
-     &        kappa,SN,rhoR,tanpsi,DR,tauR,sigbed,kpermR,compressR,pm)
-            call auxeval(hL,uL,vL,mL,pL,phi_bedL,
-     &        kappa,SN,rhoL,tanpsi,DL,tauL,sigbed,kpermL,compressL,pm)
-            D = 0.5d0*(DL + DR)
-            compress = 0.5d0*(compressL + compressR)
-            kperm = 0.5d0*(kpermR + kpermL)
-            tau = 0.5d0*(tauL + tauR)
-            rho = 0.5d0*(rhoR + rhoL)
-         elseif (hR.gt.drytol) then
-            !inundation problem
-            call auxeval(hR,uR,vR,mR,pR,phi_bedR,
-     &        kappa,SN,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-         elseif (hL.gt.drytol) then
-            !inundation problem
-            call auxeval(hL,uL,vL,mL,pL,phi_bedL,
-     &        kappa,SN,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-         endif
-
-         gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
-         eps = kappa + (1.d0-kappa)*gamma
-
-
-c         if (abs(D).gt.0.d0) then
-c            write(*,*) 't,D',tcom,D
+c         pm = dsign(1.d0,uR-uL)
+c
+c         if (hL.gt.drytol.and.hR.gt.drytol) then
+c            !this is a completely wet 'normal' Riemann problem
+c            call auxeval(hR,uR,vR,mR,pR,phi_bedR,theta,
+c     &        kappa,SN,rhoR,tanpsi,DR,tauR,sigbed,kpermR,compressR,pm)
+c            call auxeval(hL,uL,vL,mL,pL,phi_bedL,theta,
+c     &        kappa,SN,rhoL,tanpsi,DL,tauL,sigbed,kpermL,compressL,pm)
+c            D = 0.5d0*(DL + DR)
+c            compress = 0.5d0*(compressL + compressR)
+c            kperm = 0.5d0*(kpermR + kpermL)
+c            tau = 0.5d0*(tauL + tauR)
+c            rho = 0.5d0*(rhoR + rhoL)
+c         elseif (hR.gt.drytol) then
+c            !inundation problem
+c            call auxeval(hR,uR,vR,mR,pR,phi_bedR,theta,
+c     &        kappa,SN,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+c         elseif (hL.gt.drytol) then
+c            !inundation problem
+c            call auxeval(hL,uL,vL,mL,pL,phi_bedL,theta,
+c     &        kappa,SN,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 c         endif
+
+
 
 c================end digclaw-aux========================================
 
@@ -244,10 +248,14 @@ c            sw(2) = 0.5d0*(sw(1)+sw(3))
 c         endif
 
          !-- solve Riemann problem
-         call riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
+c         call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
+c     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
+c     &         kappa,rho,kperm,compress,tanpsi,D,tau,
+c     &         theta,gamma,eps,dx,sw,fw,wave)
+
+         call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,eps,dx,sw,fw,wave)
+     &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
@@ -358,8 +366,8 @@ c============= compute fluctuations=============================================
                   apdq(i,m) = apdq(i,m) +
      &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
                else
-c                  amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
-c                  apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
+                  amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
+                  apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
                endif
             enddo
          enddo

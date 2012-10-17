@@ -1,10 +1,9 @@
 
 
 c-----------------------------------------------------------------------
-      subroutine riemann_dig2_aug_sswave(meqn,mwaves,hL,hR,huL,huR,
+      subroutine riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         kappa,rho,kperm,compress,tanpsi,D,tau,
-     &         gamma,eps,dx,sw,fw,w)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -26,12 +25,13 @@ c-----------------------------------------------------------------------
       implicit none
 
 *     !i/o
-      integer meqn,mwaves
+      integer ixy,meqn,mwaves
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
-      double precision kappa,rho,kperm,compress,tanpsi,D,tau
-      double precision gamma,eps,dx
+      double precision thetaL,thetaR,phiL,phiR,dx
+      logical wallprob
+
 
       double precision fw(meqn,mwaves),w(meqn,mwaves)
       double precision sw(mwaves)
@@ -43,22 +43,42 @@ c-----------------------------------------------------------------------
       double precision det1,det2,det3,detR
       double precision R(0:4,0:4),A(5,5),del(0:4)
       double precision beta(0:4),betas(4)
+      double precision rho,rhoL,rhoR,tauL,tauR
+      double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pm
+      double precision theta,gamma,eps
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
       double precision hstarHLL,deldelh,drytol,gmod,geps
+      double precision raremin,raremax,rare1st,rare2st,sdelta
+      double precision source2dxL,source2dxR
       logical sonic,rare1,rare2
-      logical entropycorr1
+      logical rarecorrectortest,rarecorrector
 
       veltol1=1.d-6
       veltol2=0.d0
       criticaltol=1.d-6
       drytol=drytolerance
 
-      gmod = grav
-      geps = grav*eps
+      do m=1,4
+         psi(m) = 0.d0
+      enddo
 
-      entropycorr1 = .false.
+      pm = dsign(1.d0,uR-uL)
+
+      call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
+     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
+
+      call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
+     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
+
+      rho = 0.5d0*(rhoL + rhoR)
+      theta = 0.5d0*(thetaL + thetaR)
+      gamma = 1.5d0*(rho_f/(6.d0*rho)+0.5d0)
+      eps = kappa + (1.d0-kappa)*gamma
+
+      gmod = grav*dcos(theta)
+      geps = gmod*eps
 
       !determine wave speeds
       sL=uL-dsqrt(geps*hL) ! 1 wave speed of left state
@@ -72,6 +92,12 @@ c-----------------------------------------------------------------------
       sE2 = max(sR,sRoe2) ! Eindfeldt speed 2 wave
       sw(1) = sE1
       sw(3) = sE2
+
+      call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
+     &                                          1,drytol,geps)
+      sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
+      sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
+      sw(2) = 0.5d0*(sw(3)+sw(1))
 
       if (hL.ge.drytol.and.hR.ge.drytol) then
          h = 0.5d0*(hL + hR)
@@ -90,23 +116,33 @@ c-----------------------------------------------------------------------
          mbar = mR
       endif
 
-
-      call riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
-     &                                          1,drytol,gmod)
-      sw(1)= min(sw(1),s2m) !Modified Einfeldt speed
-      sw(3)= max(sw(3),s1m) !Modified Einfeldt speed
-      sw(2) = uhat
-
-      !----Harten entropy fix for near zero-speed nonlinear waves
-      ! Note: this might change near zero-speed shocks as well
-      ! smoothed absolute value function between veltol and 2*veltol
-      if (entropycorr1) then
-         do mw=1,mwaves
-            if (dabs(sw(mw)).le.2.d0*veltol1) then
-              sw(mw) = dsign((sw(mw)**2 + (2.d0*veltol1)**2)/
-     &            (4.d0*veltol1),sw(mw))
+      hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
+c     !determine the middle entropy corrector wave------------------------
+      rarecorrectortest = .true.
+      rarecorrector=.false.
+      if (rarecorrectortest) then
+         sdelta=sw(3)-sw(1)
+         raremin = 0.5d0
+         raremax = 0.9d0
+         if (rare1.and.sE1*s1m.lt.0.d0) raremin=0.2d0
+         if (rare2.and.sE2*s2m.lt.0.d0) raremin=0.2d0
+         if (rare1.or.rare2) then
+            !see which rarefaction is larger
+            rare1st=3.d0*(dsqrt(geps*hL)-dsqrt(geps*hm))
+            rare2st=3.d0*(dsqrt(geps*hR)-dsqrt(geps*hm))
+            if (max(rare1st,rare2st).gt.raremin*sdelta.and.
+     &         max(rare1st,rare2st).lt.raremax*sdelta) then
+                  rarecorrector=.true.
+               if (rare1st.gt.rare2st) then
+                  sw(2)=s1m
+               elseif (rare2st.gt.rare1st) then
+                  sw(2)=s2m
+               else
+                  sw(2)=0.5d0*(s1m+s2m)
+               endif
             endif
-         enddo
+         endif
+         if (hstarHLL.lt.min(hL,hR)/5.d0) rarecorrector=.false.
       endif
 
       delb=bR-bL
@@ -135,13 +171,14 @@ c     !find if sonic problem
 
       source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
       source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
-c      if (dabs(u).le.veltol2) then
-c         source2dx=-h*gmod*delb
-c      endif
+
+      if (dabs(u).le.veltol2) then
+         source2dx=-hbar*gmod*delb
+      endif
 
 c     !find bounds in case of critical state resonance, or negative states
 c     !find jump in h, deldelh
-      hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
+
       if (sonic) then
          deldelh =  -delb
       else
@@ -158,7 +195,6 @@ c     !find bounds in case of critical state resonance, or negative states
          deldelh = min(deldelh,hR)
          deldelh = max(deldelh,hstarHLL*(sE2-sE1)/sE2)
       endif
-
 
 *     !determine R
       R(0,0) = 0.d0
@@ -192,6 +228,20 @@ c     !find bounds in case of critical state resonance, or negative states
       R(3,4) = 0.d0
       R(4,4) = 1.d0
 
+      if (rarecorrector) then
+         R(0,0) = 1.d0
+         R(1,0) = sw(2)
+         R(2,0) = sw(2)**2
+         R(3,0) = gamma*rho*gmod
+         R(4,0) = 0.d0
+
+         R(0,4) = 1.d0
+         R(1,4) = sw(2)
+         R(2,4) = 0.d0
+         R(3,4) = gamma*rho*gmod
+         R(4,4) = gamma*rho*gmod*sw(2)
+      endif
+
       !determine del
       del(0) = hR- hL - deldelh
       del(1) = huR - huL
@@ -204,22 +254,50 @@ c     !find bounds in case of critical state resonance, or negative states
 
 
 *     !determine the source term
-      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
+c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
+      source2dxL = source2dx
+      source2dxR = source2dx
 
-      if (dabs(u).gt.veltol2) then
-         del(2) = del(2) -source2dx - dx*psi(2)
+
+      if (ixy.eq.1.and.(.not.wallprob)) then
+         source2dxL =source2dxL + dx*hL*grav*dsin(thetaL)
+         source2dxR =source2dxR + dx*hR*grav*dsin(thetaR)
+         source2dx = source2dx + dx*hbar*grav*dsin(theta)
+      endif
+
+      if (dabs(uR**2+uL**2).gt.veltol2) then
+         del(2) = del(2) -source2dx
       else
-         if (dabs(del(2)-source2dx).ge.dabs(dx*tau/rho)) then
-            del(2)=dsign(dabs(dabs(del(2)-source2dx)
-     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
+         if ((dabs(del(2)-source2dx).ge.dabs(dx*tauL/rhoL)).and.
+     &         (dabs(del(2)-source2dx).ge.dabs(dx*tauR/rhoR))) then
+c            del(2)=dsign(dabs(dabs(del(2)-source2dx)
+c     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
+            if (.false.) then
+            write(*,*) '-----------------------------------------'
+            write(*,*) 'thetaL,thetaR',thetaL,thetaR
+            write(*,*) 'ixy',ixy
+            write(*,*) 'Now: hL,hR,uL,uR:',hL,hR,uL,uR
+            write(*,*) 'bl,br',bL,bR
+            write(*,*) 'norm:', uR**2 + uL**2
+            write(*,*) 'srcL,src,srcR',source2dxL,source2dx,source2dxR
+            write(*,*) 'pL,pR,friction',pL,pR,dx*tauL/rhoL,dx*tauR/rhoR
+            write(*,*) 'prat',pL/(rho_f*gmod*hL),pR/(rho_f*hR*gmod)
+            write(*,*) '----------------------------------------------'
+            endif
+            del(2) = del(2) -source2dx
          else
             del(0)=0.d0
+            del(1)=0.d0
             del(2)=0.d0
             del(3)=0.d0
+            !write(*,*) 'del:',(del(m),m=0,4)
          endif
       endif
-      del(1) = del(1) - 0.5d0*dx*psi(1)
-      del(4) = del(4) - 0.5d0*dx*psi(4)
+
+c      del(1) = del(1) - 0.5d0*dx*psi(1)
+c      del(2) = del(2) - dx*psi(2)
+c      del(4) = del(4) - 0.5d0*dx*psi(4)
+
 
 *     !R beta = del
 *     !gauss routine replaces del with beta and R with it's inverse
@@ -240,8 +318,8 @@ c     !find bounds in case of critical state resonance, or negative states
       enddo
 
       !corrector wave
-      fw(2,2) = fw(2,2) + beta(0)
-      fw(5,2) = fw(5,2) + beta(4)
+      fw(2,2) = fw(2,2) + beta(0)*R(2,0)
+      fw(5,2) = fw(5,2) + beta(4)*R(4,4)
 
       !waves and fwaves for delta hum
       fw(4,1) = fw(1,1)*mL
@@ -651,10 +729,10 @@ c  On output a is replaced by it's inverse, and b replaced by x.
 
       SUBROUTINE gaussj(a,n,np,b,m,mp)
       INTEGER m,mp,n,np,NMAX
-      REAL a(np,np),b(np,mp)
+      DOUBLE PRECISION a(np,np),b(np,mp)
       PARAMETER (NMAX=50)
       INTEGER i,icol,irow,j,k,l,ll,indxc(NMAX),indxr(NMAX),ipiv(NMAX)
-      REAL big,dum,pivinv
+      DOUBLE PRECISION big,dum,pivinv
       do 11 j=1,n
         ipiv(j)=0
 11    continue

@@ -19,7 +19,7 @@ c =========================================================
       double precision gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision cx,cy,pdh,vnorm
+      double precision cx,cy,pdh,vnorm,hvnorm,theta
       integer i,j
 c
 
@@ -36,8 +36,13 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
       do i=1,mx
          do j=1,my
+            theta = 0.d0
+            if (bed_normal.eq.1) then
+               theta = aux(i,j,i_theta)
+               gmod = grav*dcos(theta)
+            endif
             call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
-     &            q(i,j,4),q(i,j,5),u,v,m)
+     &            q(i,j,4),q(i,j,5),u,v,m,theta)
             h = q(i,j,1)
             if (h.le.drytolerance) cycle
             hu = q(i,j,2)
@@ -47,29 +52,24 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             phi = aux(i,j,i_phi)
 
             !integrate momentum source term
-            call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
 
             vnorm = dsqrt(u**2 + v**2)
+            hvnorm = h*vnorm
             if (p_initialized.eq.0.and.vnorm.le.0.d0) cycle
 
-            hu = hu -dsign(tau/rho,hu)*dt
-            hv = hv -dsign(tau/rho,hv)*dt
-            hu = hu*dexp(-(1.d0-m)*mu*dt/h**2)
-            hv = hv*dexp(-(1.d0-m)*mu*dt/h**2)
-
-
-            if (hu*q(i,j,2).le.0.d0) then
-               hu = 0.d0
-            endif
-            if (hv*q(i,j,3).le.0.d0) then
-               hv = 0.d0
+            if (vnorm.gt.0.d0) then
+               hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
+               hvnorm = hvnorm*dexp(-(1.d0-m)*mu*dt/h**2)
+               hu = hvnorm*u/vnorm
+               hv = hvnorm*v/vnorm
             endif
 
-            call admissibleq(h,hu,hv,hm,p,u,v,m)
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
 
             !integrate pressure source term
-            call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
             !integrate shear-induced dilatancy
             p = p - dt*3.d0*dabs(vnorm)*tanpsi/(h*compress*(1.d0+kappa))
@@ -87,21 +87,24 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*dexp(krate*dt)
 
-            !integrate solid volume source term
-            !krate = -rho_f*D/(rho*h)
-            !hm = hm*dexp(krate*dt)
 
-            !call admissibleq(h,hu,hv,hm,p,u,v,m)
-            !call auxeval(h,u,v,m,p,phi,kappa,S,rho,tanpsi,D,tau,
-c     &                  sigbed,kperm,compress,pm)
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
+     &                  sigbed,kperm,compress,pm)
 
 
-            call admissibleq(h,hu,hv,hm,p,u,v,m)
+            krate = D*(rho-rho_f)/rho
+            hu = hu*dexp(dt*krate/h)
+            hv = hv*dexp(dt*krate/h)
+            hm = hm*dexp(-dt*D*rho_f/(h*rho))
+            h = h + krate*dt
+
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             q(i,j,1) = h
             q(i,j,2) = hu
             q(i,j,3) = hv
             q(i,j,4) = hm
-            q(i,j,5) = p!h*pdh
+            q(i,j,5) = p
 
          enddo
       enddo
@@ -110,7 +113,7 @@ c     &                  sigbed,kperm,compress,pm)
       if (coeffmanning.gt.0.d0.and.frictiondepth.gt.0.d0) then
          do i=1,mx
             do j=1,my
-
+               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
                h=q(i,j,1)
                if (h.le.frictiondepth) then
 c                 # apply friction source term only in shallower water

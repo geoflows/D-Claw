@@ -24,7 +24,7 @@ module digclaw_module
     double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
 
     integer init_ptype,p_initialized,bed_normal
-    double precision init_pmax_ratio,init_ptf,init_pmin_ratio
+    double precision init_pmax_ratio,init_ptf,init_pmin_ratio,init_p_ratio,p_ratioij
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
@@ -54,6 +54,7 @@ contains
 
 
          deg2rad = pi/180.d0
+         init_p_ratio = 0.d0
 
          ! Read user parameters from setgeo.data
          if (present(fname)) then
@@ -163,119 +164,27 @@ contains
 
    end subroutine set_pinit
 
-   ! ========================================================================
-   !  calc_pmin
-   ! ========================================================================
-   !  Determines minimum pore pressure for mobilization
-   ! ========================================================================
-
-   subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
-
-      implicit none
-
-      !Input
-      double precision :: dx,dy,xlower,ylower
-      double precision :: q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
-      double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
-
-      integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
-
-      !Locals
-      double precision :: forcemag,pcrit,rho,h,h_r,h_l,b_r,b_l,dry_tol,phi
-      double precision :: tanpsi,gmod
-      integer :: i,j
-
-      gmod = grav
-
-      if (init_ptype.eq.2) then
-         init_pmin_ratio = 1.0d0
-         return
-      endif
-      dry_tol = drytolerance
-
-      do i=2-mbc,mx+mbc
-         do j=2-mbc,my+mbc
-            h_r = q(i,j,1)
-            h_l = q(i-1,j,1)
-            b_r = aux(i,j,1)
-            b_l = aux(i-1,j,1)
-            phi = 0.5d0*(aux(i-1,j,i_phi)+ aux(i,j,i_phi))
-            rho = m0*rho_s + (1.d0-m0)*rho_f
-            tanpsi = c1*(m0 - m_crit)
-            phi = dmax1(0.d0,phi + datan(tanpsi))
-
-            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
-               cycle
-            endif
-
-            if (h_l.gt.dry_tol.and.h_r.gt.dry_tol) then
-               h = 0.5d0*(h_r + h_l)
-            elseif (h_r.gt.dry_tol) then
-               h = h_r
-            else
-               h = h_l
-            endif
-
-            !determine pressure min ratio
-            forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
-
-            pcrit = rho*h*gmod - rho*forcemag/(dx*tan(phi))
-            pcrit = max(pcrit,0.0)
-            init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*gmod*h))
-            init_pmin_ratio = max(init_pmin_ratio,0.d0)
-
-            !repeat for y-Riemann problems
-
-            h_r = q(i,j,1)
-            h_l = q(i,j-1,1)
-            b_r = aux(i,j,1)
-            b_l = aux(i,j-1,1)
-            phi = 0.5d0*(aux(i,j-1,i_phi)+ aux(i,j,i_phi))
-            rho = m0*rho_s + (1.d0-m0)*rho_f
-
-            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
-               cycle
-            endif
-
-            if (h_l.gt.dry_tol.and.h_r.gt.dry_tol) then
-               h = 0.5d0*(h_r + h_l)
-            elseif (h_r.gt.dry_tol) then
-               h = h_r
-            else
-               h = h_l
-            endif
-
-           !determine pressure min ratio
-            forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
-
-            pcrit = rho*h*gmod - rho*forcemag/(dy*tan(phi))
-            pcrit = max(pcrit,0.0)
-            init_pmin_ratio = min(init_pmin_ratio,pcrit/(rho_f*gmod*h))
-            init_pmin_ratio = max(init_pmin_ratio,0.d0)
-
-         enddo
-      enddo
-
-   end subroutine calc_pmin
-
 
    !====================================================================
    !subroutine admissibleq
    !accept solution q, return q in admissible space
    !====================================================================
 
-   subroutine admissibleq(h,hu,hv,hm,p,u,v,m)
+   subroutine admissibleq(h,hu,hv,hm,p,u,v,m,theta)
 
       implicit none
 
       !Input
-      double precision :: h,hu,hv,hm,p,u,v,m
+      double precision :: h,hu,hv,hm,p,u,v,m,theta
 
       !Locals
       double precision :: mlo,mhi,hlo,pmax,phi,plo,rho,dry_tol,m_min,gmod
 
       gmod = grav
       dry_tol = drytolerance
+      if (bed_normal.eq.1) gmod = grav*dcos(theta)
+      !hu=0.0
+      !hv=0.0
 
       if (h.le.dry_tol) then
          h = 0.d0
@@ -312,7 +221,7 @@ contains
       phi = pmax - plo
       if (p.lt.plo) then
          p = dmax1(0.d0,p)
-         p = (p**2 + plo**2)/(2.d0*plo)
+         !p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
          p = dmin1(pmax,p)
          p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
@@ -327,12 +236,12 @@ contains
    !                     of the solution vector q
    !====================================================================
 
-   subroutine auxeval(h,u,v,m,p,phi_bed,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+   subroutine auxeval(h,u,v,m,p,phi_bed,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
       implicit none
 
       !i/o
-      double precision, intent(in)  :: h,u,v,m,p,pm,phi_bed
+      double precision, intent(in)  :: h,u,v,m,p,pm,phi_bed,theta
       double precision, intent(out) :: S,rho,tanpsi,D,tau,kappa
       double precision, intent(out) :: sigbed,kperm,compress
 
@@ -341,6 +250,7 @@ contains
 
 
       gmod=grav
+      if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_f*(1.d0-m)
       sigbed = dmax1(0.d0,rho*gmod*h - p)
@@ -359,17 +269,20 @@ contains
          m_eqn= 0.d0
       endif
       tanpsi = c1*(m-m_eqn)
-      tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
       kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+
       !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
       compress = alpha/((m)*(sigbed + 1.d5))
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
+         tanpsi = 0.d0
       elseif (h*mu.gt.0.d0) then
          D = (kperm/(mu*h))*(rho_f*gmod*h - p)
       else
          D = 0.d0
       endif
+
+      tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
 
       !kappa: earth pressure coefficient
       if (phi_int.eq.phi_bed) then
@@ -383,7 +296,6 @@ contains
       kappa = 1.d0
 
    end subroutine auxeval
-
 
 
    !====================================================================
@@ -406,7 +318,7 @@ contains
 
       taushear = (tau/rho)*dsign(1.d0,u)
       vnorm = dabs(u)
-      if (h.lt.drytol) then
+      if (h.lt.drytol.or..true.) then
          psi(1) = 0.d0
          psi(2) = 0.d0
          psi(3) = 0.d0
@@ -420,107 +332,119 @@ contains
 
    end subroutine psieval
 
-   !====================================================================
-   ! subroutine calcaux: calculate all auxiliary variables
-   !====================================================================
+   ! ========================================================================
+   !  calc_pmin
+   ! ========================================================================
+   !  Determines minimum pore pressure for mobilization
+   ! ========================================================================
 
-   subroutine calcaux(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
+   subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
       implicit none
 
-      integer, parameter ::  i_rho    = i_dig+1
-      integer, parameter ::  i_tanpsi = i_dig+2
-      integer, parameter ::  i_D      = i_dig+3
-      integer, parameter ::  i_tau    = i_dig+4
-      integer, parameter ::  i_kappa  = i_dig+5
-      integer, parameter ::  i_S      = i_dig+6
-      integer, parameter ::  i_sigbed = i_dig+7
-      integer, parameter ::  i_theta  = i_dig+8
-      integer, parameter ::  i_kperm  = i_dig+9
-      integer, parameter ::  i_alpha  = i_dig+10
-
-      !i/o
+      !Input
+      double precision :: dx,dy,xlower,ylower
       double precision :: q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
       double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
-      double precision, intent(in) :: xlower,ylower,dx,dy
-      integer, intent(in) :: maxmx,maxmy,mx,my,meqn,mbc,maux
 
-      !local
-      double precision :: h,u,v,m,pbed,rho,S,m_eqn,tanpsi,phi,compress,pms
-      double precision :: kperm,tau,up,um,dudx,dudy,div,pm,kappa,D,theta,g
-      double precision :: sigbed,dry_tol
-      integer :: i,j,ma,ibc
+      integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
 
-      g= grav
+      !Locals
+      double precision :: forcemag,pcrit,rho,h,h_r,h_l,b_r,b_l,dry_tol
+      double precision :: tanpsi,gmod,thetaL,thetaR,phiL,phiR
+      double precision :: forcemagL,forcemagR,pcritL,pcritR
+      integer :: i,j
+
+      gmod = grav
+
+      !if (init_ptype.eq.2) then
+      !   init_pmin_ratio = 1.0d0
+      !   return
+      !endif
       dry_tol = drytolerance
+      rho = m0*rho_s + (1.d0-m0)*rho_f
+      tanpsi = c1*(m0 - m_crit)
 
       do i=1,mx
          do j=1,my
-            phi = aux(i,j,i_phi)
-            call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m)
-            h=q(i,j,1)
-            if (h.le.dry_tol) then
-               aux(i,j,i_S) = 0.d0
-               aux(i,j,i_rho) = 0.d0
-               aux(i,j,i_tanpsi) = 0.d0
-               aux(i,j,i_D) = 0.d0
-               aux(i,j,i_tau) = 0.d0
-               aux(i,j,i_kappa) = 1.d0
-               aux(i,j,i_sigbed) = 0.d0
-               aux(i,j,i_kperm) = 0.d0
-               aux(i,j,i_alpha) = 0.d0
+            h_r = q(i,j,1)
+            h_l = q(i-1,j,1)
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
                cycle
             endif
-            pbed = q(i,j,5)
-
-            if (q(i,j,1).gt.0.d0.and.q(i-1,j,1).gt.0.d0) then
-               dudx = (q(i,j,2)/q(i,j,1) - q(i-1,j,2)/q(i-1,j,1))/dx
+            b_r = aux(i,j,1)
+            b_l = aux(i-1,j,1)
+            phiL = aux(i-1,j,i_phi)
+            phiR = aux(i,j,i_phi)
+            phiL = dmax1(0.d0,phiL + datan(tanpsi))
+            phiR = dmax1(0.d0,phiR + datan(tanpsi))
+            if (bed_normal.eq.1) then
+               thetaR = aux(i,j,i_theta)
+               thetaL = aux(i-1,j,i_theta)
+               gmod = grav*dcos(0.5d0*(thetaL+thetaR))
             else
-               dudx = 0.d0
+               thetaL = 0.d0
+               thetaR = 0.d0
             endif
-            if (q(i,j,1).gt.0.d0.and.q(i-1,j-1,1).gt.0.d0) then
-               dudy = (q(i,j,2)/q(i,j,1) - q(i-1,j,2)/q(i-1,j,1))/dy
+
+            if (h_l.gt.dry_tol.and.h_r.gt.dry_tol) then
+               h = 0.5d0*(h_r + h_l)
+            elseif (h_r.gt.dry_tol) then
+               h = h_r
             else
-               dudy = 0.d0
+               h = h_l
             endif
-            div = dudx + dudy
-            pm = sign(1.d0,div)
 
-            call auxeval(h,u,v,m,pbed,kappa,S,rho,tanpsi,D,tau,phi,sigbed,kperm,compress,pm)
+            !determine pressure min ratio
+            forcemagL = abs(-grav*h*dsin(thetaL)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
+            forcemagR = abs(-grav*h*dsin(thetaR)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
+            pcritR = (rho*h_r*gmod - rho*forcemagR/(dx*tan(phiR)))/(rho_f*gmod*h_r)
+            pcritL = (rho*h_l*gmod - rho*forcemagL/(dx*tan(phiR)))/(rho_f*gmod*h_l)
+            pcrit = max(pcritR,pcritL)
+            init_pmin_ratio = min(init_pmin_ratio,pcrit)
+            init_pmin_ratio = max(init_pmin_ratio,0.d0)
 
-            aux(i,j,i_S) = S
-            aux(i,j,i_rho) = rho
-            aux(i,j,i_tanpsi) = tanpsi
-            aux(i,j,i_D) = D
-            aux(i,j,i_tau) = tau
-            aux(i,j,i_kappa) = kappa
-            aux(i,j,i_sigbed) = sigbed
-            aux(i,j,i_kperm) = kperm
-            aux(i,j,i_alpha) = compress
+            !repeat for y-Riemann problems
+            h_r = q(i,j,1)
+            h_l = q(i,j-1,1)
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
+               cycle
+            endif
+            b_r = aux(i,j,1)
+            b_l = aux(i,j-1,1)
+            phiL = aux(i,j-1,i_phi)
+            phiR = aux(i,j,i_phi)
+            phiL = dmax1(0.d0,phiL + datan(tanpsi))
+            phiR = dmax1(0.d0,phiR + datan(tanpsi))
+
+            if (bed_normal.eq.1) then
+               thetaR = aux(i,j,i_theta)
+               thetaL = aux(i,j-1,i_theta)
+               gmod = grav*dcos(0.5d0*(thetaL+thetaR))
+            endif
+
+            if (h_l.gt.dry_tol.and.h_r.gt.dry_tol) then
+               h = 0.5d0*(h_r + h_l)
+            elseif (h_r.gt.dry_tol) then
+               h = h_r
+            else
+               h = h_l
+            endif
+
+           !determine pressure min ratio
+            forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
+            pcritR = (rho*h_r*gmod - rho*forcemag/(dy*tan(phiR)))/(rho_f*gmod*h_r)
+            pcritL = (rho*h_l*gmod - rho*forcemag/(dy*tan(phiR)))/(rho_f*gmod*h_l)
+            pcrit = max(pcritR,pcritL)
+            init_pmin_ratio = min(init_pmin_ratio,pcrit)
+            init_pmin_ratio = max(init_pmin_ratio,0.d0)
+
 
          enddo
       enddo
+      write(*,*) 'init_pmin_ratio:',init_pmin_ratio
+   end subroutine calc_pmin
 
-      !right and left boundary
-      do j=1,my
-         do ma = i_dig,maux
-            do ibc=1,mbc
-               aux(1-ibc,j,ma) = aux(1,j,ma)
-               aux(mx+ibc,j,ma) = aux(mx,j,ma)
-            enddo
-         enddo
-      enddo
-      !top and bottom boundary
-      do i=1,mx
-         do ma = i_dig,maux
-            do ibc=1,mbc
-               aux(i,1-ibc,ma) = aux(i,1,ma)
-               aux(i,my+ibc,ma) = aux(i,my,ma)
-            enddo
-         enddo
-      enddo
-
-   end subroutine calcaux
 
 
 end module digclaw_module

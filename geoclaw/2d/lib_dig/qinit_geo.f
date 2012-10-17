@@ -43,13 +43,13 @@ c
 
             xintlow = dmax1(xlower,xlowqinit(mf))
             xinthi  = dmin1(xhigher,xhiqinit(mf))
-            istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
-            iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
+            istart  = max(1-mbc,int(0.5 + (xintlow-xlower)/dx))
+            iend    = min(mx+mbc,int(1.0 + (xinthi-xlower)/dx))
 
             yintlow = dmax1(ylower,ylowqinit(mf))
             yinthi  = dmin1(yhigher,yhiqinit(mf))
-            jstart  = int(0.5 + (yintlow-ylower)/dy)
-            jend    = max(my,int(1.0 + (yinthi-ylower)/dy))
+            jstart  = max(1-mbc,int(0.5 + (yintlow-ylower)/dy))
+            jend    = min(my+mbc,int(1.0 + (yinthi-ylower)/dy))
 
             do i=istart,iend
                x = xlower + (i-0.5d0)*dx
@@ -109,6 +109,7 @@ c=============== Pressure initialization for Mobilization Modeling======
       if (init_ptype.eq.1) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
+               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
                q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
             enddo
          enddo
@@ -116,6 +117,7 @@ c=============== Pressure initialization for Mobilization Modeling======
       elseif (init_ptype.eq.0) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
+               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
                q(i,j,5) = rho_f*gmod*q(i,j,1)
             enddo
          enddo

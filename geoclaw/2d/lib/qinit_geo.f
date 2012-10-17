@@ -22,9 +22,10 @@ c      # been strored in qinitwork.
          x = xlower + (i-0.5d0)*dx
          do j=1-mbc,my+mbc
              y = ylower + (j-0.5d0)*dy
-             q(i,j,1)=dmax1(0.d0,sealevel-aux(i,j,1))
-             q(i,j,2)=0.d0
-             q(i,j,3)=0.d0
+             q(i,j,1) = dmax1(0.d0,sealevel-aux(i,j,1))
+             do m=2,meqn
+               q(i,j,m)=0.d0
+             enddo
          enddo
       enddo
 c
@@ -36,15 +37,15 @@ c
          if ((xlower.le.xhiqinit(mf).and.xhigher.ge.xlowqinit(mf)).and.
      &      (ylower.le.yhiqinit(mf).and.yhigher.ge.ylowqinit(mf))) then
 
-            xintlow = max(xlower,xlowqinit(mf))
-            xinthi  = min(xhigher,xhiqinit(mf))
-            istart  = min(1,int(0.5 + (xintlow-xlower)/dx))
-            iend    = max(mx,int(1.0 + (xinthi-xlower)/dx))
+            xintlow = dmax1(xlower,xlowqinit(mf))
+            xinthi  = dmin1(xhigher,xhiqinit(mf))
+            istart  = max(1-mbc,int(0.5 + (xintlow-xlower)/dx))
+            iend    = min(mx+mbc,int(1.0 + (xinthi-xlower)/dx))
 
-            yintlow = max(ylower,ylowqinit(mf))
-            yinthi  = min(yhigher,yhiqinit(mf))
-            jstart  = int(0.5 + (yintlow-ylower)/dy)
-            jend    = max(my,int(1.0 + (yinthi-ylower)/dy))
+            yintlow = dmax1(ylower,ylowqinit(mf))
+            yinthi  = dmin1(yhigher,yhiqinit(mf))
+            jstart  = max(1-mbc,int(0.5 + (yintlow-ylower)/dy))
+            jend    = min(my+mbc,int(1.0 + (yinthi-ylower)/dy))
 
             do i=istart,iend
                x = xlower + (i-0.5d0)*dx
