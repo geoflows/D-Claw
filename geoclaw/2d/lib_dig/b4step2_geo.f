@@ -60,40 +60,42 @@ c=============mobilization =============================================
       if (p_initialized.eq.1) then
          return
       endif
-
+      init_p_ratio = (t/init_ptf)*init_pmin_ratio*init_pmax_ratio
       if (t.le.init_ptf) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
                if (q(i,j,1).le.drytolerance) cycle
                theta = 0.d0
-               if (bed_normal.eq.1) theta=aux(i,j,i_theta)
+               if (bed_normal.eq.1) then
+                  theta=aux(i,j,i_theta)
+                  p_ratioij = max(0.0,init_p_ratio
+     &               - aux(i,j,1)/q(i,j,1)+aux(i,j,1))
+               endif
                gmod = grav*dcos(theta)
 c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
-               q(i,j,5) = q(i,j,5) +
-     &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
-     &            rho_f*gmod*q(i,j,1)
+               q(i,j,5) = max(q(i,j,5),p_ratioij*rho_f*gmod*q(i,j,1))
+c               q(i,j,5) = q(i,j,5) +
+c     &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
+c     &            rho_f*gmod*q(i,j,1)
                call admissibleq(
      &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
-c               if (t.gt.9.) then
-c               write(*,*) 't prat:',t/init_ptf,
-c     &            (1./init_pmin_ratio)*q(i,j,5)/(rho_f*gmod*q(i,j,1))
-c               endif
+
             enddo
          enddo
       elseif (t.gt.init_ptf) then
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-              if (q(i,j,1).le.drytolerance) cycle
-               theta = 0.d0
-               if (bed_normal.eq.1) theta=aux(i,j,i_theta)
-               gmod = grav*dcos(theta)
+c         do i=1-mbc,mx+mbc
+c            do j=1-mbc,my+mbc
+c              if (q(i,j,1).le.drytolerance) cycle
+c               theta = 0.d0
+c               if (bed_normal.eq.1) theta=aux(i,j,i_theta)
+c               gmod = grav*dcos(theta)
 c              if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
-              q(i,j,5) = dmax1(q(i,j,5),init_pmax_ratio*init_pmin_ratio*
-     &            rho_f*gmod*q(i,j,1))
-               call admissibleq(
-     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
-            enddo
-         enddo
+c              q(i,j,5) = dmax1(q(i,j,5),init_pmax_ratio*init_pmin_ratio*
+c     &            rho_f*gmod*q(i,j,1))
+c               call admissibleq(
+c     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
+c            enddo
+c         enddo
          p_initialized=1
       endif
 

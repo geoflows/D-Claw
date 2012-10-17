@@ -255,7 +255,7 @@ c     &         theta,gamma,eps,dx,sw,fw,wave)
 
          call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave)
+     &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
