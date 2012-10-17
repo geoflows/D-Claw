@@ -183,6 +183,8 @@ contains
       gmod = grav
       dry_tol = drytolerance
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
+      !hu=0.0
+      !hv=0.0
 
       if (h.le.dry_tol) then
          h = 0.d0
