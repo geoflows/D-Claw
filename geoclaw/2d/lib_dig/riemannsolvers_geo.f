@@ -3,7 +3,7 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -30,6 +30,7 @@ c-----------------------------------------------------------------------
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
       double precision thetaL,thetaR,phiL,phiR,dx
+      logical wallprob
 
 
       double precision fw(meqn,mwaves),w(meqn,mwaves)
@@ -259,7 +260,7 @@ c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
       source2dxR = source2dx
 
 
-      if (ixy.eq.1) then
+      if (ixy.eq.1.and.(.not.wallprob)) then
          source2dxL =source2dxL + dx*hL*grav*dsin(thetaL)
          source2dxR =source2dxR + dx*hR*grav*dsin(thetaR)
          source2dx = source2dx + dx*hbar*grav*dsin(theta)

@@ -24,7 +24,7 @@ module digclaw_module
     double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
 
     integer init_ptype,p_initialized,bed_normal
-    double precision init_pmax_ratio,init_ptf,init_pmin_ratio
+    double precision init_pmax_ratio,init_ptf,init_pmin_ratio,init_p_ratio,p_ratioij
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
@@ -54,6 +54,7 @@ contains
 
 
          deg2rad = pi/180.d0
+         init_p_ratio = 0.d0
 
          ! Read user parameters from setgeo.data
          if (present(fname)) then
