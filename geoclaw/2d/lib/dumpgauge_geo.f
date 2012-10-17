@@ -98,7 +98,7 @@ c         ## straightforward linear interp
         eta = topo + var(1)
 
 !$OMP CRITICAL (gaugeio)
-        write(OUTGAUGEUNIT,100)igauge(i),level,tgrid,(var(j),j=1,3),eta
+      write(OUTGAUGEUNIT,100)igauge(i),level,tgrid,(var(j),j=1,nvar),eta
 !$OMP END CRITICAL (gaugeio)
 100     format(i8,i5,15e15.7)
 

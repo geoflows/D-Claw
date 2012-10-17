@@ -66,6 +66,7 @@ c=============mobilization =============================================
             do j=1-mbc,my+mbc
                if (q(i,j,1).le.drytolerance) cycle
                theta = 0.d0
+               p_ratioij = init_p_ratio
                if (bed_normal.eq.1) then
                   theta=aux(i,j,i_theta)
                   p_ratioij = max(0.0,init_p_ratio
