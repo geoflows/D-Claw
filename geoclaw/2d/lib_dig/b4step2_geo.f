@@ -60,8 +60,9 @@ c=============mobilization =============================================
       if (p_initialized.eq.1) then
          return
       endif
-      init_p_ratio = (t/init_ptf)*init_pmin_ratio*init_pmax_ratio
+
       if (t.le.init_ptf) then
+         init_p_ratio = (t/init_ptf)*init_pmin_ratio*init_pmax_ratio
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
                if (q(i,j,1).le.drytolerance) cycle
@@ -84,19 +85,27 @@ c     &            rho_f*gmod*q(i,j,1)
             enddo
          enddo
       elseif (t.gt.init_ptf) then
-c         do i=1-mbc,mx+mbc
-c            do j=1-mbc,my+mbc
-c              if (q(i,j,1).le.drytolerance) cycle
-c               theta = 0.d0
-c               if (bed_normal.eq.1) theta=aux(i,j,i_theta)
-c               gmod = grav*dcos(theta)
-c              if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
-c              q(i,j,5) = dmax1(q(i,j,5),init_pmax_ratio*init_pmin_ratio*
-c     &            rho_f*gmod*q(i,j,1))
-c               call admissibleq(
-c     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
-c            enddo
-c         enddo
+         init_p_ratio = init_pmin_ratio*init_pmax_ratio
+         do i=1-mbc,mx+mbc
+            do j=1-mbc,my+mbc
+              if (q(i,j,1).le.drytolerance) cycle
+               theta = 0.d0
+               p_ratioij = init_p_ratio
+               if (bed_normal.eq.1) then
+                  theta=aux(i,j,i_theta)
+                  p_ratioij = max(0.0,init_p_ratio
+     &               - aux(i,j,1)/q(i,j,1)+aux(i,j,1))
+               endif
+               gmod = grav*dcos(theta)
+c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
+               q(i,j,5) = max(q(i,j,5),p_ratioij*rho_f*gmod*q(i,j,1))
+c               q(i,j,5) = q(i,j,5) +
+c     &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
+c     &            rho_f*gmod*q(i,j,1)
+               call admissibleq(
+     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
+            enddo
+         enddo
          p_initialized=1
       endif
 
