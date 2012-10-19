@@ -57,7 +57,7 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
             vnorm = dsqrt(u**2 + v**2)
             hvnorm = h*vnorm
-            if (vnorm.le.0.d0) cycle
+
             if (p_initialized.eq.0.and.vnorm.le.0.d0) cycle
 
             if (vnorm.gt.0.d0) then
