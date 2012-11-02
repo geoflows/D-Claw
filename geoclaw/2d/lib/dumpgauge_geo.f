@@ -88,6 +88,7 @@ c         ## straightforward linear interp
      .             + xoff*(1.d0-yoff)*q(iindex+1,jindex,ivar)
      .             + (1.d0-xoff)*yoff*q(iindex,jindex+1,ivar)
      .             + xoff*yoff*q(iindex+1,jindex+1,ivar)
+            if (abs(var(ivar)).lt.1.d-99) var(ivar)=0.d0
             end do
           topo = (1.d0-xoff)*(1.d0-yoff)*aux(iindex,jindex,1)
      .             + xoff*(1.d0-yoff)*aux(iindex+1,jindex,1)
@@ -98,6 +99,7 @@ c         ## straightforward linear interp
         eta = topo + var(1)
 
 !$OMP CRITICAL (gaugeio)
+
       write(OUTGAUGEUNIT,100)igauge(i),level,tgrid,(var(j),j=1,nvar),eta
 !$OMP END CRITICAL (gaugeio)
 100     format(i8,i5,15e15.7)
