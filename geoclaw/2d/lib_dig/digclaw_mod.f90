@@ -23,8 +23,8 @@ module digclaw_module
     double precision :: rho_s,rho_f,phi_bed,phi_int,delta,kappita
     double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
 
-    integer init_ptype,p_initialized,bed_normal
-    double precision init_pmax_ratio,init_ptf,init_pmin_ratio,init_p_ratio,p_ratioij
+    integer :: init_ptype,p_initialized,bed_normal
+    double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
@@ -54,7 +54,6 @@ contains
 
 
          deg2rad = pi/180.d0
-         init_p_ratio = 0.d0
 
          ! Read user parameters from setgeo.data
          if (present(fname)) then
@@ -145,6 +144,7 @@ contains
          read(iunit,*) init_ptype
          read(iunit,*) init_pmax_ratio
          read(iunit,*) init_ptf
+         read(iunit,*) init_ptf2
          close(unit=iunit)
 
          p_initialized = 0
@@ -183,8 +183,6 @@ contains
       gmod = grav
       dry_tol = drytolerance
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
-      !hu=0.0
-      !hv=0.0
 
       if (h.le.dry_tol) then
          h = 0.d0
@@ -363,7 +361,7 @@ contains
       !endif
       dry_tol = drytolerance
       rho = m0*rho_s + (1.d0-m0)*rho_f
-      tanpsi = c1*(m0 - m_crit)
+      tanpsi = 0.0*c1*(m0 - m_crit)
 
       do i=1,mx
          do j=1,my

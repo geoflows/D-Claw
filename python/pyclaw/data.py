@@ -1490,9 +1490,10 @@ class DigclawInputData(Data):
         self.add_attribute('m0',      0.52,   'initial solid volume fraction (#)')
         self.add_attribute('dudx_eps',1.0,    'dudx below this amount scales kappa linearly between min and max values of the otherwise step function')
         self.add_attribute('phys_tol',1.e-3,  'minimum depth considered for model applicability. Values below have statically set values')
-        self.add_attribute('init_ptype', 0, '0 = hydrostatic pore-pressure, 1 = find minimum failure pressure, 2= rise pressure with time')
-        self.add_attribute('init_pmax_ratio', 1.0, 'pressure will rise to \rho g cos (theta) h init_pmax_ratio*minimum failure pressure ratio')
-        self.add_attribute('init_ptf', 1.95, 'if init_ptype=2 pressure will rise until t = init_ptf')
+        self.add_attribute('init_ptype', 0, '0 = hydrostatic, 1 = minimum failure pressure, 2= rising pressure')
+        self.add_attribute('init_pmax_ratio', 1.0, 'pressure rise to hydrostatic *init_pmax_ratio')
+        self.add_attribute('init_ptf', 1.0, 'pressure will rise until t = init_ptf without dilatancy')
+        self.add_attribute('init_ptf2', 0.0, 'will rise until t = init_ptf2')
         self.add_attribute('bed_normal', 0,  'bed_normal =1 requires theta in aux. for slope in one direction')
 
     def write(self):
@@ -1519,9 +1520,10 @@ class DigclawInputData(Data):
         print 'Creating data file setpinit.data'
         # open file and write a warning header:
         file = open_datafile('setpinit.data')
-        data_write(file, self, 'init_ptype', '0 = hydrostatic pore-pressure, 1 = find minimum failure pressure, 2= rise pressure with time')
-        data_write(file, self, 'init_pmax_ratio', 'pressure will rise to \rho g  h init_pmax_ratio*minimum failure pressure ratio')
-        data_write(file, self, 'init_ptf', 'if init_ptype=2 pressure will rise until t = init_ptf')
+        data_write(file, self, 'init_ptype', '0 = hydro, 1 = failure, 2= p(t)')
+        data_write(file, self, 'init_pmax_ratio', 'p(init_ptf2)= hydro*init_pmax_ratio')
+        data_write(file, self, 'init_ptf', ' p(init_ptf) = failure')
+        data_write(file, self, 'init_ptf2', 'p(init_ptf2)= hydro*init_pmax_ratio')
         file.close()
 
 
