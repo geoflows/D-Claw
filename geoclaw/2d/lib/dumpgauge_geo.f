@@ -80,6 +80,7 @@ c         # contains gauge rather than interpolating.
           do ivar=1,nvar
              var(ivar) = q(icell,jcell,ivar)
              topo = aux(icell,jcell,1)
+             if (abs(var(ivar)).lt.1.d-99) var(ivar)=0.d0
              enddo
          else
 c         ## straightforward linear interp
