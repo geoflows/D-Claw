@@ -87,13 +87,13 @@ c     --------------integrate auxinit files if they exist---------------
 
             xintlow = dmax1(xlow,xlowauxinit(mf))
             xinthi  = dmin1(xhigher,xhiauxinit(mf))
-            istart  = max(1-mbc,int(0.5 + (xintlow-xlow)/dx))
-            iend    = min(mx+mbc,int(1.0 + (xinthi-xlow)/dx))
+            istart  = max(1-mbc,int(0.5 + (xintlow-xlow)/dx)-mbc)
+            iend    = min(mx+mbc,int(1.0 + (xinthi-xlow)/dx)+mbc)
 
             yintlow = dmax1(ylow,ylowauxinit(mf))
             yinthi  = dmin1(yhigher,yhiauxinit(mf))
-            jstart  = max(1-mbc,int(0.5 + (yintlow-ylow)/dy))
-            jend    = min(my+mbc,int(1.0 + (yinthi-ylow)/dy))
+            jstart  = max(1-mbc,int(0.5 + (yintlow-ylow)/dy)-mbc)
+            jend    = min(my+mbc,int(1.0 + (yinthi-ylow)/dy)+mbc)
 
             do i=istart,iend
                x = xlow + (i-0.5d0)*dx
@@ -132,6 +132,7 @@ c     --------------integrate auxinit files if they exist---------------
          endif
       enddo
 
+
       do mf = 1,mauxinitfiles
          if (iauxinit(mf).eq.i_phi) return
       enddo
@@ -142,21 +143,23 @@ c     --------------integrate auxinit files if they exist---------------
          enddo
       enddo
 
+c     -----------------------------------------------------------------
 
       return
 
-c     -----------------------------------------------------------------
+
 c     # output aux array for debugging:
       open(23, file='fort.aux',status='unknown',form='formatted')
       write(23,*) 'Setting aux arrays'
       write(23,*) ' '
       do i=1,mx
         do j=1,my
-           write(23,231) i,j,(aux(i,j,m),m=1,maux)
+           write(*,*) i,j,(aux(i,j,m),m=1,maux)
+           !write(23,231) i,j,(aux(i,j,m),m=1,maux)
            enddo
         enddo
  231  format(2i4,4d15.3)
       close(23)
 
-      return
+
       end
