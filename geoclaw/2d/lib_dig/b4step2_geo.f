@@ -59,7 +59,15 @@ c      write(26,*) 'B4STEP2: t, num_dtopo: ', t,num_dtopo
       enddo
 
 c=============mobilization =============================================
+      if (init_ptype.eq.0) then
+         return
+      endif
       if (p_initialized.eq.1.and.t.gt.init_ptf2) then
+         return
+      endif
+
+      if (t.gt.max(init_ptf,init_ptf2)) then
+         p_initialized = 1
          return
       endif
 
@@ -100,7 +108,7 @@ c     &            rho_f*gmod*q(i,j,1)
                   p_ratioij = max(0.0,init_p_ratio
      &               - aux(i,j,1)/(q(i,j,1)+aux(i,j,1)))
                   p_ratioij_pre = max(0.0,init_pmin_ratio
-     &               - aux(i,j,1)/q(i,j,1)+aux(i,j,1))
+     &               - aux(i,j,1)/(q(i,j,1)+aux(i,j,1)))
                endif
                gmod = grav*dcos(theta)
 
