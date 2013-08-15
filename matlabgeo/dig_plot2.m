@@ -46,9 +46,19 @@ if PlotType == 13
     
     sv = hm2./h2;
     rho = 2700.0*sv + 1000.0*(1.-sv);
-    
+    theta = 9.81*ones(size(rho));
+    deg2rad = 3.14159/180.0;
+    flumelen = 78.0;
+    flumerad = 10.0;
+    theta1 = 31.0;
+    theta2 = 3.0;
+    D2 = flumelen + flumerad*(theta1 - theta2)*deg2rad;
+    theta(X(:,1)<=flumelen,:) = theta1;
+    theta(X(:,1)>=D2,:) = theta2;
+    theta(X(:,1)>flumelen&X(:,1)<D2,:) = theta1 - (X(X(:,1)>flumelen&X(:,1)<D2,:) - flumelen)/(deg2rad*flumerad);
+    theta = deg2rad*theta;
     if mq == 5
-        eta2color = p2./(9.81.*rho.*h2);
+        eta2color = p2./(cos(theta).*9.81.*rho.*h2);
         %eta2color = (p2 - 9.81*1000.0*h2)./(9.81*rho.*h2 - 9.81*1000.0.*h2);
         %eta2color = (9.81*rho.*h2 - p2)./(9.81*rho.*h2 - 9.81*1000.0.*h2);
     elseif mq==1
