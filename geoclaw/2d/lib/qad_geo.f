@@ -55,7 +55,7 @@ c      # for GeoClaw we skip this routine --- need to fix someday:
 c      # Is this routine properly implemented with dry states and
 c      # interpolation based on surface eta?
 
-c       return
+       return
 
 c  ---------------------------------------------------------------
 
