@@ -466,6 +466,42 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         current_data.var = var
         current_data.var2 = var2
 
+    elif pp_plot_type == '1d_fill_between_from_2d_data':
+
+        if not pp_map_2d_to_1d:
+            print '*** Error, plot_type = 1d_from_2d_data requires '
+            print '*** map_2d_to_1d function as plotitem attribute'
+            raise
+            return
+        try: pylab.fill_between
+        except:
+            print "*** This version of pylab is missing fill_between"
+            print "*** Reverting to 1d_plot"
+            pp_plot_type = '1d_plot'
+
+        try:
+            thisgridvar = get_gridvar(grid,pp_plot_var,2,current_data)
+            thisgridvar2 = get_gridvar(grid,pp_plot_var2,2,current_data)
+            xc_center = thisgridvar.xc_center   # cell centers
+            yc_center = thisgridvar.yc_center
+            xc_edge = thisgridvar.xc_edge   # cell edge
+            yc_edge = thisgridvar.yc_edge
+            var = thisgridvar.var               # variable to be plotted
+            var2 = thisgridvar2.var             # variable to be plotted
+            current_data.x = xc_center
+            current_data.y = yc_center
+            current_data.var = var
+            current_data.var2 = var2
+            xc_center, var, var2 = pp_map_2d_to_1d(current_data)
+            xc_center = xc_center.flatten()  # convert to 1d
+            var = var.flatten()  # convert to 1d
+            var2 = var2.flatten()
+        except:
+            print '*** Error with map_2d_to_1d function'
+            print 'map_2d_to_1d = ',pp_map_2d_to_1d
+            raise
+            return
+
 
     elif pp_plot_type == '1d_from_2d_data':
         if not pp_map_2d_to_1d:
@@ -551,7 +587,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_plot_show:
             exec(plotcommand)
 
-    elif pp_plot_type == '1d_fill_between':
+    elif (pp_plot_type in ['1d_fill_between','1d_fill_between_from_2d_data']):
         if pp_color:
             pp_kwargs['color'] = pp_color
         if pp_fill_where:
