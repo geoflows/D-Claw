@@ -157,6 +157,8 @@ c        !set normal direction
          drystate=.false.
          wallprob = .false.
          if (hR.le.drytol) then
+            hR = 0.d0
+            pR = 0.d0
             drystate=.true.
             call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,
      &                                 rare1,rare2,1,drytol,gmod)
@@ -175,12 +177,14 @@ c                bR=hstartest+bL
                vR=vL
                mR=mL
                pR=pL
-               thetaL = 0.d0
-               thetaR = 0.d0
+               !thetaL = 0.d0
+               !thetaR = 0.d0
             !elseif (hL+bL.lt.bR) then
                !bR=hL+bL
             endif
          elseif (hL.le.drytol) then ! right surface is lower than left topo
+            hL = 0.d0
+            pL = 0.d0
             drystate=.true.
             call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,
      &                                  rare1,rare2,1,drytol,gmod)
@@ -199,8 +203,8 @@ c               bL=hstartest+bR
                uL=-uR
                vL=vR
                pL=pR
-               thetaL = 0.d0
-               thetaR = 0.d0
+               !thetaL = 0.d0
+               !thetaR = 0.d0
             !elseif (hR+bR.lt.bL) then
                !bL=hR+bR
             endif
@@ -253,7 +257,7 @@ c     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
 c     &         kappa,rho,kperm,compress,tanpsi,D,tau,
 c     &         theta,gamma,eps,dx,sw,fw,wave)
 
-         call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
+         call riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob)
 
