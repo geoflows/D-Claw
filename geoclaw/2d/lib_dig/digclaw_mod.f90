@@ -276,7 +276,7 @@ contains
          D = 0.d0
          tanpsi = 0.d0
       elseif (h*mu.gt.0.d0) then
-         D = (kperm/(mu*h))*(rho_f*gmod*h - p)
+         D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)
       else
          D = 0.d0
       endif
