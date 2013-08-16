@@ -201,7 +201,7 @@ contains
       m = hm/h
 
       !mlo = 1.d-3
-      mlo = 1.d-16
+      mlo = 0.d0
       mhi = 1.d0 - mlo
 
       if (m.lt.mlo) then
@@ -268,10 +268,10 @@ contains
          m_eqn= 0.d0
       endif
       tanpsi = c1*(m-m_eqn)
-      kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+      !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
 
-      !kperm = kappita**2*exp(max(0.d0,m-m_crit)/(-0.03))/40.0
-      compress = alpha/((m)*(sigbed + 1.d5))
+      kperm = kappita*exp(-(m-0.6)/(0.04))
+      compress = alpha/(sigbed + 1.d5)
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
          tanpsi = 0.d0
