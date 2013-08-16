@@ -24,7 +24,7 @@ c =========================================================
 c
 
 c     # check for NANs in solution:
-c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
+      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
 
       pm=1.d0
@@ -62,7 +62,7 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
             if (vnorm.gt.0.d0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
-               hvnorm = hvnorm*dexp(-(1.d0-m)*mu*dt/h**2)
+               hvnorm = hvnorm*dexp(-(1.d0-m)*mu*dt/(rho*h**2))
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm
             endif
@@ -73,10 +73,10 @@ c      call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
             !integrate shear-induced dilatancy
-            p = p - dt*3.d0*dabs(vnorm)*tanpsi/(h*compress*(1.d0+kappa))
+            p = p - dt*6.d0*dabs(vnorm)*tanpsi/(h*compress*(1.d0+kappa))
 
             zeta = 6.d0/(compress*h*(1.d0+kappa))  +
-     &        1.5d0*(rho-rho_f)*rho_f*gmod/(6.d0*rho)
+     &        (rho-rho_f)*rho_f*gmod/(2.d0*rho)
 
             krate=-zeta*kperm/(h*dmax1(mu,1.d-16))
 
