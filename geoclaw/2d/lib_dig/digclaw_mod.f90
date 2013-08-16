@@ -201,7 +201,7 @@ contains
       m = hm/h
 
       !mlo = 1.d-3
-      mlo = 0.d0
+      mlo = 1.d-16
       mhi = 1.d0 - mlo
 
       if (m.lt.mlo) then
