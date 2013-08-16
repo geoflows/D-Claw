@@ -185,11 +185,11 @@ contains
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
 
       if (h.le.dry_tol) then
-         h = 0.d0
+         h =  0.0*max(h,0.d0)
          hu = 0.d0
          hv = 0.d0
-         hm = 0.d0
-         p  = 0.d0
+         hm = h*m0
+         p  = h*gmod*rho_f
          u = 0.d0
          v = 0.d0
          m = m0
@@ -200,20 +200,21 @@ contains
       v = hv/h
       m = hm/h
 
-      mlo = 1.d-3
+      !mlo = 1.d-3
+      mlo = 0.d0
       mhi = 1.d0 - mlo
 
-      if (m.le.mlo) then
-         m = dmax1(m,0.d0)
-         m = (m**2 + mlo**2)/(2.d0*mlo)
+      if (m.lt.mlo) then
+         m = dmax1(m,mlo)
+         !m = (m**2 + mlo**2)/(2.d0*mlo)
          hm = h*m
-      elseif (m.ge.mhi) then
+      elseif (m.gt.mhi) then
          m = dmin1(m,1.d0)
-         m = 1.d0 - ((1.d0-mhi)**2 + (1.d0-m)**2)/(2.d0*(1.d0-mhi))
+         !m = 1.d0 - ((1.d0-mhi)**2 + (1.d0-m)**2)/(2.d0*(1.d0-mhi))
          hm = h*m
       endif
 
-      rho = (rho_s*m + (1.d0-m)*rho_f)
+      rho = rho_s*m + (1.d0-m)*rho_f
       pmax = rho*gmod*h
       plo = rho_f*dry_tol*gmod*dry_tol
       phi = pmax - plo
@@ -222,7 +223,7 @@ contains
          !p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
          p = dmin1(pmax,p)
-         p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
+         !p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
       endif
 
       return
