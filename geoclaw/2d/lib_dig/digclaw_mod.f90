@@ -201,7 +201,7 @@ contains
       m = hm/h
 
       !mlo = 1.d-3
-      mlo = 0.d0
+      mlo = 1.d-16
       mhi = 1.d0 - mlo
 
       if (m.lt.mlo) then
@@ -284,14 +284,14 @@ contains
       tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
 
       !kappa: earth pressure coefficient
-      if (phi_int.eq.phi_bed) then
-         sqrtarg = 0.d0
-      else
-         sqrtarg = 1.d0-(dcos(phi_int)**2)*(1.d0 + dtan(phi_bed)**2)
-      endif
+      !if (phi_int.eq.phi_bed) then
+      !   sqrtarg = 0.d0
+      !else
+      !   sqrtarg = 1.d0-(dcos(phi_int)**2)*(1.d0 + dtan(phi_bed)**2)
+      !endif
 
-      kappa = (2.d0 - pm*2.d0*dsqrt(sqrtarg))/(dcos(phi_int)**2)
-      kappa = kappa - 1.d0
+      !kappa = (2.d0 - pm*2.d0*dsqrt(sqrtarg))/(dcos(phi_int)**2)
+      !kappa = kappa - 1.d0
       kappa = 1.d0
 
    end subroutine auxeval
@@ -362,7 +362,8 @@ contains
       !endif
       dry_tol = drytolerance
       rho = m0*rho_s + (1.d0-m0)*rho_f
-      tanpsi = 0.0*c1*(m0 - m_crit)
+      tanpsi = max(c1*(m0 - m_crit),0.d0)
+      !tanpsi = c1*(m0-m_crit)
 
       do i=1,mx
          do j=1,my
