@@ -268,9 +268,9 @@ contains
          m_eqn= 0.d0
       endif
       tanpsi = c1*(m-m_eqn)
-      !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+      kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
 
-      kperm = kappita*exp(-(m-0.6)/(0.04))
+      !kperm = kappita*exp(-(m-0.6)/(0.04))
       compress = alpha/(sigbed + 1.d5)
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
