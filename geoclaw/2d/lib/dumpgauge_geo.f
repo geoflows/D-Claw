@@ -98,6 +98,7 @@ c         ## straightforward linear interp
         endif
 
         eta = topo + var(1)
+        if (abs(eta).lt.1.d-99) eta = 0.d0
 
 !$OMP CRITICAL (gaugeio)
 

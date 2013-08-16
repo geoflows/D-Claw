@@ -13,7 +13,7 @@ c
 c
       use geoclaw_module
       use topo_module
-      
+
       implicit double precision (a-h,o-z)
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
       dimension dtopo(mxdtopo,mydtopo,mtdtopo)
@@ -41,7 +41,7 @@ c       write(26,*) 'MOVETOPO: tt, dt, t0dtopo: ',tt,dt,t0dtopo
 
 c     # change topography
 
-        write(*,*) 'MOVETOPO: setting dtopo at time = ',t
+c        write(*,*) 'MOVETOPO: setting dtopo at time = ',t
 c       write(26,*) 'MOVETOPO: setting dtopo at time = ',t
 
         if (tt.ge.tfdtopo) then
@@ -250,7 +250,7 @@ c       if (.false.) then
                      yjm=ylowtopo(m) + (jb-1.d0)*dytopo(m)
                      yjp = ylowtopo(m) + jb*dytopo(m)
 
-                if (yjm.le.yhidtopo.and.yjp.ge.ylowdtopo) then
+                if (yjm.lt.yhidtopo.and.yjp.gt.ylowdtopo) then
                     yjmc=max(yjm,ylowdtopo)
                     yjpc=min(yjp,yhidtopo)
                     dyc = yjpc-yjmc
@@ -265,6 +265,7 @@ c                  # topointegral actually integrates,
 c                  #so need to divide by area
 c                  #physical area of cell depends on coordinate system
                    ztopoij=ztopoij/(dxc*dyc)
+
                    if (icoordsys.eq.2) then
                      deg2rad = pi/180.d0
                      capac_area = deg2rad*Rearth**2*
