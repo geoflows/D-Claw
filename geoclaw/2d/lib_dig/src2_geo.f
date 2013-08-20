@@ -62,7 +62,7 @@ c     # check for NANs in solution:
 
             if (vnorm.gt.0.d0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
-               hvnorm = hvnorm*dexp(-(1.d0-m)*mu*dt/(rho*h**2))
+               hvnorm = hvnorm*dexp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm
             endif
@@ -72,13 +72,12 @@ c     # check for NANs in solution:
             !integrate pressure source term
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
-            !integrate shear-induced dilatancy
-            p = p - dt*6.d0*dabs(vnorm)*tanpsi/(h*compress*(1.d0+kappa))
 
-            zeta = 6.d0/(compress*h*(1.d0+kappa))  +
-     &        (rho-rho_f)*rho_f*gmod/(2.d0*rho)
 
-            krate=-zeta*kperm/(h*dmax1(mu,1.d-16))
+            zeta = 3.d0/(compress*h*2.0)  +
+     &        (rho-rho_f)*rho_f*gmod/(4.d0*rho)
+
+            krate=-zeta*2.0*kperm/(h*dmax1(mu,1.d-16))
 
             p_hydro = h*rho_f*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
@@ -88,11 +87,13 @@ c     # check for NANs in solution:
             !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*dexp(krate*dt)
 
+            !integrate shear-induced dilatancy
+            p = p - dt*3.0*dabs(vnorm)*tanpsi/(h*compress)
+
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
-
 
             krate = D*(rho-rho_f)/rho
             hu = hu*dexp(dt*krate/h)

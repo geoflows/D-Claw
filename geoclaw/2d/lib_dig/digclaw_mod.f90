@@ -245,32 +245,38 @@ contains
       double precision, intent(out) :: sigbed,kperm,compress
 
       !local
-      double precision m_eqn,vnorm,gmod,sigbedc,sqrtarg
+      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi
 
+      if (h.lt.drytolerance) return
+
+      hbounded = h !max(h,delta)
 
       gmod=grav
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_f*(1.d0-m)
+      shear = 2.0*vnorm/hbounded
       sigbed = dmax1(0.d0,rho*gmod*h - p)
-      sigbedc = (rho-rho_f)*gmod*h**2
-      !sigbedc = sigbed
-      if (sigbedc.gt.0.d0) then
-         !Note: m_eqn = m_crit/(1+sqrt(N))
-         !From Boyer et. al.
-         !and N = mu*venorm/(h*sigbed)
-         !S = mu*abs(vnorm)/(h*sigbed)
-         S = mu*dabs(vnorm)/(h*sigbedc)
-         m_eqn = dsqrt(h*sigbedc)*m_crit/(dsqrt(h*sigbedc)+ dsqrt(mu*dabs(vnorm)))
-         m_eqn = dmax1(m_eqn,m_crit/(1.d0 + dsqrt(2.d0)))
+      sigbedc = rho_s*(shear*delta)**2 + sigbed
+
+      if (sigbedc.gt.0.0) then
+         S = mu*shear/(sigbedc)
       else
          S = 0.d0
-         m_eqn= 0.d0
       endif
+      !Note: m_eqn = m_crit/(1+sqrt(S))
+      !From Boyer et. al
+      m_eqn = m_crit/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)
       !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
 
-      kperm = kappita*exp(-(m-0.6)/(0.04))
+      if (m.le.1.d-99) then
+         kperm = 0.0
+         tanpsi = 0.0
+      else
+         !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+         kperm = kappita*exp(-(m-0.6)/(0.04))
+      endif
       compress = alpha/(sigbed + 1.d5)
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
