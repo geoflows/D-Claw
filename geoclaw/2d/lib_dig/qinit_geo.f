@@ -120,26 +120,32 @@ c=============== Pressure initialization for Mobilization Modeling======
       if (init_ptype.gt.0) then
          call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
      &                     q,maux,aux)
+         if (init_ptype.eq.1) then
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                  if (bed_normal.eq.1) gmod=grav*dcos(aux(i,j,i_theta))
+                  q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+               enddo
+            enddo
+            p_initialized = 1
+         endif
+         return
       endif
 
-      if (init_ptype.eq.1) then
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
-               q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
-            enddo
-         enddo
-         p_initialized = 1
-      elseif (init_ptype.eq.0) then
+
+      if (init_ptype.eq.0) then
          do i=1-mbc,mx+mbc
             do j=1-mbc,my+mbc
                if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
                q(i,j,5) = rho_f*gmod*q(i,j,1)
             enddo
          enddo
-         p_initialized = 1
+      elseif (init_ptype.eq.-1) then
+         do j=1-mbc,my+mbc
+               q(i,j,5) = 0.0
+         enddo
       endif
-
+      p_initialized = 1
 
       return
       end

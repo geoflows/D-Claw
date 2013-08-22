@@ -88,7 +88,7 @@ c     # check for NANs in solution:
             p = p_eq + (p-p_eq)*dexp(krate*dt)
 
             !integrate shear-induced dilatancy
-            p = p - dt*3.0*dabs(vnorm)*tanpsi/(h*compress)
+            p = p - dt*3.0*vnorm*tanpsi/(h*compress)
 
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)

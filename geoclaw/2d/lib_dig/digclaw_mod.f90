@@ -267,7 +267,7 @@ contains
       !Note: m_eqn = m_crit/(1+sqrt(S))
       !From Boyer et. al
       m_eqn = m_crit/(1.d0 + sqrt(S))
-      tanpsi = c1*(m-m_eqn)
+      tanpsi = c1*tanh(shear)*(m-m_eqn)
       !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
 
       if (m.le.1.d-99) then
@@ -280,7 +280,7 @@ contains
       compress = alpha/(sigbed + 1.d5)
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
-         tanpsi = 0.d0
+         !tanpsi = 0.d0
       elseif (h*mu.gt.0.d0) then
          D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)
       else
@@ -370,6 +370,7 @@ contains
       rho = m0*rho_s + (1.d0-m0)*rho_f
       tanpsi = max(c1*(m0 - m_crit),0.d0)
       !tanpsi = c1*(m0-m_crit)
+      tanpsi = 0.d0
 
       do i=1,mx
          do j=1,my

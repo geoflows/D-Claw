@@ -59,7 +59,7 @@ c      write(26,*) 'B4STEP2: t, num_dtopo: ', t,num_dtopo
       enddo
 
 c=============mobilization =============================================
-      if (init_ptype.eq.0) then
+      if (init_ptype.le.0) then
          return
       endif
       if (p_initialized.eq.1.and.t.gt.init_ptf2) then
