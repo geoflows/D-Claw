@@ -42,7 +42,7 @@ c-----------------------------------------------------------------------
       double precision det1,det2,det3,detR
       double precision R(0:2,1:3),A(3,3),del(0:4)
       double precision beta(3)
-      double precision rho,rhoL,rhoR,tauL,tauR
+      double precision rho,rhoL,rhoR,tauL,tauR,tau
       double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pm
       double precision theta,gamma,eps
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
@@ -95,6 +95,7 @@ c-----------------------------------------------------------------------
 
 
       rho = 0.5d0*(rhoL + rhoR)
+      tau = 0.5d0*(tauL + tauR)
       theta = 0.5d0*(thetaL + thetaR)
       gamma = 0.25*(rho_f + 3.0*rho)/rho
       gammaL = 0.25*(rho_f + 3.0*rhoL)/rhoL
