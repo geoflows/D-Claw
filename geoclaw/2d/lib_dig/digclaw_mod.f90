@@ -267,7 +267,7 @@ contains
       !Note: m_eqn = m_crit/(1+sqrt(S))
       !From Boyer et. al
       m_eqn = m_crit/(1.d0 + sqrt(S))
-      tanpsi = c1*tanh(shear)*(m-m_eqn)
+      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
 
       if (m.le.1.d-99) then
