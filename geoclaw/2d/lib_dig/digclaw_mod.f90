@@ -368,8 +368,7 @@ contains
       !endif
       dry_tol = drytolerance
       rho = m0*rho_s + (1.d0-m0)*rho_f
-      tanpsi = max(c1*(m0 - m_crit),0.d0)
-      !tanpsi = c1*(m0-m_crit)
+      !tanpsi = max(c1*(m0 - m_crit),0.d0)
       tanpsi = 0.d0
 
       do i=1,mx
