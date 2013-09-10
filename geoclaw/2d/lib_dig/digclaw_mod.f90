@@ -268,19 +268,17 @@ contains
       !From Boyer et. al
       m_eqn = m_crit/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
-      !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
+
+      kperm = kappita*exp(-(m-0.6)/(0.04))
+      compress = 1.0/(alpha*sigbed + 1.d4)
 
       if (m.le.1.d-99) then
          kperm = 0.0
          tanpsi = 0.0
-      else
-         !kperm = (kappita**2*(1.d0-m)**3)/(180.d0*m**2)
-         kperm = kappita*exp(-(m-0.6)/(0.04))
       endif
-      compress = alpha/(sigbed + 1.d5)
+
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
-         !tanpsi = 0.d0
       elseif (h*mu.gt.0.d0) then
          D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)
       else
