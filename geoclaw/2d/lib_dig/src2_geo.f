@@ -62,14 +62,14 @@ c     # check for NANs in solution:
 
             if (vnorm.gt.0.d0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
-               hvnorm = hvnorm*dexp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
+               hvnorm = hvnorm*dexp(-(1.d0-m)*1.0*mu*dt/(rho*h**2))
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm
             endif
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
-            vnorm = dsqrt(u**2 + v**2)
+            !vnorm = dsqrt(u**2 + v**2)
 
             !integrate shear-induced dilatancy
             p = p - dt*3.0*vnorm*tanpsi/(h*compress)
