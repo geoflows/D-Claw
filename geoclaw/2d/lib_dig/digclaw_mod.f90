@@ -255,9 +255,9 @@ contains
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_f*(1.d0-m)
-      shear = vnorm/hbounded
+      shear = 2.0*vnorm/hbounded
       sigbed = dmax1(0.d0,rho*gmod*h - p)
-      sigbedc = rho_s*gmod*(shear*delta)**2 + sigbed
+      sigbedc = rho_s*(shear*delta)**2 + sigbed
 
       if (sigbedc.gt.0.0) then
          S = mu*shear/(sigbedc)
@@ -267,11 +267,11 @@ contains
       !Note: m_eqn = m_crit/(1+sqrt(S))
       !From Boyer et. al
       m_eqn = m_crit/(1.d0 + sqrt(S))
-      tanpsi = c1*(m-m_eqn)!*tanh(shear/0.1)
+      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 
-      kperm = kappita*exp(-(m-0.62)/(0.04))
-      compress = 1.0/(alpha*sigbed + 1.d5)
-      !compress = .03/(m*(alpha*sigbed +  100.0))
+      kperm = kappita*exp(-(m-0.60)/(0.04))
+      !compress = 10.0/(sigbed + 1.d5)
+      compress = alpha/(m*(sigbed +  1.d2))
 
       if (m.le.1.d-99) then
          kperm = 0.0
@@ -281,17 +281,17 @@ contains
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
          D = 0.d0
       elseif (h*mu.gt.0.d0) then
-         D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)*0.5
+         D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)
       else
          D = 0.d0
       endif
-
-      if (S.gt.0.0) then
-         tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
-      endif
+      tanphi = dtan(phi_bed + datan(tanpsi))
+      !if (S.gt.0.0) then
+      !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
+      !endif
 
       tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
-
+      !tau = (grav/gmod)*dmax1(0.d0,sigbed*tanphi)
       !kappa: earth pressure coefficient
       !if (phi_int.eq.phi_bed) then
       !   sqrtarg = 0.d0

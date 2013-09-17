@@ -62,7 +62,7 @@ c     # check for NANs in solution:
 
             if (vnorm.gt.0.d0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
-               hvnorm = hvnorm*dexp(-(1.d0-m)*1.0*mu*dt/(rho*h**2))
+               hvnorm = hvnorm*dexp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm
             endif
