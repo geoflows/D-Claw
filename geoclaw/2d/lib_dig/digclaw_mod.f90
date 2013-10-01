@@ -250,7 +250,6 @@ contains
       if (h.lt.drytolerance) return
 
       hbounded = h !max(h,delta)
-
       gmod=grav
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2 + v**2)
@@ -270,7 +269,7 @@ contains
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 
       kperm = kappita*exp(-(m-0.60)/(0.04))
-      !compress = 10.0/(sigbed + 1.d5)
+      !compress = alpha/(sigbed + 1.d5)
       compress = alpha/(m*(sigbed +  1.d2))
 
       if (m.le.1.d-99) then
@@ -279,6 +278,7 @@ contains
       endif
 
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
+         tanpsi = 0.d0
          D = 0.d0
       elseif (h*mu.gt.0.d0) then
          D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)
@@ -372,7 +372,7 @@ contains
       dry_tol = drytolerance
       rho = m0*rho_s + (1.d0-m0)*rho_f
       tanpsi = max(c1*(m0 - m_crit),0.d0)
-      !tanpsi = 0.d0
+      tanpsi = 0.0 !c1*(m0 - m_crit)
 
       do i=1,mx
          do j=1,my

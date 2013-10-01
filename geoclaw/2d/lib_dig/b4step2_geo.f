@@ -81,7 +81,7 @@ c=============mobilization =============================================
                if (bed_normal.eq.1) then
                   theta=aux(i,j,i_theta)
                   p_ratioij = max(0.0,init_p_ratio
-     &               - aux(i,j,1)/(q(i,j,1)+aux(i,j,1)))
+     &               + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
                endif
                gmod = grav*dcos(theta)
 c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
@@ -106,9 +106,9 @@ c     &            rho_f*gmod*q(i,j,1)
                if (bed_normal.eq.1) then
                   theta=aux(i,j,i_theta)
                   p_ratioij = max(0.0,init_p_ratio
-     &               - aux(i,j,1)/(q(i,j,1)+aux(i,j,1)))
-                  p_ratioij_pre = max(0.0,init_pmin_ratio
-     &               - aux(i,j,1)/(q(i,j,1)+aux(i,j,1)))
+     &               + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
+                  p_ratioij_pre = max(0.0,init_p_ratio
+     &               + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
                endif
                gmod = grav*dcos(theta)
 

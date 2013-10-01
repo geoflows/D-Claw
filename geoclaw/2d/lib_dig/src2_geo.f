@@ -32,7 +32,7 @@ c     # check for NANs in solution:
       gmod=grav
       coeff = coeffmanning
       tol = 1.d-30  !# to prevent divide by zero in gamma
-
+      !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
 
       do i=1,mx
          do j=1,my
@@ -58,21 +58,24 @@ c     # check for NANs in solution:
             vnorm = dsqrt(u**2 + v**2)
             hvnorm = h*vnorm
 
-            if (p_initialized.eq.0.and.vnorm.le.0.d0) cycle
-
             if (vnorm.gt.0.d0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
                hvnorm = hvnorm*dexp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm
             endif
+
+            if (p_initialized.eq.0) cycle
+
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
-            !vnorm = dsqrt(u**2 + v**2)
+
+
+            vnorm = dsqrt(u**2 + v**2)
 
             !integrate shear-induced dilatancy
-            p = p - dt*3.0*vnorm*tanpsi/(h*compress)
+c            p = p - dt*3.0*vnorm*tanpsi/(h*compress)
 
             !integrate pressure relaxation
             zeta = 3.d0/(compress*h*2.0)  +
@@ -81,7 +84,8 @@ c     # check for NANs in solution:
             krate=-zeta*2.0*kperm/(h*dmax1(mu,1.d-16))
             p_hydro = h*rho_f*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
-            p_eq = p_hydro
+
+            p_eq = p_hydro + 3.0*vnorm*tanpsi/(compress*h*krate)
             p = p_eq + (p-p_eq)*dexp(krate*dt)
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
@@ -96,8 +100,8 @@ c     # check for NANs in solution:
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
 c            !vnorm = dsqrt(u**2 + v**2)
-c            !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
-c     &                  sigbed,kperm,compress,pm)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
+     &                  sigbed,kperm,compress,pm)
 
             q(i,j,1) = h
             q(i,j,2) = hu
