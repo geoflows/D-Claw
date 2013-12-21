@@ -19,7 +19,7 @@ c =========================================================
       double precision gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision cx,cy,pdh,vnorm,hvnorm,theta
+      double precision cx,cy,pdh,vnorm,hvnorm,theta,dtheta
       integer i,j
 c
 
@@ -37,9 +37,11 @@ c     # check for NANs in solution:
       do i=1,mx
          do j=1,my
             theta = 0.d0
+            dtheta = 0.d0
             if (bed_normal.eq.1) then
                theta = aux(i,j,i_theta)
                gmod = grav*dcos(theta)
+               dtheta = -(aux(i+1,j,i_theta) - theta)/dx
             endif
             call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
      &            q(i,j,4),q(i,j,5),u,v,m,theta)
@@ -55,8 +57,14 @@ c     # check for NANs in solution:
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,
      &                  sigbed,kperm,compress,pm)
 
+
+
             vnorm = dsqrt(u**2 + v**2)
             hvnorm = h*vnorm
+
+            if (dtheta.gt.0.d0) then
+               tau = tau*(gmod + dtheta*vnorm**2)/gmod
+            endif
 
             if (vnorm.gt.0.d0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)

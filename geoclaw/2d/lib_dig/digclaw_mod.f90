@@ -270,7 +270,7 @@ contains
 
       kperm = kappita*exp(-(m-0.60)/(0.04))
       !compress = alpha/(sigbed + 1.d5)
-      compress = alpha/(m*(sigbed +  1.d2))
+      compress = alpha/(m*(sigbed +  1.d3))
 
       if (m.le.1.d-99) then
          kperm = 0.0
