@@ -29,6 +29,8 @@ module digclaw_module
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
     integer, parameter ::  i_theta  = i_dig + 1
+    integer, parameter ::  i_fs_x   = i_dig + 2
+    integer, parameter ::  i_fx_y   = i_dig + 3
     integer, parameter ::  DIG_PARM_UNIT = 78
 
 
@@ -339,6 +341,51 @@ contains
       endif
 
    end subroutine psieval
+
+   ! ========================================================================
+   !  calc_fs
+   ! ========================================================================
+   !  Determines the factor of safety ratios at every cell interface
+   ! ========================================================================
+
+subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
+
+      implicit none
+
+      !Input
+      double precision :: dx,dy,xlower,ylower
+      double precision :: q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
+      double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
+
+      integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
+
+      do i=1,mx
+         do j=1,my
+            h_r = q(i,j,1)
+            h_l = q(i-1,j,1)
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
+               cycle
+            endif
+            b_r = aux(i,j,1)
+            b_l = aux(i-1,j,1)
+            phiL = aux(i-1,j,i_phi)
+            phiR = aux(i,j,i_phi)
+            phiL = dmax1(0.d0,phiL + datan(tanpsi))
+            phiR = dmax1(0.d0,phiR + datan(tanpsi))
+            if (bed_normal.eq.1) then
+               thetaR = aux(i,j,i_theta)
+               thetaL = aux(i-1,j,i_theta)
+               gmod = grav*dcos(0.5d0*(thetaL+thetaR))
+            else
+               thetaL = 0.d0
+               thetaR = 0.d0
+            endif
+
+         enddo
+      enddo
+
+
+end subroutine calc_fs
 
    ! ========================================================================
    !  calc_pmin

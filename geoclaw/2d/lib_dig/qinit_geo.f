@@ -114,6 +114,9 @@ c
          enddo
       enddo
 
+c===============set factor of safety====================================
+      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+     &                     q,maux,aux)
 
 c=============== Pressure initialization for Mobilization Modeling======
 

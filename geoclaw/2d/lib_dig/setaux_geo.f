@@ -70,6 +70,10 @@ c        #------- zero aux variables that will be set by files
             do mf = 1,mauxinitfiles
                aux(i,j,iauxinit(mf)) = 0.d0
             enddo
+         !--------zero all d-claw aux variables----
+            do mf= i_dig,maux
+               aux(i,j,mf) = 0.0
+            enddo
 
          enddo
       enddo
