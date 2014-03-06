@@ -62,12 +62,12 @@ c     # check for NANs in solution:
             vnorm = dsqrt(u**2 + v**2)
             hvnorm = h*vnorm
 
-            if (dtheta.gt.0.d0) then
-               tau = tau*(gmod + dtheta*vnorm**2)/gmod
-            endif
+            !if (dtheta.gt.0.d0) then
+            !   tau = tau*(gmod + dtheta*vnorm**2)/gmod
+            !endif
 
             if (vnorm.gt.0.d0) then
-               hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
+               !hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
                hvnorm = hvnorm*dexp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm

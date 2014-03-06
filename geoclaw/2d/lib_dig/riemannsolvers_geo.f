@@ -2,7 +2,7 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,fs)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -28,7 +28,7 @@ c-----------------------------------------------------------------------
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
-      double precision thetaL,thetaR,phiL,phiR,dx
+      double precision thetaL,thetaR,phiL,phiR,dx,fs
       logical wallprob
 
 
@@ -48,10 +48,9 @@ c-----------------------------------------------------------------------
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
-      double precision hstarHLL,deldelh,drytol,gmod,geps
+      double precision hstarHLL,deldelh,drytol,gmod,geps,tausource
       double precision raremin,raremax,rare1st,rare2st,sdelta
-      double precision source2dxL,source2dxR
-      double precision gammaL,gammaR,theta1,theta2,theta3
+      double precision gammaL,gammaR,theta1,theta2,theta3,vnorm
       logical sonic,rare1,rare2
       logical rarecorrectortest,rarecorrector
 
@@ -239,33 +238,22 @@ c     !find bounds in case of critical state resonance, or negative states
 
 *     !determine the source term
 c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
-      source2dxL = source2dx
-      source2dxR = source2dx
 
       if (ixy.eq.1.and.(.not.wallprob)) then
-         source2dxL =source2dxL + dx*hL*grav*dsin(thetaL)
-         source2dxR =source2dxR + dx*hR*grav*dsin(thetaR)
          source2dx = source2dx + dx*hbar*grav*dsin(theta)
       endif
 
-      if (dabs(uR**2+uL**2).gt.veltol2) then
-         del(2) = del(2) -source2dx
-      else
-         if ((dabs(del(2)-source2dx).ge.dabs(dx*tauL/rhoL)).and.
-     &         (dabs(del(2)-source2dx).ge.dabs(dx*tauR/rhoR))) then
-c            del(2)=dsign(dabs(dabs(del(2)-source2dx)
-c     &                   -dabs(dx*tau/rho)),del(2)-source2dx)
-
-            del(2) = del(2) -source2dx
-         else
-            del(0)=0.d0
-            del(1)=0.d0
-            del(2)=0.d0
-            del(3)=0.d0
-            del(4)=0.d0
-            !write(*,*) 'del:',(del(m),m=0,4)
-         endif
+      vnorm = sqrt(u**2 + v**2)
+      if (vnorm>0.0) then
+         tausource = - dx*0.5*(tauL/rhoL + tauR/rhoR)*u/vnorm
+      elseif (fs.le.1.0) then
+         tausource = (del(2) - source2dx)*fs
+      elseif (fs.gt.1.0) then
+         tausource = del(2) - source2dx
       endif
+
+      del(2) = del(2) - source2dx - tausource
+
 
 c      del(1) = del(1) - 0.5d0*dx*psi(1)
 c      del(2) = del(2) - dx*psi(2)
