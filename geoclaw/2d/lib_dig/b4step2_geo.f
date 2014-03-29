@@ -46,7 +46,6 @@ c     # set hu = hv = 0 in all these cells
         enddo
       enddo
 
-
 c      write(26,*) 'B4STEP2: t, num_dtopo: ', t,num_dtopo
       do i=1,num_dtopo
           call movetopo(maxmx,maxmy,mbc,mx,my,
@@ -63,95 +62,53 @@ c======find factor of safety ratios===================================
      &                     q,maux,aux)
 
 c=============mobilization =============================================
-      if (init_ptype.le.0) then
-         return
-      endif
-      if (p_initialized.eq.1.and.t.gt.init_ptf2) then
-         return
-      endif
-
-      if (t.gt.max(init_ptf,init_ptf2)) then
-         p_initialized = 1
+      !write(*,*) 'b4step2, t:',t,init_pmin_ratio
+      if (p_initialized.eq.1.and.t.gt.0.5*dt) then
          return
       endif
 
-      if (t.le.init_ptf) then
-         init_p_ratio = (t/init_ptf)*init_pmin_ratio
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-               if (q(i,j,1).le.drytolerance) cycle
-               theta = 0.d0
-               p_ratioij = init_p_ratio
-               if (bed_normal.eq.1) then
-                  theta=aux(i,j,i_theta)
-                  p_ratioij = max(0.0,init_p_ratio
-     &               + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
-               endif
-               gmod = grav*dcos(theta)
-c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
-               q(i,j,5) = max(q(i,j,5),p_ratioij*rho_f*gmod*q(i,j,1))
-c               q(i,j,5) = q(i,j,5) +
-c     &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
-c     &            rho_f*gmod*q(i,j,1)
-               call admissibleq(
-     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
-            enddo
-         enddo
-      elseif (t.le.init_ptf2) then
-         p_initialized=1
-         init_p_ratio = (init_pmax_ratio - init_pmin_ratio)/
-     &                                 (init_ptf2 - init_ptf)
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-               if (q(i,j,1).le.drytolerance) cycle
-               theta = 0.d0
-               p_ratioij = init_p_ratio
-               p_ratioij_pre = init_pmin_ratio
-               if (bed_normal.eq.1) then
-                  theta=aux(i,j,i_theta)
-                  p_ratioij = max(0.0,init_p_ratio
-     &               + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
-                  p_ratioij_pre = max(0.0,init_p_ratio
-     &               + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
-               endif
-               gmod = grav*dcos(theta)
-
-               if (q(i,j,5).lt.(rho_f*gmod*q(i,j,1)*
-     &            (p_ratioij_pre + (t-init_ptf)*p_ratioij))) then
-                  q(i,j,5) = q(i,j,5) + dt*p_ratioij*rho_f*gmod*q(i,j,1)
-c                  write(*,*) 't,rat:',t,q(i,j,5)/(rho_f*gmod*q(i,j,1))
-               endif
-c               q(i,j,5) = q(i,j,5) +
-c     &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
-c     &            rho_f*gmod*q(i,j,1)
-               call admissibleq(
-     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
-            enddo
-         enddo
-      elseif (t.gt.init_ptf2) then
-         p_initialized=1
-         init_p_ratio = init_pmax_ratio
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-              if (q(i,j,1).le.drytolerance) cycle
-               theta = 0.d0
-               p_ratioij = init_p_ratio
-               if (bed_normal.eq.1) then
-                  theta=aux(i,j,i_theta)
-                  p_ratioij = max(0.0,init_p_ratio
-     &               - aux(i,j,1)/(q(i,j,1)+aux(i,j,1)))
-               endif
-               gmod = grav*dcos(theta)
-c               if ((q(i,j,2)**2 + q(i,j,3)**2).gt.1.d-16) cycle
-c               q(i,j,5) = max(q(i,j,5),p_ratioij*rho_f*gmod*q(i,j,1))
-c               q(i,j,5) = q(i,j,5) +
-c     &           (dt/init_ptf)*init_pmax_ratio*init_pmin_ratio*
-c     &            rho_f*gmod*q(i,j,1)
-               call admissibleq(
-     &        q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,sv,theta)
-            enddo
-         enddo
+      if (init_ptype.lt.1) then
+         return
       endif
+
+      select case (init_ptype)
+         case(1)
+         !set to failure pressure
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                  if (bed_normal.eq.1) gmod=grav*dcos(aux(i,j,i_theta))
+                  q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+               enddo
+            enddo
+            p_initialized = 1
+
+         case(2)
+            !raise pressure
+            if (t.gt.max(init_ptf,init_ptf2)) then
+               p_initialized = 1
+               return
+            endif
+
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                  if (q(i,j,1).le.drytolerance) cycle
+                  theta = 0.d0
+                  p_ratioij = init_pmin_ratio
+                  if (bed_normal.eq.1) then
+                        theta=aux(i,j,i_theta)
+                        p_ratioij = max(0.0,init_p_ratio
+     &                     + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
+                  endif
+                  gmod = grav*dcos(theta)
+                  pfail = p_ratioij*rho_f*gmod*q(i,j,1)
+                  q(i,j,5) = pfail - (init_ptf - t)*abs(pfail)
+                  call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+     &                           q(i,j,4),q(i,j,5),u,v,sv,theta)
+               enddo
+            enddo
+
+      end select
+
 
       return
       end

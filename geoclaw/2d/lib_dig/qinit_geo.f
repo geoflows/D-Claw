@@ -114,41 +114,50 @@ c
          enddo
       enddo
 
-c===============set factor of safety====================================
-      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
-     &                     q,maux,aux)
-
 c=============== Pressure initialization for Mobilization Modeling======
 
-      if (init_ptype.gt.0) then
-         call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
-     &                     q,maux,aux)
-         if (init_ptype.eq.1) then
+      select case (init_ptype)
+         case (-1)
+            !p should already be 0 or set by qinit file
+            p_initialized = 1
+         case (0)
+            !set to hydrostatic
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
-                  if (bed_normal.eq.1) gmod=grav*dcos(aux(i,j,i_theta))
-                  q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
+                 q(i,j,5) = rho_f*gmod*q(i,j,1)
                enddo
             enddo
             p_initialized = 1
-         endif
-         return
-      endif
-
-
-      if (init_ptype.eq.0) then
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
-               q(i,j,5) = rho_f*gmod*q(i,j,1)
+         case(1)
+            !will be set to failure pressure in b4step at t = 0
+           call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
+     &                    dx,dy,q,maux,aux)
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
+                 q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+               enddo
             enddo
-         enddo
-      elseif (init_ptype.eq.-1) then
-         do j=1-mbc,my+mbc
-               q(i,j,5) = 0.0
-         enddo
-      endif
-      p_initialized = 1
+            p_initialized = 0
+         case(2)
+            !p will be set in b4step2, but need pmin
+            call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
+     &                        dx,dy,q,maux,aux)
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
+                     pfail = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                     q(i,j,5) = pfail - (init_ptf)*abs(pfail)
+               enddo
+            enddo
+            p_initialized = 0
+      end select
+      !write(*,*) 'qinit:init,dx,dy:',init_pmin_ratio,dx,dy
+
+c===============set factor of safety====================================
+      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+     &                     q,maux,aux)
 
       return
       end

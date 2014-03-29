@@ -2,7 +2,7 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,fs)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,fs,fail)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -28,7 +28,7 @@ c-----------------------------------------------------------------------
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
-      double precision thetaL,thetaR,phiL,phiR,dx,fs
+      double precision thetaL,thetaR,phiL,phiR,dx,fs,fail
       logical wallprob
 
 
@@ -238,22 +238,29 @@ c     !find bounds in case of critical state resonance, or negative states
 
 *     !determine the source term
 c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
-
+      if (fs.lt.1.0.and..not.wallprob) then
+         !write(*,*) 'rp: fs,hL,hR,uL,uR:',fs,hL,hR,uL,uR
+      endif
       if (ixy.eq.1.and.(.not.wallprob)) then
-         source2dx = source2dx + dx*hbar*grav*dsin(theta)
+         source2dx = source2dx !+ dx*hbar*grav*dsin(theta)
       endif
 
       vnorm = sqrt(u**2 + v**2)
-      if (vnorm>0.0) then
+      if (fs<=0.0.and.vnorm>0.0) then
          tausource = - dx*0.5*(tauL/rhoL + tauR/rhoR)*u/vnorm
-      elseif (fs.le.1.0) then
-         tausource = (del(2) - source2dx)*fs
-      elseif (fs.gt.1.0) then
+      elseif (fs>1.0.or.fail>=1.0) then
          tausource = del(2) - source2dx
+         del(1) = 0.0
+         del(0) = 0.0
+         del(4) = 0.0
+      elseif (fs<=1.0.and.vnorm<=0.0) then
+         tausource = (del(2) - source2dx)*fs
+      else
+         tausource = 0.0
       endif
 
-      del(2) = del(2) - source2dx - tausource
-
+      del(2) = del(2) - source2dx ! - tausource
+      !del(4) = del(4) + dx*3.0*vnorm*tanpsi/(h*compress)
 
 c      del(1) = del(1) - 0.5d0*dx*psi(1)
 c      del(2) = del(2) - dx*psi(2)
