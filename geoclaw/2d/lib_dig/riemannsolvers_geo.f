@@ -127,7 +127,7 @@ c-----------------------------------------------------------------------
 
       hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
 c     !determine the middle entropy corrector wave------------------------
-      rarecorrectortest = .true.
+      rarecorrectortest = .false.
       rarecorrector=.false.
       if (rarecorrectortest) then
          sdelta=sw(3)-sw(1)
@@ -172,14 +172,14 @@ c     !find if sonic problem
       if ((uL+dsqrt(geps*hL))*(uR+dsqrt(geps*hR)).lt.0.d0) sonic=.true.
       if ((uL-dsqrt(geps*hL))*(uR-dsqrt(geps*hR)).lt.0.d0) sonic=.true.
 
-      if (sonic) then
+      if (sonic.or..true.) then
          source2dx = -gmod*hbar*delb
       else
          source2dx = -delb*gmod*hbar*s1s2tilde/s1s2bar
       endif
 
-      source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
-      source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
+      !source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
+      !source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
 
       if (dabs(u).le.veltol2) then
          source2dx=-hbar*gmod*delb
@@ -259,7 +259,7 @@ c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
          tausource = 0.0
       endif
 
-      del(2) = del(2) - source2dx ! - tausource
+      del(2) = del(2) - source2dx  - tausource
       !del(4) = del(4) + dx*3.0*vnorm*tanpsi/(h*compress)
 
 c      del(1) = del(1) - 0.5d0*dx*psi(1)
