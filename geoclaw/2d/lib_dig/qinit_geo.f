@@ -130,25 +130,46 @@ c=============== Pressure initialization for Mobilization Modeling======
             enddo
             p_initialized = 1
          case(1)
-            !will be set to failure pressure in b4step at t = 0
+
            call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
      &                    dx,dy,q,maux,aux)
+
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
-                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
-                 q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                  p_ratioij = init_pmin_ratio
+                  if (q(i,j,1).le.drytolerance) then
+                     q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                     cycle
+                  endif
+                  if (bed_normal.eq.1) then
+                     gmod = grav*dcos(aux(i,j,i_theta))
+                     p_ratioij = max(0.0,init_pmin_ratio
+     &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
+                  endif
+
+
+                 q(i,j,5) = p_ratioij*rho_f*gmod*q(i,j,1)
                enddo
             enddo
-            p_initialized = 0
+            p_initialized = 1
          case(2)
-            !p will be set in b4step2, but need pmin
+            !p will be updated in b4step2
             call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
      &                        dx,dy,q,maux,aux)
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
-                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
-                     pfail = init_pmin_ratio*rho_f*gmod*q(i,j,1)
-                     q(i,j,5) = pfail - (init_ptf)*abs(pfail)
+                 p_ratioij = init_pmin_ratio
+                  if (q(i,j,1).le.drytolerance) then
+                     q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                     cycle
+                  endif
+                 if (bed_normal.eq.1) then
+                     gmod = grav*dcos(aux(i,j,i_theta))
+                     p_ratioij = max(0.0,init_pmin_ratio
+     &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
+                 endif
+                     pfail = p_ratioij*rho_f*gmod*q(i,j,1)
+                     q(i,j,5) = pfail - abs(pfail)
                enddo
             enddo
             p_initialized = 0

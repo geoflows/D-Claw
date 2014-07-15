@@ -63,7 +63,7 @@ c======find factor of safety ratios===================================
 
 c=============mobilization =============================================
       !write(*,*) 'b4step2, t:',t,init_pmin_ratio
-      if (p_initialized.eq.1.and.t.gt.0.5*dt) then
+      if (p_initialized.eq.1) then
          return
       endif
 
@@ -73,14 +73,7 @@ c=============mobilization =============================================
 
       select case (init_ptype)
          case(1)
-         !set to failure pressure
-            do i=1-mbc,mx+mbc
-               do j=1-mbc,my+mbc
-                  if (bed_normal.eq.1) gmod=grav*dcos(aux(i,j,i_theta))
-                  q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
-               enddo
-            enddo
-            p_initialized = 1
+         !set to failure pressure in qinit
 
          case(2)
             !raise pressure
@@ -93,15 +86,15 @@ c=============mobilization =============================================
                do j=1-mbc,my+mbc
                   if (q(i,j,1).le.drytolerance) cycle
                   theta = 0.d0
-                  p_ratioij = init_pmin_ratio
+                  pratio_ij = init_pmin_ratio
                   if (bed_normal.eq.1) then
-                        theta=aux(i,j,i_theta)
-                        p_ratioij = max(0.0,init_p_ratio
-     &                     + (init_p_ratio - 1.0)*aux(i,j,1)/q(i,j,1))
+                     theta=aux(i,j,i_theta)
+                     p_ratioij = max(0.0,init_pmin_ratio*
+     &                 (1.0 + aux(i,j,1)/q(i,j,1)) -aux(i,j,1)/q(i,j,1))
                   endif
                   gmod = grav*dcos(theta)
                   pfail = p_ratioij*rho_f*gmod*q(i,j,1)
-                  q(i,j,5) = pfail - (init_ptf - t)*abs(pfail)
+                  q(i,j,5) = pfail - abs(pfail)*(init_ptf - t)/init_ptf
                   call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
      &                           q(i,j,4),q(i,j,5),u,v,sv,theta)
                enddo

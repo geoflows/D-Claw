@@ -590,7 +590,7 @@ end subroutine calc_fs
          do j=1,my
             h_r = q(i,j,1)
             h_l = q(i-1,j,1)
-            if (h_l.le.dry_tol.and.h_r.le.dry_tol) then
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
                cycle
             endif
             b_r = aux(i,j,1)
@@ -635,7 +635,7 @@ end subroutine calc_fs
             !repeat for y-Riemann problems
             h_r = q(i,j,1)
             h_l = q(i,j-1,1)
-            if (h_l.le.dry_tol.and.h_r.le.dry_tol) then
+            if (h_l.le.dry_tol.or.h_r.le.dry_tol) then
                cycle
             endif
             b_r = aux(i,j,1)
