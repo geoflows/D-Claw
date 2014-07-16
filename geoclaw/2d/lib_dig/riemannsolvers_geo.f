@@ -237,12 +237,9 @@ c     !find bounds in case of critical state resonance, or negative states
 
 
 *     !determine the source term
-c      call psieval(tau,rho,D,tanpsi,kperm,compress,h,u,mbar,psi)
-      if (fs.lt.1.0.and..not.wallprob) then
-         !write(*,*) 'rp: fs,hL,hR,uL,uR:',fs,hL,hR,uL,uR
-      endif
+
       if (ixy.eq.1.and.(.not.wallprob)) then
-         source2dx = source2dx !+ dx*hbar*grav*dsin(theta)
+         source2dx = source2dx + dx*hbar*grav*dsin(theta)
       endif
 
       vnorm = sqrt(u**2 + v**2)

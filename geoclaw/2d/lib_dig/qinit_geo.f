@@ -176,6 +176,12 @@ c=============== Pressure initialization for Mobilization Modeling======
       end select
       !write(*,*) 'qinit:init,dx,dy:',init_pmin_ratio,dx,dy
 
+      do i=1,mx
+         do j=1,my
+            call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+     &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
+         enddo
+      enddo
 c===============set factor of safety====================================
       call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
      &                     q,maux,aux)

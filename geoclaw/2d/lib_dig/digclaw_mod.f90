@@ -225,7 +225,7 @@ contains
       plo = rho_f*dry_tol*gmod*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
-         !p = dmax1(0.d0,p)
+         p = dmax1(0.d0,p)
          !p = dmax1(-5.0*pmax,p)
          !p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
@@ -370,7 +370,6 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       double precision :: gmod,dry_tol
       double precision :: kappa,S,tanpsi,D,sigbed,kperm,compress,pm
       double precision :: Fx,Fy,F,vRnorm,vLnorm
-      double precision :: hL2,hR2,bL2,bR2,h2
       integer :: i,j,ii,jj
 
       dry_tol = drytolerance
@@ -421,26 +420,16 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                theta = 0.5*(thetaL + thetaR)
                h = 0.5*(hL + hR)
                Fx = -0.5*gmod*(hR**2 - hL**2)/dx + grav*h*sin(theta) - gmod*h*(bR-bL)/dx
-               Fy = 0.0
-               do ii = 0,1
-                  do jj = 0,1
-                     hR2 = q(i+ii-1,j+jj,1)
-                     bR2 = aux(i+ii-1,j+jj,1)
-                     hL2 = q(i+ii-1,j+jj-1,1)
-                     bL2 = aux(i+ii-1,j+jj-1,1)
-                     h2 = 0.5*(hL + hR)
-                     Fy = Fy -0.5*gmod*(hR2**2 - hL2**2)/dy - gmod*h2*(bR2-bL2)/dy
-                  enddo
-               enddo
-               Fy = 0.25*Fy
-               F = sqrt(Fx**2 + Fy**2)
-               if (F<=0.0) F=10.0
+               F = abs(Fx)
+
+               if (F<=0.0) F=1.0e-6
+
                if (hL<=dry_tol) then
                   aux(i,j,i_fs_x) = (tauR/rhoR)/F
                elseif (hR<=dry_tol) then
                   aux(i,j,i_fs_x) = (tauL/rhoL)/F
                else
-                  aux(i,j,i_fs_x) = 0.5*((tauL/rhoL)+(tauR/rhoR))/F
+                  aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
             endif
          enddo
@@ -491,62 +480,18 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                theta = 0.5*(thetaL + thetaR)
                h = 0.5*(hL + hR)
                Fy = -0.5*gmod*(hR**2 - hL**2)/dy - gmod*h*(bR-bL)/dy
-               Fx = 0.0
-               do ii = 0,1
-                  do jj = 0,1
-                     hR2 = q(i+ii,j+jj-1,1)
-                     hL2 = q(i+ii-1,j+jj-1,1)
-                     bR2 = aux(i+ii,j+jj-1,1)
-                     bL2 = aux(i+ii-1,j+jj-1,1)
-                     h2 = 0.5*(hL + hR)
-                     Fx = Fx -0.5*gmod*(hR2**2 - hL2**2)/dx + grav*h2*sin(theta)- gmod*h2*(bR2-bL2)/dx
-                  enddo
-               enddo
-               Fx = 0.25*Fx
-               F = sqrt(Fx**2 + Fy**2)
-               if (F<=0.0) F=10.0
+               F = abs(Fy)
+               if (F<=0.0) F=1.0e-6
                if (hL<=dry_tol) then
                   aux(i,j,i_fs_y) = (tauR/rhoR)/F
                elseif (hR<=dry_tol) then
                   aux(i,j,i_fs_y) = (tauL/rhoL)/F
                else
-                  aux(i,j,i_fs_y) = 0.5*(tauL/rhoL+tauR/rhoR)/F
+                  aux(i,j,i_fs_y) = max(tauL/rhoL,tauR/rhoR)/F
                endif
             endif
          enddo
          aux(mx+mbc,j,i_fs_y) = aux(mx+mbc-1,j,i_fs_y)
-      enddo
-
-      do i=1-mbc,mx+mbc
-         do j=1-mbc,my+mbc
-            aux(i,j,i_fail_x) = 0.0
-            aux(i,j,i_fail_y) = 0.0
-         enddo
-      enddo
-
-      do i=2-mbc,mx+mbc
-         do j=2-mbc,my+mbc-1
-            do ii = 0,1
-               do jj = 0,1
-                  if (aux(i-ii,j+jj,i_fs_y)>1.0) then
-                     aux(i,j,i_fail_x) = 1.0
-                  endif
-               enddo
-            enddo
-         enddo
-      enddo
-
-      do j=2-mbc,my+mbc
-         do i=2-mbc,mx+mbc-1
-            aux(i,j,i_fail_y) = 0.0
-            do ii = 0,1
-               do jj = 0,1
-                  if (aux(i+ii,j-jj,i_fs_x)>1.0) then
-                     aux(i,j,i_fail_y) = 1.0
-                  endif
-               enddo
-            enddo
-         enddo
       enddo
 
 
@@ -613,16 +558,17 @@ end subroutine calc_fs
                !determine pressure min ratio
                forcemagL = abs(-grav*h_l*dsin(thetaL)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                forcemagR = abs(-grav*h_r*dsin(thetaR)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
-               pcritR = (rho*h_r*gmod - rho*forcemagR/(dx*tan(phiR)))/(rho_f*gmod*h_r)
-               pcritL = (rho*h_l*gmod - rho*forcemagL/(dx*tan(phiL)))/(rho_f*gmod*h_l)
+               forcemag = 0.5*(forcemagL + forcemagR)
+               pcritR = (rho*h_r*gmod - rho*forcemag/(dx*tan(phiR)))/(rho_f*gmod*h_r)
+               pcritL = (rho*h_l*gmod - rho*forcemag/(dx*tan(phiL)))/(rho_f*gmod*h_l)
                pcrit = max(pcritR,pcritL)
             elseif (h_r.gt.dry_tol) then
-               h = h_r
+               h = 0.5*h_r
                forcemagR = abs(-grav*h*dsin(thetaR)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                pcritR = (rho*h_r*gmod - rho*forcemagR/(dx*tan(phiR)))/(rho_f*gmod*h_r)
                pcrit = pcritR
             else
-               h = h_l
+               h = 0.5*h_l
                forcemagL = abs(-grav*h*dsin(thetaL)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                pcritL = (rho*h_l*gmod - rho*forcemagL/(dx*tan(phiR)))/(rho_f*gmod*h_l)
                pcrit = pcritL
@@ -656,16 +602,17 @@ end subroutine calc_fs
                !determine pressure min ratio
                forcemagR = abs(gmod*(b_r-b_l)*h_r + 0.5d0*gmod*(h_r**2 - h_l**2))
                forcemagL = abs(gmod*(b_r-b_l)*h_l + 0.5d0*gmod*(h_r**2 - h_l**2))
-               pcritR = (rho*h_r*gmod - rho*forcemagR/(dy*tan(phiR)))/(rho_f*gmod*h_r)
-               pcritL = (rho*h_l*gmod - rho*forcemagL/(dy*tan(phiL)))/(rho_f*gmod*h_l)
+               forcemag = 0.5*(forcemagR + forcemagL)
+               pcritR = (rho*h_r*gmod - rho*forcemag/(dy*tan(phiR)))/(rho_f*gmod*h_r)
+               pcritL = (rho*h_l*gmod - rho*forcemag/(dy*tan(phiL)))/(rho_f*gmod*h_l)
                pcrit = max(pcritR,pcritL)
             elseif (h_r.gt.dry_tol) then
-               h = h_r
+               h = 0.5*h_r
                forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                pcritR = (rho*h_r*gmod - rho*forcemag/(dy*tan(phiR)))/(rho_f*gmod*h_r)
                pcrit = pcritR
             else
-               h = h_l
+               h = 0.5*h_l
                forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                pcritL = (rho*h_l*gmod - rho*forcemag/(dy*tan(phiR)))/(rho_f*gmod*h_l)
                pcrit = pcritL
