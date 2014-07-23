@@ -31,8 +31,8 @@ module digclaw_module
     integer, parameter ::  i_theta  = i_dig + 1
     integer, parameter ::  i_fs_x   = i_dig + 2
     integer, parameter ::  i_fs_y   = i_dig + 3
-    integer, parameter ::  i_fail_x = i_dig + 4
-    integer, parameter ::  i_fail_y = i_dig + 5
+    integer, parameter ::  i_taudir_x = i_dig + 4
+    integer, parameter ::  i_taudir_y = i_dig + 5
     integer, parameter ::  DIG_PARM_UNIT = 78
 
 
@@ -379,6 +379,20 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       do i=2-mbc,mx+mbc
          do j=2-mbc,my+mbc-1
             !note: for edge valued aux, aux(i,..) is at i-1/2.
+
+            dry = .false.
+            do ii = -1,0
+               do jj = -1,1
+                  if (q(i+ii,j+jj,1)<=dry_tol) then
+                     aux(i,j,i_fs_x) = 10.0
+                     aux(i,j,i_taudir_x) = 1.0
+                     dry = .true.
+                  endif
+               enddo
+            enddo
+            if (dry) then
+               cycle
+            endif
             hR = q(i,j,1)
             hL = q(i-1,j,1)
             huL = q(i-1,j,2)
@@ -389,10 +403,17 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             hmR = q(i,j,4)
             pL = q(i-1,j,5)
             pR = q(i,j,5)
-            if (hL.le.dry_tol.and.hR.le.dry_tol) then
-               aux(i,j,i_fs_x) = 0.0
-               cycle
-            endif
+
+            htL = q(i-1,j+1,1)
+            htR = q(i,j+1,1)
+            hlL = q(i-1,j-1,1)
+            hlR = q(i,j-1,1)
+
+            btL = aux(i-1,j+1,1)
+            btR = aux(i,j+1,1)
+            blL = aux(i-1,j-1,1)
+            blR = aux(i,j-1,1)
+
             bR = aux(i,j,1)
             bL = aux(i-1,j,1)
             phiL = aux(i-1,j,i_phi)
@@ -400,45 +421,62 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             if (bed_normal.eq.1) then
                thetaR = aux(i,j,i_theta)
                thetaL = aux(i-1,j,i_theta)
-               gmod = grav*dcos(0.5d0*(thetaL+thetaR))
+               gmod = grav*cos(0.5d0*(thetaL+thetaR))
             else
                thetaL = 0.d0
                thetaR = 0.d0
             endif
-
 
             call admissibleq(hL,huL,hvL,hmL,pL,uL,vL,mL,thetaL)
             call admissibleq(hR,huR,hvR,hmR,pR,uR,vR,mR,thetaR)
 
             vLnorm = sqrt(uL**2 + vL**2)
             vRnorm = sqrt(uR**2 + vR**2)
+
             if ((vLnorm + vRnorm)>0.0) then
                aux(i,j,i_fs_x) = 0.0
+               aux(i,j,i_taudir_x) = 1.0
             else
                call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,kappa,S,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
                call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,kappa,S,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
                theta = 0.5*(thetaL + thetaR)
                h = 0.5*(hL + hR)
                Fx = -0.5*gmod*(hR**2 - hL**2)/dx + grav*h*sin(theta) - gmod*h*(bR-bL)/dx
-               F = abs(Fx)
 
-               if (F<=0.0) F=1.0e-6
-
-               if (hL<=dry_tol) then
-                  aux(i,j,i_fs_x) = (tauR/rhoR)/F
-               elseif (hR<=dry_tol) then
-                  aux(i,j,i_fs_x) = (tauL/rhoL)/F
+               hhi = 0.25*(q(i,j+1,1)+ q(i-1,j+1,1)q(i,j,1)+ q(i-1,j,1))
+               hlo = 0.25*(q(i,j,1)+ q(i-1,j,1)q(i,j-1,1)+ q(i-1,j-1,1))
+               bhi = 0.25*(aux(i,j+1,1)+ aux(i-1,j+1,1)aux(i,j,1)+ aux(i-1,j,1))
+               blo = 0.25*(aux(i,j,1)+ aux(i-1,j,1)aux(i,j-1,1)+ aux(i-1,j-1,1))
+               Fy = -0.5*gmod*(hhi**2 - hlo**2)/dy - gmod*h*(bhi-blo)/dy
+               F = sqrt(Fx**2 + Fy**2)
+               if (F<=0.0) then
+                  aux(i,j,i_taudir_x) = 1.0
+                  aux(i,j,i_fs_x) = 10.0
                else
+                  aux(i,j,i_taudir_x) = Fx/F
                   aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
-            endif
          enddo
          aux(i,my+mbc,i_fs_x) = aux(i,my+mbc-1,i_fs_x)
+         aux(i,my+mbc,i_taudir_x) = aux(i,my+mbc-1,i_taudir_x)
       enddo
 
       do j=2-mbc,my+mbc
          do i=2-mbc,mx+mbc-1
             !note: for edge valued aux, aux(.,j..) is at j-1/2.
+            dry = .false.
+            do ii = -1,1
+               do jj = -1,0
+                  if (q(i+ii,j+jj,1)<=dry_tol) then
+                     aux(i,j,i_fs_y) = 10.0
+                     aux(i,j,i_taudir_y) = 1.0
+                     dry = .true.
+                  endif
+               enddo
+            enddo
+            if (dry) then
+               cycle
+            endif
             hR = q(i,j,1)
             hL = q(i,j-1,1)
             huL = q(i,j-1,2)
@@ -449,10 +487,17 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             hmR = q(i,j,4)
             pL = q(i,j-1,5)
             pR = q(i,j,5)
-            if (hL.le.dry_tol.and.hR.le.dry_tol) then
-               aux(i,j,i_fs_y) = 0.0
-               cycle
-            endif
+
+            htL = q(i+1,j-1,1)
+            htR = q(i+1,j,1)
+            hlL = q(i-1,j-1,1)
+            hlR = q(i-1,j,1)
+
+            btL = aux(i+1,j-1,1)
+            btR = aux(i+1,j,1)
+            blL = aux(i-1,j-1,1)
+            blR = aux(i-1,j,1)
+
             bR = aux(i,j,1)
             bL = aux(i,j-1,1)
             phiL = aux(i,j-1,i_phi)
@@ -480,18 +525,25 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                theta = 0.5*(thetaL + thetaR)
                h = 0.5*(hL + hR)
                Fy = -0.5*gmod*(hR**2 - hL**2)/dy - gmod*h*(bR-bL)/dy
-               F = abs(Fy)
-               if (F<=0.0) F=1.0e-6
-               if (hL<=dry_tol) then
-                  aux(i,j,i_fs_y) = (tauR/rhoR)/F
-               elseif (hR<=dry_tol) then
-                  aux(i,j,i_fs_y) = (tauL/rhoL)/F
+
+               hhi = 0.25*(htR+htL+hL+hR)
+               hlo = 0.25*(hlR+hlL+hL+hR)
+               bhi = 0.25*(btR+btL+bL+bR)
+               blo = 0.25*(blR+blL+bL+bR)
+               Fx = -0.5*gmod*(hhi**2 - hlo**2)/dx - gmod*h*(bhi-blo)/dx + grav*h*sin(theta)
+               F = sqrt(Fx**2 + Fy**2)
+
+               if (F<=0.0) then
+                  aux(i,j,i_taudir_y) = 1.0
+                  aux(i,j,i_fs_y) = 10.0
                else
-                  aux(i,j,i_fs_y) = max(tauL/rhoL,tauR/rhoR)/F
+                  aux(i,j,i_taudir_y) = Fy/F
+                  aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
-            endif
+
          enddo
          aux(mx+mbc,j,i_fs_y) = aux(mx+mbc-1,j,i_fs_y)
+         aux(mx+mbc,j,i_taudir_y) = aux(mx+mbc-1,j,i_taudir_y)
       enddo
 
 
