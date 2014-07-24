@@ -225,7 +225,7 @@ contains
       plo = rho_f*dry_tol*gmod*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
-         p = dmax1(0.d0,p)
+          p = dmax1(0.d0,p)
          !p = dmax1(-5.0*pmax,p)
          !p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
@@ -370,6 +370,9 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       double precision :: gmod,dry_tol
       double precision :: kappa,S,tanpsi,D,sigbed,kperm,compress,pm
       double precision :: Fx,Fy,F,vRnorm,vLnorm
+      double precision :: htL,htR,hlL,hlR,btL,btR,blL,blR
+      double precision :: hhi,hlo,bhi,blo
+      logical :: dry
       integer :: i,j,ii,jj
 
       dry_tol = drytolerance
@@ -443,10 +446,10 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                h = 0.5*(hL + hR)
                Fx = -0.5*gmod*(hR**2 - hL**2)/dx + grav*h*sin(theta) - gmod*h*(bR-bL)/dx
 
-               hhi = 0.25*(q(i,j+1,1)+ q(i-1,j+1,1)q(i,j,1)+ q(i-1,j,1))
-               hlo = 0.25*(q(i,j,1)+ q(i-1,j,1)q(i,j-1,1)+ q(i-1,j-1,1))
-               bhi = 0.25*(aux(i,j+1,1)+ aux(i-1,j+1,1)aux(i,j,1)+ aux(i-1,j,1))
-               blo = 0.25*(aux(i,j,1)+ aux(i-1,j,1)aux(i,j-1,1)+ aux(i-1,j-1,1))
+               hhi = 0.25*(q(i,j+1,1)+ q(i-1,j+1,1)+q(i,j,1)+ q(i-1,j,1))
+               hlo = 0.25*(q(i,j,1)+ q(i-1,j,1)+q(i,j-1,1)+ q(i-1,j-1,1))
+               bhi = 0.25*(aux(i,j+1,1)+ aux(i-1,j+1,1)+aux(i,j,1)+ aux(i-1,j,1))
+               blo = 0.25*(aux(i,j,1)+ aux(i-1,j,1)+aux(i,j-1,1)+ aux(i-1,j-1,1))
                Fy = -0.5*gmod*(hhi**2 - hlo**2)/dy - gmod*h*(bhi-blo)/dy
                F = sqrt(Fx**2 + Fy**2)
                if (F<=0.0) then
@@ -456,6 +459,7 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                   aux(i,j,i_taudir_x) = Fx/F
                   aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
+            endif
          enddo
          aux(i,my+mbc,i_fs_x) = aux(i,my+mbc-1,i_fs_x)
          aux(i,my+mbc,i_taudir_x) = aux(i,my+mbc-1,i_taudir_x)
@@ -540,6 +544,7 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                   aux(i,j,i_taudir_y) = Fy/F
                   aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
+            endif
 
          enddo
          aux(mx+mbc,j,i_fs_y) = aux(mx+mbc-1,j,i_fs_y)

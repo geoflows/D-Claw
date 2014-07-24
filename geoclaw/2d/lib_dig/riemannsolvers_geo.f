@@ -243,17 +243,21 @@ c     !find bounds in case of critical state resonance, or negative states
       endif
 
       vnorm = sqrt(u**2 + v**2)
-      if (fs<=0.0.and.vnorm>0.0) then
+      if (vnorm>0.0) then
          tausource = - dx*0.5*(tauL/rhoL + tauR/rhoR)*u/vnorm
-      elseif (fs>1.0) then
+         tausource = - dx*max(tauL/rhoL , tauR/rhoR)*u/vnorm
+         !tausource = - dx*0.5*(tau/rho)*u/vnorm
+      elseif (max(abs(dx*tauL*taudir/rhoL),abs(dx*tauR*taudir/rhoR))
+      !elseif (abs(dx*tau*taudir/rho)
+     &                                 .gt.abs(del(2) - source2dx)) then
          tausource = del(2) - source2dx
          del(1) = 0.0
          del(0) = 0.0
          del(4) = 0.0
-      elseif (fs<=1.0.and.vnorm<=0.0) then
-         tausource = (del(2) - source2dx)*fs
       else
-         tausource = 0.0
+         tausource =   sign(abs(dx*0.5*(tauL/rhoL + tauR/rhoR))
+         !tausource =   sign(abs(dx*0.5*tau/rho)
+     &                                       ,del(2)-source2dx)
       endif
 
       del(2) = del(2) - source2dx  - tausource
