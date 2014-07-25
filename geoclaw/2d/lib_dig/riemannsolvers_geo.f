@@ -127,7 +127,7 @@ c-----------------------------------------------------------------------
 
       hstarHLL = max((huL-huR+sE2*hR-sE1*hL)/(sE2-sE1),0.d0) ! middle state in an HLL solve
 c     !determine the middle entropy corrector wave------------------------
-      rarecorrectortest = .true.
+      rarecorrectortest = .false.
       rarecorrector=.false.
       if (rarecorrectortest) then
          sdelta=sw(3)-sw(1)
@@ -178,8 +178,8 @@ c     !find if sonic problem
          source2dx = -delb*gmod*hbar*s1s2tilde/s1s2bar
       endif
 
-      !source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
-      !source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
+      source2dx=min(source2dx,gmod*max(-hL*delb,-hR*delb))
+      source2dx=max(source2dx,gmod*min(-hL*delb,-hR*delb))
 
       if (dabs(u).le.veltol2) then
          source2dx=-hbar*gmod*delb
