@@ -89,8 +89,8 @@ c=============mobilization =============================================
                   pratio_ij = init_pmin_ratio
                   if (bed_normal.eq.1) then
                      theta=aux(i,j,i_theta)
-                     p_ratioij = max(0.0,init_pmin_ratio*
-     &                 (1.0 + aux(i,j,1)/q(i,j,1)) -aux(i,j,1)/q(i,j,1))
+                     p_ratioij = init_pmin_ratio*
+     &                 (1.0 + aux(i,j,1)/q(i,j,1)) -aux(i,j,1)/q(i,j,1)
                   endif
                   gmod = grav*dcos(theta)
                   pfail = p_ratioij*rho_f*gmod*q(i,j,1)

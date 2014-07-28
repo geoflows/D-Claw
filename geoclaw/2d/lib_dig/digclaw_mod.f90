@@ -225,7 +225,7 @@ contains
       plo = rho_f*dry_tol*gmod*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
-          p = dmax1(0.d0,p)
+         p = dmax1(0.d0,p)
          !p = dmax1(-5.0*pmax,p)
          !p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
