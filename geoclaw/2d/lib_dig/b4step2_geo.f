@@ -23,8 +23,6 @@ c     Also calls movetopo if topography might be moving.
       dimension q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, meqn)
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
 
-      double precision init_p_ratio
-
 
 c=====================Parameters===========================================
       gmod = grav
@@ -86,7 +84,7 @@ c=============mobilization =============================================
                do j=1-mbc,my+mbc
                   if (q(i,j,1).le.drytolerance) cycle
                   theta = 0.d0
-                  pratio_ij = init_pmin_ratio
+                  p_ratioij = init_pmin_ratio
                   if (bed_normal.eq.1) then
                      theta=aux(i,j,i_theta)
                      p_ratioij = init_pmin_ratio*
