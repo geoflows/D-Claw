@@ -456,7 +456,7 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                   aux(i,j,i_taudir_x) = 1.0
                   aux(i,j,i_fs_x) = 10.0
                else
-                  aux(i,j,i_taudir_x) = Fx/F
+                  aux(i,j,i_taudir_x) = abs(Fx)/F
                   aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
             endif
@@ -541,7 +541,7 @@ subroutine calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
                   aux(i,j,i_taudir_y) = 1.0
                   aux(i,j,i_fs_y) = 10.0
                else
-                  aux(i,j,i_taudir_y) = Fy/F
+                  aux(i,j,i_taudir_y) = abs(Fy)/F
                   aux(i,j,i_fs_x) = max((tauL/rhoL),(tauR/rhoR))/F
                endif
             endif
@@ -613,9 +613,7 @@ end subroutine calc_fs
             if (h_l.gt.dry_tol.and.h_r.gt.dry_tol) then
                h = 0.5d0*(h_r + h_l)
                !determine pressure min ratio
-               forcemagL = abs(-grav*h_l*dsin(thetaL)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
-               forcemagR = abs(-grav*h_r*dsin(thetaR)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
-               forcemag = 0.5*(forcemagL + forcemagR)
+               forcemag = abs(-grav*h*dsin(thetaR)*dx + gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                pcritR = (rho*h_r*gmod - rho*forcemag/(dx*tan(phiR)))/(rho_f*gmod*h_r)
                pcritL = (rho*h_l*gmod - rho*forcemag/(dx*tan(phiL)))/(rho_f*gmod*h_l)
                pcrit = max(pcritR,pcritL)
@@ -657,9 +655,7 @@ end subroutine calc_fs
             if (h_l.gt.dry_tol.and.h_r.gt.dry_tol) then
                h = 0.5d0*(h_r + h_l)
                !determine pressure min ratio
-               forcemagR = abs(gmod*(b_r-b_l)*h_r + 0.5d0*gmod*(h_r**2 - h_l**2))
-               forcemagL = abs(gmod*(b_r-b_l)*h_l + 0.5d0*gmod*(h_r**2 - h_l**2))
-               forcemag = 0.5*(forcemagR + forcemagL)
+               forcemag = abs(gmod*(b_r-b_l)*h + 0.5d0*gmod*(h_r**2 - h_l**2))
                pcritR = (rho*h_r*gmod - rho*forcemag/(dy*tan(phiR)))/(rho_f*gmod*h_r)
                pcritL = (rho*h_l*gmod - rho*forcemag/(dy*tan(phiL)))/(rho_f*gmod*h_l)
                pcrit = max(pcritR,pcritL)

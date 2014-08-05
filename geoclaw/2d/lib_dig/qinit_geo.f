@@ -116,6 +116,10 @@ c
 
 c=============== Pressure initialization for Mobilization Modeling======
 
+c===============set factor of safety/direction angles ==================
+      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+     &                     q,maux,aux)
+
       select case (init_ptype)
          case (-1)
             !p should already be 0 or set by qinit file
