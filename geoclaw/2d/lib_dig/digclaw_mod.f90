@@ -300,7 +300,7 @@ contains
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
 
-      tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi))) + 1e3
+      tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
       if (p_initialized.eq.0) then
          !tau = tau + rho*gmod*h*max(0.0,grad_eta_max*tan(phi_bed)-tan(phi_bed))
          tau = tau + pm
@@ -658,7 +658,7 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       double precision :: gmod,dry_tol
       double precision :: EtaL,EtaR,EtaT,EtaB,Eta
       double precision :: detadx,detadxL,detadxR,detady,detadyT,detadyB
-      double precision :: grad_eta
+      double precision :: grad_eta,init_pmin_ratio_noc
 
 
       integer :: i,j
@@ -747,7 +747,7 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
             grad_eta = sqrt(detadx**2 + detady**2)
 
-            if (grad_eta/tan(phi)>grad_eta_max) then
+            if (grad_eta/tan(phi)>grad_eta_max+1.e16) then
                write(*,*) '--------------------------------------------'
                write(*,*) 'h,hl,hr,ht,hb',h,hl,hr,ht,hb
                write(*,*) 'angle',atan(grad_eta)*180./3.14
@@ -756,24 +756,28 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             endif
 
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
-            init_pmin_ratio = 1.0 - grad_eta_max
+            init_pmin_ratio_noc = 1.0 - grad_eta_max
 
-            aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi)))
+            aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+rho_f*gmod*h*tan(phi))
             cohesion_max = max(cohesion_max,aux(i,j,i_cohesion))
+            init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi) + aux(i,j,i_cohesion)/(rho*gmod*h*tan(phi)))
 
             if (grad_eta>0.0) then
                aux(i,j,i_fs) = tan(phi)/grad_eta
             else
                aux(i,j,i_fs) = 1.0e6
             endif
-!
          enddo
       enddo
+      write(*,*) '--------------------------------------------'
+      write(*,*) 'hydrostatic pressure ratio:', rho_f/rho
+      write(*,*) 'minimum stable pressure ratio:',init_pmin_ratio
+      write(*,*) 'minimum stable pressure ratio (no cohesion):', init_pmin_ratio_noc
+      write(*,*) 'cohesion maximum:',cohesion_max
+      write(*,*) 'maximum slope angle:',180.*atan(grad_eta_max)/3.14
+      write(*,*) '--------------------------------------------'
+      !init_pmin_ratio = max(init_pmin_ratio,0.0)
 
-      write(*,*) 'init_pmin_ratio:',init_pmin_ratio
-      write(*,*) 'cohesion_max:',cohesion_max
-      write(*,*) 'grad_eta_max:',grad_eta_max
-      init_pmin_ratio = max(init_pmin_ratio,0.0)
    end subroutine calc_pmin
 
 
