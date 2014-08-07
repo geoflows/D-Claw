@@ -116,10 +116,6 @@ c
 
 c=============== Pressure initialization for Mobilization Modeling======
 
-c===============set factor of safety/direction angles ==================
-      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
-     &                     q,maux,aux)
-
       select case (init_ptype)
          case (-1)
             !p should already be 0 or set by qinit file
@@ -145,13 +141,15 @@ c===============set factor of safety/direction angles ==================
                      q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
                      cycle
                   endif
+                  call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+     &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
                   if (bed_normal.eq.1) then
                      gmod = grav*dcos(aux(i,j,i_theta))
                      p_ratioij = init_pmin_ratio
      &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1)
                   endif
-
-                 q(i,j,5) = p_ratioij*rho_f*gmod*q(i,j,1)
+                  rho = sv*rho_s + (1.0-sv)*rho_f
+                 q(i,j,5) = p_ratioij*rho*gmod*q(i,j,1)
                enddo
             enddo
             p_initialized = 1
@@ -162,16 +160,19 @@ c===============set factor of safety/direction angles ==================
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
                  p_ratioij = init_pmin_ratio
-                  if (q(i,j,1).le.drytolerance) then
+                 if (q(i,j,1).le.drytolerance) then
                      q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
                      cycle
-                  endif
+                 endif
+                 call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+     &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
                  if (bed_normal.eq.1) then
                      gmod = grav*dcos(aux(i,j,i_theta))
                      p_ratioij = init_pmin_ratio
      &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1)
                  endif
-                     pfail = p_ratioij*rho_f*gmod*q(i,j,1)
+                 rho = sv*rho_s + (1.0-sv)*rho_f
+                     pfail = p_ratioij*rho*gmod*q(i,j,1)
                      q(i,j,5) = pfail - abs(pfail)
                enddo
             enddo
@@ -179,14 +180,8 @@ c===============set factor of safety/direction angles ==================
       end select
       !write(*,*) 'qinit:init,dx,dy:',init_pmin_ratio,dx,dy
 
-      do i=1,mx
-         do j=1,my
-            call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
-     &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
-         enddo
-      enddo
 c===============set factor of safety====================================
-      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+      call calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
      &                     q,maux,aux)
 
       return

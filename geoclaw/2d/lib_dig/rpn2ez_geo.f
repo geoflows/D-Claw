@@ -58,7 +58,7 @@ c
       double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
       double precision pR,pL,hmL,hmR,mL,mR,phi_bedL,phi_bedR
       double precision hstar,hstartest,s1m,s2m,bL,bR
-      double precision dxdc,dx,fs,taudir
+      double precision dxdc,dx,taudir,cL,cR
       double precision theta,thetaL,thetaR
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
       double precision sE1,sE2
@@ -109,15 +109,16 @@ c        !set normal direction
             mhu=2
             nhv=3
             dx = dxcom
-            fs = auxl(i,i_fs_x)
             taudir = auxl(i,i_taudir_x)
          else
             mhu=3
             nhv=2
             dx = dycom
-            fs = auxl(i,i_fs_y)
             taudir = auxl(i,i_taudir_y)
          endif
+
+         cL = auxr(i-1,i_cohesion)
+         cR = auxl(i,i_cohesion)
 
          if (bed_normal.eq.1) then
             thetaL = auxr(i-1,i_theta)
@@ -169,7 +170,6 @@ c        !set normal direction
             hstartest=dmax1(hL,hstar)
             if (hstartest+bL.lt.bR) then !right state should become ghost values that mirror left for wall problem
 c                bR=hstartest+bL
-               fs = 0.0
                wall(2)=0.d0
                wall(3)=0.d0
                wallprob=.true.
@@ -199,7 +199,6 @@ c               bL=hstartest+bR
                wall(1)=0.d0
                wall(2)=0.d0
                wallprob=.true.
-               fs = 0.0
                hL=hR
                huL=-huR
                hvL=hvR
@@ -265,8 +264,8 @@ c     &         theta,gamma,eps,dx,sw,fw,wave)
 
          call riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &        thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,fs,
-     &         taudir)
+     &        thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
+     &         taudir,cL,cR)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,

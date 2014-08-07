@@ -56,8 +56,9 @@ c      write(26,*) 'B4STEP2: t, num_dtopo: ', t,num_dtopo
       enddo
 
 c======find factor of safety ratios===================================
-      call calc_fs(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+      call calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
      &                     q,maux,aux)
+
 
 c=============mobilization =============================================
       !write(*,*) 'b4step2, t:',t,init_pmin_ratio
@@ -87,14 +88,17 @@ c=============mobilization =============================================
                   p_ratioij = init_pmin_ratio
                   if (bed_normal.eq.1) then
                      theta=aux(i,j,i_theta)
+                     gmod = grav*dcos(theta)
                      p_ratioij = init_pmin_ratio*
      &                 (1.0 + aux(i,j,1)/q(i,j,1)) -aux(i,j,1)/q(i,j,1)
                   endif
-                  gmod = grav*dcos(theta)
-                  pfail = p_ratioij*rho_f*gmod*q(i,j,1)
-                  q(i,j,5) = pfail - abs(pfail)*(init_ptf - t)/init_ptf
                   call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
      &                           q(i,j,4),q(i,j,5),u,v,sv,theta)
+
+                  rho = sv*rho_s + (1.0-sv)*rho_f
+                  pfail = p_ratioij*rho*gmod*q(i,j,1)
+                  q(i,j,5) = pfail - abs(pfail)*(init_ptf - t)/init_ptf
+
                enddo
             enddo
 

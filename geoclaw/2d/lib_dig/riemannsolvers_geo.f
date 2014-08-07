@@ -2,7 +2,7 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,fs,taudir)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir,cL,cR)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -28,7 +28,7 @@ c-----------------------------------------------------------------------
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR
-      double precision thetaL,thetaR,phiL,phiR,dx,fs,taudir
+      double precision thetaL,thetaR,phiL,phiR,dx,taudir
       logical wallprob
 
 
@@ -42,7 +42,7 @@ c-----------------------------------------------------------------------
       double precision det1,det2,det3,detR
       double precision R(0:2,1:3),A(3,3),del(0:4)
       double precision beta(3)
-      double precision rho,rhoL,rhoR,tauL,tauR,tau
+      double precision rho,rhoL,rhoR,tauL,tauR,tau,cL,cR
       double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pm
       double precision theta,gamma,eps
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
@@ -91,7 +91,6 @@ c-----------------------------------------------------------------------
          v = vR
          mbar = mR
       endif
-
 
       rho = 0.5d0*(rhoL + rhoR)
       tau = 0.5d0*(tauL + tauR)
@@ -249,13 +248,15 @@ c     !find bounds in case of critical state resonance, or negative states
          !tausource = - dx*0.5*(tau/rho)*u/vnorm
       elseif (max(abs(dx*tauL*taudir/rhoL),abs(dx*tauR*taudir/rhoR))
       !elseif (abs(dx*tau*taudir/rho)
+      !no failure
      &                                 .gt.abs(del(2) - source2dx)) then
          tausource = del(2) - source2dx
          del(1) = 0.0
          del(0) = 0.0
          del(4) = 0.0
       else
-         tausource =   sign(abs(dx*0.5*(tauL/rhoL + tauR/rhoR))
+         !failure
+         tausource =   sign(abs(dx*0.5*taudir*(tauL/rhoL + tauR/rhoR))
          !tausource =   sign(abs(dx*0.5*tau/rho)
      &                                       ,del(2)-source2dx)
       endif
