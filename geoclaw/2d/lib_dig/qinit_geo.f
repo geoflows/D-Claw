@@ -115,7 +115,8 @@ c
       enddo
 
 c=============== Pressure initialization for Mobilization Modeling======
-
+      call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
+     &                    dx,dy,q,maux,aux)
       select case (init_ptype)
          case (-1)
             !p should already be 0 or set by qinit file
@@ -130,10 +131,6 @@ c=============== Pressure initialization for Mobilization Modeling======
             enddo
             p_initialized = 1
          case(1)
-
-           call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
-     &                    dx,dy,q,maux,aux)
-
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
                   p_ratioij = init_pmin_ratio
@@ -155,8 +152,6 @@ c=============== Pressure initialization for Mobilization Modeling======
             p_initialized = 1
          case(2)
             !p will be updated in b4step2
-            call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
-     &                        dx,dy,q,maux,aux)
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
                  p_ratioij = init_pmin_ratio

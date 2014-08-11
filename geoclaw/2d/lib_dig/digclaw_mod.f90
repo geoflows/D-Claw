@@ -499,13 +499,10 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             !---------factor of safety for dry static material (p=0)--
             if (detady>0.0) then
                aux(i,j,i_taudir_x) = abs(detadx)/sqrt(detadx**2 + detady**2)
-               aux(i,j,i_fs) =  tan(phi)/sqrt(detadx**2 + detady**2)
             elseif (detadx>0.0) then
                aux(i,j,i_taudir_x) = 1.0
-               aux(i,j,i_fs) =  tan(phi)/sqrt(detadx**2 + detady**2)
             else
                aux(i,j,i_taudir_x) = 1.0
-               aux(i,j,i_fs) =  10.0
             endif
          enddo
          aux(i,my+mbc,i_taudir_x) = aux(i,my+mbc-1,i_taudir_x)
@@ -518,7 +515,6 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             hR = q(i,j,1)
             hL = q(i,j-1,1)
             if ((hL<=dry_tol).and.(hR<=dry_tol)) then
-               aux(i,j,i_fs) = 10.0
                aux(i,j,i_taudir_y) = 1.0
                cycle
             endif
@@ -682,7 +678,7 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             hu = q(i,j,2)
             hv = q(i,j,3)
 
-            if ((hu**2)>0.0) then
+            if ((hu**2+hv**2)>0.0) then
                aux(i,j,i_fs) = 0.0
                aux(i,j,i_cohesion) = 0.0
                cycle
@@ -758,14 +754,14 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
             init_pmin_ratio_noc = 1.0 - grad_eta_max
 
-            aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+rho_f*gmod*h*tan(phi))
+            aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+0.0*rho_f*gmod*h*tan(phi))
             cohesion_max = max(cohesion_max,aux(i,j,i_cohesion))
             init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi) + aux(i,j,i_cohesion)/(rho*gmod*h*tan(phi)))
 
             if (grad_eta>0.0) then
                aux(i,j,i_fs) = tan(phi)/grad_eta
             else
-               aux(i,j,i_fs) = 1.0e6
+               aux(i,j,i_fs) = 10.0
             endif
          enddo
       enddo
