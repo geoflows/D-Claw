@@ -25,7 +25,7 @@ module digclaw_module
 
     integer :: init_ptype,p_initialized,bed_normal
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
-    double precision :: grad_eta_max,cohesion_max
+    double precision :: grad_eta_max,cohesion_max,grad_eta_ave,eta_cell_count
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
@@ -156,6 +156,8 @@ contains
          init_pmin_ratio = 1.d16
          grad_eta_max = 0.0
          cohesion_max = 0.0
+         grad_eta_ave = 0.0
+         eta_cell_count = 1.e-6
 
 
          write(DIG_PARM_UNIT,*) ' '
@@ -301,9 +303,10 @@ contains
       !endif
 
       tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
+
       if (p_initialized.eq.0) then
          !tau = tau + rho*gmod*h*max(0.0,grad_eta_max*tan(phi_bed)-tan(phi_bed))
-         tau = tau + pm
+      !   tau = tau + pm
       endif
       !tau = (grav/gmod)*dmax1(0.d0,sigbed*tanphi)
       !kappa: earth pressure coefficient
@@ -742,21 +745,21 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             endif
 
             grad_eta = sqrt(detadx**2 + detady**2)
-
-            if (grad_eta/tan(phi)>grad_eta_max+1.e16) then
-               write(*,*) '--------------------------------------------'
-               write(*,*) 'h,hl,hr,ht,hb',h,hl,hr,ht,hb
-               write(*,*) 'angle',atan(grad_eta)*180./3.14
-               write(*,*) 'angle',atan(grad_eta_max*tan(phi))*180./3.14
-               write(*,*) 'dx,dy',dx,dy,'----------------------------'
-            endif
+            grad_eta_ave = grad_eta_ave + grad_eta/tan(phi)
+            eta_cell_count = eta_cell_count + 1.0
 
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
+            if (grad_eta_max.ne.grad_eta_max) then
+               write(*,*) 'grad_eta_max,tan(phi)',grad_eta_max,tan(phi)
+            endif
+
             init_pmin_ratio_noc = 1.0 - grad_eta_max
 
-            aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+0.0*rho_f*gmod*h*tan(phi))
+            !aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+0.0*rho_f*gmod*h*tan(phi))
+
+            aux(i,j,i_cohesion) = 1.0-grad_eta/tan(phi)
             cohesion_max = max(cohesion_max,aux(i,j,i_cohesion))
-            init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi) + aux(i,j,i_cohesion)/(rho*gmod*h*tan(phi)))
+            init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi))
 
             if (grad_eta>0.0) then
                aux(i,j,i_fs) = tan(phi)/grad_eta
@@ -771,9 +774,10 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       write(*,*) 'minimum stable pressure ratio (no cohesion):', init_pmin_ratio_noc
       write(*,*) 'cohesion maximum:',cohesion_max
       write(*,*) 'maximum slope angle:',180.*atan(grad_eta_max)/3.14
+      write(*,*) 'average failure pressure:', 1.0-(grad_eta_ave/eta_cell_count)
       write(*,*) '--------------------------------------------'
       !init_pmin_ratio = max(init_pmin_ratio,0.0)
-
+      init_pmin_ratio = 1.0-(grad_eta_ave/eta_cell_count)
    end subroutine calc_pmin
 
 

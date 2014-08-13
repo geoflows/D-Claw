@@ -131,6 +131,7 @@ c=============== Pressure initialization for Mobilization Modeling======
             enddo
             p_initialized = 1
          case(1)
+            !set to failure
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
                   p_ratioij = init_pmin_ratio
