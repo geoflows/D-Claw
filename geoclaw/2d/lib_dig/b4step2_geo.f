@@ -71,10 +71,9 @@ c=============mobilization =============================================
       endif
 
       select case (init_ptype)
-         case(1)
-         !set to failure pressure in qinit
+         !1,2 set to failure pressure in qinit
 
-         case(2)
+         case(3:4)
             !raise pressure
             if (t.gt.max(init_ptf,init_ptf2)) then
                p_initialized = 1

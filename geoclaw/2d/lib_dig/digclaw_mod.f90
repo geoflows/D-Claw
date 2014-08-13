@@ -749,9 +749,6 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             eta_cell_count = eta_cell_count + 1.0
 
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
-            if (grad_eta_max.ne.grad_eta_max) then
-               write(*,*) 'grad_eta_max,tan(phi)',grad_eta_max,tan(phi)
-            endif
 
             init_pmin_ratio_noc = 1.0 - grad_eta_max
 
@@ -768,16 +765,18 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             endif
          enddo
       enddo
+
+      if (init_ptype==2.or.init_ptype==4) then
+         init_pmin_ratio = 1.0-(grad_eta_ave/eta_cell_count)
+      endif
       write(*,*) '--------------------------------------------'
       write(*,*) 'hydrostatic pressure ratio:', rho_f/rho
-      write(*,*) 'minimum stable pressure ratio:',init_pmin_ratio
+      write(*,*) 'initiation pressure ratio:',init_pmin_ratio
       write(*,*) 'minimum stable pressure ratio (no cohesion):', init_pmin_ratio_noc
-      write(*,*) 'cohesion maximum:',cohesion_max
       write(*,*) 'maximum slope angle:',180.*atan(grad_eta_max)/3.14
       write(*,*) 'average failure pressure:', 1.0-(grad_eta_ave/eta_cell_count)
       write(*,*) '--------------------------------------------'
-      !init_pmin_ratio = max(init_pmin_ratio,0.0)
-      init_pmin_ratio = 1.0-(grad_eta_ave/eta_cell_count)
+
    end subroutine calc_pmin
 
 

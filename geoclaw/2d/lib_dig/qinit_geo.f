@@ -130,7 +130,7 @@ c=============== Pressure initialization for Mobilization Modeling======
                enddo
             enddo
             p_initialized = 1
-         case(1)
+         case(1:2)
             !set to failure
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
@@ -151,7 +151,7 @@ c=============== Pressure initialization for Mobilization Modeling======
                enddo
             enddo
             p_initialized = 1
-         case(2)
+         case(3:4)
             !p will be updated in b4step2
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
