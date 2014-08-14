@@ -2,7 +2,7 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir,cL,cR)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -42,7 +42,7 @@ c-----------------------------------------------------------------------
       double precision det1,det2,det3,detR
       double precision R(0:2,1:3),A(3,3),del(0:4)
       double precision beta(3)
-      double precision rho,rhoL,rhoR,tauL,tauR,tau,cL,cR
+      double precision rho,rhoL,rhoR,tauL,tauR,tau
       double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pm
       double precision theta,gamma,eps
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat

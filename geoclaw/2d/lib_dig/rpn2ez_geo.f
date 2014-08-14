@@ -46,11 +46,11 @@ c
 
 
       !local
-      integer m,i,mw,maxiter,mhu,nhv,mcapa,icom,jcom
+      integer m,i,mw,maxiter,mhu,nhv,mcapa,icom,jcom,waves
       double precision dtcom,dxcom,dycom,tcom
       double precision wall(3),fw(5,3),sw(3),wave(5,3)
       double precision lamL(3),lamR(3),beta(3)
-      logical entropy(3)
+      logical entropy(5)
       logical rare1,rare2,wallprob,drystate
       !logical entropycorr1,entropycorr2
 
@@ -58,7 +58,7 @@ c
       double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
       double precision pR,pL,hmL,hmR,mL,mR,phi_bedL,phi_bedR
       double precision hstar,hstartest,s1m,s2m,bL,bR
-      double precision dxdc,dx,taudir,cL,cR
+      double precision dxdc,dx,taudir
       double precision theta,thetaL,thetaR
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
       double precision sE1,sE2
@@ -78,6 +78,7 @@ c
       !near-zero velocity tolerance
       veltol = 1.d-3
 
+      waves = 3
       !loop through Riemann problems at each grid cell
       do i=2-mbc,mx+mbc
 
@@ -88,12 +89,17 @@ c            write(*,*) 'Negative input: hl,hr,i=',qr(i-1,1),ql(i,1),i
 c         endif
 
          !Initialize Riemann problem for grid interface
+
          do mw=1,mwaves
             s(i,mw)=0.d0
-            sw(mw) = 0.d0
             entropy(mw)=.false.
             do m=1,meqn
                fwave(i,m,mw)=0.d0
+            enddo
+         enddo
+         do mw=1,waves
+            sw(mw) = 0.d0
+            do m=1,meqn
                wave(m,mw) = 0.d0
                fw(m,mw) = 0.d0
             enddo
@@ -116,9 +122,6 @@ c        !set normal direction
             dx = dycom
             taudir = auxl(i,i_taudir_y)
          endif
-
-         cL = auxr(i-1,i_cohesion)
-         cR = auxl(i,i_cohesion)
 
          if (bed_normal.eq.1) then
             thetaL = auxr(i-1,i_theta)
@@ -156,7 +159,7 @@ c        !set normal direction
          phi_bedR = auxl(i,i_phi)
 
          !test for wall problem vs. inundation problem
-         do mw=1,mwaves
+         do mw=1,waves
             wall(mw) = 1.d0
          enddo
          drystate=.false.
@@ -262,10 +265,10 @@ c     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
 c     &         kappa,rho,kperm,compress,tanpsi,D,tau,
 c     &         theta,gamma,eps,dx,sw,fw,wave)
 
-         call riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,huL,huR,
+         call riemann_dig2_aug_sswave_ez(ixy,meqn,waves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &        thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
-     &         taudir,cL,cR)
+     &         taudir)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
@@ -277,7 +280,7 @@ c     &                                    drytolerance,gmod,sw,fw)
          !--------------------------------------------------------------
 
 c        !eliminate ghost fluxes for wall
-         do mw=1,mwaves
+         do mw=1,3
             sw(mw)=sw(mw)*wall(mw)
             do m=1,meqn
                fw(m,mw)=fw(m,mw)*wall(mw)
@@ -330,14 +333,54 @@ c            endif
 c         endif
 
 c=======================================================================
-         do mw=1,mwaves
-            s(i,mw)=sw(mw)
-            fwave(i,1,mw)=fw(1,mw)
-            fwave(i,mhu,mw)=fw(2,mw)
-            fwave(i,nhv,mw)=fw(3,mw)
-            fwave(i,4,mw) = fw(4,mw)
-            fwave(i,5,mw) = fw(5,mw)
-         enddo
+c         do mw=1,mwaves
+c            s(i,mw)=sw(mw)
+c            fwave(i,1,mw)=fw(1,mw)
+c            fwave(i,mhu,mw)=fw(2,mw)
+c            fwave(i,nhv,mw)=fw(3,mw)
+c            fwave(i,4,mw) = fw(4,mw)
+c            fwave(i,5,mw) = fw(5,mw)
+c         enddo
+
+         s(i,1) = sw(1)
+         s(i,2) = sw(2)
+         s(i,3) = sw(2)
+         s(i,4) = sw(2)
+         s(i,5) = sw(3)
+
+         fwave(i,1,1) =   fw(1,1)
+         fwave(i,mhu,1) = fw(2,1)
+         fwave(i,nhv,1) = fw(3,1)
+         fwave(i,4,1)   = fw(4,1)
+         fwave(i,5,1) =   fw(5,1)
+
+         fwave(i,1,2) =   fw(1,2)
+         fwave(i,mhu,2) = fw(2,2)
+         fwave(i,nhv,2) = fw(3,2)
+         fwave(i,4,2)   = 0.0
+         fwave(i,5,2) =  0.0
+
+         fwave(i,1,3) =   0.0
+         fwave(i,mhu,3) = 0.0
+         fwave(i,nhv,3) = 0.0
+         fwave(i,4,3)   = fw(4,2)
+         fwave(i,5,3) =  0.0
+
+         fwave(i,1,4) =   0.0
+         fwave(i,mhu,4) = 0.0
+         fwave(i,nhv,4) = 0.0
+         fwave(i,4,4)   = 0.0
+         fwave(i,5,4) =  fw(5,2)
+
+         fwave(i,1,5) =   fw(1,3)
+         fwave(i,mhu,5) = fw(2,3)
+         fwave(i,nhv,5) = fw(3,3)
+         fwave(i,4,5)   = fw(4,3)
+         fwave(i,5,5) =   fw(5,3)
+
+
+
+
 
 
 c==========Capacity for mapping from latitude longitude to physical space====
@@ -371,10 +414,10 @@ c============= compute fluctuations=============================================
                elseif (s(i,mw).gt.0.d0.and.(.not.entropy(mw))) then
                   apdq(i,m) = apdq(i,m) + fwave(i,m,mw)
                elseif (entropy(mw)) then !note fwave has already been divided by s
-                  amdq(i,m) = amdq(i,m) +
-     &               beta(mw)*lamL(mw)*fwave(i,m,mw)
-                  apdq(i,m) = apdq(i,m) +
-     &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
+c                  amdq(i,m) = amdq(i,m) +
+c     &               beta(mw)*lamL(mw)*fwave(i,m,mw)
+c                  apdq(i,m) = apdq(i,m) +
+c     &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
                else
                   !amdq(i,m) = amdq(i,m) + .5d0*fwave(i,m,mw)
                   !apdq(i,m) = apdq(i,m) + .5d0*fwave(i,m,mw)
