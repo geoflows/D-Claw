@@ -32,10 +32,10 @@ c-----------------------last modified 1/10/05----------------------
       double precision  g,tol,abs_tol
       double precision  hl,hr,hul,hur,hvl,hvr,vl,vr,ul,ur,bl,br
       double precision  uhat,vhat,hhat,roe1,roe3,s1,s2,s3,s1l,s3r
-      double precision  delf1,delf2,delf3,dxdcd,dxdcu
+      double precision  delf1,delf2,delf3,delf4,delf5,dxdcd,dxdcu
       double precision  dxdcm,dxdcp,topo1,topo3,eta
       double precision  pl,pr,hml,hmr,ml,mr
-      double precision  rhoR,rhoL,gammaL,gammaR
+      double precision  rhoR,rhoL,rho,gamma
 
       integer i,m,mw,mu,mv
 
@@ -94,8 +94,8 @@ c===========determine velocity from momentum===========================
 
        rhoL = mL*rho_s + (1.0-mL)*rho_f
        rhoR = mR*rho_s + (1.0-mR)*rho_f
-       gammaL = 0.25*(rho_f + 3.0*rhoL)/rhoL
-       gammaR = 0.25*(rho_f + 3.0*rhoR)/rhoR
+       rho = 0.5*(rhoL + rhoR)
+       gamma = 0.25*(rho_f + 3.0*rho)/rho
 
        do mw=1,mwaves
           s(mw)=0.d0
@@ -168,9 +168,11 @@ c=======================Determine asdq decomposition (beta)============
          delf1=asdq(i,1)
          delf2=asdq(i,mu)
          delf3=asdq(i,mv)
+         delf4=asdq(i,4)
+         delf5=asdq(i,5)
 
          beta(1) = (s3*delf1/(s3-s1))-(delf3/(s3-s1))
-         beta(2) = -s2*delf1 + delf2
+         beta(2) = 1.0
          beta(3) = (delf3/(s3-s1))-(s1*delf1/(s3-s1))
 c======================End =================================================
 
@@ -179,19 +181,19 @@ c=====================Set-up eigenvectors===================================
          r(2,1) = s2
          r(3,1) = s1
          r(4,1) = mL
-         r(5,1) = gammaL*rhoL*g
-
-         r(1,2) = 0.d0
-         r(2,2) = 1.d0
-         r(3,2) = 0.d0
-         r(4,2) = 0.d0
-         r(5,2) = 0.d0
+         r(5,1) = gamma*rho*g
 
          r(1,3) = 1.d0
          r(2,3) = s2
          r(3,3) = s3
          r(4,3) = mR
-         r(5,3) = gammaR*rhoR*g
+         r(5,3) = gamma*rho*g
+
+         r(1,2) = 0.0
+         r(2,2) = delf2 - beta(1)*r(2,1) - beta(3)*r(2,3)
+         r(3,2) = 0.0
+         r(4,2) = delf4 - beta(1)*r(4,1) - beta(3)*r(4,3)
+         r(5,2) = delf5 - beta(1)*r(5,1) - beta(3)*r(5,3)
 c============================================================================
 90      continue
 c============= compute fluctuations==========================================
