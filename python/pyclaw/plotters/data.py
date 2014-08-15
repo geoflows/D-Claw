@@ -9,7 +9,7 @@
 """
 Plotting Data Module
 
-Contains the general class definition and the subclasses of the Clawpack 
+Contains the general class definition and the subclasses of the Clawpack
 data objects specific to plotting.
 """
 import os
@@ -24,7 +24,7 @@ from pyclaw.data import Data
 # ============================================================================
 class ClawPlotData(Data):
     """ClawPlotData class
-    
+
     Data subclass containing plot data.
 
     """
@@ -32,9 +32,9 @@ class ClawPlotData(Data):
     # ========== Initialization routine ======================================
     def __init__(self, data_files=[], controller=None):
         """Initialize a PlotData object
-        
+
         Accepts a list of data_files to be read into and instantiate into one
-        ClawPlotData object.  An empty object can be created by not passing 
+        ClawPlotData object.  An empty object can be created by not passing
         anything in for the data_file_list
         """
         plot_attrs = ['rundir','plotdir','outdir','overwrite','plotter',
@@ -72,8 +72,8 @@ class ClawPlotData(Data):
                                         # afterframe, for example
 					# Deprecated.
 
-        self.printfigs = True 
-        self.print_format = 'png'     
+        self.printfigs = True
+        self.print_format = 'png'
         self.print_framenos = 'all'  # which frames to plot
         self.print_gaugenos = 'all'  # which gauges to plot
         self.print_fignos = 'all'    # which figures to plot each frame
@@ -82,7 +82,7 @@ class ClawPlotData(Data):
 
         self.latex = True                # make latex files for figures
         self.latex_fname = 'plots'       # name of latex file
-        self.latex_title = 'Clawpack Results'       
+        self.latex_title = 'Clawpack Results'
         self.latex_framesperpage = 'all' # number of frames on each page
         self.latex_framesperline = 2     # number of frames on each line
         self.latex_figsperline = 'all'   # number of figures on each line
@@ -108,34 +108,34 @@ class ClawPlotData(Data):
 	                                # points to physical
 
 
-        self.beforeframe = None         # function called before all plots 
+        self.beforeframe = None         # function called before all plots
                                         # in each frame are done
-        self.afterframe = None          # function called after all plots 
+        self.afterframe = None          # function called after all plots
                                         # in each frame are done
 
-        self.plotfigure_dict = {}  
-        self.otherfigure_dict = {}  
+        self.plotfigure_dict = {}
+        self.otherfigure_dict = {}
 
         self.framesoln_dict = {}        # dictionary for holding framesoln
                                         # objects associated with plots
 
         self.gaugesoln_dict = {}        # dictionary for holding gaugesoln
                                         # objects associated with plots
-                                        
+
         self.save_frames = True         # True ==> Keep a copy of any frame
                                         # read in.  False ==> Clear the frame
                                         # solution dictionary before adding
                                         # another solution
 
         self.save_figures = True        # True ==> Keep a copy of and figure
-                                        # created.  False ==> Clear the 
+                                        # created.  False ==> Clear the
                                         # figure dictionary before adding
                                         # another solution
 
-        self.refresh_frames = False     # False ==> don't re-read framesoln if 
+        self.refresh_frames = False     # False ==> don't re-read framesoln if
                                         # already in framesoln_dict
 
-        self.refresh_gauges = False     # False ==> don't re-read gaugesoln if 
+        self.refresh_gauges = False     # False ==> don't re-read gaugesoln if
                                         # already in gaugesoln_dict
 
 
@@ -155,8 +155,8 @@ class ClawPlotData(Data):
 
     def new_plotfigure(self, name=None, figno=None, type='each_frame'):
         """
-        Create a new figure for Clawpack plots.  
-        If type='each_frame' it is a figure that will be plotted 
+        Create a new figure for Clawpack plots.
+        If type='each_frame' it is a figure that will be plotted
 	for each time frame.
         If type='multi_frame' it is a figure that will be plotted based on
 	all the frames, such as x-t plots or time series. (Not yet implemented)
@@ -246,10 +246,10 @@ class ClawPlotData(Data):
             framesoln = self.framesoln_dict[key]
 
         return framesoln
-        
+
     def gettime(self,frameno,outdir='./'):
         r"""Fetch time from solution corresponding to frame number in outdir
-        
+
         This method only works for ascii and netcdf formatted files
         """
         if self.format=='ascii':
@@ -352,7 +352,7 @@ class ClawPlotData(Data):
             print "*** Cannot find key = ",key
             print "***   in gaugesoln_dict = ",gaugesoln_dict
             raise("*** Problem getting gaugesoln in getgauge")
-                
+
 
         return gaugesoln
 
@@ -360,25 +360,25 @@ class ClawPlotData(Data):
         """
         Read the gauge output in file fort.gauge in the directory specified by
         outdir.
-    
+
         Returns a dictionary *gauges* with an entry for each gauge number.
         Each entry is an object of class GaugeSolution
-    
+
         """
-    
+
         import os
         import numpy as np
         from matplotlib.mlab import find
         from pyclaw.plotters import gaugetools
         from StringIO import StringIO
-    
+
         fname = outdir + '/fort.gauge'
         if not os.path.isfile(fname):
             print "*** Gauge file not found: ",fname
             gauges = {}
 
         print '    Reading gauge data from ',fname
-        
+
         def stars2num(s):
             """
             Converter to us in case gauge number was too long and
@@ -410,10 +410,10 @@ class ClawPlotData(Data):
         level = np.array(gdata[:,1], dtype=int)
         t = gdata[:,2]
         q = gdata[:,3:]  # all remaining columns are stored in q
-    
-        
+
+
         setgauges = gaugetools.read_setgauges(datadir=outdir)
-    
+
         gauges = {}
         gaugenos = set(gaugeno)   # reduces to unique elements
         for n in gaugenos:
@@ -424,7 +424,7 @@ class ClawPlotData(Data):
             gauges[n].level = level[nn]
             gauges[n].t = t[nn]
             gauges[n].q = q[nn,:]
-    
+
             # Locations:
             try:
                 gauges[n].x = setgauges.x[n]
@@ -433,22 +433,22 @@ class ClawPlotData(Data):
                 gauges[n].t2 = setgauges.t2[n]
             except:
                 print "*** Could not extract gauge locations for gaugeno = ",n
-    
+
         print '    Found gauge numbers: ',gauges.keys()
         return gauges
-    
+
 
 
     def plotframe(self, frameno):
         from pyclaw.plotters import frametools
         frametools.plotframe(frameno, self)
-        
+
     def printframes(self, verbose=True):
         #from pyclaw.plotters import frametools
         #frametools.printframes(self, verbose)
         print "*** printframes is deprecated.  Use plotpages.plotclaw_driver"
         print "*** for added capabilities."
-        
+
     def fignos(self):
         """
         Return a list of the figure numbers actually used.
@@ -459,7 +459,7 @@ class ClawPlotData(Data):
 
     def mode(self):
         """
-        Return self._mode, which is set internally to 
+        Return self._mode, which is set internally to
            'iplotclaw' if Iplotclaw is in use,
            'printframes' if printframes is being used
         Useful in afterframe function if you want to do different things
@@ -573,7 +573,7 @@ class ClawPlotData(Data):
         for figname in fignames:
             plotfigure = self.getfigure(figname)
             s =  "  figname = %s, figno = %s" % (figname, plotfigure.figno)
-            if not plotfigure._show: 
+            if not plotfigure._show:
                 s = s + "  [Not showing]"
             print s
             axesnames = plotfigure._axesnames
@@ -581,7 +581,7 @@ class ClawPlotData(Data):
                 plotaxes = self.getaxes(axesname,figname)
                 s =  "     axesname = %s, axescmd = %s" \
                        % (axesname, plotaxes.axescmd)
-                if not plotaxes._show: 
+                if not plotaxes._show:
                     s = s + "  [Not showing]"
                 print s
                 for itemname in plotaxes._itemnames:
@@ -589,7 +589,7 @@ class ClawPlotData(Data):
                     plot_type = plotitem.plot_type
                     s =  "        itemname = %s,  plot_type = %s" \
                           % (itemname,plot_type)
-                    if not plotitem._show: 
+                    if not plotitem._show:
                         s = s + "  [Not showing]"
                     print s
             print " "
@@ -606,7 +606,7 @@ class ClawPlotData(Data):
 
     def new_otherfigure(self, name=None):
         """
-        Create a new figure for Clawpack plots.  
+        Create a new figure for Clawpack plots.
         For figures not repeated each frame.
         """
         if (self._mode != 'iplotclaw') and (name in self._fignames):
@@ -630,7 +630,7 @@ class ClawPlotData(Data):
 # ============================================================================
 class ClawPlotFigure(Data):
     """
-    
+
     Data subclass containing plot data needed to plot a single figure.
     This may consist of several ClawPlotAxes objects.
 
@@ -648,7 +648,7 @@ class ClawPlotFigure(Data):
                            '_axesnames','show','_show','kwargs','_handle',\
 			   '_type']
 
-        super(ClawPlotFigure, self).__init__(attributes = attributes)    
+        super(ClawPlotFigure, self).__init__(attributes = attributes)
 
         self._plotdata = plotdata           # parent ClawPlotData object
         self.name = name
@@ -666,7 +666,7 @@ class ClawPlotFigure(Data):
     def new_plotaxes(self, name=None, type='each_frame'):
         """
         Create a new axes that will be plotted in this figure.
-        If type='each_frame' it is an axes that will be plotted 
+        If type='each_frame' it is an axes that will be plotted
 	for each time frame.
         If type='multi_frame' it is an axes that will be plotted based on
 	all the frames, such as x-t plots or time series. (Not yet implemented)
@@ -697,7 +697,7 @@ class ClawPlotFigure(Data):
 # ============================================================================
 class ClawPlotAxes(Data):
     """
-    
+
     Data subclass containing plot data needed to plot a single axes.
     This may consist of several ClawPlotItem objects.
 
@@ -715,7 +715,7 @@ class ClawPlotAxes(Data):
                            'axescmd','xlimits','ylimits','plotitem_dict', 'user',\
                            'afteraxes','_itemnames','show','_show','_handle', \
                            '_plotfigure','_plotdata', 'scaled']
-        super(ClawPlotAxes, self).__init__(attributes = attributes)    
+        super(ClawPlotAxes, self).__init__(attributes = attributes)
 
         self._plotfigure = plotfigure                   # figure this item is on
         self._plotdata = plotfigure._plotdata           # parent ClawPlotData object
@@ -746,14 +746,14 @@ class ClawPlotAxes(Data):
         if name is None:
             self._next_ITEM += 1
             name = "ITEM%s" % self._next_ITEM
-        
+
         if name not in self._itemnames:
             self._itemnames.append(name)
 
         plotitem = ClawPlotItem(name, plot_type, plotaxes=self)
 
         self.plotitem_dict[name] = plotitem
-        
+
         return plotitem
 
     def get_plotdata(self):
@@ -773,7 +773,7 @@ class ClawPlotAxes(Data):
 # ============================================================================
 class ClawPlotItem(Data):
     """
-    
+
     Data subclass containing plot data needed to plot a single object.
     This may be a single curve, set of points, contour plot, etc.
 
@@ -791,9 +791,9 @@ class ClawPlotItem(Data):
                            'MappedGrid', 'mapc2p', \
                            'figno', 'handle', 'params', \
                            'aftergrid','afteritem','framesoln_dict', \
-                           '_pobjs']  
+                           '_pobjs']
 
-        super(ClawPlotItem, self).__init__(attributes = attributes)    
+        super(ClawPlotItem, self).__init__(attributes = attributes)
 
 
         self._plotaxes = plotaxes                       # axes this item is on
@@ -809,7 +809,7 @@ class ClawPlotItem(Data):
         self.name = name
         self.figno = plotaxes.figno
 
-        self.outdir = None              # indicates data comes from 
+        self.outdir = None              # indicates data comes from
                                         #   self._plotdata.outdir
 
         self.plot_type = plot_type
@@ -902,7 +902,7 @@ class ClawPlotItem(Data):
             elif plot_type == '2d_grid':
                 self.add_attribute('max_density',None)
                 self.gridlines_show = True
-                
+
             elif plot_type == '2d_quiver':
                 self.add_attribute('quiver_var_x',None)
                 self.add_attribute('quiver_var_y',None)
@@ -919,12 +919,12 @@ class ClawPlotItem(Data):
 
         elif ndim == 3:
             print '*** Warning- ClawPlotItem not yet set up for ndim = 3'
-    
+
         else:
             print '*** Warning- Unrecognized plot_type in ClawPlotItem'
 
         self.params = {}  # dictionary to hold optional parameters
-        
+
 
     def getframe(self,frameno):
         """
@@ -973,7 +973,7 @@ class ClawInputData(Data):
     def __init__(self, ndim):
         super(ClawInputData,self).__init__()
         self.add_attribute('ndim',ndim)
-        
+
         # Set default values:
         if ndim == 1:
             self.add_attribute('mx',100)
@@ -1045,7 +1045,7 @@ class ClawInputData(Data):
 
     def write(self):
         print 'Creating data file claw.data for use with xclaw'
-        make_clawdatafile(self)   
+        make_clawdatafile(self)
 
 
 
@@ -1056,7 +1056,7 @@ class AmrclawInputData(Data):
     def __init__(self, ndim):
         super(AmrclawInputData,self).__init__()
         self.add_attribute('ndim',ndim)
-        
+
         # Set default values:
         if ndim == 1:
             self.add_attribute('mx',100)
@@ -1162,7 +1162,7 @@ class AmrclawInputData(Data):
 
     def write(self):
         print 'Creating data file amr2ez.data for use with xamr'
-        make_amrclawdatafile(self)   
+        make_amrclawdatafile(self)
 
 
 
@@ -1177,7 +1177,7 @@ def open_datafile(name, datasource='setrun.py'):
     OUTPUT:
         file - file object
     """
-    
+
     import string
 
     source = string.ljust(datasource,25)
@@ -1216,7 +1216,7 @@ def data_write(file, dataobj, name=None, descr=''):
             print "  from dataobj = ", dataobj
             raise
         # Convert value to an appropriate string repr
-        import numpy 
+        import numpy
         if isinstance(value,numpy.ndarray):
             value = list(value)
         if isinstance(value,tuple) | isinstance(value,list):
@@ -1233,7 +1233,7 @@ def data_write(file, dataobj, name=None, descr=''):
         padded_value = string.ljust(string_value, 25)
         padded_name = string.ljust(name, 12)
         file.write('%s =: %s %s\n' % (padded_value, padded_name, descr))
-        
+
 
 def make_clawdatafile(clawdata):
     """
@@ -1285,12 +1285,12 @@ def make_clawdatafile(clawdata):
     data_write(file, clawdata, 'mcapa', '(aux index for capacity fcn)')
     data_write(file, clawdata, 'maux', '(number of aux variables)')
     data_write(file, clawdata, None)
-    
+
     data_write(file, clawdata, 'meqn', '(number of equations)')
     data_write(file, clawdata, 'mwaves', '(number of waves)')
     data_write(file, clawdata, 'mthlim', '(limiter choice for each wave)')
     data_write(file, clawdata, None)
-    
+
     data_write(file, clawdata, 't0', '(initial time)')
     data_write(file, clawdata, 'xlower', '(xlower)')
     data_write(file, clawdata, 'xupper', '(xupper)')
@@ -1301,7 +1301,7 @@ def make_clawdatafile(clawdata):
         data_write(file, clawdata, 'zlower', '(zlower)')
         data_write(file, clawdata, 'zupper', '(zupper)')
     data_write(file, clawdata, None)
-    
+
     data_write(file, clawdata, 'mbc', '(number of ghost cells)')
     data_write(file, clawdata, 'mthbc_xlower', '(type of BC at xlower)')
     data_write(file, clawdata, 'mthbc_xupper', '(type of BC at xupper)')
@@ -1311,7 +1311,7 @@ def make_clawdatafile(clawdata):
     if ndim == 3:
         data_write(file, clawdata, 'mthbc_zlower', '(type of BC at zlower)')
         data_write(file, clawdata, 'mthbc_zupper', '(type of BC at zupper)')
-    
+
     file.close()
 
 def make_amrclawdatafile(clawdata):
@@ -1374,12 +1374,12 @@ def make_amrclawdatafile(clawdata):
     for i in range(clawdata.maux):
         file.write("'%s'\n" % clawdata.auxtype[i])
     data_write(file, clawdata, None)
-    
+
     data_write(file, clawdata, 'meqn', '(number of equations)')
     data_write(file, clawdata, 'mwaves', '(number of waves)')
     data_write(file, clawdata, 'mthlim', '(limiter choice for each wave)')
     data_write(file, clawdata, None)
-    
+
     data_write(file, clawdata, 't0', '(initial time)')
     data_write(file, clawdata, 'xlower', '(xlower)')
     data_write(file, clawdata, 'xupper', '(xupper)')
@@ -1389,7 +1389,7 @@ def make_amrclawdatafile(clawdata):
         data_write(file, clawdata, 'zlower', '(zlower)')
         data_write(file, clawdata, 'zupper', '(zupper)')
     data_write(file, clawdata, None)
-    
+
     data_write(file, clawdata, 'mbc', '(number of ghost cells)')
     data_write(file, clawdata, 'mthbc_xlower', '(type of BC at xlower)')
     data_write(file, clawdata, 'mthbc_xupper', '(type of BC at xupper)')
@@ -1426,7 +1426,7 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, 'sprint', '(space/memory output)')
     data_write(file, clawdata, 'tprint', '(time step reporting each level)')
     data_write(file, clawdata, 'uprint', '(update/upbnd reporting)')
-    
+
     file.close()
 
 def make_userdatafile(userdata):
@@ -1471,7 +1471,7 @@ class GaugeSolution(Data):
 # ============================================================================
 class ClawOtherFigure(Data):
     """
-    
+
     Data subclass containing plot data needed to plot a single figure.
     For figures that are not produced each frame.
 
@@ -1487,7 +1487,7 @@ class ClawOtherFigure(Data):
 
         attributes = ['name','_plotdata','fname','makefig']
 
-        super(ClawOtherFigure, self).__init__(attributes = attributes)    
+        super(ClawOtherFigure, self).__init__(attributes = attributes)
 
         self._plotdata = plotdata           # parent ClawPlotData object
         self.name = name

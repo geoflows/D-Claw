@@ -19,8 +19,8 @@ c =========================================================
       double precision gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision cx,cy,pdh,vnorm,hvnorm,theta,dtheta
-      integer i,j
+      double precision cx,cy,pdh,vnorm,hvnorm,theta,dtheta,D2x,D2y
+      integer i,j,ii,jj,icount
 c
 
 c     # check for NANs in solution:
@@ -62,13 +62,14 @@ c     # check for NANs in solution:
             vnorm = dsqrt(u**2 + v**2)
             hvnorm = h*vnorm
 
-            if (dtheta.gt.0.d0) then
-               tau = tau*(gmod + dtheta*vnorm**2)/gmod
-            endif
+            !if (dtheta.gt.0.d0) then
+            !   tau = tau*(gmod + dtheta*vnorm**2)/gmod
+            !endif
 
             if (vnorm.gt.0.d0) then
-               hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
+               !hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
                hvnorm = hvnorm*dexp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
+               if (hvnorm<1.e-6) hvnorm = 0.0
                hu = hvnorm*u/vnorm
                hv = hvnorm*v/vnorm
             endif
@@ -94,6 +95,8 @@ c            p = p - dt*3.0*vnorm*tanpsi/(h*compress)
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
 
             p_eq = p_hydro + 3.0*vnorm*tanpsi/(compress*h*krate)
+            !p_eq = max(p_eq,0.0)
+            !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*dexp(krate*dt)
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
@@ -120,6 +123,30 @@ c            !vnorm = dsqrt(u**2 + v**2)
          enddo
       enddo
 
+      !diffusion?
+      do i=1,mx
+         do j=1,my
+         if (q(i,j,1).le.drytolerance) cycle
+            p = 0.0
+            icount = 0
+            do ii=-1,1
+               do jj=-1,1
+                  if (q(i+ii,j+jj,1).gt.drytolerance) then
+                     p = p + q(i+ii,j+jj,5)/q(i+ii,j+jj,1)
+                     icount = icount + 1
+                  endif
+               enddo
+            enddo
+            aux(i,j,8) = p/icount
+         enddo
+      enddo
+      do i=1,mx
+         do j=1,my
+            if (q(i,j,1).le.drytolerance) cycle
+            q(i,j,5) = aux(i,j,8)*q(i,j,1)
+         enddo
+      enddo
+
 *     ! Manning friction------------------------------------------------
       if (coeffmanning.gt.0.d0.and.frictiondepth.gt.0.d0) then
          do i=1,mx
@@ -136,7 +163,7 @@ c                 # apply friction source term only in shallower water
                      q(i,j,3)=0.d0
                   else
                      gamma= dsqrt(hu**2 + hv**2)*
-     &                  (gmod*coeff**2)/(h**(7/3))
+     &                  (gmod*coeff**2)/(h**(7.0/3.0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
                      q(i,j,3)= q(i,j,3)/dgamma

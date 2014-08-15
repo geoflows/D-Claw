@@ -6,6 +6,7 @@ c     =====================================================
      &                  ilr,asdq,bmasdq,bpasdq)
 c     =====================================================
       use geoclaw_module
+      use digclaw_module, only: rho_f,rho_s,bed_normal,i_theta
 
       implicit none
 c
@@ -26,13 +27,15 @@ c-----------------------last modified 1/10/05----------------------
       double precision  aux3(1-mbc:maxm+mbc,*)
 
       double precision  s(3)
-      double precision  r(3,3)
+      double precision  r(5,3)
       double precision  beta(3)
       double precision  g,tol,abs_tol
       double precision  hl,hr,hul,hur,hvl,hvr,vl,vr,ul,ur,bl,br
       double precision  uhat,vhat,hhat,roe1,roe3,s1,s2,s3,s1l,s3r
-      double precision  delf1,delf2,delf3,dxdcd,dxdcu
+      double precision  delf1,delf2,delf3,delf4,delf5,dxdcd,dxdcu
       double precision  dxdcm,dxdcp,topo1,topo3,eta
+      double precision  pl,pr,hml,hmr,ml,mr
+      double precision  rhoR,rhoL,rho,gamma
 
       integer i,m,mw,mu,mv
 
@@ -51,31 +54,48 @@ c-----------------------last modified 1/10/05----------------------
 
       do i=2-mbc,mx+mbc
 
+         if (bed_normal.eq.1) then
+            g = grav*dcos(0.5d0*(aux2(i-1,i_theta)+aux2(i,i_theta)))
+         endif
+
          hl=qr(i-1,1)
          hr=ql(i,1)
          hul=qr(i-1,mu)
          hur=ql(i,mu)
          hvl=qr(i-1,mv)
          hvr=ql(i,mv)
+         hml=qr(i-1,4)
+         hmr=ql(i,4)
+         pl = qr(i-1,5)
+         pr = ql(i,5)
 
 c===========determine velocity from momentum===========================
        if (hl.lt.abs_tol) then
           hl=0.d0
           ul=0.d0
           vl=0.d0
+          ml=0.5
        else
           ul=hul/hl
           vl=hvl/hl
+          ml=hml/hl
        endif
 
        if (hr.lt.abs_tol) then
           hr=0.d0
           ur=0.d0
           vr=0.d0
+          mr=0.5
        else
           ur=hur/hr
           vr=hvr/hr
+          mr=hmr/hr
        endif
+
+       rhoL = mL*rho_s + (1.0-mL)*rho_f
+       rhoR = mR*rho_s + (1.0-mR)*rho_f
+       rho = 0.5*(rhoL + rhoR)
+       gamma = 0.25*(rho_f + 3.0*rho)/rho
 
        do mw=1,mwaves
           s(mw)=0.d0
@@ -148,9 +168,11 @@ c=======================Determine asdq decomposition (beta)============
          delf1=asdq(i,1)
          delf2=asdq(i,mu)
          delf3=asdq(i,mv)
+         delf4=asdq(i,4)
+         delf5=asdq(i,5)
 
          beta(1) = (s3*delf1/(s3-s1))-(delf3/(s3-s1))
-         beta(2) = -s2*delf1 + delf2
+         beta(2) = 1.0
          beta(3) = (delf3/(s3-s1))-(s1*delf1/(s3-s1))
 c======================End =================================================
 
@@ -158,14 +180,20 @@ c=====================Set-up eigenvectors===================================
          r(1,1) = 1.d0
          r(2,1) = s2
          r(3,1) = s1
-
-         r(1,2) = 0.d0
-         r(2,2) = 1.d0
-         r(3,2) = 0.d0
+         r(4,1) = mL
+         r(5,1) = gamma*rho*g
 
          r(1,3) = 1.d0
          r(2,3) = s2
          r(3,3) = s3
+         r(4,3) = mR
+         r(5,3) = gamma*rho*g
+
+         r(1,2) = 0.0
+         r(2,2) = delf2 - beta(1)*r(2,1) - beta(3)*r(2,3)
+         r(3,2) = 0.0
+         r(4,2) = delf4 - beta(1)*r(4,1) - beta(3)*r(4,3)
+         r(5,2) = delf5 - beta(1)*r(5,1) - beta(3)*r(5,3)
 c============================================================================
 90      continue
 c============= compute fluctuations==========================================
@@ -179,10 +207,14 @@ c============= compute fluctuations==========================================
                  bmasdq(i,1) =bmasdq(i,1) + dxdcm*s(mw)*beta(mw)*r(1,mw)
                  bmasdq(i,mu)=bmasdq(i,mu)+ dxdcm*s(mw)*beta(mw)*r(2,mw)
                  bmasdq(i,mv)=bmasdq(i,mv)+ dxdcm*s(mw)*beta(mw)*r(3,mw)
+                 bmasdq(i,4)=bmasdq(i,4)+ dxdcm*s(mw)*beta(mw)*r(4,mw)
+                 bmasdq(i,5)=bmasdq(i,5)+ dxdcm*s(mw)*beta(mw)*r(5,mw)
                elseif (s(mw).gt.0.d0) then
                  bpasdq(i,1) =bpasdq(i,1) + dxdcp*s(mw)*beta(mw)*r(1,mw)
                  bpasdq(i,mu)=bpasdq(i,mu)+ dxdcp*s(mw)*beta(mw)*r(2,mw)
                  bpasdq(i,mv)=bpasdq(i,mv)+ dxdcp*s(mw)*beta(mw)*r(3,mw)
+                 bpasdq(i,4) =bpasdq(i,4) + dxdcp*s(mw)*beta(mw)*r(4,mw)
+                 bpasdq(i,5) =bpasdq(i,5) + dxdcp*s(mw)*beta(mw)*r(5,mw)
                endif
             enddo
 c========================================================================

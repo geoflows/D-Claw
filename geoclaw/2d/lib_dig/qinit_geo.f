@@ -114,38 +114,71 @@ c
          enddo
       enddo
 
-
 c=============== Pressure initialization for Mobilization Modeling======
-
-      if (init_ptype.gt.0) then
-         call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
-     &                     q,maux,aux)
-         if (init_ptype.eq.1) then
+      call calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
+     &                    dx,dy,q,maux,aux)
+      select case (init_ptype)
+         case (-1)
+            !p should already be 0 or set by qinit file
+            p_initialized = 1
+         case (0)
+            !set to hydrostatic
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
-                  if (bed_normal.eq.1) gmod=grav*dcos(aux(i,j,i_theta))
-                  q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
+                 q(i,j,5) = rho_f*gmod*q(i,j,1)
                enddo
             enddo
             p_initialized = 1
-         endif
-         return
-      endif
-
-
-      if (init_ptype.eq.0) then
-         do i=1-mbc,mx+mbc
-            do j=1-mbc,my+mbc
-               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
-               q(i,j,5) = rho_f*gmod*q(i,j,1)
+         case(1:2)
+            !set to failure
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                  p_ratioij = init_pmin_ratio
+                  if (q(i,j,1).le.drytolerance) then
+                     q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                     cycle
+                  endif
+                  call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+     &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
+                  if (bed_normal.eq.1) then
+                     gmod = grav*dcos(aux(i,j,i_theta))
+                     p_ratioij = init_pmin_ratio
+     &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1)
+                  endif
+                  rho = sv*rho_s + (1.0-sv)*rho_f
+                 q(i,j,5) = p_ratioij*rho*gmod*q(i,j,1)
+               enddo
             enddo
-         enddo
-      elseif (init_ptype.eq.-1) then
-         do j=1-mbc,my+mbc
-               q(i,j,5) = 0.0
-         enddo
-      endif
-      p_initialized = 1
+            p_initialized = 1
+         case(3:4)
+            !p will be updated in b4step2
+            do i=1-mbc,mx+mbc
+               do j=1-mbc,my+mbc
+                 p_ratioij = init_pmin_ratio
+                 if (q(i,j,1).le.drytolerance) then
+                     q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
+                     cycle
+                 endif
+                 call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+     &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
+                 if (bed_normal.eq.1) then
+                     gmod = grav*dcos(aux(i,j,i_theta))
+                     p_ratioij = init_pmin_ratio
+     &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1)
+                 endif
+                 rho = sv*rho_s + (1.0-sv)*rho_f
+                     pfail = p_ratioij*rho*gmod*q(i,j,1)
+                     q(i,j,5) = pfail - abs(pfail)
+               enddo
+            enddo
+            p_initialized = 0
+      end select
+      !write(*,*) 'qinit:init,dx,dy:',init_pmin_ratio,dx,dy
+
+c===============set factor of safety====================================
+      call calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+     &                     q,maux,aux)
 
       return
       end

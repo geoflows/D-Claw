@@ -53,13 +53,13 @@ end
 %ylabel('Latitude','Fontsize',12)
 %xlabel('Longitude','Fontsize',12)
 hold on
-if (level>4)
+if (level>1)
     sq=10;
     xq = X(1:sq:end,1:sq:end);
     yq = Y(1:sq:end,1:sq:end);
     zq = eta2(1:sq:end,1:sq:end) + 10.;
-    uq = hu2(1:sq:end,1:sq:end);%./h2(1:sq:end,1:sq:end);
-    vq = hv2(1:sq:end,1:sq:end);%./h2(1:sq:end,1:sq:end);
+    uq = hu2(1:sq:end,1:sq:end)./h2(1:sq:end,1:sq:end);
+    vq = hv2(1:sq:end,1:sq:end)./h2(1:sq:end,1:sq:end);
     wq = 0.0*vq;
-    quiver3(xq,yq,zq,uq,vq,wq,3)
+    quiver3(xq,yq,zq,uq,vq,wq,0,'r')
 end
