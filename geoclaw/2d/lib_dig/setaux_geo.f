@@ -21,7 +21,7 @@ c
       implicit double precision (a-h,o-z)
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
-      logical use_phi_bed
+      logical use_phi_bed,use_theta_input
 
       include "call.i"
 
@@ -72,9 +72,9 @@ c        #------- zero aux variables that will be set by files
                aux(i,j,iauxinit(mf)) = 0.d0
             enddo
          !--------zero all d-claw aux variables----
-            !do mf= i_dig,maux
-            !   aux(i,j,mf) = 0.0
-            !enddo
+            do mf= i_dig,maux
+               aux(i,j,mf) = 0.0
+            enddo
 
          enddo
       enddo
@@ -138,14 +138,24 @@ c     --------------integrate auxinit files if they exist---------------
       enddo
 
       use_phi_bed = .true.
+      use_theta_input = .true.
       do mf = 1,mauxinitfiles
          if (iauxinit(mf).eq.i_phi) use_phi_bed = .false.
+         if (iauxinit(mf).eq.i_theta) use_theta_input = .false.
       enddo
 
       if (use_phi_bed) then
          do j=1-mbc,my+mbc
             do i=1-mbc,mx+mbc
                aux(i,j,i_phi) = phi_bed
+            enddo
+         enddo
+      endif
+
+      if (use_theta_input) then
+         do j=1-mbc,my+mbc
+            do i=1-mbc,mx+mbc
+               aux(i,j,i_theta) = theta_input
             enddo
          enddo
       endif

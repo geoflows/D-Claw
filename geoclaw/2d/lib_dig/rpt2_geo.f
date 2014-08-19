@@ -97,7 +97,7 @@ c===========determine velocity from momentum===========================
        rho = 0.5*(rhoL + rhoR)
        gamma = 0.25*(rho_f + 3.0*rho)/rho
 
-       do mw=1,mwaves
+       do mw=1,3
           s(mw)=0.d0
           beta(mw)=0.d0
           do m=1,meqn

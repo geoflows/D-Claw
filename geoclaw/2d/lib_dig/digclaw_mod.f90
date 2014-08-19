@@ -20,7 +20,7 @@ module digclaw_module
     ! ========================================================================
     ! General digclaw parameters
     ! ========================================================================
-    double precision :: rho_s,rho_f,phi_bed,phi_int,delta,kappita
+    double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
     double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
 
     integer :: init_ptype,p_initialized,bed_normal
@@ -78,8 +78,8 @@ contains
          read(iunit,*) rho_f
          read(iunit,*) phi_bed
          phi_bed = deg2rad*phi_bed
-         read(iunit,*) phi_int
-         phi_int = deg2rad*phi_int
+         read(iunit,*) theta_input
+         theta_input = deg2rad*theta_input
          read(iunit,*) delta
          read(iunit,*) kappita
          read(iunit,*) mu
@@ -101,7 +101,7 @@ contains
          write(DIG_PARM_UNIT,*) '    rho_s:',rho_s
          write(DIG_PARM_UNIT,*) '    rho_f:',rho_f
          write(DIG_PARM_UNIT,*) '    phi_bed:', phi_bed/deg2rad
-         write(DIG_PARM_UNIT,*) '    phi_int:', phi_int/deg2rad
+         write(DIG_PARM_UNIT,*) '    theta_input:', theta_input/deg2rad
          write(DIG_PARM_UNIT,*) '    delta:', delta
          write(DIG_PARM_UNIT,*) '    kappita:', kappita
          write(DIG_PARM_UNIT,*) '    mu:', mu
@@ -692,6 +692,13 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             bL = aux(i-1,j,1)
             phi = aux(i,j,i_phi)
 
+            if ((phi)==0.0) then
+               aux(i,j,i_fs) = 0.0
+               aux(i,j,i_cohesion) = 0.0
+               init_pmin_ratio = 0.0
+               cycle
+            endif
+
             hT = q(i,j+1,1)
             bT = aux(i,j+1,1)
             hB = q(i,j-1,1)
@@ -750,12 +757,10 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
 
-            init_pmin_ratio_noc = 1.0 - grad_eta_max
 
             !aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+0.0*rho_f*gmod*h*tan(phi))
 
             aux(i,j,i_cohesion) = 1.0-grad_eta/tan(phi)
-            cohesion_max = max(cohesion_max,aux(i,j,i_cohesion))
             init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi))
 
             if (grad_eta>0.0) then
@@ -769,14 +774,14 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       if (init_ptype==2.or.init_ptype==4) then
          init_pmin_ratio = 1.0-(grad_eta_ave/eta_cell_count)
       endif
-      write(*,*) '--------------------------------------------'
-      write(*,*) 'hydrostatic pressure ratio:', rho_f/rho
-      write(*,*) 'initiation pressure ratio:',init_pmin_ratio
-      write(*,*) 'minimum stable pressure ratio (no cohesion):', init_pmin_ratio_noc
-      write(*,*) 'maximum slope angle:',180.*atan(grad_eta_max)/3.14
-      write(*,*) 'average failure pressure:', 1.0-(grad_eta_ave/eta_cell_count)
-      write(*,*) '--------------------------------------------'
-
+      if (init_ptype>0) then
+         write(*,*) '--------------------------------------------'
+         write(*,*) 'hydrostatic liquefaction ratio:', rho_f/rho
+         write(*,*) 'initiation liquefaction  ratio:',init_pmin_ratio, grad_eta_ave
+         write(*,*) 'maximum surface slope angle:',180.*atan(tan(phi)*grad_eta_max)/3.14, grad_eta_max
+         write(*,*) 'average failure liquefaction ratio:', 1.0-(grad_eta_ave/eta_cell_count) , eta_cell_count
+         write(*,*) '--------------------------------------------'
+      endif
    end subroutine calc_pmin
 
 

@@ -89,7 +89,11 @@
             p_hydro = h*rho_f*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
 
-            p_eq = p_hydro + 3.0*vnorm*tanpsi/(compress*h*krate)
+            if (abs(compress*krate)>0.0) then
+               p_eq = p_hydro + 3.0*vnorm*tanpsi/(compress*h*krate)
+            else
+               p_eq = p_hydro
+            endif
             !p_eq = max(p_eq,0.0)
             !p_eq = min(p_eq,p_litho)
             p = p_eq + (p-p_eq)*exp(krate*dt)
@@ -159,6 +163,7 @@
       endif
 
       ! Manning friction------------------------------------------------
+      if (ifriction==0) return
       if (coeffmanning>0.d0.and.frictiondepth>0.d0) then
          do i=1,mx
             do j=1,my
