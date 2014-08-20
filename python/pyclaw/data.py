@@ -1513,7 +1513,7 @@ class DigclawInputData(Data):
         data_write(file, self, 'c1',       'dilation coefficient 1 (#)')
         data_write(file, self, 'm0',       'initial solid volume fraction (#)')
         data_write(file, self, 'sigma_0', 'baseline stress for definition of compessibility')
-        data_write(file, self, 'phys_tol', 'minimum depth considered for model applicability. Values below have statically set values')
+        data_write(file, self, 'phys_tol', 'minimum depth considered for model applicability. Deprecated uses dry_tol')
         data_write(file, self, 'bed_normal', 'bed_normal = 1 requires theta in aux for slope in one direction')
         file.close()
 

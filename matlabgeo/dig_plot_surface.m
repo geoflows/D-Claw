@@ -53,7 +53,7 @@ end
 %ylabel('Latitude','Fontsize',12)
 %xlabel('Longitude','Fontsize',12)
 hold on
-if (level>1)
+if (level>1&quiverplot)
     sq=10;
     xq = X(1:sq:end,1:sq:end);
     yq = Y(1:sq:end,1:sq:end);
