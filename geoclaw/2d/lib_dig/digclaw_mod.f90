@@ -21,7 +21,7 @@ module digclaw_module
     ! General digclaw parameters
     ! ========================================================================
     double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
-    double precision :: mu,alpha,m_crit,c1,m0,dudx_eps,phys_tol
+    double precision :: mu,alpha,m_crit,c1,m0,phys_tol,sigma_0
 
     integer :: init_ptype,p_initialized,bed_normal
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
@@ -87,7 +87,7 @@ contains
          read(iunit,*) m_crit
          read(iunit,*) c1
          read(iunit,*) m0
-         read(iunit,*) dudx_eps
+         read(iunit,*) sigma_0
          read(iunit,*) phys_tol
          read(iunit,*) bed_normal
          close(iunit)
@@ -109,7 +109,7 @@ contains
          write(DIG_PARM_UNIT,*) '    m_crit:', m_crit
          write(DIG_PARM_UNIT,*) '    c1:', c1
          write(DIG_PARM_UNIT,*) '    m0:', m0
-         write(DIG_PARM_UNIT,*) '    dudx_eps:', dudx_eps
+         write(DIG_PARM_UNIT,*) '    sigma_0:', sigma_0
          write(DIG_PARM_UNIT,*) '    phys_tol:', phys_tol
 
 
@@ -281,7 +281,7 @@ contains
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       kperm = (1.0 + 0.0*vnorm/sqrt(gmod*h))*kappita*exp(-(m-0.60)/(0.04))
       !compress = alpha/(sigbed + 1.d5)
-      compress = alpha/(m*(sigbed +  1.d3))
+      compress = alpha/(m*(sigbed +  sigma_0))
 
       if (m.le.1.d-99) then
          kperm = 0.0
