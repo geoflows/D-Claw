@@ -18,7 +18,7 @@ c
       dimension   aux(mitot,mjtot,naux), auxc(mic,mjc,naux)
 
       double precision coarseval(3)
-      logical fineflag(5)
+      logical fineflag(6)
 
 
 c

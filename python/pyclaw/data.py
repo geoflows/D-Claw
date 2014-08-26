@@ -1489,7 +1489,7 @@ class DigclawInputData(Data):
         self.add_attribute('c1',      1.0,    'dilation coefficient 1 (#)')
         self.add_attribute('m0',      0.52,   'initial solid volume fraction (#)')
         self.add_attribute('sigma_0',1.e3,    'baseline stress for definition of compessibility')
-        self.add_attribute('phys_tol',1.e-3,  'minimum depth considered for model applicability. Values below have statically set values')
+        self.add_attribute('alpha_seg',1.0,  'coefficient of segregation velocity profile')
         self.add_attribute('init_ptype', 0, '0 = hydrostatic, 1,2 = failure pressure, 3,4 = rising pressure')
         self.add_attribute('init_pmax_ratio', 1.0, 'pressure rise to hydrostatic *init_pmax_ratio')
         self.add_attribute('init_ptf', 1.0, 'pressure will rise until t = init_ptf without dilatancy')
@@ -1513,7 +1513,7 @@ class DigclawInputData(Data):
         data_write(file, self, 'c1',       'dilation coefficient 1 (#)')
         data_write(file, self, 'm0',       'initial solid volume fraction (#)')
         data_write(file, self, 'sigma_0', 'baseline stress for definition of compessibility')
-        data_write(file, self, 'phys_tol', 'minimum depth considered for model applicability. Deprecated uses dry_tol')
+        data_write(file, self, 'alpha_seg', 'coefficient of segregation velocity profile')
         data_write(file, self, 'bed_normal', 'bed_normal = 1 requires theta in aux for slope in one direction')
         file.close()
 

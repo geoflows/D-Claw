@@ -2,7 +2,8 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir,
+     &         chiL,chiR)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -27,7 +28,7 @@ c-----------------------------------------------------------------------
       integer ixy,meqn,mwaves
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
-      double precision bL,bR,uL,uR,vL,vR,mL,mR
+      double precision bL,bR,uL,uR,vL,vR,mL,mR,chiL,chiR,seg_L,seg_R
       double precision thetaL,thetaR,phiL,phiR,dx,taudir
       logical wallprob
 
@@ -43,8 +44,8 @@ c-----------------------------------------------------------------------
       double precision R(0:2,1:3),A(3,3),del(0:4)
       double precision beta(3)
       double precision rho,rhoL,rhoR,tauL,tauR,tau
-      double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pm
-      double precision theta,gamma,eps
+      double precision kappa,kperm,compress,tanpsi,D,SN,sigbed,pmL,pmR
+      double precision theta,gamma,eps,pm
       double precision sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
@@ -63,30 +64,34 @@ c-----------------------------------------------------------------------
          psi(m) = 0.d0
       enddo
 
-      pm = dsign(1.d0,uR-uL)
+      pmL = chiL
+      pmR = chiR
+      pm = 0.5*(chiL + chiR)
+      pm = min(1.0,pm)
+      pm = max(0.0,pm)
 
 
       if (hL.gt.drytol.and.hR.gt.drytol) then
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
-     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
+     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmL)
          call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
-     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
+     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pmR)
          h = 0.5d0*(hL + hR)
          v = 0.5d0*(vL + vR)
          mbar = 0.5d0*(mL + mR)
       elseif (hL.gt.drytol) then
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
-     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
+     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmL)
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
-     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
+     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pmL)
          h = hL
          v = vL
          mbar = mL
       else
          call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
-     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
+     &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmR)
          call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
-     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
+     &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pmR)
          h = hR
          v = vR
          mbar = mR
@@ -323,6 +328,12 @@ c      del(4) = del(4) - 0.5d0*dx*psi(4)
       !&      +       gammaR*rhoR*dcos(theta3)*beta(3)))
 
 
+      !fwaves for segregation
+      seg_L = chiL*hL*uL*(1.0+(1.0-alpha_seg)*(1.0-chiL))
+      seg_R = chiR*hR*uR*(1.0+(1.0-alpha_seg)*(1.0-chiR))
+      fw(6,1) = fw(1,1)*chiL*(1.0+(1.0-alpha_seg)*(1.0-chiL))
+      fw(6,3) = fw(1,3)*chiR*(1.0+(1.0-alpha_seg)*(1.0-chiR))
+      fw(6,2) = seg_R - seg_L - fw(6,1) - fw(6,3)
       return
       end !subroutine riemann_dig2_aug_sswave_ez
 

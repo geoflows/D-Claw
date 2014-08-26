@@ -48,7 +48,7 @@ c
       !local
       integer m,i,mw,maxiter,mhu,nhv,mcapa,icom,jcom,waves
       double precision dtcom,dxcom,dycom,tcom
-      double precision wall(3),fw(5,3),sw(3),wave(5,3)
+      double precision wall(3),fw(6,3),sw(3),wave(5,3)
       double precision lamL(3),lamR(3),beta(3)
       logical entropy(5)
       logical rare1,rare2,wallprob,drystate
@@ -62,6 +62,7 @@ c
       double precision theta,thetaL,thetaR
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
       double precision sE1,sE2
+      double precision chiHL,chiHR,chiL,chiR
 
 
 
@@ -99,7 +100,7 @@ c         endif
          enddo
          do mw=1,waves
             sw(mw) = 0.d0
-            do m=1,meqn
+            do m=1,5
                wave(m,mw) = 0.d0
                fw(m,mw) = 0.d0
             enddo
@@ -157,6 +158,15 @@ c        !set normal direction
          bR = auxl(i,1)
          phi_bedL = auxr(i-1,i_phi)
          phi_bedR = auxl(i,i_phi)
+         chiHL = qr(i-1,6)
+         chiHR = ql(i,6)
+
+         if (hL.ge.drytol) then
+            chiL = chiHL/hL
+         endif
+         if (hR.ge.drytol) then
+            chiR = chiHR/hR
+         endif
 
          !test for wall problem vs. inundation problem
          do mw=1,waves
@@ -167,6 +177,7 @@ c        !set normal direction
          if (hR.le.drytol) then
             hR = 0.d0
             pR = 0.d0
+            chiR = 0.0
             drystate=.true.
             call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,
      &                                 rare1,rare2,1,drytol,gmod)
@@ -185,6 +196,8 @@ c                bR=hstartest+bL
                vR=vL
                mR=mL
                pR=pL
+               chiHR=chiHL
+               chiR = chiL
                !thetaL = 0.d0
                !thetaR = 0.d0
             !elseif (hL+bL.lt.bR) then
@@ -193,6 +206,7 @@ c                bR=hstartest+bL
          elseif (hL.le.drytol) then ! right surface is lower than left topo
             hL = 0.d0
             pL = 0.d0
+            chiL= 0.0
             drystate=.true.
             call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,
      &                                  rare1,rare2,1,drytol,gmod)
@@ -211,6 +225,8 @@ c               bL=hstartest+bR
                uL=-uR
                vL=vR
                pL=pR
+               chiHL=chiHR
+               chiL = chiR
                !thetaL = 0.d0
                !thetaR = 0.d0
             !elseif (hR+bR.lt.bL) then
@@ -267,8 +283,8 @@ c     &         theta,gamma,eps,dx,sw,fw,wave)
 
          call riemann_dig2_aug_sswave_ez(ixy,meqn,waves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &        thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
-     &         taudir)
+     &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
+     &         taudir,chiL,chiR)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
@@ -282,7 +298,7 @@ c     &                                    drytolerance,gmod,sw,fw)
 c        !eliminate ghost fluxes for wall
          do mw=1,3
             sw(mw)=sw(mw)*wall(mw)
-            do m=1,meqn
+            do m=1,6
                fw(m,mw)=fw(m,mw)*wall(mw)
             enddo
          enddo
@@ -342,6 +358,8 @@ c            fwave(i,4,mw) = fw(4,mw)
 c            fwave(i,5,mw) = fw(5,mw)
 c         enddo
 
+c============segregation================================================
+
          s(i,1) = sw(1)
          s(i,2) = sw(2)
          s(i,3) = sw(2)
@@ -353,12 +371,21 @@ c         enddo
          fwave(i,nhv,1) = fw(3,1)
          fwave(i,4,1)   = fw(4,1)
          fwave(i,5,1) =   fw(5,1)
+         fwave(i,6,1) =   fw(6,1)
+
+         fwave(i,1,5) =   fw(1,3)
+         fwave(i,mhu,5) = fw(2,3)
+         fwave(i,nhv,5) = fw(3,3)
+         fwave(i,4,5)   = fw(4,3)
+         fwave(i,5,5) =   fw(5,3)
+         fwave(i,6,5) =   fw(6,3)
 
          fwave(i,1,2) =   fw(1,2)
          fwave(i,mhu,2) = fw(2,2)
          fwave(i,nhv,2) = fw(3,2)
          fwave(i,4,2)   = 0.0
          fwave(i,5,2) =  0.0
+         fwave(i,6,2) = fw(6,2)
 
          fwave(i,1,3) =   0.0
          fwave(i,mhu,3) = 0.0
@@ -371,15 +398,6 @@ c         enddo
          fwave(i,nhv,4) = 0.0
          fwave(i,4,4)   = 0.0
          fwave(i,5,4) =  fw(5,2)
-
-         fwave(i,1,5) =   fw(1,3)
-         fwave(i,mhu,5) = fw(2,3)
-         fwave(i,nhv,5) = fw(3,3)
-         fwave(i,4,5)   = fw(4,3)
-         fwave(i,5,5) =   fw(5,3)
-
-
-
 
 
 

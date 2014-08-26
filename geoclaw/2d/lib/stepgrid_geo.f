@@ -53,7 +53,7 @@ c     # be included in the Riemann solver, for example, if t is explicitly
 c     # needed there.
 
       tcom = time
-      
+
       level = node(nestlevel,mptr)
 
       if (dump) then
@@ -221,7 +221,7 @@ c
      &              work(i0aux1),work(i0aux2),work(i0aux3),
      &              work(i0next),mwork1,rpn2,rpt2)
 c
-c            
+c
         mptr_level = node(nestlevel,mptr)
         write(outunit,811) mptr, mptr_level, cflgrid
  811    format(" Courant # of grid ",i5," level",i3," is ",d12.4)
@@ -306,17 +306,17 @@ c        # check for arrival times
      &    tc0,mfgridvars2(ng),q,nvar,mx,my,mbc,dx,dy,nvar,xlowmbc,
      &    ylowmbc,maux,aux,ioutarrivaltimes(ng),ioutsurfacemax(ng),1)
          endif
-         
-c        # RJL: Modified 8/20/11 
+
+c        # RJL: Modified 8/20/11
 c        # If levelcheck > 0 then update max/mins at end of step on this grid.
 c        # Note that if there are finer grids then fgridoften will not have been updated
 c        # properly yet by those grids.  This modification allows checking max/min more
 c        # frequently than the original code (equivalent to levelcheck==0) when you know
 c        # what level is most relevant for this fixed grid.  Note also that if there are no
-c        # grids at levelcheck overlapping a portion of the fixed grid then the max/min values 
+c        # grids at levelcheck overlapping a portion of the fixed grid then the max/min values
 c        # will be updated only at start of next level 1 step.
- 
-         levelcheck = 0 
+
+         levelcheck = 0
          if (level .eq. levelcheck) then
          if (ioutsurfacemax(ng)+ioutarrivaltimes(ng).gt.0) then
            i0=i0fg2(ng)

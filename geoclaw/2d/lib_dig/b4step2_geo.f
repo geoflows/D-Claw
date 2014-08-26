@@ -41,6 +41,8 @@ c     # set hu = hv = 0 in all these cells
            if (bed_normal.eq.1) theta=aux(i,j,i_theta)
            call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5)
      &                     ,u,v,sv,theta)
+           q(i,j,6) = min(q(i,j,6),q(i,j,1))
+           q(i,j,6) = max(q(i,j,6),0.0)
         enddo
       enddo
 

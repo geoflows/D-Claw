@@ -14,9 +14,9 @@ c
 
       include  "call.i"
 
-      double precision husum(5)
-      double precision huc(5)
-      double precision huf(5)
+      double precision husum(6)
+      double precision huc(6)
+      double precision huf(6)
 
       integer listgrids(numgrids(level))
 

@@ -18,7 +18,7 @@
       double precision :: gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision :: D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision :: zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision :: cx,cy,pdh,vnorm,hvnorm,theta,dtheta,w,taucf
+      double precision :: vnorm,hvnorm,theta,dtheta,w,taucf
       integer :: i,j,ii,jj,icount
 
       double precision, allocatable :: moll(:,:)
@@ -26,8 +26,6 @@
       ! check for NANs in solution:
       call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
 
-
-      pm=1.d0
 
       gmod=grav
       coeff = coeffmanning
@@ -51,6 +49,9 @@
             hm = q(i,j,4)
             p =  q(i,j,5)
             phi = aux(i,j,i_phi)
+            pm = q(i,j,6)/h
+            pm = max(0.0,pm)
+            pm = min(1.0,pm)
 
             !integrate momentum source term
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)

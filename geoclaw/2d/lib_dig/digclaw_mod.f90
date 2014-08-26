@@ -21,7 +21,7 @@ module digclaw_module
     ! General digclaw parameters
     ! ========================================================================
     double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
-    double precision :: mu,alpha,m_crit,c1,m0,phys_tol,sigma_0
+    double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0
 
     integer :: init_ptype,p_initialized,bed_normal
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
@@ -88,7 +88,7 @@ contains
          read(iunit,*) c1
          read(iunit,*) m0
          read(iunit,*) sigma_0
-         read(iunit,*) phys_tol
+         read(iunit,*) alpha_seg
          read(iunit,*) bed_normal
          close(iunit)
 
@@ -110,7 +110,7 @@ contains
          write(DIG_PARM_UNIT,*) '    c1:', c1
          write(DIG_PARM_UNIT,*) '    m0:', m0
          write(DIG_PARM_UNIT,*) '    sigma_0:', sigma_0
-         write(DIG_PARM_UNIT,*) '    phys_tol:', phys_tol
+         write(DIG_PARM_UNIT,*) '    alpha_seg:', alpha_seg
 
 
    end subroutine set_dig
@@ -252,7 +252,8 @@ contains
       implicit none
 
       !i/o
-      double precision, intent(in)  :: h,u,v,m,p,pm,phi_bed,theta
+      double precision, intent(inout) :: pm
+      double precision, intent(in)  :: h,u,v,m,p,phi_bed,theta
       double precision, intent(out) :: S,rho,tanpsi,D,tau,kappa
       double precision, intent(out) :: sigbed,kperm,compress
 
@@ -269,7 +270,6 @@ contains
       shear = 2.0*vnorm/hbounded
       sigbed = dmax1(0.d0,rho*gmod*h - p)
       sigbedc = rho_s*(shear*delta)**2 + sigbed
-
       if (sigbedc.gt.0.0) then
          S = mu*shear/(sigbedc)
       else
@@ -277,9 +277,18 @@ contains
       endif
       !Note: m_eqn = m_crit/(1+sqrt(S))
       !From Boyer et. al
+      !S = 0.0
       m_eqn = m_crit/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
-      kperm = (1.0 + 0.0*vnorm/sqrt(gmod*h))*kappita*exp(-(m-0.60)/(0.04))
+      pm = max(0.0,pm)
+      pm = min(1.0,pm)
+      kperm = kappita*(1.0+ 10.0*pm)*exp(-(m-0.60)/(0.04))
+
+
+      !kperm = kperm + 1.0*pm*kappita
+      !write(*,*) 'kperm:',kperm,m,10.0*pm*kappita
+
+
       !compress = alpha/(sigbed + 1.d5)
       compress = alpha/(m*(sigbed +  sigma_0))
 
