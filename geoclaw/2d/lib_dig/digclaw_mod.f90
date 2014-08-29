@@ -282,7 +282,7 @@ contains
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       pm = max(0.0,pm)
       pm = min(1.0,pm)
-      kperm = kappita*(1.0+ 10.0*pm)*exp(-(m-0.60)/(0.04))
+      kperm = kappita*(10**(2.0*(pm)))*exp(-(m-0.60)/(0.04))
 
 
       !kperm = kperm + 1.0*pm*kappita
@@ -509,7 +509,7 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
 
             !---------direction cosine for resistive static friction--
             !---------factor of safety for dry static material (p=0)--
-            if (detady>0.0) then
+            if (abs(detady)>0.0) then
                aux(i,j,i_taudir_x) = abs(detadx)/sqrt(detadx**2 + detady**2)
             elseif (detadx>0.0) then
                aux(i,j,i_taudir_x) = 1.0
@@ -631,8 +631,10 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
 
             !---------direction cosine for resistive static friction--
             !---------factor of safety for dry static material (p=0)--
-            if (detadx>0) then
+            if (abs(detadx)>0) then
                aux(i,j,i_taudir_y) = abs(detady)/sqrt(detady**2 + detadx**2)
+            else
+               aux(i,j,i_taudir_y) = 1.0
             endif
 
          enddo

@@ -242,7 +242,7 @@ c     !find bounds in case of critical state resonance, or negative states
 
 *     !determine the source term
 
-      if (ixy.eq.1.and.(.not.wallprob)) then
+      if (ixy.eq.1) then
          source2dx = source2dx + dx*hbar*grav*dsin(theta)
       endif
 

@@ -117,6 +117,7 @@
             q(i,j,3) = hv
             q(i,j,4) = hm
             q(i,j,5) = p
+            q(i,j,6) = pm*h
 
          enddo
       enddo
