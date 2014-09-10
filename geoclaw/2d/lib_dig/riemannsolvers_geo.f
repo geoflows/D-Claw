@@ -3,7 +3,7 @@ c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir,
-     &         chiL,chiR)
+     &         chiL,chiR,fsL,fsR)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -29,7 +29,7 @@ c-----------------------------------------------------------------------
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR,chiL,chiR,seg_L,seg_R
-      double precision thetaL,thetaR,phiL,phiR,dx,taudir
+      double precision thetaL,thetaR,phiL,phiR,dx,taudir,fsL,fsR
       logical wallprob
 
 
@@ -97,6 +97,8 @@ c-----------------------------------------------------------------------
          mbar = mR
       endif
 
+      tauL = fsL*tauL
+      tauR = fsR*tauR
       rho = 0.5d0*(rhoL + rhoR)
       tau = 0.5d0*(tauL + tauR)
       theta = 0.5d0*(thetaL + thetaR)
@@ -252,9 +254,8 @@ c     !find bounds in case of critical state resonance, or negative states
          tausource = - dx*max(tauL/rhoL , tauR/rhoR)*u/vnorm
          !tausource = - dx*0.5*(tau/rho)*u/vnorm
       elseif (max(abs(dx*tauL*taudir/rhoL),abs(dx*tauR*taudir/rhoR))
-      !elseif (abs(dx*tau*taudir/rho)
-      !no failure
      &                                 .gt.abs(del(2) - source2dx)) then
+         !no failure
          tausource = del(2) - source2dx
          del(1) = 0.0
          del(0) = 0.0

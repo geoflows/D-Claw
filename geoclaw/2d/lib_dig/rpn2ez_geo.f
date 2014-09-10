@@ -62,7 +62,7 @@ c
       double precision theta,thetaL,thetaR
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
       double precision sE1,sE2
-      double precision chiHL,chiHR,chiL,chiR
+      double precision chiHL,chiHR,chiL,chiR,fsL,fsR
 
 
 
@@ -123,6 +123,9 @@ c        !set normal direction
             dx = dycom
             taudir = auxl(i,i_taudir_y)
          endif
+
+         fsL = auxr(i-1,i_fsphi)
+         fsR = auxl(i,i_fsphi)
 
          if (bed_normal.eq.1) then
             thetaL = auxr(i-1,i_theta)
@@ -284,7 +287,7 @@ c     &         theta,gamma,eps,dx,sw,fw,wave)
          call riemann_dig2_aug_sswave_ez(ixy,meqn,waves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
-     &         taudir,chiL,chiR)
+     &         taudir,chiL,chiR,fsL,fsR)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,

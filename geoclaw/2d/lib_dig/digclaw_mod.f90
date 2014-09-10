@@ -31,7 +31,7 @@ module digclaw_module
     integer, parameter ::  i_phi    = i_dig
     integer, parameter ::  i_theta  = i_dig + 1
     integer, parameter ::  i_fs     = i_dig + 2
-    integer, parameter ::  i_cohesion  = i_dig + 3
+    integer, parameter ::  i_fsphi  = i_dig + 3
     integer, parameter ::  i_taudir_x = i_dig + 4
     integer, parameter ::  i_taudir_y = i_dig + 5
     integer, parameter ::  DIG_PARM_UNIT = 78
@@ -645,6 +645,132 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
 end subroutine calc_taudir
 
    ! ========================================================================
+   !  calc_tausplit
+   ! ========================================================================
+   !  Determines splitting of tau for rp vs. src.
+   ! ========================================================================
+
+subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
+
+
+      implicit none
+
+      !Input
+      double precision :: dx,dy,xlower,ylower
+      double precision :: q(1-mbc:maxmx+mbc, 1-mbc:maxmy+mbc, meqn)
+      double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc,maux)
+      integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
+
+      !Locals
+      double precision :: h,hL,hR,hu,hv,hm,p,b,bL,bR,bT,bB,hT,hB,u,v,m
+      double precision :: phi,theta,rho,kappa,S,tanpsi,D,tau,sigbed,kperm,compress,pm
+      double precision :: gmod,dry_tol
+      double precision :: EtaL,EtaR,EtaT,EtaB,Eta
+      double precision :: detadx,detadxL,detadxR,detady,detadyT,detadyB
+      double precision :: grad_eta
+
+
+      integer :: i,j
+
+      dry_tol = drytolerance
+      gmod = grav
+      rho = m0*rho_s + (1.0-m0)*rho_f
+
+      do i=2-mbc,mx+mbc-1
+         do j=2-mbc,my+mbc-1
+
+            h = q(i,j,1)
+            hL = q(i-1,j,1)
+            hR = q(i+1,j,1)
+            if (h<dry_tol) then
+               aux(i,j,i_fsphi) = 1.0
+               cycle
+            endif
+
+            hu = q(i,j,2)
+            hv = q(i,j,3)
+            hm = q(i,j,4)
+            p  = q(i,j,5)
+
+            if ((hu**2 + hv**2)==0.0) then
+               aux(i,j,i_fsphi) = 1.0
+               cycle
+            endif
+
+            b = aux(i,j,1)
+            bR = aux(i+1,j,1)
+            bL = aux(i-1,j,1)
+            phi = aux(i,j,i_phi)
+
+            hT = q(i,j+1,1)
+            bT = aux(i,j+1,1)
+            hB = q(i,j-1,1)
+            bB = aux(i,j-1,1)
+
+            if (bed_normal.eq.1) then
+               theta = aux(i,j,i_theta)
+               gmod = grav*cos(theta)
+            else
+               theta = 0.d0
+            endif
+
+            Eta  = h+b
+            !---------max deta/dx-------------------
+            EtaR = hR+bR
+            EtaL = hL+bL
+            if (hR<=dry_tol) then
+               EtaR = min(Eta,bR)
+            endif
+            if (hL<=dry_tol) then
+               EtaL = min(Eta,bL)
+            endif
+            detadxR = (EtaR-Eta)/dx -sin(theta)
+            detadxL = (Eta-EtaL)/dx -sin(theta)
+            if (detadxR*detadxL<=0.0) then
+               detadx = 0.0
+            elseif (abs(detadxR)>abs(detadxL)) then
+               detadx = detadxL
+            else
+               detadx = detadxR
+            endif
+
+
+            !---------max deta/dy-------------------
+            EtaT = hT+bT
+            EtaB = hB+bB
+            if (hT<=dry_tol) then
+               EtaT = min(Eta,bT)
+            endif
+            if (hB<=dry_tol) then
+               EtaB = min(Eta,bB)
+            endif
+            detadyT = (EtaT-Eta)/dy
+            detadyB = (Eta-EtaB)/dy
+            if (detadyT*detadyB<=0.0) then
+               detady = 0.0
+            elseif (abs(detadyT)>abs(detadyB)) then
+               detady = detadyB
+            else
+               detady = detadyT
+            endif
+
+            grad_eta = sqrt(detadx**2 + detady**2)
+
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+
+            if (tau>0.0) then
+               aux(i,j,i_fsphi) = min(1.0,grad_eta*rho*gmod*h/tau)
+            else
+               aux(i,j,i_fsphi) = 1.0
+            endif
+
+         enddo
+      enddo
+
+   end subroutine calc_tausplit
+
+   ! ========================================================================
    !  calc_pmin
    ! ========================================================================
    !  Determines minimum pore pressure for mobilization
@@ -685,7 +811,6 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             hR = q(i+1,j,1)
             if (h<dry_tol) then
                aux(i,j,i_fs) = 10.0
-               aux(i,j,i_cohesion) = 0.0
                cycle
             endif
 
@@ -694,7 +819,6 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
             if ((hu**2+hv**2)>0.0) then
                aux(i,j,i_fs) = 0.0
-               aux(i,j,i_cohesion) = 0.0
                cycle
             endif
 
@@ -705,7 +829,6 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
             if ((phi)==0.0) then
                aux(i,j,i_fs) = 0.0
-               aux(i,j,i_cohesion) = 0.0
                init_pmin_ratio = 0.0
                cycle
             endif
@@ -768,10 +891,6 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
 
-
-            !aux(i,j,i_cohesion) = max(0.0,rho*gmod*h*(grad_eta-tan(phi))+0.0*rho_f*gmod*h*tan(phi))
-
-            aux(i,j,i_cohesion) = 1.0-grad_eta/tan(phi)
             init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi))
 
             if (grad_eta>0.0) then

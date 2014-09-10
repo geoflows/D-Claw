@@ -60,6 +60,8 @@ c      write(26,*) 'B4STEP2: t, num_dtopo: ', t,num_dtopo
 c======find factor of safety ratios===================================
       call calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
      &                     q,maux,aux)
+      call calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,
+     &                     q,maux,aux)
 
 
 c=============mobilization =============================================
