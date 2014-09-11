@@ -65,7 +65,7 @@
             if (vnorm>0.0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
                if (abs(dt*tau/rho)>=hvnorm) hvnorm = 0.0
-               taucf = u**2*dtheta*(rho*h - p/gmod)
+               taucf = u**2*dtheta*tau/gmod
                hvnorm = dmax1(0.d0,hvnorm - dt*taucf/rho)
                hvnorm = hvnorm*exp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
                if (hvnorm<1.e-16) hvnorm = 0.0
