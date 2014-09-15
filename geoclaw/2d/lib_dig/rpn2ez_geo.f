@@ -395,13 +395,14 @@ c============segregation================================================
          fwave(i,nhv,3) = 0.0
          fwave(i,4,3)   = fw(4,2)
          fwave(i,5,3) =  0.0
+         fwave(i,6,3) =  0.0
 
          fwave(i,1,4) =   0.0
          fwave(i,mhu,4) = 0.0
          fwave(i,nhv,4) = 0.0
          fwave(i,4,4)   = 0.0
          fwave(i,5,4) =  fw(5,2)
-
+         fwave(i,6,4) =  0.0
 
 
 c==========Capacity for mapping from latitude longitude to physical space====

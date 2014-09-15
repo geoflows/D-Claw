@@ -106,7 +106,7 @@ c
                else
                   q(i,j,4) = q(i,j,1)*q(i,j,4)
                endif
-                  q(i,j,6) = 0.5*q(i,j,1)
+               q(i,j,6) = 0.5*q(i,j,1)
                if (q(i,j,1).le.drytolerance) then
                   do m = 1,meqn
                      q(i,j,m) = 0.d0

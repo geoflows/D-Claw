@@ -284,11 +284,7 @@ contains
       pm = min(1.0,pm)
       kperm = kappita*(10**(2.0*(pm)))*exp(-(m-0.60)/(0.04))
 
-
       !kperm = kperm + 1.0*pm*kappita
-      !write(*,*) 'kperm:',kperm,m,10.0*pm*kappita
-
-
       !compress = alpha/(sigbed + 1.d5)
       compress = alpha/(m*(sigbed +  sigma_0))
 
@@ -306,17 +302,13 @@ contains
       else
          D = 0.d0
       endif
-      tanphi = dtan(phi_bed + datan(tanpsi))
+      tanphi = dtan(phi_bed + datan(tanpsi))!+ 3.14*10.*pm/180.0)
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
 
-      tau = dmax1(0.d0,sigbed*dtan(phi_bed + datan(tanpsi)))
+      tau = dmax1(0.d0,sigbed*tanphi)
 
-      if (p_initialized.eq.0) then
-         !tau = tau + rho*gmod*h*max(0.0,grad_eta_max*tan(phi_bed)-tan(phi_bed))
-      !   tau = tau + pm
-      endif
       !tau = (grav/gmod)*dmax1(0.d0,sigbed*tanphi)
       !kappa: earth pressure coefficient
       !if (phi_int.eq.phi_bed) then
@@ -757,6 +749,7 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
             grad_eta = sqrt(detadx**2 + detady**2)
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            pm = q(i,j,6)/q(i,j,1)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
             if (tau>0.0) then

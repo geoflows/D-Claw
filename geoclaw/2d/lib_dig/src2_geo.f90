@@ -18,7 +18,7 @@
       double precision :: gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi
       double precision :: D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision :: zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,fsphi
+      double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,fsphi,hvnorm0
       integer :: i,j,ii,jj,icount
 
       double precision, allocatable :: moll(:,:)
@@ -60,17 +60,18 @@
             tau = tau*(1.0-fsphi)
 
             vnorm = sqrt(u**2 + v**2)
-            hvnorm = h*vnorm
+            hvnorm = sqrt(hu**2 + hv**2)
+            hvnorm0 = hvnorm
 
-            if (vnorm>0.0) then
+            if (hvnorm>0.0) then
                hvnorm = dmax1(0.d0,hvnorm - dt*tau/rho)
                if (abs(dt*tau/rho)>=hvnorm) hvnorm = 0.0
                taucf = u**2*dtheta*tau/gmod
                hvnorm = dmax1(0.d0,hvnorm - dt*taucf/rho)
                hvnorm = hvnorm*exp(-(1.d0-m)*2.0*mu*dt/(rho*h**2))
                if (hvnorm<1.e-16) hvnorm = 0.0
-               hu = hvnorm*u/vnorm
-               hv = hvnorm*v/vnorm
+               hu = hvnorm*hu/hvnorm0
+               hv = hvnorm*hv/hvnorm0
             endif
 
             if (p_initialized==0) cycle
@@ -97,7 +98,9 @@
             endif
             !p_eq = max(p_eq,0.0)
             !p_eq = min(p_eq,p_litho)
+
             p = p_eq + (p-p_eq)*exp(krate*dt)
+
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
