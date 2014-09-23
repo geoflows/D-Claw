@@ -19,6 +19,7 @@
       double precision :: D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision :: zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
       double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,fsphi,hvnorm0
+      double precision :: shear,sigebar
       integer :: i,j,ii,jj,icount
 
       double precision, allocatable :: moll(:,:)
@@ -57,7 +58,7 @@
             !integrate momentum source term
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
-            tau = tau*(1.0-fsphi)
+            tau = max(tau*(1.0-fsphi),0.0)
 
             vnorm = sqrt(u**2 + v**2)
             hvnorm = sqrt(hu**2 + hv**2)
@@ -79,10 +80,20 @@
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
+            do jj=1,100
             vnorm = sqrt(u**2 + v**2)
 
             !integrate shear-induced dilatancy
-            !p = p - dt*3.0*vnorm*tanpsi/(h*compress)
+            sigebar = rho*gmod*h - p + sigma_0
+            shear = 2.0*vnorm/h
+            krate = 1.5*shear*m*tanpsi/alpha
+            sigebar = sigebar*exp(krate*dt)
+            !p = rho*gmod*h + sigma_0 - sigebar
+            p = p - dt*3.0*vnorm*tanpsi/(h*compress)
+
+            !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+
 
             !integrate pressure relaxation
             zeta = 3.d0/(compress*h*2.0)  + (rho-rho_f)*rho_f*gmod/(4.d0*rho)
@@ -96,6 +107,7 @@
             else
                p_eq = p_hydro
             endif
+            p_eq = p_hydro
             !p_eq = max(p_eq,0.0)
             !p_eq = min(p_eq,p_litho)
 
@@ -104,6 +116,7 @@
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            enddo
 
             krate = D*(rho-rho_f)/rho
             hu = hu*exp(dt*krate/h)
@@ -112,7 +125,6 @@
             h = h + krate*dt
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
-            !vnorm = dsqrt(u**2 + v**2)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
             q(i,j,1) = h

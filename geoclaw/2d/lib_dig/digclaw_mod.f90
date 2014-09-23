@@ -262,7 +262,7 @@ contains
 
       if (h.lt.drytolerance) return
 
-      hbounded = h !max(h,delta)
+      hbounded = h!max(h,0.1)
       gmod=grav
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2 + v**2)
@@ -271,7 +271,7 @@ contains
       sigbed = dmax1(0.d0,rho*gmod*h - p)
       sigbedc = rho_s*(shear*delta)**2 + sigbed
       if (sigbedc.gt.0.0) then
-         S = mu*shear/(sigbedc)
+         S = tanh(mu*shear/(sigbedc))
       else
          S = 0.d0
       endif
@@ -279,6 +279,7 @@ contains
       !From Boyer et. al
       !S = 0.0
       m_eqn = m_crit/(1.d0 + sqrt(S))
+      !if (m.gt.m_eqn) write(*,*) 'm,m_eqn,S:',m,m_eqn,S,sigbed,shear
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       pm = max(0.0,pm)
       pm = min(1.0,pm)
@@ -302,7 +303,7 @@ contains
       else
          D = 0.d0
       endif
-      tanphi = dtan(phi_bed + datan(tanpsi))!+ 3.14*10.*pm/180.0)
+      tanphi = dtan(phi_bed + datan(tanpsi))
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
