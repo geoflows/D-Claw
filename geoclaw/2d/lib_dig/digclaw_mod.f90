@@ -283,7 +283,7 @@ contains
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       pm = max(0.0,pm)
       pm = min(1.0,pm)
-      kperm = kappita*(10**(2.0*(pm)))*exp(-(m-0.60)/(0.04))
+      kperm = kappita*(10**(2.0*(pm-0.5)))*exp(-(m-0.60)/(0.04))
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
