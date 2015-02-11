@@ -91,6 +91,7 @@ contains
          read(iunit,*) alpha_seg
          read(iunit,*) bed_normal
          close(iunit)
+         alpha_seg = 1.0 - alpha_seg
 
          open(unit=DIG_PARM_UNIT,file='fort.dig',status="unknown",action="write")
 
