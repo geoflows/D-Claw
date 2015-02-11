@@ -26,11 +26,11 @@ topo2colors(:,:,1) = topo2colors(:,:,1) .* covered_ind;
 cw=surf(X,Y,topo2.*covered_ind,topo2colors);
 
 if (PlotGrid(level)==1)
-    set(cw,'FaceColor','interp','EdgeColor',[0 0 0]);
+    set(cw,'FaceColor','flat','EdgeColor',[0 0 0]);
 else
-    set(cw,'FaceColor','interp','EdgeColor','none');
+    set(cw,'FaceColor','flat','EdgeColor','none');
 end
-set(cw,'FaceLighting','flat','SpecularColorReflectance',0.0,'SpecularStrength',1)
+%set(cw,'FaceLighting','flat','SpecularColorReflectance',0.0,'SpecularStrength',1)
 
 if (PlotGridEdges(level)==1)
     l1=line(xedge,0*xedge+yedge(1),topo2(:,1)+1000,'Color','k','LineWidth',1);

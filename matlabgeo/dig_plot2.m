@@ -73,7 +73,7 @@ if PlotType == 13
         eta2color = sv;
     elseif mq==6
         eta2color = trac2./h2;
-    elseif mq==neta
+    elseif mq>neta
         eta2color = sqrt((hu2./h2).^2 + (hv2./h2).^2);
     end
 
