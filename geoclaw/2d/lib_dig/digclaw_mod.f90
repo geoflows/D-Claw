@@ -259,20 +259,20 @@ contains
       double precision, intent(out) :: sigbed,kperm,compress
 
       !local
-      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi
+      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,pmlin,pmtan,pmtanh,pmtanh01
 
       if (h.lt.drytolerance) return
 
       hbounded = h!max(h,0.1)
       gmod=grav
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
-      vnorm = dsqrt(u**2 + v**2)
+      vnorm = dsqrt(u**2.0 + v**2.0)
       rho = rho_s*m + rho_f*(1.d0-m)
       shear = 2.0*vnorm/hbounded
       sigbed = dmax1(0.d0,rho*gmod*h - p)
-      sigbedc = rho_s*(shear*delta)**2 + sigbed
+      sigbedc = rho_s*(shear*delta)**2.0 + sigbed
       if (sigbedc.gt.0.0) then
-         S = tanh(mu*shear/(sigbedc))
+         S = (mu*shear/(sigbedc))
       else
          S = 0.d0
       endif
@@ -284,7 +284,11 @@ contains
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       pm = max(0.0,pm)
       pm = min(1.0,pm)
-      kperm = kappita*(10**(2.0*(pm-0.5)))*exp(-(m-0.60)/(0.04))
+      pmlin = 2.0*(pm-0.5)
+      pmtan = 0.06*(tan(3.*(pm-0.5)))
+      pmtanh = tanh(3.*pmlin)
+      pmtanh01 = 0.5*(tanh(8.0*(pm-0.75))+1.0)
+      kperm = 10**(pmtanh01)*kappita*exp(-(m-0.60)/(0.04))
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
@@ -304,7 +308,8 @@ contains
       else
          D = 0.d0
       endif
-      tanphi = dtan(phi_bed + datan(tanpsi))
+      
+      tanphi = dtan(phi_bed + datan(tanpsi)) + pmtanh01*dtan(phi_bed)
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
@@ -788,7 +793,7 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
       double precision :: gmod,dry_tol
       double precision :: EtaL,EtaR,EtaT,EtaB,Eta
       double precision :: detadx,detadxL,detadxR,detady,detadyT,detadyB
-      double precision :: grad_eta,init_pmin_ratio_noc
+      double precision :: grad_eta
 
 
       integer :: i,j

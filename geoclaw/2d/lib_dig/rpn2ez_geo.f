@@ -180,7 +180,7 @@ c        !set normal direction
          if (hR.le.drytol) then
             hR = 0.d0
             pR = 0.d0
-            chiR = 0.0
+            chiR = chiL
             drystate=.true.
             call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,
      &                                 rare1,rare2,1,drytol,gmod)
@@ -209,7 +209,7 @@ c                bR=hstartest+bL
          elseif (hL.le.drytol) then ! right surface is lower than left topo
             hL = 0.d0
             pL = 0.d0
-            chiL= 0.0
+            chiL= chiR
             drystate=.true.
             call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,
      &                                  rare1,rare2,1,drytol,gmod)

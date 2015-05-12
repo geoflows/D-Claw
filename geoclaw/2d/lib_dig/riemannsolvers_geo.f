@@ -245,6 +245,9 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
 
       if (ixy.eq.1) then
+         if (theta.lt.100.0) then
+            !write(*,*) 'theta,grav,dx:', theta,grav,dx
+         endif
          source2dx = source2dx + dx*hbar*grav*dsin(theta)
       endif
 
