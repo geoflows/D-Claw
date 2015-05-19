@@ -1495,6 +1495,7 @@ class DigclawInputData(Data):
         self.add_attribute('init_ptf', 1.0, 'pressure will rise until t = init_ptf without dilatancy')
         self.add_attribute('init_ptf2', 0.0, 'will rise until t = init_ptf2')
         self.add_attribute('bed_normal', 0,  'bed_normal =1 requires theta in aux. for slope in one direction')
+        self.add_attribute('phi_seg_coeff', 0.0,  'adjustment to friction coefficient based on segregation')
 
     def write(self):
 
@@ -1515,6 +1516,7 @@ class DigclawInputData(Data):
         data_write(file, self, 'sigma_0', 'baseline stress for definition of compessibility')
         data_write(file, self, 'alpha_seg', 'coefficient of segregation velocity profile')
         data_write(file, self, 'bed_normal', 'bed_normal = 1 requires theta in aux for slope in one direction')
+        data_write(file, self, 'phi_seg_coeff', 'adjustment to friction coefficient based on segregation')
         file.close()
 
         print 'Creating data file setpinit.data'

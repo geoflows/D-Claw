@@ -21,7 +21,7 @@ module digclaw_module
     ! General digclaw parameters
     ! ========================================================================
     double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
-    double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0
+    double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff
 
     integer :: init_ptype,p_initialized,bed_normal
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
@@ -90,6 +90,7 @@ contains
          read(iunit,*) sigma_0
          read(iunit,*) alpha_seg
          read(iunit,*) bed_normal
+         read(iunit,*) phi_seg_coeff
          close(iunit)
          alpha_seg = 1.0 - alpha_seg
 
@@ -112,6 +113,8 @@ contains
          write(DIG_PARM_UNIT,*) '    m0:', m0
          write(DIG_PARM_UNIT,*) '    sigma_0:', sigma_0
          write(DIG_PARM_UNIT,*) '    alpha_seg:', alpha_seg
+         write(DIG_PARM_UNIT,*) '    bed_normal:', bed_normal
+         write(DIG_PARM_UNIT,*) '    phi_seg_coeff:', phi_seg_coeff
 
 
    end subroutine set_dig
@@ -309,7 +312,7 @@ contains
          D = 0.d0
       endif
       
-      tanphi = dtan(phi_bed + datan(tanpsi)) + pmtanh01*dtan(phi_bed)
+      tanphi = dtan(phi_bed + datan(tanpsi)) + phi_seg_coeff*pmtanh01*dtan(phi_bed)
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
