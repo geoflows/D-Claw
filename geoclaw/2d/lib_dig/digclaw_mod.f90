@@ -400,36 +400,60 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
       gmod = grav
 
 
-      do i=2-mbc,mx+mbc
-         do j=2-mbc,my+mbc
-            !note: for edge valued aux, aux(i,. _x) is at i-1/2.
+      do i=2-mbc,mx+mbc-1
+         do j=2-mbc,my+mbc-1
+            
 
             h = q(i,j,1)
-            hL = q(i-1,j,1)
-            hB = q(i,j-1,1)
-            if (h<=dry_tol.or.hL<=dry_tol.or.hB<=dry_tol) then
-               aux(i,j,i_taudir_x) = 1.0
-               aux(i,j,i_taudir_y) = 1.0
+            if (h<dry_tol) then
+               aux(i,j,i_taudir_x) = 0.0
+               aux(i,j,i_taudir_y) = 0.0
                aux(i,j,i_fsphi) = 0.0
                cycle
             endif
 
             hu = q(i,j,2)
-            huL = q(i-1,j,2)
-            huB = q(i,j-1,2)
-            
             hv = q(i,j,3)
-            hvL = q(i-1,j,3)
-            hvB = q(i,j-1,3)
-
-            b = aux(i,j,1)
-            bL = aux(i-1,j,1)
-            bB = aux(i,j-1,1)
-            phi = aux(i,j,i_phi)
-
             hm = q(i,j,4)
             p  = q(i,j,5)
+            b = aux(i,j,1)
+            phi = aux(i,j,i_phi)
 
+            hL = q(i-1,j,1)
+            huL= q(i-1,j,2)
+            hvL= q(i-1,j,3)
+            bL = aux(i-1,j,1)
+            etaL= hL+bL
+            if (hL<dry_tol) then
+               etaL = min(etaL,eta)
+            endif
+
+            hR = q(i+1,j,1)
+            huR= q(i+1,j,2)
+            hvR= q(i+1,j,3)
+            bR = aux(i+1,j,1)
+            etaR= hR+bR
+            if (hR<dry_tol) then
+               etaR = min(etaR,eta)
+            endif
+
+            hB = q(i,j-1,1)
+            huB= q(i,j-1,2)
+            hvB= q(i,j-1,3)
+            bB = aux(i,j-1,1)
+            etaB= hB+bB
+            if (hB<dry_tol) then
+               etaB = min(etaB,eta)
+            endif
+
+            hT = q(i,j-1,1)
+            huT= q(i,j-1,2)
+            hvT= q(i,j-1,3)
+            bT = aux(i,j-1,1)
+            etaT= hT+bT
+            if (hT<dry_tol) then
+               etaT = min(etaT,eta)
+            endif
 
             if (bed_normal.eq.1) then
                theta = aux(i,j,i_theta)
@@ -442,30 +466,7 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                thetaB = 0.d0
             endif
 
-
-            if ((h>dry_tol).and.(hL>dry_tol))then
-               Eta = h+b
-               EtaL = hL+bL
-            elseif (h>dry_tol) then
-               Eta = h+b
-               EtaL = min(Eta,hL+bL)
-            else
-               EtaL = hL+bL
-               Eta = min(EtaL,h+b)
-            endif
-
-            if ((h>dry_tol).and.(hB>dry_tol))then
-               Eta = h+b
-               EtaB = hB+bB
-            elseif (h>dry_tol) then
-               Eta = h+b
-               EtaB = min(Eta,hB+bB)
-            else
-               EtaB = hB+bB
-               Eta = min(EtaB,h+b)
-            endif
-
-            Fx = -gmod*0.5*(h+hL)*((Eta-EtaL)/dx + sin(theta))
+            Fx = -(Eta-EtaL)/dx + sin(theta))
             Fy = -gmod*0.5*(h+hB)*(Eta-EtaB)/dy
             
             vnorm = hu**2 + hv**2 + huL**2 + huB**2 + hvL**2 + hvB**2
