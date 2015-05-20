@@ -245,19 +245,17 @@ c     !find bounds in case of critical state resonance, or negative states
 *     !determine the source term
 
       if (ixy.eq.1) then
-         if (theta.lt.100.0) then
-            !write(*,*) 'theta,grav,dx:', theta,grav,dx
-         endif
          source2dx = source2dx + dx*hbar*grav*dsin(theta)
       endif
 
-      vnorm = sqrt(u**2 + v**2)
+      vnorm = sqrt(uR**2 + vR**2)
       if (vnorm>0.0) then
          tausource = - dx*0.5*(tauL/rhoL + tauR/rhoR)*u/vnorm
          tausource = - dx*max(tauL/rhoL , tauR/rhoR)*u/vnorm
+         tausource = -dx*tauR*taudir/rhoR
          !tausource = - dx*0.5*(tau/rho)*u/vnorm
-      elseif (max(abs(dx*tauL*taudir/rhoL),abs(dx*tauR*taudir/rhoR))
-     &                                 .gt.abs(del(2) - source2dx)) then
+      !elseif (max(abs(dx*tauL*taudir/rhoL),abs(dx*tauR*taudir/rhoR))
+      elseif  (dx*tauR*taudir/rhoR.gt.abs(del(2) - source2dx)) then
          !no failure
          tausource = del(2) - source2dx
          del(1) = 0.0
@@ -265,9 +263,9 @@ c     !find bounds in case of critical state resonance, or negative states
          del(4) = 0.0
       else
          !failure
-         tausource =   sign(abs(dx*0.5*taudir*(tauL/rhoL + tauR/rhoR))
+         !tausource =   sign(abs(dx*0.5*taudir*(tauL/rhoL + tauR/rhoR))
          !tausource =   sign(abs(dx*0.5*tau/rho)
-     &                                       ,del(2)-source2dx)
+         tausource =   dx*taudir*tauR/rhoR
       endif
 
       del(2) = del(2) - source2dx  - tausource

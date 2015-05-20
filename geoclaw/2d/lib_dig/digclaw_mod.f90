@@ -386,13 +386,13 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
       integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
 
       !Locals
-      double precision :: hL,hR,huL,huR,hvL,hvR,bL,bR
-      double precision :: phiL,phiR,phi,thetaL,thetaR,theta
+      double precision :: hL,h,huL,hu,hvL,hv,bL,b,hB,huB,hvB,bB,hm
+      double precision :: thetaL,thetaB,theta
       double precision :: gmod,dry_tol
-      double precision :: EtaL,EtaR,EtaTL,EtaTR,EtaBL,EtaBR
-      double precision :: detadx,detadxL,detadxR,detadxTR,detadxTL,detadxBR,detadxBL
-      double precision :: detady,detadyL,detadyR,detadyTR,detadyTL,detadyBR,detadyBL
-      double precision :: hTL,hTR,hBL,hBR,bTL,bTR,bBL,bBR
+      double precision :: EtaL,Eta,EtaTL,EtaB
+      double precision :: phi,rho,kappa,S,tanpsi,D,tau,sigbed,kperm,compress,pm
+      double precision :: Fx,Fy,dot,u,v,m,p
+
 
       integer :: i,j
 
@@ -401,248 +401,111 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
 
 
       do i=2-mbc,mx+mbc
-         do j=2-mbc,my+mbc-1
+         do j=2-mbc,my+mbc
             !note: for edge valued aux, aux(i,. _x) is at i-1/2.
 
-            hR = q(i,j,1)
+            h = q(i,j,1)
             hL = q(i-1,j,1)
-            if ((hL<=dry_tol).and.(hR<=dry_tol)) then
+            hB = q(i,j-1,1)
+            if (h<=dry_tol) then
                aux(i,j,i_taudir_x) = 1.0
+               aux(i,j,i_taudir_y) = 1.0
                cycle
             endif
 
+            hu = q(i,j,2)
             huL = q(i-1,j,2)
-            huR = q(i,j,2)
+            huB = q(i,j-1,2)
+            
+            hv = q(i,j,3)
             hvL = q(i-1,j,3)
-            hvR = q(i,j,3)
+            hvB = q(i,j-1,3)
 
-            if ((huL**2+huR**2)>0.0) then
-               aux(i,j,i_taudir_x) = 1.0
-               cycle
-            endif
-
-            bR = aux(i,j,1)
+            b = aux(i,j,1)
             bL = aux(i-1,j,1)
-            phiL = aux(i-1,j,i_phi)
-            phiR = aux(i,j,i_phi)
+            bB = aux(i,j-1,1)
+            phi = aux(i,j,i_phi)
 
-            hTL = q(i-1,j+1,1)
-            bTL = aux(i-1,j+1,1)
-            hBL = q(i-1,j-1,1)
-            bBL = aux(i-1,j-1,1)
+            hm = q(i,j,4)
+            p  = q(i,j,5)
 
-            hTR = q(i,j+1,1)
-            bTR = aux(i,j+1,1)
-            hBR = q(i,j-1,1)
-            bBR = aux(i,j-1,1)
 
             if (bed_normal.eq.1) then
-               thetaR = aux(i,j,i_theta)
+               theta = aux(i,j,i_theta)
                thetaL = aux(i-1,j,i_theta)
-               gmod = grav*cos(0.5d0*(thetaL+thetaR))
+               thetaB = aux(i,j-1,i_theta)
+               gmod = grav*cos(theta)
             else
+               theta = 0.d0
                thetaL = 0.d0
-               thetaR = 0.d0
+               thetaB = 0.d0
             endif
-            phi   = 0.5*(phiL + phiR)
-            theta = 0.5*(thetaL + thetaR)
 
-            if ((hR>dry_tol).and.(hL>dry_tol))then
-               EtaR = hR+bR
+
+            if ((h>dry_tol).and.(hL>dry_tol))then
+               Eta = h+b
                EtaL = hL+bL
-            elseif (hR>dry_tol) then
-               EtaR = hR+bR
-               EtaL = min(EtaR,hL+bL)
-            else
-               EtaL = hL+bL
-               EtaR = min(EtaL,hR+bR)
-            endif
-
-            detadx = (EtaR-EtaL)/dx - tan(theta)
-
-            !---------left minmod deta/dy-------------------
-            if (hTL>dry_tol) then
-               EtaTL = hTL+bTL
-            else
-               EtaTL = min(EtaL,hTL+bTL)
-            endif
-            detadyTL = (EtaTL-EtaL)/dy
-
-            if (hBL>dry_tol) then
-               EtaBL = hBL+bBL
-            else
-               EtaBL = min(EtaL,hBL+bBL)
-            endif
-            detadyBL = (EtaL-EtaBL)/dy
-
-            if (detadyTL*detadyBL.gt.0.0) then
-               detadyL = min(abs(detadyTL),abs(detadyBL))*sign(1.0,etaTL-etaBL)
-            else
-               detadyL = 0.0
-            endif
-
-            !-----------right minmod deta/dy------------------
-            if (hTR>dry_tol) then
-               EtaTR = hTR+bTR
-            else
-               EtaTR = min(EtaR,hTR+bTR)
-            endif
-            detadyTR = (EtaTR-EtaR)/dy
-
-            if (hBR>dry_tol) then
-               EtaBR = hBR+bBR
-            else
-               EtaBR = min(EtaR,hBR+bBR)
-            endif
-            detadyBR = (EtaR-EtaBR)/dy
-
-            if (detadyTR*detadyBR.gt.0.0) then
-               detadyR = min(abs(detadyTR),abs(detadyBR))*sign(1.0,etaTR-etaBR)
-            else
-               detadyR = 0.0
-            endif
-
-            !---------minmod deta/dy--------------------------
-            if (detadyR*detadyL.gt.0.0) then
-               detady = min(abs(detadyR),abs(detadyL))*sign(1.0,detadyR)
-            else
-               detady = 0.0
-            endif
-
-            !---------direction cosine for resistive static friction--
-            !---------factor of safety for dry static material (p=0)--
-            if (abs(detady)>0.0) then
-               aux(i,j,i_taudir_x) = abs(detadx)/sqrt(detadx**2 + detady**2)
-            elseif (detadx>0.0) then
-               aux(i,j,i_taudir_x) = 1.0
-            else
-               aux(i,j,i_taudir_x) = 1.0
-            endif
-         enddo
-         aux(i,my+mbc,i_taudir_x) = aux(i,my+mbc-1,i_taudir_x)
-      enddo
-
-      do j=2-mbc,my+mbc
-         do i=2-mbc,mx+mbc-1
-            !Note: edge value aux(.,j._y) is at j-1/2
-
-            hR = q(i,j,1)
-            hL = q(i,j-1,1)
-            if ((hL<=dry_tol).and.(hR<=dry_tol)) then
-               aux(i,j,i_taudir_y) = 1.0
-               cycle
-            endif
-
-            huL = q(i,j-1,2)
-            huR = q(i,j,2)
-            hvL = q(i,j-1,3)
-            hvR = q(i,j,3)
-
-            if ((huL**2+huR**2)>0.0) then
-               aux(i,j,i_taudir_y) = 1.0
-               cycle
-            endif
-
-            bR = aux(i,j,1)
-            bL = aux(i,j-1,1)
-            phiL = aux(i,j-1,i_phi)
-            phiR = aux(i,j,i_phi)
-
-            hTL = q(i+1,j-1,1)
-            bTL = aux(i+1,j-1,1)
-            hBL = q(i-1,j-1,1)
-            bBL = aux(i-1,j-1,1)
-
-            hTR = q(i+1,j,1)
-            bTR = aux(i+1,j,1)
-            hBR = q(i-1,j,1)
-            bBR = aux(i-1,j,1)
-
-            if (bed_normal.eq.1) then
-               thetaR = aux(i,j,i_theta)
-               thetaL = aux(i,j-1,i_theta)
-               gmod = grav*cos(0.5d0*(thetaL+thetaR))
-            else
-               thetaL = 0.d0
-               thetaR = 0.d0
-            endif
-            phi   = 0.5*(phiL + phiR)
-            theta = 0.5*(thetaL + thetaR)
-
-            if ((hR>dry_tol).and.(hL>dry_tol))then
-               EtaR = hR+bR
-               EtaL = hL+bL
-            elseif (hR>dry_tol) then
-               EtaR = hR+bR
-               EtaL = min(EtaR,hL+bL)
+            elseif (h>dry_tol) then
+               Eta = h+b
+               EtaL = min(Eta,hL+bL)
             else
                EtaL = hL+bL
-               EtaR = min(EtaL,hR+bR)
+               Eta = min(EtaL,h+b)
             endif
 
-            detady = (EtaR-EtaL)/dy
-
-            !---------left minmod deta/dx-------------------
-            if (hTL>dry_tol) then
-               EtaTL = hTL+bTL
+            if ((h>dry_tol).and.(hB>dry_tol))then
+               Eta = h+b
+               EtaB = hB+bB
+            elseif (h>dry_tol) then
+               Eta = h+b
+               EtaB = min(Eta,hB+bB)
             else
-               EtaTL = min(EtaL,hTL+bTL)
-            endif
-            detadxTL = (EtaTL-EtaL)/dx -tan(theta)
-
-            if (hBL>dry_tol) then
-               EtaBL = hBL+bBL
-            else
-               EtaBL = min(EtaL,hBL+bBL)
-            endif
-            detadxBL = (EtaL-EtaBL)/dx -tan(theta)
-
-            if (detadxTL*detadxBL.gt.0.0) then
-               detadxL = min(abs(detadxTL),abs(detadxBL))*sign(1.0,etaTL-etaBL)
-            else
-               detadxL = 0.0
+               EtaB = hB+bB
+               Eta = min(EtaB,h+b)
             endif
 
-            !-----------right minmod deta/dy------------------
-            if (hTR>dry_tol) then
-               EtaTR = hTR+bTR
-            else
-               EtaTR = min(EtaR,hTR+bTR)
-            endif
-            detadxTR = (EtaTR-EtaR)/dx -tan(theta)
+            Fx = -(Eta-EtaL)/dx + sin(theta)
+            Fy = -(Eta-EtaB)/dy
+            
 
-            if (hBR>dry_tol) then
-               EtaBR = hBR+bBR
-            else
-               EtaBR = min(EtaR,hBR+bBR)
-            endif
-            detadxBR = (EtaR-EtaBR)/dx - tan(theta)
+            if ((hv**2+hu**2)>0.0) then
+               aux(i,j,i_taudir_x) = -hu/sqrt(hv**2+hu**2)
+               aux(i,j,i_taudir_y) = -hv/sqrt(hv**2+hu**2) 
 
-            if (detadxTR*detadxBR.gt.0.0) then
-               detadxR = min(abs(detadxTR),abs(detadxBR))*sign(1.0,etaTR-etaBR)
-            else
-               detadxR = 0.0
-            endif
+               call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+               pm = q(i,j,6)/q(i,j,1)
+               call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+               
+               dot = Fx*hu + Fy*hv
+               if (dot>0.0) then
+                  !friction should oppose direction of velocity
+                  !if net force is in same direction, split friction source term
+                  !splitting is useful for small velocities and nearly balanced forces
+                  !only split amount up to maximum net force for large velocities
+                  aux(i,j,i_fsphi) = min(1.0,sqrt(Fx**2+Fy**2)*rho*gmod*h/max(tau,1.d-16))
+               else
+                  !net force is in same direction as friction
+                  !if nearly balanced steady state not due to friction
+                  !no splitting, integrate friction in src
+                  aux(i,j,i_fsphi) = 0.0
+               endif
+               
 
-            !---------minmod deta/dy--------------------------
-            if (detadxR*detadxL.gt.0.0) then
-               detadx = min(abs(detadxR),abs(detadxL))*sign(1.0,detadxR)
-            else
-               detadx = 0.0
-            endif
-
-            !---------direction cosine for resistive static friction--
-            !---------factor of safety for dry static material (p=0)--
-            if (abs(detadx)>0) then
-               aux(i,j,i_taudir_y) = abs(detady)/sqrt(detady**2 + detadx**2)
-            else
-               aux(i,j,i_taudir_y) = 1.0
-            endif
+            else 
+               if ((Fx**2 + Fy**2)>0.d0) then
+                  !friction should oppose net force. resolve in Riemann solver
+                  aux(i,j,i_taudir_x) = -Fx/sqrt(Fx**2+Fy**2)
+                  aux(i,j,i_taudir_y) = -Fy/sqrt(Fx**2+Fy**2) 
+               else
+                  !there is no motion or net force. 
+                  aux(i,j,i_taudir_x) = 1.0
+                  aux(i,j,i_taudir_y) = 1.0
+               endif
+               aux(i,j,i_fsphi) = 1.0
+            endif 
 
          enddo
-         aux(mx+mbc,j,i_taudir_y) = aux(mx+mbc-1,j,i_taudir_y)
       enddo
-
 
 end subroutine calc_taudir
 
