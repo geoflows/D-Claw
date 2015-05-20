@@ -217,11 +217,12 @@
                   hm = q(i,j,4)
                   p =  q(i,j,5)
                   phi = aux(i,j,i_phi)
+                  theta = aux(i,j,i_theta)
+                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+                  if (h<tol) cycle
                   pm = q(i,j,6)/h
                   pm = max(0.0,pm)
                   pm = min(1.0,pm)
-                  theta = aux(i,j,i_theta)
-                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
                   call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
                   if (h.lt.tol) then
