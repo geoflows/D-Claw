@@ -58,7 +58,7 @@ c
       double precision hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL
       double precision pR,pL,hmL,hmR,mL,mR,phi_bedL,phi_bedR
       double precision hstar,hstartest,s1m,s2m,bL,bR
-      double precision dxdc,dx,taudir
+      double precision dxdc,dx,taudirL,taudirR
       double precision theta,thetaL,thetaR
       double precision h1M,h2M,hu1M,hu2M,u1M,u2M,heR,heL
       double precision sE1,sE2
@@ -116,12 +116,14 @@ c        !set normal direction
             mhu=2
             nhv=3
             dx = dxcom
-            taudir = auxl(i,i_taudir_x)
+            taudirR = auxl(i,i_taudir_x)
+            taudirL = auxr(i-1,i_taudir_x)
          else
             mhu=3
             nhv=2
             dx = dycom
-            taudir = auxl(i,i_taudir_y)
+            taudirR = auxl(i,i_taudir_y)
+            taudirL = auxr(i-1,i_taudir_y)
          endif
 
          fsL = auxr(i-1,i_fsphi)
@@ -287,7 +289,7 @@ c     &         theta,gamma,eps,dx,sw,fw,wave)
          call riemann_dig2_aug_sswave_ez(ixy,meqn,waves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
-     &         taudir,chiL,chiR,fsL,fsR)
+     &         taudirL,taudirR,chiL,chiR,fsL,fsR)
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,

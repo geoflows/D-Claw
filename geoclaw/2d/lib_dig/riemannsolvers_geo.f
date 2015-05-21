@@ -2,8 +2,8 @@
 c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
-     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudir,
-     &         chiL,chiR,fsL,fsR)
+     &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudirL,
+     &         taudirR,chiL,chiR,fsL,fsR)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -29,7 +29,8 @@ c-----------------------------------------------------------------------
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR,chiL,chiR,seg_L,seg_R
-      double precision thetaL,thetaR,phiL,phiR,dx,taudir,fsL,fsR
+      double precision thetaL,thetaR,phiL,phiR,dx
+      double precision taudirL,taudirR,fsL,fsR
       logical wallprob
 
 
@@ -84,7 +85,8 @@ c-----------------------------------------------------------------------
      &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmL)
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
      &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pmL)
-         h = hL
+         tauR=0.5*tauL
+         h = 0.5*hL
          v = vL
          mbar = mL
       else
@@ -92,7 +94,8 @@ c-----------------------------------------------------------------------
      &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmR)
          call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
      &        kappa,SN,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pmR)
-         h = hR
+         tauL=0.5*tauR
+         h = 0.5*hR
          v = vR
          mbar = mR
       endif
@@ -248,14 +251,17 @@ c     !find bounds in case of critical state resonance, or negative states
          source2dx = source2dx + dx*hbar*grav*dsin(theta)
       endif
 
-      vnorm = sqrt(uR**2 + vR**2 +uL**2 + vL**2)
+      vnorm = sqrt(uR**2 + uL**2 + vR**2 + vL**2)
       if (vnorm>0.0) then
          !tausource = - dx*0.5*(tauL/rhoL + tauR/rhoR)*u/vnorm
          !tausource = - dx*max(tauL/rhoL , tauR/rhoR)*u/vnorm
-         tausource =  0.0!dx*tauR*taudir/rhoR
+         !tausource =  0.0!dx*tauR*taudir/rhoR
          !tausource = - dx*0.5*(tau/rho)*u/vnorm
-      !elseif (max(abs(dx*tauL*taudir/rhoL),abs(dx*tauR*taudir/rhoR))
-      elseif  (abs(dx*tauR*taudir).gt.rhoR*abs(del(2) - source2dx)) then
+         tausource =  dx*0.5*(taudirL*tauL/rhoL + tauR*taudirR/rhoR)
+      !elseif (dx*max(abs(tauL*taudirL/rhoL),abs(tauR*taudirR/rhoR))
+      elseif(abs(dx*max(taudirR*tauR/rhoR,tauR*taudirR/rhoR))
+     &      .gt.abs(del(2) - source2dx)) then 
+      
          !no failure
          tausource = del(2) - source2dx
          del(1) = 0.0
@@ -265,7 +271,10 @@ c     !find bounds in case of critical state resonance, or negative states
          !failure
          !tausource =   sign(abs(dx*0.5*taudir*(tauL/rhoL + tauR/rhoR))
          !tausource =   sign(abs(dx*0.5*tau/rho)
-         tausource =   dx*taudir*tauR/rhoR
+         !tausource =   dx*taudir*tauR/rhoR
+         
+         tausource = dx*0.5*(taudirR*tauR/rhoR + tauR*taudirR/rhoR)
+         tausource = dsign(tausource,del(2)-source2dx)
       endif
 
       del(2) = del(2) - source2dx  - tausource

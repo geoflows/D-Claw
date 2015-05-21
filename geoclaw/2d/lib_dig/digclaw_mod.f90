@@ -386,12 +386,22 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
       integer :: maxmx,maxmy,mx,my,mbc,meqn,maux
 
       !Locals
-      double precision :: hL,h,huL,hu,hvL,hv,bL,b,hB,huB,hvB,bB,hm
-      double precision :: thetaL,thetaB,theta
       double precision :: gmod,dry_tol
-      double precision :: EtaL,Eta,EtaTL,EtaB
-      double precision :: phi,rho,kappa,S,tanpsi,D,tau,sigbed,kperm,compress,pm
-      double precision :: Fx,Fy,dot,u,v,m,p,vnorm
+      double precision :: h,hu,hv,hm,p,b,eta
+      double precision :: hL,huL,hvL,hmL,pL,bL,etaL
+      double precision :: hR,huR,hvR,hmR,pR,bR,etaR
+      double precision :: hB,huB,hvB,hmB,pB,bB,etaB
+      double precision :: hT,huT,hvT,hmT,pT,bT,etaT
+
+      double precision :: u,v,m
+      double precision :: uL,vL,mL
+      double precision :: uR,vR,mR
+      double precision :: uB,vB,mB
+      double precision :: uT,vT,mT
+      double precision :: thetaL,thetaB,theta
+      double precision :: tau,tauL,tauR,tauB,tauT,rho,rhoL,rhoR,rhoT,rhoB
+      double precision :: phi,kappa,S,tanpsi,D,sigbed,kperm,compress,pm
+      double precision :: Fx,Fy,FxL,FxR,FyL,FyR,FyC,FxC,dot,vnorm,Fproj
 
 
       integer :: i,j
@@ -405,23 +415,23 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             
 
             h = q(i,j,1)
-            if (h<dry_tol) then
-               aux(i,j,i_taudir_x) = 0.0
-               aux(i,j,i_taudir_y) = 0.0
-               aux(i,j,i_fsphi) = 0.0
-               cycle
-            endif
-
             hu = q(i,j,2)
             hv = q(i,j,3)
+            if (h<dry_tol) then
+               hu=0.0
+               hv=0.0
+            endif
             hm = q(i,j,4)
             p  = q(i,j,5)
             b = aux(i,j,1)
+            eta = h+b
             phi = aux(i,j,i_phi)
 
             hL = q(i-1,j,1)
             huL= q(i-1,j,2)
             hvL= q(i-1,j,3)
+            hmL = q(i-1,j,4)
+            pL  = q(i-1,j,5)
             bL = aux(i-1,j,1)
             etaL= hL+bL
             if (hL<dry_tol) then
@@ -431,6 +441,8 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             hR = q(i+1,j,1)
             huR= q(i+1,j,2)
             hvR= q(i+1,j,3)
+            hmR = q(i+1,j,4)
+            pR  = q(i+1,j,5)
             bR = aux(i+1,j,1)
             etaR= hR+bR
             if (hR<dry_tol) then
@@ -440,19 +452,35 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             hB = q(i,j-1,1)
             huB= q(i,j-1,2)
             hvB= q(i,j-1,3)
+            hmB = q(i,j-1,4)
+            pB  = q(i,j-1,5)
             bB = aux(i,j-1,1)
             etaB= hB+bB
             if (hB<dry_tol) then
                etaB = min(etaB,eta)
             endif
 
-            hT = q(i,j-1,1)
-            huT= q(i,j-1,2)
-            hvT= q(i,j-1,3)
-            bT = aux(i,j-1,1)
+            hT = q(i,j+1,1)
+            huT= q(i,j+1,2)
+            hvT= q(i,j+1,3)
+            hmT = q(i,j+1,4)
+            pT  = q(i,j+1,5)
+            bT = aux(i,j+1,1)
             etaT= hT+bT
             if (hT<dry_tol) then
                etaT = min(etaT,eta)
+            endif
+
+            if (h<dry_tol) then
+               eta = min(etaL,eta)
+               eta = min(etaB,eta)
+            endif
+
+            if ((h+hL+hB+hR+hT)<dry_tol) then
+               aux(i,j,i_taudir_x) = 0.0
+               aux(i,j,i_taudir_y) = 0.0
+               aux(i,j,i_fsphi) = 0.0
+               cycle
             endif
 
             if (bed_normal.eq.1) then
@@ -466,25 +494,56 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                thetaB = 0.d0
             endif
 
-            Fx = -(Eta-EtaL)/dx + sin(theta))
-            Fy = -gmod*0.5*(h+hB)*(Eta-EtaB)/dy
+            pm = 0.5 !does not effect tau. only need tau in different cells
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            call admissibleq(hL,huL,hvL,hmL,pL,uL,vL,mL,theta)
+            call admissibleq(hB,huB,hvB,hmL,pB,uB,vB,mB,theta)
+            call admissibleq(hR,huR,hvR,hmR,pR,uR,vR,mR,theta)
+            call admissibleq(hT,huT,hvT,hmT,pT,uT,vT,mT,theta)
+
+
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            call auxeval(hL,uL,vL,mL,pL,phi,theta,kappa,S,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pm)
+            call auxeval(hR,uR,vR,mR,pR,phi,theta,kappa,S,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
+            call auxeval(hB,uB,vB,mB,pB,phi,theta,kappa,S,rhoB,tanpsi,D,tauB,sigbed,kperm,compress,pm)
+            call auxeval(hT,uT,vT,mT,pT,phi,theta,kappa,S,rhoT,tanpsi,D,tauT,sigbed,kperm,compress,pm)
             
-            vnorm = hu**2 + hv**2 + huL**2 + huB**2 + hvL**2 + hvB**2
+            !minmod gradients
+            FxC = -gmod*h*((EtaR-EtaL)/(2.0*dx) - sin(theta))
+            FyC = -gmod*h*(EtaT-EtaB)/(2.0*dy)
+
+            FxL = -gmod*0.5*(h+hL)*((Eta-EtaL)/(dx) - sin(theta))
+            FyL = -gmod*0.5*(h+hB)*(Eta-EtaB)/(dy)
+
+            FxR = -gmod*0.5*(h+hR)*((EtaR-Eta)/(dx) - sin(theta))
+            FyR = -gmod*0.5*(h+hT)*(EtaT-Eta)/(dy)
+
+            if (FxL*FxR.gt.0.0) then
+               Fx = dsign(min(abs(FxL),abs(FxR)),FxL)
+            else
+               Fx = 0.0
+            endif
+
+            if (FyL*FyR.gt.0.0) then
+               Fy = dsign(min(abs(FyL),abs(FyR)),FyL)
+            else
+               Fy = 0.0
+            endif
+            
+            vnorm = sqrt(hu**2 + hv**2)
             if (vnorm>0.0) then
                aux(i,j,i_taudir_x) = -hu/sqrt(hv**2+hu**2)
                aux(i,j,i_taudir_y) = -hv/sqrt(hv**2+hu**2) 
-
-               call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
-               pm = q(i,j,6)/q(i,j,1)
-               call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
                
-               dot = Fx*hu + Fy*hv
+               dot = max(0.0,Fx*hu) + max(0.0,Fy*hv)
                if (dot>0.0) then
                   !friction should oppose direction of velocity
                   !if net force is in same direction, split friction source term
                   !splitting is useful for small velocities and nearly balanced forces
                   !only split amount up to maximum net force for large velocities
-                  aux(i,j,i_fsphi) = 0.*min(1.0,sqrt(Fx**2+Fy**2)*rho/max(tau,1.d-16))
+                  !aux has cell centered interpretation in Riemann solver
+                  Fproj = dot/vnorm
+                  aux(i,j,i_fsphi) = min(1.0,Fproj*rho/max(tau,1.d-16))
                else
                   !net force is in same direction as friction
                   !if nearly balanced steady state not due to friction
@@ -494,18 +553,26 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                
 
             else 
-               if ((Fx**2 + Fy**2)>0.d0) then
-                  !friction should oppose net force. resolve in Riemann solver
-                  aux(i,j,i_taudir_x) = -Fx/sqrt(Fx**2+Fy**2)
-                  aux(i,j,i_taudir_y) = -Fy/sqrt(Fx**2+Fy**2) 
-                  aux(i,j,i_fsphi) = 1.0
+               !aux now have cell edge interpretation in Riemann solver
+               !friction should oppose net force. resolve in Riemann solver
+               if ((FxL**2+Fy**2)>0.0) then
+                  aux(i,j,i_taudir_x) = -FxL/sqrt(FxL**2+Fy**2)
+               else
+                  aux(i,j,i_taudir_x) = 1.0
+               endif
+
+               if ((Fx**2+FyL**2)>0.0) then
+                  aux(i,j,i_taudir_y) = -FyL/sqrt(Fx**2+FyL**2) 
                else
                   !there is no motion or net force. resolve in src after Riemann 
-                  aux(i,j,i_taudir_x) = 1.0
                   aux(i,j,i_taudir_y) = 1.0
-                  aux(i,j,i_fsphi) = 0.0
                endif
-               
+
+               if ((aux(i,j,i_taudir_y)**2 + aux(i,j,i_taudir_x)**2)>0.0) then
+                  aux(i,j,i_fsphi) = 1.0
+               else
+                  aux(i,j,i_fsphi) = 0.0
+               endif               
             endif 
 
          enddo
