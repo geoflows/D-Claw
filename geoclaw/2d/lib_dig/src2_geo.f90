@@ -65,7 +65,7 @@
             !integrate momentum source term
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
-            tau = max(tau*(1.0-fsphi),0.0)
+            !tau = max(tau*(1.0-fsphi),0.0)
 
             vnorm = sqrt(u**2.0 + v**2.0)
             hvnorm = sqrt(hu**2.0 + hv**2.0)

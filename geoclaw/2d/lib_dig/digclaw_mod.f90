@@ -262,7 +262,8 @@ contains
       double precision, intent(out) :: sigbed,kperm,compress
 
       !local
-      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,pmlin,pmtan,pmtanh,pmtanh01
+      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi
+      double precision :: seg,pmlin,pmtan,pmtanh,pmtanh01
 
       if (h.lt.drytolerance) return
 
@@ -287,10 +288,16 @@ contains
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
       pm = max(0.0,pm)
       pm = min(1.0,pm)
-      pmlin = 2.0*(pm-0.5)
-      pmtan = 0.06*(tan(3.*(pm-0.5)))
-      pmtanh = tanh(3.*pmlin)
-      pmtanh01 = 0.5*(tanh(8.0*(pm-0.75))+1.0)
+      if (alpha_seg==1.0) then
+         seg = 0.0
+      else
+         seg = 1.0
+      endif
+      pmlin = seg*2.0*(pm-0.5)
+      pmtan = seg*0.06*(tan(3.*(pm-0.5)))
+      pmtanh = seg*tanh(3.*pmlin)
+      pmtanh01 = seg*0.5*(tanh(8.0*(pm-0.75))+1.0)
+
       kperm = 10**(pmtanh01)*kappita*exp(-(m-0.60)/(0.04))
 
       !kperm = kperm + 1.0*pm*kappita
@@ -509,13 +516,13 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             call auxeval(hT,uT,vT,mT,pT,phi,theta,kappa,S,rhoT,tanpsi,D,tauT,sigbed,kperm,compress,pm)
             
             !minmod gradients
-            FxC = -gmod*h*((EtaR-EtaL)/(2.0*dx) - sin(theta))
+            FxC = -gmod*h*(EtaR-EtaL)/(2.0*dx) + gmod*h*sin(theta)
             FyC = -gmod*h*(EtaT-EtaB)/(2.0*dy)
 
-            FxL = -gmod*0.5*(h+hL)*((Eta-EtaL)/(dx) - sin(theta))
+            FxL = -gmod*0.5*(h+hL)*(Eta-EtaL)/(dx) + gmod*0.5*(h+hL)*sin(theta)
             FyL = -gmod*0.5*(h+hB)*(Eta-EtaB)/(dy)
 
-            FxR = -gmod*0.5*(h+hR)*((EtaR-Eta)/(dx) - sin(theta))
+            FxR = -gmod*0.5*(h+hR)*(EtaR-Eta)/(dx) + gmod*0.5*(h+hR)*sin(theta)
             FyR = -gmod*0.5*(h+hT)*(EtaT-Eta)/(dy)
 
             if (FxL*FxR.gt.0.0) then
@@ -535,7 +542,7 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                aux(i,j,i_taudir_x) = -hu/sqrt(hv**2+hu**2)
                aux(i,j,i_taudir_y) = -hv/sqrt(hv**2+hu**2) 
                
-               dot = max(0.0,Fx*hu) + max(0.0,Fy*hv)
+               dot = min(max(0.0,Fx*hu) , max(0.0,Fy*hv))
                if (dot>0.0) then
                   !friction should oppose direction of velocity
                   !if net force is in same direction, split friction source term

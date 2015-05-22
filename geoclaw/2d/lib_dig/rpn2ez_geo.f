@@ -100,7 +100,7 @@ c         endif
          enddo
          do mw=1,waves
             sw(mw) = 0.d0
-            do m=1,5
+            do m=1,6
                wave(m,mw) = 0.d0
                fw(m,mw) = 0.d0
             enddo

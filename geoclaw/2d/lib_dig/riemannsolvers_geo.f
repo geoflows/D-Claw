@@ -72,7 +72,7 @@ c-----------------------------------------------------------------------
       pm = max(0.0,pm)
 
 
-      if (hL.gt.drytol.and.hR.gt.drytol) then
+      if (hL.ge.drytol.and.hR.ge.drytol) then
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
      &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmL)
          call auxeval(hR,uR,vR,mR,pR,phiR,thetaR,
@@ -80,7 +80,7 @@ c-----------------------------------------------------------------------
          h = 0.5d0*(hL + hR)
          v = 0.5d0*(vL + vR)
          mbar = 0.5d0*(mL + mR)
-      elseif (hL.gt.drytol) then
+      elseif (hL.ge.drytol) then
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
      &        kappa,SN,rhoL,tanpsi,D,tauL,sigbed,kperm,compress,pmL)
          call auxeval(hL,uL,vL,mL,pL,phiL,thetaL,
@@ -252,14 +252,31 @@ c     !find bounds in case of critical state resonance, or negative states
       endif
 
       vnorm = sqrt(uR**2 + uL**2 + vR**2 + vL**2)
+      !vnorm = sqrt(u**2 + v**2)
       if (vnorm>0.0) then
          !tausource = - dx*0.5*(tauL/rhoL + tauR/rhoR)*u/vnorm
          !tausource = - dx*max(tauL/rhoL , tauR/rhoR)*u/vnorm
          !tausource =  0.0!dx*tauR*taudir/rhoR
          !tausource = - dx*0.5*(tau/rho)*u/vnorm
-         tausource =  dx*0.5*(taudirL*tauL/rhoL + tauR*taudirR/rhoR)
+         !if (  (.not.wallprob).and.((-uR*taudirR)<0.0)) then
+         !   write(*,*) 'wtf:', uR,taudirR
+         !   write(*,*) 'fsR', fsR
+         !   write(*,*) 'ixy', ixy
+         !endif
+
+         if ((uL**2 + vL**2)==0.0) then
+            taudirL = taudirR
+         else
+            taudirL = -uL/sqrt(uL**2 + vL**2)
+         endif
+
+         if ((uR**2 + vR**2)>0.0) then
+            taudirR = -uR/sqrt(uR**2 + vR**2)
+         endif
+         
+         tausource =  0.0*dx*0.5*(taudirL*tauL/rhoL + tauR*taudirR/rhoR)
       !elseif (dx*max(abs(tauL*taudirL/rhoL),abs(tauR*taudirR/rhoR))
-      elseif(abs(dx*max(taudirR*tauR/rhoR,tauR*taudirR/rhoR))
+      elseif (dx*0.5*abs(taudirR*tauR/rhoR + tauL*taudirR/rhoL)
      &      .gt.abs(del(2) - source2dx)) then 
       
          !no failure
@@ -273,10 +290,12 @@ c     !find bounds in case of critical state resonance, or negative states
          !tausource =   sign(abs(dx*0.5*tau/rho)
          !tausource =   dx*taudir*tauR/rhoR
          
-         tausource = dx*0.5*(taudirR*tauR/rhoR + tauR*taudirR/rhoR)
+         tausource = 0.5*dx*((taudirR*tauR/rhoR)+(tauL*taudirR/rhoL))
          tausource = dsign(tausource,del(2)-source2dx)
       endif
-
+      if (wallprob) then
+         tausource = 0.0
+      endif
       del(2) = del(2) - source2dx  - tausource
       !del(4) = del(4) + dx*3.0*vnorm*tanpsi/(h*compress)
 
