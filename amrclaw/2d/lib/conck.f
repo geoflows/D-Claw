@@ -71,8 +71,8 @@ c
            write(6,*) 'Total mass at initial time: ',tmass0
             write(6,*) 'Total volume at initial time: ',tvol0
            endif
-       write(outunit,777) time, totmass, 100.0*(totmass-tmass0)/tmass0
-       write(outunit,778) time, totvol, 100.0*(totvol-tvol0)/tvol0
+       !write(outunit,777) time, totmass, 100.0*(totmass-tmass0)/tmass0
+       !write(outunit,778) time, totvol, 100.0*(totvol-tvol0)/tvol0
  777   format('time t = ',e12.5,',  total mass = ',e22.15, ' diff % = ',
      &         e11.4)
  778   format('time t = ',e12.5,',  total vol = ',e22.15, '  diff % = ',

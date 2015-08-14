@@ -48,9 +48,9 @@ c
       !local
       integer m,i,mw,maxiter,mhu,nhv,mcapa,icom,jcom,waves
       double precision dtcom,dxcom,dycom,tcom
-      double precision wall(3),fw(6,3),sw(3),wave(5,3)
+      double precision wall(3),fw(6,3),sw(3),wave(6,3)
       double precision lamL(3),lamR(3),beta(3)
-      logical entropy(5)
+      logical entropy(6)
       logical rare1,rare2,wallprob,drystate
       !logical entropycorr1,entropycorr2
 
