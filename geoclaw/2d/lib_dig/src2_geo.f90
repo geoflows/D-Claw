@@ -31,7 +31,7 @@
       gmod=grav
       coeff = coeffmanning
       tol = 1.e-30  !# to prevent divide by zero in gamma
-      curvature = 0 !add friction due to curvature acceleration
+      curvature = 1 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
 
       do i=1-mbc+1,mx+mbc-1

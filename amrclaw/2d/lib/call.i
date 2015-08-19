@@ -47,10 +47,10 @@ c :::::::  for flagging points
        parameter (iinfinity = 999999)
        parameter (horizontal = 1)
        parameter (vertical = 2)
-       parameter  (maxgr = 1)
+       parameter  (maxgr = 5000)
        parameter  (maxlv = 10)
        parameter  (maxcl = 500)
-       parameter  (max1d = 6000)
+       parameter  (max1d = 60)
        parameter  (maxvar = 10)
        parameter  (maxaux = 20)
        parameter  (maxout = 5000)
@@ -77,7 +77,7 @@ c      ::::  for alloc array/memory
 c      ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 c       Static memory implementation
-c        parameter  (memsize = 1000000000)
+c        parameter  (memsize = 10000000)
 c        common  /calloc/   alloc(memsize)
 
 c      Dynamic memmory
@@ -90,7 +90,7 @@ c      ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c      :::::   for space management of alloc array
 c      ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c
-       parameter (lfdim=500)
+       parameter (lfdim=5000)
 
        common /space/
      1               lfree(lfdim,2),lenf
