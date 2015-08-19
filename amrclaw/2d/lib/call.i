@@ -90,7 +90,7 @@ c      ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c      :::::   for space management of alloc array
 c      ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c
-       parameter (lfdim=5000000)
+       parameter (lfdim=500)
 
        common /space/
      1               lfree(lfdim,2),lenf
