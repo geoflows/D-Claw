@@ -84,7 +84,9 @@ c
                      if (iqinit(mf).le.meqn) then
                         q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
                      else
-                        q(i,j,1) = dmax1(dq-aux(i,j,1),0.d0)
+                        if (dq-aux(i,j,1).gt.0.d0) then
+                          q(i,j,1) = dmax1(q(i,j,1),dq-aux(i,j,1))
+                        endif
                      endif
 c
                   endif
