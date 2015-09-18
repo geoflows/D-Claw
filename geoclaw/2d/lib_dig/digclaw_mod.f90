@@ -263,7 +263,7 @@ contains
 
       !local
       double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi
-      double precision :: seg,pmlin,pmtan,pmtanh,pmtanh01
+      double precision :: seg,pmlin,pmtan,pmtanh,pmtanh01,pmtanh01s
 
       if (h.lt.drytolerance) return
 
@@ -297,8 +297,9 @@ contains
       pmtan = seg*0.06*(tan(3.*(pm-0.5)))
       pmtanh = seg*tanh(3.*pmlin)
       pmtanh01 = seg*0.5*(tanh(8.0*(pm-0.75))+1.0)
+      pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kperm = 10**(pmtanh01)*kappita*exp(-(m-0.60)/(0.04))
+      kperm = 10**(pmtanh01s)*kappita*exp(-(m-0.60)/(0.04))
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
