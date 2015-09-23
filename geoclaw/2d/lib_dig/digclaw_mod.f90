@@ -299,7 +299,7 @@ contains
       pmtanh01 = seg*0.5*(tanh(8.0*(pm-0.75))+1.0)
       pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kperm = 10**(pmtanh01s)*kappita*exp(-(m-0.60)/(0.04))
+      kperm = 10**(pmtanh01)*kappita*exp(-(m-0.60)/(0.04))
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
