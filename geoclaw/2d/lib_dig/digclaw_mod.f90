@@ -283,9 +283,10 @@ contains
       !Note: m_eqn = m_crit/(1+sqrt(S))
       !From Boyer et. al
       !S = 0.0
-      m_eqn = m_crit/(1.d0 + sqrt(S))
+      !m_eqn = m_crit/(1.d0 + sqrt(S))
       !if (m.gt.m_eqn) write(*,*) 'm,m_eqn,S:',m,m_eqn,S,sigbed,shear
-      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
+      !tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
+
       pm = max(0.0,pm)
       pm = min(1.0,pm)
       if (alpha_seg==1.0) then
@@ -300,6 +301,9 @@ contains
       pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
       kperm = 10**(pmtanh01)*kappita*exp(-(m-0.60)/(0.04))
+
+      m_eqn = (m_crit-0.4*pmtanh01)/(1.d0 + sqrt(S))
+      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)

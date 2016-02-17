@@ -73,7 +73,8 @@
 
             !integrate friction
             hvnorm = dmax1(0.d0,hvnorm - dti*tau/rho)
-            hvnorm = hvnorm*exp(-(1.d0-m)*2.0*mu*dti/(rho*h**2.0))
+            hvnorm = hvnorm*exp(-(1.d0-m)*2.0d0*mu*dti/(rho*h**2.0))
+            !hvnorm = hvnorm*exp(-(1.d0-m)*2.0d0*0.1*dti/(rho*h**2.0))
             if (hvnorm<1.e-16) hvnorm = 0.0
 
 
@@ -229,7 +230,7 @@
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
-                     beta = tan(1.5*p/(rho*gmod*h))/14.0
+                     beta = 1.0 !tan(1.5*p/(rho*gmod*h))/14.0
                      gamma= dsqrt(hu**2 + hv**2)*(beta*gmod*coeff**2)/(h**(7.0/3.0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
