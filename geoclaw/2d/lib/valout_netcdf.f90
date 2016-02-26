@@ -71,9 +71,12 @@
 
 
    !INDEXING FUNCTIONS
-    iadd(i,j,ivar)  = loc + ivar-1 + nvar*((j-1)*mitot+i-1)
-    iaddaux(i,j,iaux) = locaux + iaux-1 + naux*((j-1)*mitot+i-1)
+    !iadd(i,j,ivar)  = loc + ivar-1 + nvar*((j-1)*mitot+i-1)
+    !iaddaux(i,j,iaux) = locaux + iaux-1 + naux*((j-1)*mitot+i-1)
     iaddqeta(i,j,ivar)  = 1 + ivar - 1 + 4*((j-1)*mitot+i-1)
+
+    iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
+    iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
 
   ! define some variables for 4.x
    output_aux_onlyonce = .false.
