@@ -4,7 +4,7 @@
 %view(2)
 %colorbar
 daspect([1 1 1])  % aspect ratio for 3d view
-axis off
+%axis off
 %dx=.5;
 %axis([-1 10 -3.7 3.7])
 

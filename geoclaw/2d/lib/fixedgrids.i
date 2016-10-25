@@ -2,7 +2,7 @@
 c     # arrays and common blocks for fixed output grids
 
       parameter (maxfgrids=3)
-      parameter (maxfgridsize=404012)
+      parameter (maxfgridsize=20000002)
 
       dimension fgridearly(maxfgridsize)
       dimension fgridlate(maxfgridsize)

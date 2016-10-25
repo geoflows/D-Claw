@@ -216,7 +216,7 @@ contains
       m = hm/h
 
       !mlo = 1.d-3
-      mlo = 1.d-16
+      mlo = 0.0
       mhi = 1.d0 - mlo
 
       if (m.lt.mlo) then
@@ -300,18 +300,27 @@ contains
       pmtanh01 = seg*0.5*(tanh(8.0*(pm-0.75))+1.0)
       pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kperm = 10**(pmtanh01)*kappita*exp(-(m-0.60)/(0.04))
+      kperm = 10**(pmtanh01)*kappita*exp(-(m-m0)/(0.04))
 
       m_eqn = (m_crit-0.4*pmtanh01)/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
-      compress = alpha/(m*(sigbed +  sigma_0))
 
-      if (m.le.1.d-99) then
+      if (m.le.0.04) then
+          !eliminate coulomb friction for hyperconcentrated/fluid problems
+          !klugey, but won't effect debris-flow problems
+         !sigbed = sigbed*0.5d0*(tanh(400.d0*(m-0.02d0)) + 1.0d0)
+      endif
+
+      if (m.le.1.d-16) then
+         compress = 1.d16
          kperm = 0.0
          tanpsi = 0.0
+         sigbed=0.0
+      else
+         compress = alpha/(m*(sigbed +  sigma_0))
       endif
 
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then

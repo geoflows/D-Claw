@@ -31,7 +31,7 @@
       gmod=grav
       coeff = coeffmanning
       tol = 1.e-30  !# to prevent divide by zero in gamma
-      curvature = 1 !add friction due to curvature acceleration
+      curvature = 0 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
 
       do i=1-mbc+1,mx+mbc-1
@@ -109,14 +109,20 @@
             krate = 1.5*shear*m*tanpsi/alpha
             sigebar = sigebar*exp(krate*dti)
             !p = rho*gmod*h + sigma_0 - sigebar
-            p = p - dti*3.0*vnorm*tanpsi/(h*compress)
+            if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
+               p = p - dti*3.0*vnorm*tanpsi/(h*compress)
+            endif
 
             !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
 
             !integrate pressure relaxation
-            zeta = 3.d0/(compress*h*2.0)  + (rho-rho_f)*rho_f*gmod/(4.d0*rho)
+            if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
+               zeta = 3.d0/(compress*h*2.0)  + (rho-rho_f)*rho_f*gmod/(4.d0*rho)
+            else
+               zeta = (rho-rho_f)*rho_f*gmod/(4.d0*rho)
+            endif
 
             krate=-zeta*2.0*kperm/(h*max(mu,1.d-16))
             p_hydro = h*rho_f*gmod
