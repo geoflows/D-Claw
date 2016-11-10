@@ -271,7 +271,12 @@ contains
       gmod=grav
       pm = max(0.0,pm)
       pm = min(1.0,pm)
-      pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+      if (alpha_seg==1.0) then
+         seg = 0.0
+      else
+         seg = 1.0
+      endif
+      pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       rho_fp = (1.0-pmtanh01)*rho_f
 
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
@@ -291,12 +296,6 @@ contains
       !m_eqn = m_crit/(1.d0 + sqrt(S))
       !if (m.gt.m_eqn) write(*,*) 'm,m_eqn,S:',m,m_eqn,S,sigbed,shear
       !tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
-
-      if (alpha_seg==1.0) then
-         seg = 0.0
-      else
-         seg = 1.0
-      endif
       !pmlin = seg*2.0*(pm-0.5)
       !pmtan = seg*0.06*(tan(3.*(pm-0.5)))
       !pmtanh = seg*tanh(3.*pmlin)

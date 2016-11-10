@@ -51,7 +51,7 @@ c-----------------------------------------------------------------------
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
       double precision hstarHLL,deldelh,drytol,gmod,geps,tausource
-      double precision raremin,raremax,rare1st,rare2st,sdelta,rho_fp
+      double precision raremin,raremax,rare1st,rare2st,sdelta,rho_fp,seg
       double precision gammaL,gammaR,theta1,theta2,theta3,vnorm,pmtanh01
       logical sonic,rare1,rare2
       logical rarecorrectortest,rarecorrector
@@ -70,7 +70,12 @@ c-----------------------------------------------------------------------
       pm = 0.5*(chiL + chiR)
       pm = min(1.0,pm)
       pm = max(0.0,pm)
-      pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+      if (alpha_seg==1.0) then
+         seg = 0.0
+      else
+         seg = 1.0
+      endif
+      pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       rho_fp = (1.0-pmtanh01)*rho_f
 
 

@@ -19,7 +19,7 @@
       double precision :: D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision :: zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
       double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,fsphi,hvnorm0
-      double precision :: shear,sigebar,pmtanh01,rho_fp
+      double precision :: shear,sigebar,pmtanh01,rho_fp,seg
       double precision :: b_xx,b_yy,b_xy,chi,beta
       integer :: i,j,ii,jj,jjend,icount,curvature
 
@@ -115,7 +115,12 @@
 
             !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-            pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+            if (alpha_seg==1.0) then
+         		seg = 0.0
+      		else
+         		seg = 1.0
+      		endif
+            pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
             rho_fp = (1.0-pmtanh01)*rho_f
             !integrate pressure relaxation
             if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
