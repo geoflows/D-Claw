@@ -19,7 +19,7 @@
       double precision :: D,tau,sigbed,kperm,compress,pm,coeff,tol
       double precision :: zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
       double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,fsphi,hvnorm0
-      double precision :: shear,sigebar
+      double precision :: shear,sigebar,pmtanh01,rho_fp
       double precision :: b_xx,b_yy,b_xy,chi,beta
       integer :: i,j,ii,jj,jjend,icount,curvature
 
@@ -30,8 +30,8 @@
 
       gmod=grav
       coeff = coeffmanning
-      tol = 1.e-30  !# to prevent divide by zero in gamma
-      curvature = 0 !add friction due to curvature acceleration
+      tol = drytolerance !# to prevent divide by zero in gamma
+      curvature = 1 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
 
       do i=1-mbc+1,mx+mbc-1
@@ -58,8 +58,8 @@
             fsphi = aux(i,j,i_fsphi)
 
             jjend = 1
-            dti = dt/real(jjend,kind=8)
-            do jj=1,jjend
+            dti = dt!/real(jjend,kind=8)
+            !do jj=1,jjend
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             !integrate momentum source term
@@ -115,18 +115,18 @@
 
             !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
-
+            pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+            rho_fp = (1.0-pmtanh01)*rho_f
             !integrate pressure relaxation
             if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
-               zeta = 3.d0/(compress*h*2.0)  + (rho-rho_f)*rho_f*gmod/(4.d0*rho)
+               zeta = 3.d0/(compress*h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
             else
-               zeta = (rho-rho_f)*rho_f*gmod/(4.d0*rho)
+               zeta = (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
             endif
 
             krate=-zeta*2.0*kperm/(h*max(mu,1.d-16))
-            p_hydro = h*rho_f*gmod
-            p_litho = (rho_s*m + (1.d0-m)*rho_f)*gmod*h
+            p_hydro = h*rho_fp*gmod
+            p_litho = (rho_s*m + (1.d0-m)*rho_fp)*gmod*h
 
             !if (abs(compress*krate)>0.0) then
             !   p_eq = p_hydro + 3.0*vnorm*tanpsi/(compress*h*krate)
@@ -134,8 +134,8 @@
             !   p_eq = p_hydro
             !endif
             !if (abs(pm-.5)>.49) then
-
-            p_eq = p_hydro
+            !pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+            p_eq = p_hydro !*(1.0-pmtanh01)
             !p_eq = max(p_eq,0.0)
             !p_eq = min(p_eq,p_litho)
 
@@ -146,13 +146,13 @@
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
             
 
-            krate = D*(rho-rho_f)/rho
+            krate = D*(rho-rho_fp)/rho
             hu = hu*exp(dti*krate/h)
             hv = hv*exp(dti*krate/h)
-            hm = hm*exp(-dti*D*rho_f/(h*rho))
+            hm = hm*exp(-dti*D*rho_fp/(h*rho))
             h = h + krate*dti
 
-            enddo
+            !enddo
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
@@ -236,7 +236,7 @@
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
-                     beta = 1.0 !tan(1.5*p/(rho*gmod*h))/14.0
+                     beta = 1.0-m !tan(1.5*p/(rho*gmod*h))/14.0
                      gamma= dsqrt(hu**2 + hv**2)*(beta*gmod*coeff**2)/(h**(7.0/3.0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma

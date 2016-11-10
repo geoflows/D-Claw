@@ -51,8 +51,8 @@ c-----------------------------------------------------------------------
       double precision delb,s1m,s2m,hm,heL,heR,criticaltol
       double precision s1s2bar,s1s2tilde,hbar,source2dx,veltol1,veltol2
       double precision hstarHLL,deldelh,drytol,gmod,geps,tausource
-      double precision raremin,raremax,rare1st,rare2st,sdelta
-      double precision gammaL,gammaR,theta1,theta2,theta3,vnorm
+      double precision raremin,raremax,rare1st,rare2st,sdelta,rho_fp
+      double precision gammaL,gammaR,theta1,theta2,theta3,vnorm,pmtanh01
       logical sonic,rare1,rare2
       logical rarecorrectortest,rarecorrector
 
@@ -70,6 +70,8 @@ c-----------------------------------------------------------------------
       pm = 0.5*(chiL + chiR)
       pm = min(1.0,pm)
       pm = max(0.0,pm)
+      pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+      rho_fp = (1.0-pmtanh01)*rho_f
 
 
       if (hL.ge.drytol.and.hR.ge.drytol) then
@@ -105,9 +107,9 @@ c-----------------------------------------------------------------------
       rho = 0.5d0*(rhoL + rhoR)
       tau = 0.5d0*(tauL + tauR)
       theta = 0.5d0*(thetaL + thetaR)
-      gamma = 0.25*(rho_f + 3.0*rho)/rho
-      gammaL = 0.25*(rho_f + 3.0*rhoL)/rhoL
-      gammaR = 0.25*(rho_f + 3.0*rhoR)/rhoR
+      gamma = 0.25*(rho_fp + 3.0*rho)/rho
+      gammaL = 0.25*(rho_fp + 3.0*rhoL)/rhoL
+      gammaR = 0.25*(rho_fp + 3.0*rhoR)/rhoR
 
       eps = kappa + (1.d0-kappa)*gamma
 

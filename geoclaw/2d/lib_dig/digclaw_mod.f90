@@ -262,16 +262,21 @@ contains
       double precision, intent(out) :: sigbed,kperm,compress
 
       !local
-      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi
-      double precision :: seg,pmlin,pmtan,pmtanh,pmtanh01,pmtanh01s
+      double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,rho_fp
+      double precision :: seg,pmtanh01,m_crit_m
 
       if (h.lt.drytolerance) return
 
       hbounded = h!max(h,0.1)
       gmod=grav
+      pm = max(0.0,pm)
+      pm = min(1.0,pm)
+      pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
+      rho_fp = (1.0-pmtanh01)*rho_f
+
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2.0 + v**2.0)
-      rho = rho_s*m + rho_f*(1.d0-m)
+      rho = rho_s*m + rho_fp*(1.d0-m)
       shear = 2.0*vnorm/hbounded
       sigbed = dmax1(0.d0,rho*gmod*h - p)
       sigbedc = rho_s*(shear*delta)**2.0 + sigbed
@@ -287,22 +292,22 @@ contains
       !if (m.gt.m_eqn) write(*,*) 'm,m_eqn,S:',m,m_eqn,S,sigbed,shear
       !tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 
-      pm = max(0.0,pm)
-      pm = min(1.0,pm)
       if (alpha_seg==1.0) then
          seg = 0.0
       else
          seg = 1.0
       endif
-      pmlin = seg*2.0*(pm-0.5)
-      pmtan = seg*0.06*(tan(3.*(pm-0.5)))
-      pmtanh = seg*tanh(3.*pmlin)
-      pmtanh01 = seg*0.5*(tanh(8.0*(pm-0.75))+1.0)
-      pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
+      !pmlin = seg*2.0*(pm-0.5)
+      !pmtan = seg*0.06*(tan(3.*(pm-0.5)))
+      !pmtanh = seg*tanh(3.*pmlin)
+      !pmtanh01 = seg*0.5*(tanh(8.0*(pm-0.75))+1.0)
+      !pmtanh01 = seg*0.5*(tanh(20.0*(pm-0.80))+1.0)
+      !pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kperm = 10**(pmtanh01)*kappita*exp(-(m-m0)/(0.04))
+      kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
 
-      m_eqn = (m_crit-0.4*pmtanh01)/(1.d0 + sqrt(S))
+      m_crit_m = m_crit - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)
+      m_eqn = m_crit_m/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 
       !kperm = kperm + 1.0*pm*kappita
@@ -328,12 +333,12 @@ contains
          tanpsi = 0.d0
          D = 0.d0
       elseif (h*mu.gt.0.d0) then
-         D = 2.0*(kperm/(mu*h))*(rho_f*gmod*h - p)
+         D = 2.0*(kperm/(mu*h))*(rho_fp*gmod*h - p)
       else
          D = 0.d0
       endif
       
-      tanphi = dtan(phi_bed + datan(tanpsi)) + phi_seg_coeff*pmtanh01*dtan(phi_bed)
+      tanphi = dtan(phi_bed + datan(tanpsi))! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
