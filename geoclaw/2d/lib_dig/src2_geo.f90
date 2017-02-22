@@ -21,6 +21,8 @@
       double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,fsphi,hvnorm0
       double precision :: shear,sigebar,pmtanh01,rho_fp,seg
       double precision :: b_xx,b_yy,b_xy,chi,beta
+      double precision :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
+      double precision :: vlow,m2,vreg,slopebound
       integer :: i,j,ii,jj,jjend,icount,curvature
 
       double precision, allocatable :: moll(:,:)
@@ -162,6 +164,41 @@
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
+            !======================mass entrainment===========================
+            
+            vnorm = sqrt(u**2.0 + v**2.0)
+            vlow = 0.1d0
+            if (.false..and.vnorm.gt.vlow.and.(aux(i,j,i_theta)>1.0)) then
+               b_x = (aux(i+1,j,1)-aux(i-1,j,1))/(2.d0*dx)
+               b_y = (aux(i,j+1,1)-aux(i,j-1,1))/(2.d0*dy)
+               dbdv = -(u*b_x+v*b_y)/vnorm
+               slopebound = 0.15d0
+               if (dbdv>slopebound) then
+                  m2 = 0.6d0
+                  rho2 = m2*2700.d0 + (1.d0-m2)*1000.d0
+                  beta2 = 0.66d0
+                  t1bot = beta2*vnorm*2.d0*mu*(1.d0-m)/(tanh(h+1.d-2))
+                  beta = 1.0-tanh(10.d0*m) !tan(1.5*p/(rho*gmod*h))/14.0
+                  gamma= beta2*vnorm*(beta*gmod*coeff**2)/(tanh(h+1.d-2)**(6.0/3.0))
+                  t1bot = t1bot + gamma
+                  t1bot = t1bot + tau!+p*tan(phi)
+                  t2top = min(t1bot,0.98*(tau))
+
+                  prat = p/(rho*h)
+                  !dh = dti*(t1bot-t2top)/(beta2*tanh(vnorm+1.d-2)*rho2)
+                  vreg = ((vnorm-vlow)**2/((vnorm-vlow)**2+1.d0))
+                  dh = dti*vreg*(t1bot-t2top)/(beta2*(vnorm+vlow)*rho2)
+                  h = h + dh
+                  hm = hm + dh*m2
+
+                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+                  call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+                  p = prat*rho*h
+                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+               endif
+            endif
+            !===================================================================
+
             q(i,j,1) = h
             q(i,j,2) = hu
             q(i,j,3) = hv
@@ -242,7 +279,7 @@
                      q(i,j,3)=0.d0
                   else
                      beta = 1.0-m !tan(1.5*p/(rho*gmod*h))/14.0
-                     gamma= dsqrt(hu**2 + hv**2)*(beta*gmod*coeff**2)/(h**(7.0/3.0))
+                     gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.0/3.0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
                      q(i,j,3)= q(i,j,3)/dgamma
