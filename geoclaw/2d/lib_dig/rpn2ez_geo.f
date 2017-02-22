@@ -159,8 +159,8 @@ c        !set normal direction
          hmR = ql(i,4)
          pL = qr(i-1,5)
          pR = ql(i,5)
-         bL = auxr(i-1,1)
-         bR = auxl(i,1)
+         bL = auxr(i-1,1) - qr(i-1,7)
+         bR = auxl(i,1) - ql(i,7)
          phi_bedL = auxr(i-1,i_phi)
          phi_bedR = auxl(i,i_phi)
          chiHL = qr(i-1,6)
@@ -281,12 +281,12 @@ c            sw(2) = 0.5d0*(sw(1)+sw(3))
 c         endif
 
          !-- solve Riemann problem
-c         call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
+c         call riemann_dig2_aug_sswave(ixy,meqn-1,mwaves,hL,hR,huL,huR,
 c     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
 c     &         kappa,rho,kperm,compress,tanpsi,D,tau,
 c     &         theta,gamma,eps,dx,sw,fw,wave)
 
-         call riemann_dig2_aug_sswave_ez(ixy,meqn,waves,hL,hR,huL,huR,
+         call riemann_dig2_aug_sswave_ez(ixy,meqn-1,waves,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
      &         taudirL,taudirR,chiL,chiR,fsL,fsR)

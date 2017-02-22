@@ -43,6 +43,7 @@ c     # set hu = hv = 0 in all these cells
      &                     ,u,v,sv,theta)
            q(i,j,6) = min(q(i,j,6),q(i,j,1))
            q(i,j,6) = max(q(i,j,6),0.0)
+           q(i,j,7) = max(q(i,j,7),0.0)
         enddo
       enddo
 
