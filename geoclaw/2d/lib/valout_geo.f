@@ -81,6 +81,7 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                endif
             enddo
             surface = alloc(iadd(i,j,1)) + alloc(iaddaux(i,j,1))
+     &              - alloc(iadd(i,j,7))
             write(matunit1,109) (alloc(iadd(i,j,ivar)), ivar=1,nvar),
      &         surface
          enddo
