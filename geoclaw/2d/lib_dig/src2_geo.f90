@@ -186,7 +186,7 @@
                   gamma= beta2*vnorm*(beta*gmod*coeff**2)/(tanh(h+1.d-2)**(6.0/3.0))
                   t1bot = t1bot + gamma
                   t1bot = t1bot + tau!+p*tan(phi)
-                  t2top = min(t1bot,0.98*(tau))
+                  t2top = min(t1bot,0.80*(tau))
 
                   prat = p/(rho*h)
                   !dh = dti*(t1bot-t2top)/(beta2*tanh(vnorm+1.d-2)*rho2)

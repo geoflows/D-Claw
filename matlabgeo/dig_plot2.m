@@ -23,6 +23,7 @@ hv = reshape(data(:,3),mx,my);
 hm = reshape(data(:,4),mx,my);
 p = reshape(data(:,5),mx,my);
 trac = reshape(data(:,6),mx,my);
+erode = reshape(data(:,7),mx,my);
 eta = reshape(data(:,neta),mx,my);              % surface
 topo = reshape(data(:,neta)-data(:,1),mx,my);   % topography
 
@@ -43,6 +44,7 @@ if PlotType == 13
     hm2 = hm;   hm2(:,my+1) = hm2(:,my);   hm2(mx+1,:) = hm2(mx,:);
     p2 = p;   p2(:,my+1) = p2(:,my);   p2(mx+1,:) = p2(mx,:);
     trac2 = trac;   trac2(:,my+1) = trac2(:,my);   trac2(mx+1,:) = trac2(mx,:);
+    erode2 = erode;   erode2(:,my+1) = erode2(:,my);   erode2(mx+1,:) = erode2(mx,:);
     eta2 = eta;   eta2(:,my+1) = eta2(:,my);   eta2(mx+1,:) = eta2(mx,:);
     topo2 = topo;   topo2(:,my+1) = topo2(:,my);   topo2(mx+1,:) = topo2(mx,:);
 
@@ -73,6 +75,8 @@ if PlotType == 13
         eta2color = sv;
     elseif mq==6
         eta2color = trac2./h2;
+    elseif mq==7
+        eta2color = erode2;
     elseif mq==neta
         eta2color = sqrt((hu2./h2).^2 + (hv2./h2).^2);
     end
