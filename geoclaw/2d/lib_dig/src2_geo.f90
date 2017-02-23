@@ -170,7 +170,6 @@
             vnorm = sqrt(u**2.0 + v**2.0)
             vlow = 0.1d0
             if (.false..and.vnorm.gt.vlow.and.(aux(i,j,i_theta)>1.0)) then
-               write(*,*) 'what?'
                b_x = (aux(i+1,j,1)+q(i+1,j,7)-aux(i-1,j,1)-q(i-1,j,7))/(2.d0*dx)
                b_y = (aux(i,j+1,1)+q(i,j+1,7)-aux(i,j-1,1)-q(i,j-1,7))/(2.d0*dy)
                dbdv = -(u*b_x+v*b_y)/vnorm
