@@ -1496,6 +1496,8 @@ class DigclawInputData(Data):
         self.add_attribute('init_ptf2', 0.0, 'will rise until t = init_ptf2')
         self.add_attribute('bed_normal', 0,  'bed_normal =1 requires theta in aux. for slope in one direction')
         self.add_attribute('phi_seg_coeff', 0.0,  'adjustment to friction coefficient based on segregation')
+        self.add_attribute('entrainment', 0,  'flag for entrainment, 0 = no entrainment')
+        self.add_attribute('entrainment_rate', 0.2,  'rate of entrainment parameter 0-1')
 
     def write(self):
 
@@ -1517,6 +1519,8 @@ class DigclawInputData(Data):
         data_write(file, self, 'alpha_seg', 'coefficient of segregation velocity profile')
         data_write(file, self, 'bed_normal', 'bed_normal = 1 requires theta in aux for slope in one direction')
         data_write(file, self, 'phi_seg_coeff', 'adjustment to friction coefficient based on segregation')
+        data_write(file, self, 'entrainment', 'flag for entrainment, 0 = no entrainment')
+        data_write(file, self, 'entrainment_rate', 'rate of entrainment parameter 0-1')
         file.close()
 
         print 'Creating data file setpinit.data'

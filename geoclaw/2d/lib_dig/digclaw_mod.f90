@@ -21,9 +21,9 @@ module digclaw_module
     ! General digclaw parameters
     ! ========================================================================
     double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
-    double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff
+    double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
 
-    integer :: init_ptype,p_initialized,bed_normal
+    integer :: init_ptype,p_initialized,bed_normal,entrainment
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
     double precision :: grad_eta_max,cohesion_max,grad_eta_ave,eta_cell_count
 
@@ -91,6 +91,9 @@ contains
          read(iunit,*) alpha_seg
          read(iunit,*) bed_normal
          read(iunit,*) phi_seg_coeff
+         read(iunit,*) entrainment
+         read(iunit,*) entrainment_rate
+
          close(iunit)
          alpha_seg = 1.0 - alpha_seg
 
@@ -115,6 +118,8 @@ contains
          write(DIG_PARM_UNIT,*) '    alpha_seg:', alpha_seg
          write(DIG_PARM_UNIT,*) '    bed_normal:', bed_normal
          write(DIG_PARM_UNIT,*) '    phi_seg_coeff:', phi_seg_coeff
+         write(DIG_PARM_UNIT,*) '    entrainment:', entrainment
+         write(DIG_PARM_UNIT,*) '    entrainment_rate:', entrainment_rate
 
 
    end subroutine set_dig

@@ -23,8 +23,9 @@
       double precision :: b_xx,b_yy,b_xy,chi,beta
       double precision :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
       double precision :: vlow,m2,vreg,slopebound
-      double precision :: b_eroded,b_remaining
+      double precision :: b_eroded,b_remaining,dtcoeff
       integer :: i,j,ii,jj,jjend,icount,curvature
+      logical :: ent
 
       double precision, allocatable :: moll(:,:)
 
@@ -36,6 +37,11 @@
       tol = drytolerance !# to prevent divide by zero in gamma
       curvature = 0 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
+      if (entrainment>0) then
+         ent = .true.
+      else
+         ent = .false.
+      endif
 
       do i=1-mbc+1,mx+mbc-1
          do j=1-mbc+1,my+mbc-1
@@ -170,28 +176,37 @@
             vnorm = sqrt(u**2.0 + v**2.0)
             vlow = 0.1d0
 
-            if (.true..and.vnorm.gt.vlow.and.(aux(i,j,i_theta)>0.0)) then
+            if (ent.and.vnorm.gt.vlow.and.(aux(i,j,i_theta)>0.0)) then
                b_x = (aux(i+1,j,1)+q(i+1,j,7)-aux(i-1,j,1)-q(i-1,j,7))/(2.d0*dx)
                b_y = (aux(i,j+1,1)+q(i,j+1,7)-aux(i,j-1,1)-q(i,j-1,7))/(2.d0*dy)
-               dbdv = -(u*b_x+v*b_y)/vnorm
-               slopebound = 0.15d0
+               dbdv = (u*b_x+v*b_y)/vnorm
+               slopebound = 1.e10
                b_eroded = q(i,j,7)
-               if (dbdv>slopebound.and.b_eroded<aux(i,j,i_theta)) then
+               if (dbdv<slopebound.and.b_eroded<aux(i,j,i_theta)) then
                   b_remaining = aux(i,j,i_theta)-b_eroded
                   m2 = 0.6d0
                   rho2 = m2*2700.d0 + (1.d0-m2)*1000.d0
                   beta2 = 0.66d0
                   t1bot = beta2*vnorm*2.d0*mu*(1.d0-m)/(tanh(h+1.d-2))
+                  !write(*,*) '------------'
+                  !write(*,*) 'vu',t1bot
                   beta = 1.0-tanh(10.d0*m) !tan(1.5*p/(rho*gmod*h))/14.0
-                  gamma= beta2*vnorm*(beta*gmod*coeff**2)/(tanh(h+1.d-2)**(6.0/3.0))
+                  gamma= rho*beta2*(vnorm**2)*(beta*gmod*coeff**2)/(tanh(h+1.d-2)**(1.0/3.0))
+                  !write(*,*) 'gamma', gamma
                   t1bot = t1bot + gamma
                   t1bot = t1bot + tau!+p*tan(phi)
-                  t2top = min(t1bot,0.1*(tau))
-
+                  !write(*,*) 'tau',tau
+                  t2top = min(t1bot,(1.d0-beta*entrainment_rate)*(tau))
+                  !write(*,*) 't2top',t2top
                   prat = p/(rho*h)
                   !dh = dti*(t1bot-t2top)/(beta2*tanh(vnorm+1.d-2)*rho2)
                   vreg = ((vnorm-vlow)**2/((vnorm-vlow)**2+1.d0))
-                  dh = dti*vreg*(t1bot-t2top)/(beta2*(vnorm+vlow)*rho2)
+                  dtcoeff = entrainment_rate*dti*vreg/(beta2*(vnorm+vlow)*rho2)
+                  !dh = dtcoeff*t1bot/(1.d0 + dtcoeff*tan(phi))
+                  dh = dtcoeff*(t1bot-t2top)
+                  dh = entrainment_rate*dti*(t1bot-t2top)/(rho2*beta2*vnorm)
+                  !write(*,*) 'dh',dh
+                  !write(*,*) 'dh/dti', dh/dti
                   dh = min(dh,b_remaining)
                   h = h + dh
                   hm = hm + dh*m2
