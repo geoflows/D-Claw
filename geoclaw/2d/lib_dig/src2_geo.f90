@@ -190,7 +190,7 @@
                   t1bot = beta2*vnorm*2.d0*mu*(1.d0-m)/(tanh(h+1.d-2))
                   !write(*,*) '------------'
                   !write(*,*) 'vu',t1bot
-                  beta = 1.0-tanh(10.d0*m) !tan(1.5*p/(rho*gmod*h))/14.0
+                  beta = 1.0-m!tanh(10.d0*m) !tan(1.5*p/(rho*gmod*h))/14.0
                   gamma= rho*beta2*(vnorm**2)*(beta*gmod*coeff**2)/(tanh(h+1.d-2)**(1.0/3.0))
                   !write(*,*) 'gamma', gamma
                   t1bot = t1bot + gamma

@@ -63,7 +63,7 @@ for level = 1:length(slice), % loop over levels
 
     % now project the contourlines.
     clines = udata.contourLines;
-    hdl = [];
+    hdl = gobjects(0);
     for i = 1:length(clines),
       xdata = get(clines(i),'XData');
       ydata = get(clines(i),'YData');

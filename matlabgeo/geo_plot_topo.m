@@ -10,7 +10,7 @@
 %topo2masked = topo2 .* covered_ind;
 
 
-if ~exist('topo_colormap')
+while ~exist('topo_colormap')
   disp('*** You must define topo_colormap, e.g. to one of the maps')
   disp('    defined in geo_setzcolormaps.m')
   break
@@ -30,6 +30,8 @@ if (PlotGrid(level)==1)
 else
     set(cw,'FaceColor','flat','EdgeColor','none');
 end
+%cw.AlphaData = covered_ind;
+
 %set(cw,'FaceLighting','flat','SpecularColorReflectance',0.0,'SpecularStrength',1)
 
 if (PlotGridEdges(level)==1)
