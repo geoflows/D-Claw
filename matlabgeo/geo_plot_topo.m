@@ -23,17 +23,17 @@ set_covered_ind
 topo2colors(:,:,1) = topo2colors(:,:,1) .* covered_ind;
 
 %cw=surf(X,Y,topo2,topo2colors);
-cw=surf(X,Y,topo2.*covered_ind,topo2colors);
+htopo=surf(X,Y,topo2.*covered_ind,topo2colors);
 
 if (PlotGrid(level)==1)
-    set(cw,'FaceColor','interp','EdgeColor',[.5 .5 .5]);
+    set(htopo,'FaceColor','interp','EdgeColor',[.5 .5 .5]);
 else
-    set(cw,'FaceColor','interp','EdgeColor','none');
+    set(htopo,'FaceColor','interp','EdgeColor','none');
 end
-cw.AlphaData = 0.*topo2 + 1;
-cw.AlphaDataMapping ='none';
-cw.FaceAlpha = 'interp';
-cw.EdgeAlpha = .2;
+htopo.AlphaData = ones(size(topo2));
+htopo.AlphaDataMapping ='none';
+htopo.FaceAlpha = 'interp';
+htopo.EdgeAlpha = .2;
 %set(cw,'FaceLighting','flat','SpecularColorReflectance',0.0,'SpecularStrength',1)
 
 if (PlotGridEdges(level)==1)
