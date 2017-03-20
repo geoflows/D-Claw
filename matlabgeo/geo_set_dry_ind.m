@@ -4,3 +4,7 @@
 cutoff= 1.0e-4;
 dry_ind=ones(size(X));
 dry_ind(find((h2./cutoff)<1))=NaN;
+
+cutoff = 1.;
+alpha_ind =ones(size(X));
+alpha_ind(find((h2./cutoff)<1))=h2(find((h2./cutoff)<1)).^2;

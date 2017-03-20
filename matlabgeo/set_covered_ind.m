@@ -16,6 +16,6 @@ for og=1:ngrids
         
         erasei=find(xedge>=xlowog-amrdata(og).dx & xedge<=xhighog+amrdata(og).dx);
         erasej=find(yedge>=ylowog-amrdata(og).dy& yedge<=yhighog+amrdata(og).dy);
-        covered_ind([erasei(2:end-1)],[erasej(2:end-1)])=0.0;
+        covered_ind([erasei(2:end-1)],[erasej(2:end-1)])=NaN;
     end
 end
