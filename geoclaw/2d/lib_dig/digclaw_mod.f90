@@ -268,7 +268,7 @@ contains
 
       !local
       double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,rho_fp
-      double precision :: seg,pmtanh01,m_crit_m
+      double precision :: seg,pmtanh01,m_crit_m,m_crit_pm
 
       if (h.lt.drytolerance) return
 
@@ -281,7 +281,8 @@ contains
       else
          seg = 1.0
       endif
-      pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
+      !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
+      pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
       rho_fp = (1.0-pmtanh01)*rho_f
 
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
@@ -309,8 +310,10 @@ contains
       !pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
       kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
-
-      m_crit_m = m_crit - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)
+      !m_crit_pm - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)
+      !m_crit_pm =  max(pm-0.7,0.0)*((m_crit- 0.55)/0.5) + max(0.3-pm,0.0)*((m_crit-0.55)/0.5)
+      m_crit_pm = max(pm-0.6,0.0)*((m_crit- 0.55)/0.4) + max(0.3-pm,0.0)*((m_crit-0.55)/0.3)
+      m_crit_m = m_crit - m_crit_pm
       m_eqn = m_crit_m/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
 

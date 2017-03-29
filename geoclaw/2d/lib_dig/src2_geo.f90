@@ -35,7 +35,7 @@
       gmod=grav
       coeff = coeffmanning
       tol = drytolerance !# to prevent divide by zero in gamma
-      curvature = 0 !add friction due to curvature acceleration
+      curvature = 1 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
       if (entrainment>0) then
          ent = .true.
@@ -129,7 +129,8 @@
       		else
          		seg = 1.0
       		endif
-            pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
+            !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
+            pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
             rho_fp = (1.0-pmtanh01)*rho_f
             !integrate pressure relaxation
             if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval

@@ -22,7 +22,6 @@ while ~exist('flow_colormap')
   break
   end
 
-
 eta2colors = mapzcolors(eta2color,flow_colormap);
 
 % set color to NaN in cells covered by finer grids:
@@ -32,6 +31,8 @@ eta2colors(:,:,1) = eta2colors(:,:,1) .* covered_ind;
 % set color to NaN in dry cells:
 geo_set_dry_ind
 eta2colors(:,:,1) = eta2colors(:,:,1) .* dry_ind;
+
+
 
 %cw=surf(X,Y,eta2,eta2colors);
 hsurf=surf(X,Y,eta2.*dry_ind.*covered_ind,eta2colors); % Matlab has a bug regarding plotting edges--1/17/08 dlg
@@ -45,7 +46,7 @@ end
 hsurf.AlphaData = alpha_ind;
 hsurf.AlphaDataMapping ='none';
 hsurf.FaceAlpha = 'interp';
-hsurf.EdgeAlpha = 0;
+hsurf.EdgeAlpha = 0.0;
 
 if (PlotGridEdges(level)==1)
     l1=line(xedge,0*xedge+yedge(1),eta2(:,1)+1000,'Color','k','LineWidth',1);
