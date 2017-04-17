@@ -196,7 +196,7 @@ contains
 
         ! Locals
         integer, parameter :: iunit = 19, miss_unit = 17
-        double precision, parameter :: topo_missing = -150.d0
+        double precision, parameter :: topo_missing = 150.d0
         logical, parameter :: maketype2 = .false.
         integer :: i,j,num_points,missing,status,topo_start
         double precision :: no_data_value,x,y,z
