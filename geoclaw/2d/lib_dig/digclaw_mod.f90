@@ -205,7 +205,7 @@ contains
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
 
       if (h.le.dry_tol) then
-         h =  0.0*max(h,0.d0)
+         h =  max(h,0.d0)
          hu = 0.d0
          hv = 0.d0
          hm = h*m0
@@ -239,7 +239,9 @@ contains
       plo = rho_f*dry_tol*gmod*dry_tol
       phi = pmax - plo
       if (p.lt.plo) then
-         p = dmax1(0.d0,p)
+         if ((u**2+v**2)>0.d0) then
+            p = dmax1(0.d0,p)
+         endif
          !p = dmax1(-5.0*pmax,p)
          !p = (p**2 + plo**2)/(2.d0*plo)
       elseif (p.gt.phi) then
@@ -282,7 +284,8 @@ contains
          seg = 1.0
       endif
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
-      pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
+      !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
+      call calc_pmtanh(pm,seg,pmtanh01)
       rho_fp = (1.0-pmtanh01)*rho_f
 
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
@@ -312,7 +315,9 @@ contains
       kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
       !m_crit_pm - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)
       !m_crit_pm =  max(pm-0.7,0.0)*((m_crit- 0.55)/0.5) + max(0.3-pm,0.0)*((m_crit-0.55)/0.5)
-      m_crit_pm = max(pm-0.6,0.0)*((m_crit- 0.55)/0.4) + max(0.3-pm,0.0)*((m_crit-0.55)/0.3)
+      m_crit_pm =  0.! max(pm-0.6,0.0)*((m_crit- 0.55)/0.4) + max(0.3-pm,0.0)*((m_crit-0.55)/0.3)
+      !m_crit_pm = max(pm-0.9,0.0)*((m_crit- 0.55)/0.1) + max(0.1-pm,0.0)*((m_crit-0.55)/0.1);
+      m_crit_pm = pmtanh01*0.09
       m_crit_m = m_crit - m_crit_pm
       m_eqn = m_crit_m/(1.d0 + sqrt(S))
       tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
@@ -882,6 +887,29 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
          write(*,*) '--------------------------------------------'
       endif
    end subroutine calc_pmin
+
+   !====================================================================
+   !subroutine admissibleq
+   !accept solution q, return q in admissible space
+   !====================================================================
+
+subroutine calc_pmtanh(pm,seg,pmtanh)
+
+      implicit none
+
+      !i/o
+      double precision, intent(in) :: pm,seg
+      double precision, intent(out) :: pmtanh
+
+      !Locals
+      
+
+      pmtanh = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
+      !pmtanh = 0.8*seg*(0.5*(tanh(40.0*(pm-0.98))+1.0))
+
+      return
+
+   end subroutine calc_pmtanh
 
 
 end module digclaw_module

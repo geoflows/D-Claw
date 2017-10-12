@@ -130,8 +130,9 @@
          		seg = 1.0
       		endif
             !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
-            pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
-            rho_fp = (1.0-pmtanh01)*rho_f
+            !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
+            call calc_pmtanh(pm,seg,pmtanh01)
+            rho_fp = max(0.d0,(1.0-pmtanh01))*rho_f
             !integrate pressure relaxation
             if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
                zeta = 3.d0/(compress*h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
