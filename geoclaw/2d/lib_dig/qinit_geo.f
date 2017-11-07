@@ -99,7 +99,10 @@ c
       initm = 0
       initchi = 0
       do mf =1,mqinitfiles
+         if (iqinit(mf).eq.2) initu=1
+         if (iqinit(mf).eq.3) initv = 1
          if (iqinit(mf).eq.4) initm = 1
+         if (iqinit(mf).eq.5) initpv = 1
          if (iqinit(mf).eq.6) initchi = 1
       enddo
 
@@ -114,6 +117,15 @@ c
                   q(i,j,6) = 0.5*q(i,j,1)
                else
                   q(i,j,6) = q(i,j,1)*q(i,j,6)
+               endif
+               if (initu.eq.1) then
+                  q(i,j,2) = q(i,j,1)*q(i,j,2)   
+               endif
+               if (initv.eq.1) then
+                  q(i,j,3) = q(i,j,1)*q(i,j,3)   
+               endif
+               if (initpv.eq.1) then
+                  q(i,j,5) = q(i,j,1)*q(i,j,5)   
                endif
                if (q(i,j,1).le.drytolerance) then
                   do m = 1,meqn
