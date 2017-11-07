@@ -78,6 +78,8 @@ if PlotType == 13
     elseif mq==7
         eta2color = erode2;
     elseif mq==neta
+        eta2color=eta2;
+    elseif mq==neta+1
         eta2color = sqrt((hu2./h2).^2 + (hv2./h2).^2);
     end
 
