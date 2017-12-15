@@ -205,14 +205,14 @@ contains
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
 
       if (h.le.dry_tol) then
-         h =  max(h,0.d0)
+         h =  0.d0
          hu = 0.d0
          hv = 0.d0
          hm = h*m0
          p  = h*gmod*rho_f
          u = 0.d0
          v = 0.d0
-         m = m0
+         m = 0.d0
          return
       endif
 
@@ -338,6 +338,12 @@ contains
          sigbed=0.0
       else
          compress = alpha/(m*(sigbed +  sigma_0))
+      endif
+
+      if (m.le.0.4) then
+         kperm = tanh(10.d0*m)*kperm
+         tanpsi = tanh(10.d0*m)*tanpsi
+         sigbed= tanh(10.d0*m)*sigbed
       endif
 
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
