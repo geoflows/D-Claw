@@ -22,7 +22,11 @@ while ~exist('flow_colormap')
   break
   end
 
-eta2colors = mapzcolors(eta2color,flow_colormap);
+if exist('discrete_colormap')
+    eta2colors = mapzcolors(eta2color,flow_colormap,discrete_colormap);
+else
+    eta2colors = mapzcolors(eta2color,flow_colormap);
+end
 
 % set color to NaN in cells covered by finer grids:
 set_covered_ind

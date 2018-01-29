@@ -30,13 +30,13 @@ Z(ij) = min(Z(ij),zmax);
 
 % interpolate each value of Z array into zcolormap:
 
-if (exist('discrete_colormap')&discrete_colormap==1)
-	ppR = interp1(zcolormap(:,1),zcolormap(:,2),'next','pp');
-	Rvalues = ppval(ppR, Z);
-	ppG = interp1(zcolormap(:,1),zcolormap(:,3),'next','pp');
-	Gvalues = ppval(ppG, Z);
-	ppB = interp1(zcolormap(:,1),zcolormap(:,4),'next','pp');
-	Bvalues = ppval(ppB, Z);
+if (exist('discrete_colormap')&(discrete_colormap==1))
+	ppR = griddedInterpolant(zcolormap(:,1),zcolormap(:,2),'next');
+	Rvalues = ppR(Z);
+	ppG = griddedInterpolant(zcolormap(:,1),zcolormap(:,3),'next');
+	Gvalues = ppG(Z);
+	ppB = griddedInterpolant(zcolormap(:,1),zcolormap(:,4),'next');
+	Bvalues = ppB(Z);
 else
     ppR = interp1(zcolormap(:,1),zcolormap(:,2),'linear','pp');
     Rvalues = ppval(ppR, Z);
