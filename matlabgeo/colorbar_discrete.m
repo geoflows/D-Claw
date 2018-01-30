@@ -6,12 +6,13 @@ tvalues = [flow_colormap(:,1)];
 ticks = linspace(0,1,ncolors+1);
 dtick = ticks(2)-ticks(1);
 cticks = ticks(1:end-1)+0.5*dtick;
-strtvalues = cellstr(num2str(tvalues));
-celllabels = cellstr(strtvalues);
+%strtvalues = cellstr(num2str(tvalues));
+%celllabels = cellstr(strtvalues);
+celllabels = {};
 
-celllabels(1) = cellstr(strcat('< ',strtvalues(1)));
+celllabels{1} = ['< ',num2str(tvalues(1))];
 for jl = 2:ncolors-1
-    celllabels(jl) = cellstr(strcat(strtvalues(jl-1),'-',strtvalues(jl)));
+    celllabels{jl} = [num2str(tvalues(jl-1)),' to ',num2str(tvalues(jl))];
 end
-celllabels(ncolors) = cellstr(strcat('> ',strtvalues(ncolors-1)));
+celllabels{ncolors} = ['> ',num2str(tvalues(ncolors-1))];
 hcbar=colorbar('peer',axhandle,'Ticks',cticks,'TickLabels',celllabels);
