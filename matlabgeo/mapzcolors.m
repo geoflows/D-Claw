@@ -1,4 +1,4 @@
-function zcolors = mapzcolors(z,zcolormap)
+function zcolors = mapzcolors(z,zcolormap,discrete_colormap)
 %
 % maps a 2d array z of z values to RGB triples that can be used in 
 %   surf(x,y,z,zcolors)
