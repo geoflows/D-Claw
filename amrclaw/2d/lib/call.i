@@ -49,7 +49,7 @@ c :::::::  for flagging points
        parameter (vertical = 2)
        parameter  (maxgr = 5000)
        parameter  (maxlv = 10)
-       parameter  (maxcl = 500)
+       parameter  (maxcl = 1000)
        parameter  (max1d = 600)
        parameter  (maxvar = 10)
        parameter  (maxaux = 20)
