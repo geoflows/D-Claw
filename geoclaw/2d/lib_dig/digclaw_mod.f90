@@ -278,15 +278,17 @@ contains
       gmod=grav
       pm = max(0.0,pm)
       pm = min(1.0,pm)
-      if (alpha_seg==1.0) then
+      if (dabs(alpha_seg-1.0)<1.d-6) then
          seg = 0.0
+         rho_fp = rho_f
+         pmtanh01=0.0
       else
          seg = 1.0
+         call calc_pmtanh(pm,seg,pmtanh01)
+         rho_fp = (1.0-pmtanh01)*rho_f
       endif
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
-      call calc_pmtanh(pm,seg,pmtanh01)
-      rho_fp = (1.0-pmtanh01)*rho_f
 
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
       vnorm = dsqrt(u**2.0 + v**2.0)
@@ -325,11 +327,11 @@ contains
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
 
-      if (m.le.0.04) then
+      !if (m.le.0.04) then
           !eliminate coulomb friction for hyperconcentrated/fluid problems
           !klugey, but won't effect debris-flow problems
          !sigbed = sigbed*0.5d0*(tanh(400.d0*(m-0.02d0)) + 1.0d0)
-      endif
+      !endif
 
       if (m.le.1.d-16) then
          compress = 1.d16
