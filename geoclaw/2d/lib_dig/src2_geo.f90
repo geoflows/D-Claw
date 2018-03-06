@@ -35,7 +35,7 @@
       gmod=grav
       coeff = coeffmanning
       tol = drytolerance !# to prevent divide by zero in gamma
-      curvature = 1 !add friction due to curvature acceleration
+      curvature = 0 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
       if (entrainment>0) then
          ent = .true.
