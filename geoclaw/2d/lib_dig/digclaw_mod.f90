@@ -342,11 +342,11 @@ contains
          compress = alpha/(m*(sigbed +  sigma_0))
       endif
 
-      if (m.le.0.4) then
-         kperm = tanh(10.d0*m)*kperm
-         tanpsi = tanh(10.d0*m)*tanpsi
-         sigbed= tanh(10.d0*m)*sigbed
-      endif
+      !if (m.le.0.4) then
+      !   kperm = tanh(10.d0*m)*kperm
+      !   tanpsi = tanh(10.d0*m)*tanpsi
+      !   sigbed= tanh(10.d0*m)*sigbed
+      !endif
 
       if (p_initialized.eq.0.and.vnorm.le.0.d0) then
       !if (vnorm.le.0.d0) then
@@ -376,7 +376,7 @@ contains
       !kappa = (2.d0 - pm*2.d0*dsqrt(sqrtarg))/(dcos(phi_int)**2)
       !kappa = kappa - 1.d0
       !kappa = 1.d0
-      kappa = 0.7
+      kappa = 1.0
 
    end subroutine auxeval
 

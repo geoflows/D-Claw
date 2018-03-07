@@ -137,12 +137,12 @@
             !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
             
             !integrate pressure relaxation
-            if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
-               zeta = 3.d0/(compress*h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
-            else
-               zeta = (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
-            endif
-
+            !if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
+            !   zeta = 3.d0/(compress*h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
+            !else
+            !   zeta = (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
+            !endif
+            zeta = ((m*(sigbed +  sigma_0))/alpha)*3.d0/(h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
             krate=-zeta*2.0*kperm/(h*max(mu,1.d-16))
             p_hydro = h*rho_fp*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_fp)*gmod*h
