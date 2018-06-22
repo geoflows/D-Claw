@@ -375,8 +375,8 @@ contains
 
       !kappa = (2.d0 - pm*2.d0*dsqrt(sqrtarg))/(dcos(phi_int)**2)
       !kappa = kappa - 1.d0
-      !kappa = 1.d0
-      kappa = 1.0
+      kappa = 1.d0
+      !kappa = 0.4d0
 
    end subroutine auxeval
 

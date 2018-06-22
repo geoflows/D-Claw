@@ -21,7 +21,7 @@ c
       implicit double precision (a-h,o-z)
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
-      logical use_phi_bed,use_theta_input
+      logical use_phi_bed,use_theta_input,friction_correction
 
       include "call.i"
 
@@ -160,6 +160,21 @@ c     --------------integrate auxinit files if they exist---------------
          enddo
       endif
 
+      friction_correction = .false.
+      if (friction_correction) then
+        do j=1-mbc+1,my+mbc-1
+            do i=1-mbc+1,mx+mbc-1
+              b_x = (aux(i+1,j,1)-aux(i-1,j,1))/(2.d0*dx)
+              b_y = (aux(i,j+1,1)-aux(i,j-1,1))/(2.d0*dy)
+              gradang = atan(sqrt(b_x**2+b_y**2))
+              kappa=1.d0
+              phi_tread = tan(aux(i,j,i_phi)-gradang)
+     &            +2.d0*kappa*tan(gradang)
+              aux(i,j,i_phi) = phi_tread
+            enddo
+         enddo
+      endif
+     
 c     -----------------------------------------------------------------
 
       return

@@ -172,7 +172,7 @@ c     !determine the middle entropy corrector wave------------------------
          if (hstarHLL.lt.min(hL,hR)/5.d0) rarecorrector=.false.
       endif
 
-      delb=kappa*(bR-bL)
+      delb=(bR-bL)!#kappa
 
       !determine ss-wave
       hbar =  0.5d0*(hL+hR)
