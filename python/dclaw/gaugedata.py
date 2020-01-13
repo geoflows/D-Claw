@@ -18,7 +18,8 @@ gaugedata
 
 """
 
-from pylab import *
+from pylab import * #I regret this import...need to clean-up at some point
+import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as pyplot
 import os
