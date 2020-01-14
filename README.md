@@ -62,9 +62,6 @@ matlab> addpath ../
 to get the local .m-files in the output's parent directory correctly on your path. (Matlab will add the absolute path for ../)
 
 
-* if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), you might want to use, if you don't already, the [environment modules](http://modules.sourceforge.net/) package, which can dynamically change your environment variables (such as $PATH, $CLAW, $PYTHONPATH, $MATLABPATH) for your running shell, to make sure all paths are correct and compatible.
-
-
 ## development
 
 If you would like to make contributions to D-Claw or dclaw-apps, please follow the development workflow used for Clawpack, described at [www.clawpack.org/developers](http://www.clawpack.org/developers.html). Briefly, please fork the repositories to your own github account, and issue pull requests on a feature branch to github/geoflows, *eg,*:
