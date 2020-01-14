@@ -8,7 +8,7 @@ description: D-Claw is numerical software package for simulating granular-fluid 
 
 # Summary
 
-D-Claw is numerical software built from Clawpack codes ([clawpack.org](http://www.clawpack.org)). It is a generalization of GeoClaw (([geoclaw.org](http://www.geoclaw.org)))for solving two-phase flows (granular-fluid mixtures), including landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam breach floods, fluid or solid entrainment by inundating flows).
+D-Claw is numerical software built from Clawpack codes ([clawpack.org](http://www.clawpack.org)). It is a generalization of GeoClaw ([geoclaw.org](http://www.geoclaw.org))for solving two-phase flows (granular-fluid mixtures), including landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam breach floods, fluid or solid entrainment by inundating flows).
 
 The documentation available with Clawpack (v5) and GeoClaw provides a good general overview, however, D-Claw is built on, or extended from, older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
 
@@ -33,7 +33,7 @@ The application repository is in progress, as is documentation for D-Claw.
 
 "Installation" of D-Claw is really just setting your environment variables correctly. Compiling and running D-Claw can be done using make, with a Makefile in an application directory.  
 
-##### environment variables
+#### environment variables
 
 * make sure the environment variable $CLAW points to the D-Claw code (the uppermost directory of the repository, "D-Claw.") (Or modify the Makefiles if you want to use an environment variable other than $CLAW. For bash shells:
 ```
@@ -42,7 +42,7 @@ export CLAW=/path/to/D-Claw
 
 * if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), you might want to use, if you don't already, the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell, to make sure you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH).
 
-##### python
+#### python
 * to use the python tools that come with D-Claw, you should include $CLAW/python/ in your $PYTHONPATH:
 ```
 export PYTHONPATH=$CLAW/python:$PYTHONPATH
@@ -53,7 +53,7 @@ python> import dclaw
 python> import dclaw.topotools as dt 
 ```  
 
-##### matlab
+#### matlab
 * if you are going to use matlab plotting with D-Claw, be sure that your $MATLABPATH contains $CLAW/matlabgeo and then $CLAW/matlab
 ```
 export MATLABPATH=$CLAW/matlabgeo:$CLAW/matlab:$MATLABPATH
