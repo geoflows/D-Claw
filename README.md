@@ -35,7 +35,7 @@ The application repository is in progress, as is documentation for D-Claw.
 
 #### environment variables
 
-* make sure the environment variable $CLAW points to the D-Claw code (the uppermost directory of the repository, "D-Claw.") (Or modify the Makefiles if you want to use an environment variable other than $CLAW. For bash shells:
+* make sure the environment variable $CLAW points to the D-Claw code (the uppermost directory of the repository, "D-Claw."), or modify the Makefiles if you want to use an environment variable other than $CLAW. For bash shells:
 ```
 export CLAW=/path/to/D-Claw
 ```
