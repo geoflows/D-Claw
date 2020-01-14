@@ -42,7 +42,7 @@ The environment variable $CLAW should be set to point to the D-Claw code (the up
 export CLAW=/path/to/D-Claw
 ```
 
-NOTE/WARNING: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful that $CLAW is set correctly each time, particularly if you are developing/testing code. (For instance, is easy to inadvertently think that make is compiling your changes when it is not, because it is checking a static library for dependency changes to your executable.) Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful. 
+NOTE/WARNING: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful of how $CLAW is set, particularly if you are developing/testing code. (For instance, it is easy to incorrectly assume that make is compiling your changes when it is not, because it is checking a static library for dependency changes to your executable.) Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful. 
 
 #### python
 In order to use the python set-up scripts that come with D-Claw, you should include $CLAW/python/ in your $PYTHONPATH:
@@ -61,7 +61,7 @@ If you are going to use matlab plotting with D-Claw, your $MATLABPATH should inc
 ```
 export MATLABPATH=$CLAW/matlabgeo:$CLAW/matlab:$MATLABPATH
 ```
-For a given application, it is useful to relocate some of the m-files (*eg.,* afterframe.m, setplot2.m, setprob.m, beforeframe.m etc.) included with D-Claw to your local working application directory, where you can modify them to suit you present purposes without modifying your D-Claw source files. 
+For a given application, it is useful to relocate some of the m-files (*eg.,* afterframe.m, setplot2.m, setprob.m, beforeframe.m etc.) included with D-Claw to your local working application directory, where you can modify them to suit you present purposes without modifying your D-Claw source files (note that files in $CLAW/matlabgeo should take precedent over files of the same name in $CLAW/matlab. Unifying these directories is planned in the future, but they currently coexist so that the D-Claw source code can be used to run Geoclaw v4.x applications...more about that in the future). 
 
 Note that D-Claw output and these locally modified .m-files (in your application directory) must both be located by matlab, but they are not usually in the same directory. For instance, if the output sub-directory is the current directory where matlab is running, *ie.,*
 ```
@@ -76,7 +76,7 @@ to get the local .m-files in the output's parent directory, myapplication, above
 
 ## Running D-Claw applications
 
-Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). In summary, an application directory houses your Makefile (which correctly resolves the D-Claw source code) and some python set-up scripts. The local file setrun.py in an application folder is used to set runtime parameters, initial conditions and input data (*eg.,* topography DEMs). The make program is used to compile and run the code (as well as produce plots if the python plotting options are used). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github).
+Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). In summary, a Makefile, some python set-up scripts, and optional plotting scripts reside in an application directory. The file setrun.py is used to set runtime parameters, initial conditions and input data (*eg.,* topography DEMs). The make program is used to compile and run the code (as well as produce plots if the python plotting options are used). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github).
 
 Setting up a given simulation essentially amounts to modifying the routine setrun.py. Unfortunately documentation is still lacking for the unique attributes of D-Claw. However, examples that can be modified can be found in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
 
