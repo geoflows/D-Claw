@@ -8,9 +8,9 @@ description: D-Claw is numerical software package for simulating granular-fluid 
 
 # Summary
 
-D-Claw is numerical software built from Clawpack codes ([clawpack.org](http://www.clawpack.org)). It is a generalization of GeoClaw ([geoclaw.org](http://www.geoclaw.org))for solving two-phase flows (granular-fluid mixtures), including landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam breach floods, fluid or solid entrainment by inundating flows).
+D-Claw is numerical software built from Clawpack codes ([clawpack.org](http://www.clawpack.org)). It is a generalization of GeoClaw ([geoclaw.org](http://www.geoclaw.org)) for solving two-phase flows (granular-fluid mixtures), including landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam-breach floods, fluid or solid entrainment by inundating flows, such as debris-laden run-off or debris-entraining tsunamis).
 
-The documentation available with Clawpack (v5) and GeoClaw provides a good general overview, however, D-Claw is built on, or extended from, older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
+The documentation available with Clawpack (v5) and GeoClaw provides a good general overview, however, in addition to unique features, D-Claw is an extension of older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
 
 Running D-Claw requires additional set-up parameters. Documentation for D-Claw is currently unsatisfactory, but in progress. Some tips on running it are below. See also the [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github for examples.
 
@@ -19,7 +19,7 @@ Running D-Claw requires additional set-up parameters. Documentation for D-Claw i
 
 To use D-Claw as is, it is assumed that you have a unix terminal of some kind (*eg.,* linux or Mac OS...for MS Windows you are on your own). 
 
-## source code
+## Source code
 
 The source code and latest git repository for D-Claw are available on github:
 
@@ -31,7 +31,7 @@ A repository for applications is also available:
 
 The application repository is in progress, as is documentation for D-Claw. 
 
-## installation
+## Installation
 
 "Installation" of D-Claw is essetially just setting some environment variables. Compiling and running D-Claw can then be done using make, with a Makefile in an application directory.  
 
@@ -74,16 +74,16 @@ matlab> addpath ../
 ```
 to get the local .m-files in the output's parent directory, myapplication, above the same routines in the D-Claw matlab libraries (*ie.* Matlab will add the absolute path for ../ to the top of your path).
 
-## running D-Claw applications
+## Running D-Claw applications
 
-Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). In summary, an application directory houses your Makefile, which correctly resolves the D-Claw source code, as well as python set-up scripts. The local file setrun.py in an application folder is used to set runtime parameters, initial conditions and input data (*eg.,* topography DEMs). The make program is used to compile and run the code (as well as produce plots if the python plotting options are used). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github).
+Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). In summary, an application directory houses your Makefile (which correctly resolves the D-Claw source code) and some python set-up scripts. The local file setrun.py in an application folder is used to set runtime parameters, initial conditions and input data (*eg.,* topography DEMs). The make program is used to compile and run the code (as well as produce plots if the python plotting options are used). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github).
 
 Setting up a given simulation essentially amounts to modifying the routine setrun.py. Unfortunately documentation is still lacking for the unique attributes of D-Claw. However, examples that can be modified can be found in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
 
 Further documentation is planned.
 
 
-## development
+## Development
 
 If you would like to make contributions to D-Claw or dclaw-apps, please follow the development workflow used for Clawpack, described at [www.clawpack.org/developers](http://www.clawpack.org/developers.html). In summary, please fork the repositories to your own github account, and issue pull requests on a feature branch to github/geoflows, *eg,*:
 
