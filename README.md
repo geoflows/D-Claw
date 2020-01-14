@@ -33,7 +33,7 @@ The application repository is in progress, as is documentation for D-Claw.
 
 ## Installation
 
-"Installation" of D-Claw is essetially just setting some environment variables. Compiling and running D-Claw can then be done using make, with a Makefile in an application directory.  
+"Installation" of D-Claw is essentially just setting some environment variables. Compiling and running D-Claw can then be done using make, with a Makefile in an application directory.  
 
 #### environment variables
 
@@ -42,19 +42,19 @@ The environment variable $CLAW should be set to point to the D-Claw code (the up
 export CLAW=/path/to/D-Claw
 ```
 
-Note: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), you might want to use, for example, the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH). 
+NOTE/WARNING: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful that $CLAW is set correctly each time, particularly if you are developing/testing code. (For instance, is easy to inadvertently think that make is compiling your changes when it is not, because it is checking a static library for dependency changes to your executable.) Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful. 
 
 #### python
-To use the python set-up scripts that come with D-Claw, you should include $CLAW/python/ in your $PYTHONPATH:
+In order to use the python set-up scripts that come with D-Claw, you should include $CLAW/python/ in your $PYTHONPATH:
 ```
 export PYTHONPATH=$CLAW/python:$PYTHONPATH
 ```
-You can also then import some tools from the D-Claw python folder if you find them useful:  
+You can also then import some auxiliary tools from the D-Claw python folder if you find them useful:  
 ```
 python> import dclaw
 python> import dclaw.topotools as dt 
 ```
-The current version of D-Claw is compatible with python v2.x. If you prefer python version v3.x, see below about developing and contributing to D-Claw.    
+NOTE: The current version of D-Claw is compatible with python v2.x. If you prefer python version v3.x, see below about developing and contributing to D-Claw.    
 
 #### matlab
 If you are going to use matlab plotting with D-Claw, your $MATLABPATH should include $CLAW/matlabgeo, above but in addition to $CLAW/matlab:
