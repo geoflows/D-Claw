@@ -8,9 +8,9 @@ description: D-Claw is numerical software package for simulating granular-fluid 
 
 # Summary
 
-D-Claw is numerical software built from Clawpack codes ([clawpack.org](http://www.clawpack.org)). It is a generalization of GeoClaw ([geoclaw.org](http://www.geoclaw.org)) for solving two-phase flows (granular-fluid mixtures), including landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam-breach floods, fluid or solid entrainment by inundating flows, such as debris-laden run-off or debris-entraining tsunamis).
+D-Claw is numerical software for modeling granular-fluid flows.  It is built on top of Clawpack ([clawpack.org](http://www.clawpack.org)), and is an extension and generalization of the shallow-water code GeoClaw ([geoclaw.org](http://www.geoclaw.org)), which includes algorithms for general shallow earth-surface flows. D-Claw solves a more general two-phase (granular-fluid mixture) model for landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam-breach floods, fluid or solid entrainment by inundating flows, such as debris-laden run-off or debris-entraining tsunamis). In the limit of vanishing solid concentrations, D-Claw theoretically reduces to Geoclaw. 
 
-The documentation available with Clawpack (v5) and GeoClaw provides a good general overview, however, in addition to unique features, D-Claw is an extension of older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
+The documentation available with Clawpack (v5) and GeoClaw provide a general overview, however, in addition to unique features, D-Claw is built on top of older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
 
 Running D-Claw requires additional set-up parameters. Documentation for D-Claw is currently unsatisfactory, but in progress. Some tips on running it are below. See also the [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github for examples.
 
@@ -25,11 +25,10 @@ The source code and latest git repository for D-Claw are available on github:
 
 * [github.com/geoflows/D-Claw](https://github.com/geoflows/D-Claw).
 
-A repository for applications is also available:
+A repository for applications (in progress) is also available:
 
 * [github.com/geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps).
-
-The application repository is in progress, as is documentation for D-Claw. 
+ 
 
 ## Installation
 
