@@ -61,18 +61,6 @@ If you are going to use matlab plotting with D-Claw, your $MATLABPATH should inc
 ```
 export MATLABPATH=$CLAW/matlabgeo:$CLAW/matlab:$MATLABPATH
 ```
-For a given application, it is useful to relocate some of the m-files (*eg.,* afterframe.m, setplot2.m, setprob.m, beforeframe.m etc.) included with D-Claw to your local working application directory, where you can modify them to suit you present purposes without modifying your D-Claw source files (note that files in $CLAW/matlabgeo should take precedent over files of the same name in $CLAW/matlab. Unifying these directories is planned in the future, but they currently coexist so that the D-Claw source code can be used to run Geoclaw v4.x applications...more about that in the future). 
-
-Note that D-Claw output and these locally modified .m-files (in your application directory) must both be located by matlab, but they are not usually in the same directory. For instance, if the output sub-directory is the current directory where matlab is running, *ie.,*
-```
-matlab> pwd
-/somedir/myapplication/_output
-```
-then you can issue,
-```
-matlab> addpath ../
-```
-to get the local .m-files in the output's parent directory, myapplication, above the same routines in the D-Claw matlab libraries (*ie.* Matlab will add the absolute path for ../ to the top of your path).
 
 ## Running D-Claw applications
 
@@ -82,6 +70,56 @@ Setting up a given simulation essentially amounts to modifying the routine setru
 
 Further documentation is planned.
 
+#### make 
+
+The program make is used to compile, run, and optionally plot D-Claw output, all from your application directory.
+
+```
+make new
+```
+will recompile all source code from scratch and create a new executable, xgeoclaw. 
+
+The following make commands will take into account dependency changes to determine the sequence of prerequisite steps that needs to be taken. 
+```
+make .exe
+```
+will compile a new executable from the Fortran source code, if necessary. 
+```
+make .output
+```
+will run the code and produce output files. Output files will be placed in a subdirectory indicated in the Makefile.
+```
+make .plots
+```
+will produce plots using python and the setplot.py routine in your application directory. 
+
+Note that each one of these steps depends on the previous steps if things have changed. So, for instance, make .plots will recompile source code, rerun the executable, and produce new plots if the source code has changed. If nothing has changed, make will indicate that nothing needs to be done.
+
+#### plotting results
+* matlab
+
+Matlab can be used to plot D-Claw output. From the output directory, use
+```
+matlab> plotclaw2
+```
+then follow the interactive menu to produce plots for each frame.
+
+For a given application, it is useful to relocate some of the m-files (*eg.,* afterframe.m, setplot2.m, setprob.m, beforeframe.m etc.) included with D-Claw to your local working application directory, where you can modify them to suit you present purposes without modifying your D-Claw source files (note that files in $CLAW/matlabgeo should take precedent over files of the same name in $CLAW/matlab. Unifying these directories is planned in the future, but they currently coexist so that the D-Claw source code can be used to run Geoclaw v4.x applications...more about that in the future). 
+
+Note that D-Claw output and these locally modified .m-files (in your application directory) must both be located by matlab, but they are not usually in the same directory. For instance, if the output sub-directory is the current directory where matlab is running, *ie.,*
+```
+matlab> pwd
+/path/to/myapplication/_output
+```
+then you can issue,
+```
+matlab> addpath ../
+```
+to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path).
+
+* python
+
+Python can alternatively be used to produce mapview 2d plots, using setplot.py and matplotlib. See [clawpack.org](http://www.clawpack.org) and [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) for more information about plotting with python. Note that v5.x python libraries may not be compatible with D-Claw v4.x output. 
 
 ## Development
 
