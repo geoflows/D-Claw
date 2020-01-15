@@ -133,9 +133,9 @@ matlab> addpath ../
 ```
 to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path).
 
-####python
+#### python
 
-Python can alternatively be used to produce mapview 2d plots, using setplot.py and matplotlib. See [clawpack.org](http://www.clawpack.org) and [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) for more information about plotting with python. Note that v5.x python libraries may not be compatible with D-Claw v4.x output. 
+Python can alternatively be used to produce mapview 2d plots, using setplot.py and matplotlib. See [clawpack.org](http://www.clawpack.org) and [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) for more information about plotting with python. Note that Clawpack's v5.x python libraries may not be compatible with D-Claw v4.x output. 
 
 ## Development
 
