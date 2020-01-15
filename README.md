@@ -15,7 +15,7 @@ The documentation available with Clawpack (v5) and GeoClaw provide a general ove
 Running D-Claw requires additional set-up parameters. Documentation for D-Claw is currently unsatisfactory, but in progress. Some tips on running it are below. See also the [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github for examples.
 
 
-# Obtaining, installing, and running D-Claw
+# Documentation (in progress)
 
 To use D-Claw as is, it is assumed that you have a unix terminal of some kind (*eg.,* linux or Mac OS...for MS Windows you are on your own). 
 
@@ -36,12 +36,13 @@ A repository for applications (in progress) is also available:
 
 #### environment variables
 
-The environment variable $CLAW should be set to point to the D-Claw code (the uppermost directory of the source code, "D-Claw/"), or modify the Makefiles if you want to use an environment variable other than $CLAW. For bash shells:
+The environment variable $CLAW should be set to point to the parent directory of the D-Claw source code. For bash shells:
 ```
 export CLAW=/path/to/D-Claw
 ```
+(Alternatively, one could modify Makefiles if you want to use an environment variable other than $CLAW, such as $DCLAW.)  
 
-NOTE/WARNING: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful of how $CLAW is set, particularly if you are developing/testing code. (For instance, it is easy to incorrectly assume that make is compiling your changes when it is not, because it is checking a static library for dependency changes to your executable.) Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful. 
+NOTE/WARNING: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful of how $CLAW is set, particularly if you are developing/testing code. It is easy to inadvertently compile the wrong code, or fail to incorporate code-changes if $CLAW is set incorrectly. Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful. 
 
 #### python
 In order to use the python set-up scripts that come with D-Claw, you should include $CLAW/python/ in your $PYTHONPATH:
@@ -61,38 +62,54 @@ If you are going to use matlab plotting with D-Claw, your $MATLABPATH should inc
 export MATLABPATH=$CLAW/matlabgeo:$CLAW/matlab:$MATLABPATH
 ```
 
-## Running D-Claw applications
+## Running a D-Claw simulation
 
-Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). In summary, a Makefile, some python set-up scripts, and optional plotting scripts reside in an application directory. The file setrun.py is used to set runtime parameters, initial conditions and input data (*eg.,* topography DEMs). The make program is used to compile and run the code (as well as produce plots if the python plotting options are used). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github).
+Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). 
 
-Setting up a given simulation essentially amounts to modifying the routine setrun.py. Unfortunately documentation is still lacking for the unique attributes of D-Claw. However, examples that can be modified can be found in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
+#### file structure
 
-Further documentation is planned.
+In summary, a working application directory (it is recommended that this reside away from your D-Claw source code) for a single simulation should contain:
+* a Makefile
+* python initialization scripts (setrun.py)
+* optional plotting routines (python or matlab)
+* optional pre-processing routines for topography or other data requirements
+
+Setting up a given simulation essentially amounts to modifying the routine setrun.py, to set runtime parameters, initial conditions, and required input data (*eg.,* topography DEMs). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github) See more below.
+
+Unfortunately documentation is still lacking for the unique attributes of D-Claw. However, examples that can be modified can be found in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
 
 #### make 
 
-The program make is used to compile, run, and optionally plot D-Claw output, all from your application directory.
+The program make is used to compile, run, and optionally plot D-Claw output, all from your application directory:
+
+```
+pwd
+
+/path/to/myapplication/
+```
+
+To recompile all source code from scratch and create a new executable ("xgeoclaw"), issue:
 
 ```
 make new
 ```
-will recompile all source code from scratch and create a new executable, xgeoclaw. 
-
-The following make commands will take into account dependency changes to determine the sequence of prerequisite steps that needs to be taken. 
+ 
+The following make commands will take into account dependency changes to determine the sequence of prerequisite steps that need to be taken. To make or retain an up-to-date executable, issue: 
 ```
 make .exe
 ```
-will compile a new executable from the Fortran source code, if necessary. 
+
+To run the executable and produce output (the output files will be placed in a subdirectory indicated in the Makefile), issue:
 ```
 make .output
 ```
-will run the code and produce output files. Output files will be placed in a subdirectory indicated in the Makefile.
+
+To produce plots using python and the setplot.py routine in your application directory, issue: 
 ```
 make .plots
 ```
-will produce plots using python and the setplot.py routine in your application directory. 
 
-Note that each one of these steps depends on the previous steps if things have changed. So, for instance, make .plots will recompile source code, rerun the executable, and produce new plots if the source code has changed. If nothing has changed, make will indicate that nothing needs to be done.
+Note that each one of the above steps depends on the previous steps if source code or parameters have changed. So, for instance, "make .plots" will recompile source code, rerun the executable to produce new output, and finally produce new plots if the source code has changed. If nothing has changed, make will indicate that nothing needs to be done.
 
 #### plotting results
 * matlab
