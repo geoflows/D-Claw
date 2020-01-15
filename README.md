@@ -111,8 +111,8 @@ make .plots
 
 Note that each one of the above steps depends on the previous steps if source code or parameters have changed. So, for instance, "make .plots" will recompile source code, rerun the executable to produce new output, and finally produce new plots if the source code has changed. If nothing has changed, make will indicate that nothing needs to be done.
 
-#### plotting results
-* matlab
+## Plotting results
+#### matlab
 
 Matlab can be used to plot D-Claw output. From the output directory, use
 ```
@@ -133,7 +133,7 @@ matlab> addpath ../
 ```
 to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path).
 
-* python
+####python
 
 Python can alternatively be used to produce mapview 2d plots, using setplot.py and matplotlib. See [clawpack.org](http://www.clawpack.org) and [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) for more information about plotting with python. Note that v5.x python libraries may not be compatible with D-Claw v4.x output. 
 
