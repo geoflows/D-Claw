@@ -135,7 +135,7 @@ then you can issue,
 ```
 matlab> addpath ../
 ```
-to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path).
+to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path for the current session).
 
 NOTE: you could alternatively place your local m-files in the output directory...but this is not recommended if you want your local m-files to be part of a repository, as the output directory is best ignored by git, as it is with the applications in the [dclaw-apps](https://github.com/geoflows/dclaw-apps).
 
@@ -160,7 +160,7 @@ or if you have ssh keys and want to avoid typing your password when you push to 
 ```
 git remote add username git@github.com:username/D-Claw.git
 ```
-these settings can be modified at anytime with `git remote set-url`.
+These settings can be modified in your local working repository at anytime with `git remote set-url`.
 Develop in a branch other than master:
 ```
 git checkout -b my_branch
