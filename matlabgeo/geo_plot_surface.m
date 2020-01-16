@@ -17,7 +17,8 @@
 if ~exist('flow_colormap')
   disp('*** You must define flow_colormap, e.g. to one of the maps')
   disp('     defined in geo_setzcolormaps.m')
-  break
+  %break
+  exit
   end
 
 
