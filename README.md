@@ -113,7 +113,7 @@ make .plots
 
 Note that each one of the above steps depends on the previous steps if source code or parameters have changed. So, for instance, "make .plots" will recompile source code, rerun the executable to produce new output, and finally produce new plots if the source code has changed. If only setrun.py has been modified, it will re-run the existing executable to produce new output. If nothing has changed, make will indicate that nothing needs to be done.
 
-**WARNING: if the command `make .output` creates a new run, it will delete previously made output files in the `_output` directory. If you have changed source code or input parameters, but wish to keep your old output for comparison or debugging, take necessary action to save your old files. The Makefile can also be modified to specify your output directory name.** 
+**WARNING: if the commands `make .output` or `make .plots` create a new run, previously made output files in the `_output` directory will be deleted. If you have changed source code or runtime parameters, but wish to keep your old output for comparison or debugging, take necessary action to save your old files. The Makefile can also be modified to specify your output directory name.** 
 
 ## Plotting results
 #### matlab
@@ -137,7 +137,9 @@ matlab> addpath ../
 ```
 to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path).
 
-NOTE: you could alternatively place your local m-files in the output directory...but this is not recommended if you want your local m-files to be part of a repository, as the output directory is best ignored by git, as it is with the applications in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps).
+NOTE: you could alternatively place your local m-files in the output directory...but this is not recommended if you want your local m-files to be part of a repository, as the output directory is best ignored by git, as it is with the applications in the [dclaw-apps](https://github.com/geoflows/dclaw-apps).
+
+More information on plotting can be found in the [dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
 
 
 #### python
@@ -158,6 +160,7 @@ or if you have ssh keys and want to avoid typing your password when you push to 
 ```
 git remote add username git@github.com:username/D-Claw.git
 ```
+these settings can be modified at anytime with `git remote set-url`.
 Develop in a branch other than master:
 ```
 git checkout -b my_branch
