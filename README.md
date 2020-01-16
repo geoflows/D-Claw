@@ -151,9 +151,9 @@ Python can alternatively be used to produce mapview 2d plots, using setplot.py a
 If you would like to make contributions to D-Claw or dclaw-apps, please follow the development workflow used for Clawpack, described at [www.clawpack.org/developers](http://www.clawpack.org/developers.html). In summary, please fork the repositories to your own github account, and issue pull requests on a feature branch to github/geoflows, *eg,*:
 
 ```
-git clone git://github.com/geoflows/D-Claw.git
+git clone https://github.com/geoflows/D-Claw.git
 cd D-Claw
-git remote add username htpps://github.com/username/D-Claw.git
+git remote add username https://github.com/username/D-Claw.git
 ```
 or if you have ssh keys and want to avoid typing your password when you push to github:
 
