@@ -6,18 +6,18 @@ description: D-Claw is numerical software package for simulating granular-fluid 
 
 ---
 
-# Summary
+# Overview
 
-D-Claw is numerical software for modeling granular-fluid flows.  It is built on top of Clawpack ([clawpack.org](http://www.clawpack.org)), and is an extension and generalization of the shallow-water code GeoClaw ([geoclaw.org](http://www.geoclaw.org)), which includes algorithms for general shallow earth-surface flows. D-Claw solves a more general two-phase (granular-fluid mixture) model for landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam-breach floods, fluid or solid entrainment by inundating flows, such as debris-laden run-off or debris-entraining tsunamis). In the limit of vanishing solid concentrations, D-Claw theoretically reduces to Geoclaw. 
+D-Claw is numerical software for modeling granular-fluid flows.  It is built on top of Clawpack ([clawpack.org](http://www.clawpack.org)), and is an extension and generalization of the shallow-water code GeoClaw ([geoclaw.org](http://www.geoclaw.org)), which includes algorithms for general shallow earth-surface flows. D-Claw solves a more general two-phase (granular-fluid mixture) model for landslides, debris flows, and lahars. D-Claw can also be used for simulating hybrid problems that involve the interaction of granular-fluid flows with bodies of water (*eg.*, landslide-generated tsunamis, dam-breach floods, fluid or solid entrainment by inundating flows, such as debris-laden run-off or debris-entraining tsunamis). In the limit of vanishing solid concentrations, D-Claw results theoretically reduce to Geoclaw results (though details of the numerical implementation may differ). 
 
 The documentation available with Clawpack (v5) and GeoClaw provide a general overview, however, in addition to unique features, D-Claw is built on top of older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
 
-Running D-Claw requires additional set-up parameters. Documentation for D-Claw is currently unsatisfactory, but in progress. Some tips on running it are below. See also the [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github for examples.
+Running D-Claw requires additional set-up parameters beyond those of Geoclaw. Documentation for D-Claw is currently unsatisfactory, but in progress. The basics of running it are below. See also the [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github for examples.
 
 
-# Documentation (in progress)
+# Use
 
-To use D-Claw as is, it is assumed that you have a unix terminal of some kind (*eg.,* linux or Mac OS...for MS Windows you are on your own). 
+To use D-Claw as is, it is assumed that you have a unix terminal of some kind (*eg.,* linux or Mac OS...for MS Windows you are on your own, but options exist for terminal emulators). 
 
 ## Source code
 
@@ -40,9 +40,10 @@ The environment variable $CLAW should be set to point to the parent directory of
 ```
 export CLAW=/path/to/D-Claw
 ```
-(Alternatively, one could modify Makefiles if you want to use an environment variable other than $CLAW, such as $DCLAW.)  
 
-TIP: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful of how $CLAW is set, particularly if you are developing/testing code. It is easy to inadvertently compile the wrong code, or fail to incorporate code-changes if $CLAW is set incorrectly. Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful. 
+TIP: if you are using multiple versions of Clawpack (*eg.,* Clawpack 5.x or GeoClaw and D-Claw), it is advisable to stay mindful of how $CLAW is set, particularly if you are developing/testing code. It is easy to inadvertently compile the wrong code, or fail to incorporate code-changes if $CLAW is set incorrectly. Packages such as the [environment modules](http://modules.sourceforge.net/) package, which can dynamically set or change your environment under a given shell to ensure that you have a compatible set of paths/versions of software (*eg.*, $PATH, $CLAW, $PYTHONPATH, $MATLABPATH), are very useful.
+
+(Alternatively, one could modify Makefiles if you want to use an environment variable other than $CLAW, such as $DCLAW. However, this can add complications to your path hierarchy for python and matlab when switching between different $CLAWs, as there are modified routines with the same file name...and so it is not recommended without something like environmental modules.)   
 
 #### python
 In order to use the python set-up scripts that come with D-Claw, you should include $CLAW/python/ in your $PYTHONPATH:
@@ -54,6 +55,8 @@ You can also then import some auxiliary tools from the D-Claw python folder if y
 python> import dclaw
 python> import dclaw.topotools as dt 
 ```
+See the comments in these modules for more information.
+
 NOTE: The current version of D-Claw is compatible with python v2.x. If you prefer python version v3.x, see below about developing and contributing to D-Claw.    
 
 #### matlab
@@ -64,9 +67,11 @@ export MATLABPATH=$CLAW/matlabgeo:$CLAW/matlab:$MATLABPATH
 
 ## Running a D-Claw simulation
 
-Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). 
+Running D-Claw applications is very similar to running applications in Clawpack v5.x. See the documentation at [clawpack.org](http://www.clawpack.org). See also example applications that include necessary files in the application repository, [github/geoflows/dlcaw-apps](https://github.com/geoflows/dclaw-apps).
 
-#### file structure
+The D-Claw executable is made entirely from Fortran source code. However, python is used to set-up and initialize a given D-Claw run, and optionally plot the results. Therefore, ordinary use of D-Claw requires interaction with python scripts and the make program. Modifying Fortran source code is only necessary if you are developing new features or debugging.
+
+#### directory and file structure
 
 In summary, a working application directory (it is recommended that this reside away from your D-Claw source code) for a single simulation should contain:
 * a Makefile
@@ -74,13 +79,10 @@ In summary, a working application directory (it is recommended that this reside 
 * optional plotting routines (python or matlab)
 * optional pre-processing routines for topography or other data requirements
 
-Setting up a given simulation essentially amounts to modifying the routine setrun.py, to set runtime parameters, initial conditions, and required input data (*eg.,* topography DEMs). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github) See more below.
-
-Unfortunately documentation is still lacking for the unique attributes of D-Claw. However, examples that can be modified can be found in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
+Setting up a given simulation essentially amounts to modifying the routine setrun.py, to set runtime parameters, initial conditions, and required input data (*eg.,* topography DEMs). Plotting can be done with python or matlab scripts, which are included with D-Claw and application examples (*see* *eg.,* [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github). See more info on plotting below, or in example applications.
 
 #### make 
 
-The program make is used to compile, run, and optionally plot D-Claw output, all from your application directory:
 
 ```
 pwd
@@ -88,7 +90,7 @@ pwd
 /path/to/myapplication/
 ```
 
-To recompile all source code from scratch and create a new executable ("xgeoclaw"), issue:
+To recompile all of the Fortran source code from scratch and create a new executable ("xgeoclaw"), issue:
 
 ```
 make new
@@ -109,7 +111,9 @@ To produce plots using python and the setplot.py routine in your application dir
 make .plots
 ```
 
-Note that each one of the above steps depends on the previous steps if source code or parameters have changed. So, for instance, "make .plots" will recompile source code, rerun the executable to produce new output, and finally produce new plots if the source code has changed. If nothing has changed, make will indicate that nothing needs to be done.
+Note that each one of the above steps depends on the previous steps if source code or parameters have changed. So, for instance, "make .plots" will recompile source code, rerun the executable to produce new output, and finally produce new plots if the source code has changed. If only setrun.py has been modified, it will re-run the existing executable to produce new output. If nothing has changed, make will indicate that nothing needs to be done.
+
+**WARNING: if the commands `make .output` or `make .plots` create a new run, previously made output files in the `_output` directory will be deleted. If you have changed source code or runtime parameters, but wish to keep your old output for comparison or debugging, take necessary action to save your old files. The Makefile can also be modified to specify your output directory name.** 
 
 ## Plotting results
 #### matlab
@@ -131,9 +135,11 @@ then you can issue,
 ```
 matlab> addpath ../
 ```
-to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path).
+to get the local .m-files in the output's parent directory, myapplication/, to the top of your path (*ie.* Matlab will add the absolute path for ../ to the top of your path for the current session).
 
-NOTE: you could alternatively place your local m-files in the output directory...but this is not recommended if you want your local m-files to be part of a repository, as the output directory is best ignored by git, as it is with the applications in the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps).
+NOTE: you could alternatively place your local m-files in the output directory...but this is not recommended if you want your local m-files to be part of a repository, as the output directory is best ignored by git, as it is with the applications in the [dclaw-apps](https://github.com/geoflows/dclaw-apps).
+
+More information on plotting can be found in the [dclaw-apps](https://github.com/geoflows/dclaw-apps) repository.
 
 
 #### python
@@ -154,6 +160,7 @@ or if you have ssh keys and want to avoid typing your password when you push to 
 ```
 git remote add username git@github.com:username/D-Claw.git
 ```
+These settings can be modified in your local working repository at anytime with `git remote set-url`.
 Develop in a branch other than master:
 ```
 git checkout -b my_branch
