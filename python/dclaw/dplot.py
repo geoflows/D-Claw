@@ -79,6 +79,12 @@ tsunami_colormap = colormaps.make_colormap({-TSUNAMI_MAX_AMPLITUDE:blue,
                                             0.0:blue_green,
                                             TSUNAMI_MAX_AMPLITUDE:red})
 
+
+flume_colormap = colormaps.make_colormap({0.0:tan0,
+                                            0.06: tan1,
+                                            0.12: tan2,
+                                            0.18:tan3})
+
 oso_debris_colormap = colormaps.make_colormap({0.0:white,
                                             10.0: light_blue,
                                             20.0: blue,

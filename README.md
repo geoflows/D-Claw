@@ -28,6 +28,16 @@ The source code and latest git repository for D-Claw are available on github:
 A repository for applications (in progress) is also available:
 
 * [github.com/geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps).
+
+If you want just the source code without using git, github provides a zipped directory. Otherwise, you can clone either of the repositories with git clone as usual:
+
+```
+git clone https://github.com/geoflows/D-Claw.git
+```
+and
+```
+git clone https://github.com/geoflows/dclaw-apps.git
+```
  
 
 ## Installation
@@ -115,6 +125,12 @@ Note that each one of the above steps depends on the previous steps if source co
 
 **WARNING: if the commands `make .output` or `make .plots` create a new run, previously made output files in the `_output` directory will be deleted. If you have changed source code or runtime parameters, but wish to keep your old output for comparison or debugging, take necessary action to save your old files. The Makefile can also be modified to specify your output directory name.** 
 
+To produce plots with python without checking dependencies, without the risk of deleting wanted output files, you can issue:
+```
+make plots
+```
+ (without the ".").
+
 ## Plotting results
 #### matlab
 
@@ -144,11 +160,22 @@ More information on plotting can be found in the [dclaw-apps](https://github.com
 
 #### python
 
-Python can alternatively be used to produce mapview 2d plots, using setplot.py and matplotlib. See [clawpack.org](http://www.clawpack.org) and [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) for more information about plotting with python. Note that Clawpack's v5.x python libraries may not be compatible with D-Claw v4.x output. 
+Python can alternatively be used to produce mapview 2D or 1D cross-sectional plots, as describe above, with:
+```
+make .plots
+```
+or
+```
+make plots
+```
+Make uses setplot.py and matplotlib.  Modify the routine setplot.py to tailor your plots. 
+
+See [clawpack.org](http://www.clawpack.org), [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) and [github/geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) for more information.
+
 
 ## Development
 
-If you would like to make contributions to D-Claw or dclaw-apps, please follow the development workflow used for Clawpack, described at [www.clawpack.org/developers](http://www.clawpack.org/developers.html). In summary, please fork the repositories to your own github account, and issue pull requests on a feature branch to github/geoflows, *eg,*:
+* If you would like to make contributions to D-Claw or dclaw-apps, please follow the development workflow used for Clawpack, described at [www.clawpack.org/developers](http://www.clawpack.org/developers.html). In summary, please fork the repositories to your own github account, and issue pull requests on a feature branch to github/geoflows, *eg,*:
 
 ```
 git clone https://github.com/geoflows/D-Claw.git
@@ -161,18 +188,27 @@ or if you have ssh keys and want to avoid typing your password when you push to 
 git remote add username git@github.com:username/D-Claw.git
 ```
 These settings can be modified in your local working repository at anytime with `git remote set-url`.
-Develop in a branch other than master:
+
+* Develop in a branch other than master:
 ```
 git checkout -b my_branch
 ```
-And then push to your repository:
+And then push to your repository on github:
 ```
 git push username my_branch
 ```
-Issue pull requests to geoflows/D-Claw from your repository to contribute to D-Claw. Update your master branches from geoflows/D-Claw:
+* Issue pull requests from your branch and repository on github.com (username/D-Claw) to contribute features or fixes to the D-Claw master branch at geoflows/D-Claw. 
+
+* Update your master branches from geoflows/D-Claw:
 ```
 git pull origin master
 ```
+and then 
+```
+git push username master
+```
+to update your git remote. It is recommended that you do not commit to your own master branches, so that your master branches are easily updated from the geoflows repository.
+
 If you prefer, rename origin to something easy to remember ("geoflows" or "upstream" or similar):
 ```
 git remote rename origin geoflows
