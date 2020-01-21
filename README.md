@@ -168,7 +168,7 @@ or
 ```
 make plots
 ```
-Make uses setplot.py and matplotlib.  Modify the routine setplot.py to tailor your plots. 
+Make uses setplot.py and matplotlib.  Modify the routine setplot.py to your needs. 
 
 See [clawpack.org](http://www.clawpack.org), [github/clawpack/visclaw](https://gihub.com/clawpack/visclaw) and [github/geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) for more information.
 
