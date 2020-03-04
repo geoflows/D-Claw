@@ -247,7 +247,7 @@ def fortgauge2gdata (indatafile="fort.gauge",setgaugefile="setgauges.data"):
     N=len(allgaugedata)
 
     for ig in xrange(N):
-        writegdata(allgaugedata[ig])
+        writegdata(allgaugedata[ig],fname=allgaugedata[ig]['gauge'])
     return
 
 #================================================================================

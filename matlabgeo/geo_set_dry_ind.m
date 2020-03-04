@@ -9,7 +9,7 @@ dry_ind=ones(size(X));
 dry_ind(find((h2./dry_cutoff)<1))=NaN;
 
 if ~exist('alpha_cutoff');
-	alpha_cutoff = 0.5;
+	alpha_cutoff = 0.05;
 end
 
 alpha_ind =ones(size(X));
