@@ -156,6 +156,9 @@ These are specified by modifying the object `digdata` in `setrun.py`, for exampl
 digdata.rho_f = 1100.0
 ```
 
+TODO: Don't yet understand init_ptype, init_pmax_ratio, init_ptf, init_ptf2. Unsure if these control when/if failure occurs. Should probably start with understanding init_ptype.
+
+
 ### 2.3 Format of spatially variable inputs
 Start by reading the information in the [topography data documentation on Clawpack website](http://www.clawpack.org/topo.html#topo). Cribnotes: Four styles of input are supported (3 ascii and 1 netcdf).
 - There are multiple types of topography-like files but at core they are all (x,y,z). Esri ascii format is topotype 3.
@@ -207,8 +210,7 @@ The `qinitftype` is the file type, the same as is permitted for topo. `iqinit` i
 
 While the surface elevation, eta, is not technically a state variable, it can be set as the eight element of qinit.
 
-TODO: what happens if ove- specified (e.g., topo, h, and eta), or `digdata.m0` and a value for q_5.
-TODO: related. If all others specified, then `p_b` implied, yes?
+TODO: What happens if inputs are over specified in a conflicting way (e.g., topo, h, and eta such that topo + h != eta), or `digdata.m0` and a value for q_5.
 
 #### 2.4.4 auxinit
 This is where you set initial values for the aux array. Same as qinit.
@@ -218,35 +220,125 @@ geodata.auxinitfiles = []
 geodata.auxinitfiles.append([auxinitftype, iauxinit, minlevel, maxlevel, fname])
 ```
 
-### 2.5 Definition of the grid scale and AMR levels.
+### 2.5 Definition of the grid scale and AMR Levels
 
-TODO.
+Domain extent and number of grid cells are set as follows:
+```python
+# Lower and upper edge of computational domain:
+clawdata.xlower = -10.0
+clawdata.xupper =  140.0
+clawdata.ylower =  -6.0
+clawdata.yupper =   8.0
+
+
+# Number of grid cells:
+clawdata.mx = 200
+clawdata.my = 28
+```
+
+AMR levels given as:
+```python
+# ---------------
+# AMR parameters:
+# ---------------
+
+# max number of refinement levels:
+mxnest = 2
+
+clawdata.mxnest = -mxnest   # negative ==> anisotropic refinement in x,y,t
+
+# List of refinement ratios at each level (length at least mxnest-1)
+clawdata.inratx = [5,5,2,4]
+clawdata.inraty = [5,5,2,4]
+clawdata.inratt = [5,5,2,4]
+```
+
+TODO: How does the domain resolution and its AMR counterparts need to relate to the resolution/alignment of the topography inputs from geodata.topofiles. Do they need to align perfectly? Is topography at a specific refinement level required?
+
+To some extent this is controlled by the amr level indicated in the topo input, yes
+
+Is AMR level 1 coarsest or finest? I think coarsest.
+
+AMR level is zero indexed or 1 indexed?
+
+[Link to example AMRCLAW setrun.py from v4.6](http://depts.washington.edu/clawpack/users-4.6/amrclaw/setrun_amrclaw_sample.html?highlight=mxnest)
 
 ### 2.6 Definition of simulation time.
 
-TODO
+Initial time is set with:
+```python
+clawdata.t0 = 0.0
+```
+
+A few ways to set final time, it is implied by the output times and will stop once the final output time has been reached.
+
+```python
+clawdata.tfinal = 20.0
+```
+
+Time stepping and courant conditions  described by:
+```python
+# --------------
+# Time stepping:
+# --------------
+
+# if dt_variable==1: variable time steps used based on cfl_desired,
+# if dt_variable==0: fixed time steps dt = dt_initial will always be used.
+clawdata.dt_variable = 1
+
+# Initial time step for variable dt.
+# If dt_variable==0 then dt=dt_initial for all steps:
+clawdata.dt_initial = 1.e-16
+
+# Max time step to be allowed if variable dt used:
+clawdata.dt_max = 1e+99
+
+# Desired Courant number if variable dt used, and max to allow without
+# retaking step with a smaller dt:
+clawdata.cfl_desired = 0.25
+clawdata.cfl_max = 0.9
+
+# Maximum number of time steps to allow between output times:
+clawdata.max_steps = 100000
+```
 
 ### 2.7 Definition of output writing.
-TODO. Include Turn on/off aux?
 
+In the Clawpack v5.7 docs the following options are listed in the [example AMRClaw setrun.py file](http://www.clawpack.org/setrun_amrclaw_sample.html#setrun-amrclaw-sample).
+
+```python
+clawdata.output_format = 'ascii'       # 'ascii', 'binary', 'netcdf'
+
+clawdata.output_q_components = 'all'   # could be list such as [True,True]
+clawdata.output_aux_components = 'none'  # could be list
+clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
+```
 
 ### 2.8 Flowgrades and AMR control
-TODO.
-This controls AMR refinement.
 
-`geodata.flowgrades` from the input file:
-  ```python
-  # for using flowgrades for refinement append lines of the form
-  # [flowgradevalue, flowgradevariable, flowgradetype, flowgrademinlevel]
-  # where:
-  #flowgradevalue: floating point relevant flowgrade value for following measure:
-  #flowgradevariable: 1=depth, 2= momentum, 3 = sign(depth)*(depth+topo) (0 at sealevel or dry land).
-  #flowgradetype: 1 = norm(flowgradevariable), 2 = norm(grad(flowgradevariable))
-  #flowgrademinlevel: refine to at least this level if flowgradevalue is exceeded.
-  geodata.flowgrades = []
-  geodata.flowgrades.append([flowgradevalue, flowgradevariable, flowgradetype, flowgrademinlevel])
-  ```
-### 2.9 Source terms and  the source  .f90 file
+Flowgrades controlls AMR refinement in D-CLAW. Refinement occurs where one of the three flow grade variables exceeds a specified flow grade value.
+
+Specified as
+```python
+geodata.flowgrades = []
+geodata.flowgrades.append([flowgradevalue, flowgradevariable, flowgradetype, flowgrademinlevel])
+```
+where
+`flowgradevalue` is the floating point relevant flowgrade value for following measure
+`flowgradevariable` is one of the following
+    - 1 = depth
+    - 2 = momentum,
+    - 3 = `sign(depth)*(depth+topo)` (0 at sealevel or dry land).
+`flowgradetype` is one of the following:
+    - 1 = norm(flowgradevariable)
+    - 2 = norm(grad(flowgradevariable))
+
+TODO: Here norm probably means the combination of x and y components of depth and momentum or the absolute value of option 3. True?
+
+and    
+`flowgrademinlevel` indicates that the refinement will occur to at least this level if `flowgradevalue` is exceeded.
+
+### 2.9 Source terms and  the source .f90 file
 
 TODO
 
