@@ -64,11 +64,7 @@ Note that some inputs must be specified as spatially distributed (e.g., h, eta) 
 
 Note also that the way D-Claw controls AMR refinement is different than how Clawpack handles it. See the discussion of "flowgrades" below.
 
-### 1.4 Conceptual statement of failure options
-
-TODO.
-
-### 1.5 The `q` and `aux` arrays
+### 1.4 The `q` and `aux` arrays
 
 There are two core arrays that Clawpack maintains. One is called `aux` and refers to non time-variable quantities. One is called `q` and it refers to the state variables. `q` often also contains other time-variable quantities that are commonly desired for writing output.
 
@@ -96,6 +92,26 @@ The aux array contains the following:
 - fsphi
 - taudir_x
 - taudir_y
+
+### 1.5 Conceptual statement of failure options
+
+Failure is indicated by the `init_ptype` variable, and some of the other `init_p***` variables.
+
+(?? some of these have implications for how q (?) and aux (?) are initialized. To the extent to which this is true, it is noted below)
+
+Main options:
+
+#### 1.5.1 Hydrostatic
+`init_ptype = 0`
+
+
+#### 1.5.1 Failure Pressure
+`init_ptype = 1 or 2`
+
+
+#### 1.5.1 Rising Pressure
+`init_ptype = 3 or 4`
+
 
 ### 1.6 A note about coordinate system and slope normals
 
@@ -158,14 +174,12 @@ digdata.rho_f = 1100.0
 
 TODO: Don't yet understand init_ptype, init_pmax_ratio, init_ptf, init_ptf2. Unsure if these control when/if failure occurs. Should probably start with understanding init_ptype.
 
-
 ### 2.3 Format of spatially variable inputs
 Start by reading the information in the [topography data documentation on Clawpack website](http://www.clawpack.org/topo.html#topo). Cribnotes: Four styles of input are supported (3 ascii and 1 netcdf).
 - There are multiple types of topography-like files but at core they are all (x,y,z). Esri ascii format is topotype 3.
 - Another good page is the [geoclaw doc page on topography data file parameters](http://www.clawpack.org/setrun_geoclaw.html#topography-data-file-parameters) for definition of each input.
 - Clawpack has a lot of python tools for working with topography-like data. Start [here](http://www.clawpack.org/topotools_module.html)
 In this document, ee also the section on grid definition and how grid resolution and topographic resolution are related (Section 2.5).
-
 
 TODO: Make clear that there are some indexing differences between the current clawpack docs and DCLAW. So there may be places where the Clawpack docs are not quite right.
 
@@ -357,7 +371,7 @@ TODO. Prob just point to Clawpack docs as this really is a language.
 In the D-Claw repository we have the following key directories:
 - Fortran source
   - `amrclaw` (adaptive mesh refinement claw)
-  - `clawpack` (core claw, this is v4.X.X of Clawpack)
+  - `clawpack` (core claw, this is v4.6 (I think) of Clawpack)
   - `geoclaw`
       - The core of D-Claw is located in `D-Claw/geoclaw/2d/lib_dig`
 
