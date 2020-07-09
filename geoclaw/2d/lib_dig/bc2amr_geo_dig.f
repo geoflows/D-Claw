@@ -91,6 +91,53 @@ c ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::;
       hymarg = hy*.01
 
       if (xperiodic .and. (yperiodic .or. spheredom)) go to 499
+
+
+c      Either by passing data arrays or looking at a file called something
+c      like "setdbc.data" at this point learn about whether there are any
+c      input-file specified boundary conditions specified by an external
+c      file.
+c
+c      Follow the pattern of dtopo files in specifying these inputs.
+c      That is, dtopo input file type 3
+c      (http://www.clawpack.org/topo.html#topo-dtopo)
+c
+c      End goal, these files will be described in setrun.py with something like:
+c
+c      digdata.dbcfiles.append([
+c              dtopotype,
+c              minlevel,
+c              maxlevel,
+c              bc_rest,
+c              iq,
+c              fname])
+c
+c      where
+c        dtopotype is the dtopo file type
+c        minlevel and max level are the min and max AMR levels
+c        bc_rest is the boundary condition type for the rest of the boundary.
+c            (alternatively we could just have the bcs for the rest specified
+c            by clawdata.mthbc_XXX in setrun.py) specify everything EXCEPT
+c            what is by an overriding file. Then rather than complex
+c            indexing selection based on what is in/out of the file, you
+c            could fill the whole domain boundary strip based on mthbc_XXX
+c            (using current routines) and then overwrite based on the file
+c            at the very end.
+c               This makes the most sense to me, so I'm going to stub out
+c               below.
+c      So if you wanted to specify n elements of q, then you would need n
+c      elements appended to dbcfiles.
+c
+c      Some statements here about reasonable default values?
+c
+c      either h, hu, or hv must be set?
+c      If not specified, default values are (the following are KRB thoughts based on 10 seconds of thought)
+c        h = zero order extrapolation
+c        hv = 0
+c        hu = 0
+c        hm = zero order extrapolation of h times m0
+c        pb = hydrostatic
+
 c
 c
 c-------------------------------------------------------
@@ -309,4 +356,59 @@ c     # negate the normal velocity:
 
       return
       end
+! KRB PSEUDOCODE.
+!
+! this block would start with if setdbc.data exists or if setdbc_flag = True.
+!
+! Then files would be read and/or arrays already loaded would be used.
+!
+! for now...
+!
+! hard code some variables here (not declared above yet) that will
+! eventually be what would be read in in setdbc.data based on the current
+! value of time.
+!
+! ymin, ymax, xmin, xmax, q1, q2, q3, q4, q5 are all floats.
+! jstart, jend, istart, iend are all ints.
 
+ymin = XXX ! these four define the bounding box of the dbc file
+ymax = XXX
+xmin = XXX
+xmax = XXX
+
+! (note that this means the extent needs to cover the extent of the ghost cells.
+! there should be a check/warning for this. Also careful precision leq/geq/lt/gt
+! checking for overlap)
+
+q1 = XXX # values for each of element of q within the dbc bounding box.
+q2 = XXX # eventually these may be spatially variable. floats for now.
+q3 = XXX
+q4 = XXX
+q5 = XXX
+
+! Ensure it is possible for multiple bcs to be specified (e.g., two on
+! left side, one on left and one on right so that multiple inflow
+! hydrographs can be specified).
+!
+! Do some sort of check about sub/supercritical. If subcritical print a
+! warning to output.
+!
+! For each bc domain for this timestep (including time interpolation
+! already supported by dtopo capabilities?)
+!
+!       use domain bounds and dbc bounds to determine the i and j indice
+!       values for val that are modified by this part of setdbc.data.
+
+jstart = XXX
+istart = XXX
+jend = XXX
+iend = XXX
+
+! such that we are filling val[istart:iend+1, jstart:jend+1, :] = [q1, q2, q3, q4, q5] # interpret this as python
+
+!       At present, fill all those with values for q1--q5.
+!       Eventually, use existing interpolation schemes to interpolate
+!       values correctly given the grid discretization and the extent of
+!       the dbc domain.
+!
+!       use default values where values are not specified.
