@@ -25,7 +25,7 @@ Parallelism is possible in all. Fortran uses OpenMP and PyClaw uses MPI and PETS
 
 The [current documentation of Clawpack](http://www.clawpack.org/contents.html) is very comprehensive.
 
-[This page]() goes to the Clawpack v4.X.X, on which D-Claw currently rests.
+[This page]() goes to the Clawpack v4.X.X, on which D-Claw currently rests. TODO.
 
 ### 1.1 Very brief summary of D-Claw
 
@@ -112,6 +112,13 @@ Main options:
 #### 1.5.1 Rising Pressure
 `init_ptype = 3 or 4`
 
+DG: The rise to failure option starts a p_b =0, raises it uniformly everywhere (scaled by depth) until failure is reached at one location, and then let go everywhere.
+
+KRB: How is the rate of rise specified?
+
+
+#### 1.5.4
+DGNOTES: I think for future development the (non-qinitfile) options should be 0, hydrostatic, failure (which is P_scaled = min_domain (p_b/h) such that failure occurs , applied everywhere: p_b = P_scaled*h). All of these options could occur at t=0 with no time interval used...Qinit files should override every other option.  
 
 ### 1.6 A note about coordinate system and slope normals
 
@@ -123,6 +130,10 @@ Optional, TODO.
 ### 1.8 Best practices with respect to topography, grid definition, and AMR
 
 TODO: Want to summarize here best practices for how desired/anticipated AMR, grid definition, and topography input scales all interact.
+
+### 1.8 Overspecification
+
+Text from Dave: Redundancy/overspecification: there is no error catching for this, which might be useful in the future. However, it would require location overlap checks, because often a variable might be set by different methods for different parts of the domain. (e.g., it might be useful to set water depth for a lake using eta and landslide material using h, etc.). Ideally, qinitfiles should override the default values...however, pressure will need some attention to make sure that's the case...currently, it should be the case for h,hu,hv,m. There are no error checks for incompatible qinitfiles...that could be useful and not too painful to do with qinitfile overlap checks. Currently, in regions where there are no qinitfiles, the defaults are used (aside from pressure, which is about to undergo changes to handle the very issues you raise).
 
 ## 2. Specification of Inputs and Running.
 
@@ -138,7 +149,15 @@ This is done in `setrun.py` and `setplot.py`. Run using make .output. See info i
 - There is a nice distinction between what parameters are specific to clawpack (`clawdata.attribute=value`), geoclaw (`geodata.attribute=value`), and D-claw (`digdata.attribute=value`)
 - In addition to the clawpack and geoclaw parameters, DCLAW can take the following additional parameters. The full list of these and their defaults can be found in the definition of the `DigclawInputData` (line 1427 of  `D-Claw/python/pyclaw/data.py`).
 
-### 2.2 D-Claw specific scalars
+### 2.2 Default values for spatially variable inputs (q and aux)
+
+depth is sea level (unless specified by qinitfiles)
+both momentum terms set as zero.
+
+pressure not typically set as spatially variable.
+m0 is typically a scalar.
+
+### 2.3 D-Claw specific scalars
 
 Many of these are defined in George and Iverson (2014). Where relevant there is a place for this definition to be noted (TODO).
 Note that some of these can be set as spatially variable using values of `q` or `aux`. This is accomplished setting auxinit or qinit (see below). Here q_1 means the first element of the q array (python index zero, iqinit=1)
@@ -174,7 +193,7 @@ digdata.rho_f = 1100.0
 
 TODO: Don't yet understand init_ptype, init_pmax_ratio, init_ptf, init_ptf2. Unsure if these control when/if failure occurs. Should probably start with understanding init_ptype.
 
-### 2.3 Format of spatially variable inputs
+### 2.4 Format of spatially variable inputs
 Start by reading the information in the [topography data documentation on Clawpack website](http://www.clawpack.org/topo.html#topo). Cribnotes: Four styles of input are supported (3 ascii and 1 netcdf).
 - There are multiple types of topography-like files but at core they are all (x,y,z). Esri ascii format is topotype 3.
 - Another good page is the [geoclaw doc page on topography data file parameters](http://www.clawpack.org/setrun_geoclaw.html#topography-data-file-parameters) for definition of each input.
@@ -183,9 +202,9 @@ In this document, ee also the section on grid definition and how grid resolution
 
 TODO: Make clear that there are some indexing differences between the current clawpack docs and DCLAW. So there may be places where the Clawpack docs are not quite right.
 
-### 2.4 Different types of spatially variable inputs that might be set.
+### 2.5 Different types of spatially variable inputs that might be set.
 
-#### 2.4.1 Topography (b)
+#### 2.5.1 Topography (b)
 
 Topography specified in `geodata.topofiles`. [Clawpack doc link](http://www.clawpack.org/setrun_geoclaw.html#topography-data-file-parameters) which includes definitions of parameters:
 ```python
@@ -204,7 +223,7 @@ In addition, topography can be specified at multiple scales. From the docs:
 
 > More than one topo file can be specified (see Topography data file parameters) that might cover overlapping regions at different resolutions. The union of all the topo files should cover the full computational domain specified (and may extend outside it). Internally in GeoClaw a single piecewise-bilinear function is constructed from the union of the topo files, using the best information available in regions of overlap. This function is then integrated over computational grid cells to obtain the single topo value in each grid cell needed when solving depth averaged equations such as the shallow water equations with these finite volume methods. Note that this has the feature that if a grid cell is refined at some stage in the computation, the topo used in the fine cells have an average value that is equal to the coarse cell value. This is crucial in maintaining the ocean-at-rest steady state, for example.
 
-#### 2.4.2. Displacement
+#### 2.5.2. Displacement
 This is unlikely to be used by D-Claw and is meant more for tsunami initiation.
 
 ```python
@@ -213,7 +232,7 @@ geodata.topofiles.append([dtopotype, minlevel, maxlevel, fname])
 ```
 See [this page](http://www.clawpack.org/topo.html#topo-dtopo) for detailed info on the dtopotypes.
 
-#### 2.4.3 qinit
+#### 2.5.3 qinit
 The qinit specification is used to state modification of the initial conditions represented in the q array. [Geoclaw doc description link](http://www.clawpack.org/setrun_geoclaw.html#setrun-qinit). These are specified as:
 
 ```python
@@ -226,7 +245,7 @@ While the surface elevation, eta, is not technically a state variable, it can be
 
 TODO: What happens if inputs are over specified in a conflicting way (e.g., topo, h, and eta such that topo + h != eta), or `digdata.m0` and a value for q_5.
 
-#### 2.4.4 auxinit
+#### 2.5.4 auxinit
 This is where you set initial values for the aux array. Same as qinit.
 
 ```python
@@ -234,7 +253,7 @@ geodata.auxinitfiles = []
 geodata.auxinitfiles.append([auxinitftype, iauxinit, minlevel, maxlevel, fname])
 ```
 
-### 2.5 Definition of the grid scale and AMR Levels
+### 2.6 Definition of the grid scale and AMR Levels
 
 Domain extent and number of grid cells are set as follows:
 ```python
@@ -277,7 +296,7 @@ AMR level is zero indexed or 1 indexed?
 
 [Link to example AMRCLAW setrun.py from v4.6](http://depts.washington.edu/clawpack/users-4.6/amrclaw/setrun_amrclaw_sample.html?highlight=mxnest)
 
-### 2.6 Definition of simulation time.
+### 2.7 Definition of simulation time.
 
 Initial time is set with:
 ```python
@@ -316,7 +335,7 @@ clawdata.cfl_max = 0.9
 clawdata.max_steps = 100000
 ```
 
-### 2.7 Definition of output writing.
+### 2.8 Definition of output writing.
 
 In the Clawpack v5.7 docs the following options are listed in the [example AMRClaw setrun.py file](http://www.clawpack.org/setrun_amrclaw_sample.html#setrun-amrclaw-sample).
 
@@ -328,7 +347,7 @@ clawdata.output_aux_components = 'none'  # could be list
 clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
 ```
 
-### 2.8 Flowgrades and AMR control
+### 2.9 Flowgrades and AMR control
 
 Flowgrades controlls AMR refinement in D-CLAW. Refinement occurs where one of the three flow grade variables exceeds a specified flow grade value.
 
@@ -352,7 +371,7 @@ TODO: Here norm probably means the combination of x and y components of depth an
 and    
 `flowgrademinlevel` indicates that the refinement will occur to at least this level if `flowgradevalue` is exceeded.
 
-### 2.9 Source terms and  the source .f90 file
+### 2.10 Source terms and  the source .f90 file
 
 TODO
 
