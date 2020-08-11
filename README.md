@@ -12,7 +12,7 @@ D-Claw is numerical software for modeling granular-fluid flows.  It is built on 
 
 The documentation available with Clawpack (v5) and GeoClaw provide a general overview, however, in addition to unique features, D-Claw is built on top of older versions of Clawpack and GeoClaw (v4.x). (The older v4.x version of Clawpack is available at [github.com/clawpack/clawpack-4.x](https://github.com/clawpack/clawpack4.x). See [clawpack.org](http://www.clawpack.org) for more information.) 
 
-Running D-Claw requires additional set-up parameters beyond those of Geoclaw. Documentation for D-Claw is currently unsatisfactory, but in progress. The basics of running it are below. See also the [geoclaw/dclaw-apps](https://github.com/geoclaw/dclaw-apps) on github for examples.
+Running D-Claw requires additional set-up parameters beyond those of Geoclaw. Documentation for D-Claw is currently unsatisfactory, but in progress. The basics of running it are below. See also the [geoflows/dclaw-apps](https://github.com/geoflows/dclaw-apps) on github for examples.
 
 
 # Use
