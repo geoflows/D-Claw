@@ -1445,7 +1445,7 @@ class GeoclawInputData(Data):
         data_write(file, self, 'nfixedgrids')
         data_write(file, self, None)
         for fixedgrid in self.fixedgrids:
-            file.write(11*"%g  " % tuple(fixedgrid) +"\n")
+            file.write("%18.8e %18.8e %i %18.8e %18.8e %18.8e %18.8e %i %i %i %i" % tuple(fixedgrid) +"\n")
         file.close()
 
 
