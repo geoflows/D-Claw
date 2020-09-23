@@ -10,8 +10,9 @@ The following summarizes my understanding of the core things that an end-user (e
 - Current version of [Clawpack documentation](http://www.clawpack.org/)
 - Looking at the D-Claw source code (which reflects my style of learning). I mostly looked at the python interface and plotting scripts.
 - Carefully looking through the `dclaw-apps/USGS_Flume/gate_release_example` files and inputs.
+- Asking Dave George lots of questions, which he thoughtfully answered.
 
-Before getting into the details of how one modifies and specifies a D-Claw run, I'll write some background. This is likely most usesful to someone who has never used anything in the Clawpack ecosystem before.
+Before getting into the details of how one modifies and specifies a D-Claw run, I'll write some background. This is likely most usesful to someone who has never used anything in the Clawpack ecosystem before (where I started).
 
 ## 1. General Clawpack, Geoclaw, D-Claw introduction
 The basic D-Claw workflow inherits from Clawpack workflows. There are four main clawpack solvers:
@@ -21,11 +22,11 @@ The basic D-Claw workflow inherits from Clawpack workflows. There are four main 
 - GeoClaw, builds on AMRClaw to add some special algorithms for geophysics.
 - PyClaw includes some additional new algorithms.
 
-Parallelism is possible in all. Fortran uses OpenMP and PyClaw uses MPI and PETSc.
+Parallelism is possible in all. Fortran uses OpenMP and PyClaw uses MPI and PETSc. I usually operate embarrassingly parallel efforts because I like to explore many parameter combinations. Thus I've not engaged with any parallelization.
 
 The [current documentation of Clawpack](http://www.clawpack.org/contents.html) is very comprehensive.
 
-[This page]() goes to the Clawpack v4.X.X, on which D-Claw currently rests. TODO.
+[This page](https://depts.washington.edu/clawpack/users-4.6/index.html) goes to the Clawpack v4.6, on which D-Claw approximately rests. TODO, correct version?
 
 ### 1.1 Very brief summary of D-Claw
 
@@ -46,12 +47,13 @@ Five dependent variables (see George and Iverson (2014) Section 2a):
 where h is the height normal to the bed of a virtual free surface, u and v are depth averaged flow velocities in the x and y directions, m is the depth-averaged solid volume fraction, and pb is the pore fluid pressure at the basal boundary.
 
 The bed (b) is additionally specified, and (optionally) an erodible layer of thickness (a)
+
 ### 1.3 Conceptual description of inputs:
 
 In order to run, D-Claw needs the following information:
 - Specification of the initial topographic surface (eta), thickness of mobile material (h), and bed (b). These three quantities are related (eta = b + h) so only two need to be specified.
 - Optionally a thickness (a) of erodible material can be specified.
-- Optionally a slope-normal (theta) can be specified.
+- Optionally a slope-normal (theta) can be specified. Note that only a or theta can be specified at the same time given array allocation set up (they occupy the same place in the aux array).
 - A number of values scalar values (described in the table below) related to physical properties. Some of these may be specified as scalars or spatially variable values.
 
 In addition, a number of standard Clawpack inputs are required. The most core being:
@@ -171,11 +173,11 @@ Note that some of these can be set as spatially variable using values of `q` or 
 | delta            |         | 0.01          | characteristic grain diameter (m) |    |
 | kappita          |         | 0.0001        | characteristic grain diameter parameter in kperm (m) |    |
 | mu               |         | 0.001         | viscosity of pore-fluid (Pa-s) |    |
-| alpha_c          |         | 1.0           | debris compressibility constant (#) |    |
+| alpha_c          |         | 1.0           | debris compressibility constant (#) | This is the a constant in the equation for alpha  |
 | m_crit           |         | 0.62          | critical state value of m (#) |    |
-| c1               |         | 1.0           | dilation coefficient 1 (#) |    |
+| c1               |         | 1.0           | dilation coefficient 1 (#) | This is a tuning nob. Not in an equation. Leave at 1   |
 | m0               | q_5     | 0.52          | initial solid volume fraction (#) |    |
-| sigma_0          |         | 1.e3          | baseline stress for definition of compessibility |    |
+| sigma_0          |         | 1.e3          | baseline stress for definition of compressibility | Defined in G/I eq 2.8 |
 | alpha_seg        |         | 0.0           | coefficient of segregation velocity profile |    |
 | init_ptype       |         | 0             | 0 = hydrostatic; 1 or 2 = failure pressure; 3 or 4 = rising pressure |    |
 | init_pmax_ratio  |         | 1.0           | pressure rise to hydrostatic times init_pmax_ratio |    |
