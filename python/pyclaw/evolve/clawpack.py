@@ -24,7 +24,7 @@ import numpy as np
 
 from pyclaw.evolve.solver import Solver
 
-import limiters
+from . import limiters
 
 # ========================================================================
 #  User-defined routines
@@ -374,13 +374,13 @@ class ClawSolver1D(ClawSolver):
         UL = grid.mbc + grid.n[0] + 1 
 
         # Update q for Godunov update
-        for m in xrange(meqn):
+        for m in range(meqn):
             q[LL:UL,m] -= dtdx[LL:UL]*apdq[LL-1:UL-1,m]
             q[LL-1:UL-1,m] -= dtdx[LL-1:UL-1]*amdq[LL-1:UL-1,m]
     
         # Compute maximum wave speed
         self.cfl = 0.0
-        for mw in xrange(wave.shape[2]):
+        for mw in range(wave.shape[2]):
             smax1 = max(dtdx[LL:UL]*s[LL-1:UL-1,mw])
             smax2 = max(-dtdx[LL-1:UL-1]*s[LL-1:UL-1,mw])
             self.cfl = max(self.cfl,smax1,smax2)
@@ -397,21 +397,21 @@ class ClawSolver1D(ClawSolver):
             # Compute correction fluxes for second order q_{xx} terms
             dtdxave = 0.5 * (dtdx[LL-1:UL-1] + dtdx[LL:UL])
             if self.fwave:
-                for mw in xrange(wave.shape[2]):
+                for mw in range(wave.shape[2]):
                     sabs = np.abs(s[LL-1:UL-1,mw])
                     om = 1.0 - sabs*dtdxave[:UL-LL]
                     ssign = np.sign(s[LL-1:UL-1,mw])
-                    for m in xrange(meqn):
+                    for m in range(meqn):
                         f[LL:UL,m] += 0.5 * ssign * om * wave[LL-1:UL-1,m,mw]
             else:
-                for mw in xrange(wave.shape[2]):
+                for mw in range(wave.shape[2]):
                     sabs = np.abs(s[LL-1:UL-1,mw])
                     om = 1.0 - sabs*dtdxave[:UL-LL]
-                    for m in xrange(meqn):
+                    for m in range(meqn):
                         f[LL:UL,m] += 0.5 * sabs * om * wave[LL-1:UL-1,m,mw]
 
             # Update q by differencing correction fluxes
-            for m in xrange(meqn):
+            for m in range(meqn):
                 q[LL:UL-1,m] -= dtdx[LL:UL-1] * (f[LL+1:UL,m] - f[LL:UL-1,m]) 
             
         # Reset q update

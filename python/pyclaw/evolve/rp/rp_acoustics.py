@@ -78,7 +78,7 @@ def rp_acoustics_1d(q_l,q_r,aux_l,aux_r,aux_global):
     s[:,1] = aux_global['cc']
     
     # Compute the left going and right going fluctuations
-    for m in xrange(meqn):
+    for m in range(meqn):
         amdq[:,m] = s[:,0] * wave[:,m,0]
         apdq[:,m] = s[:,1] * wave[:,m,1]
     

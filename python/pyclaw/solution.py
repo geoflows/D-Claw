@@ -20,8 +20,9 @@ import logging
 
 import numpy as np
 
-from data import Data
-import io
+from .data import Data
+from . import io
+from functools import reduce
 
 # ============================================================================
 #  Default function definitions
@@ -117,7 +118,7 @@ class Dimension(object):
         def fget(self): 
             if self._edge is None:
                 self._edge = np.empty(self.n+1)   
-                for i in xrange(0,self.n+1):
+                for i in range(0,self.n+1):
                     self.edge[i] = self.lower + i*self.d 
             return self._edge
         return locals()
@@ -129,7 +130,7 @@ class Dimension(object):
         def fget(self): 
             if self._center is None:
                 self._center = np.empty(self.n)
-                for i in xrange(0,self.n):
+                for i in range(0,self.n):
                     self.center[i] = self.lower + (i+0.5)*self.d
             return self._center
         return locals()
@@ -168,7 +169,7 @@ class Dimension(object):
             self.lower = float(args[0])
             self.upper = float(args[1])
             self.n = int(args[2])
-    	elif isinstance(args[0],basestring):
+    	elif isinstance(args[0],str):
             self.name = args[0]
             self.lower = float(args[1])
             self.upper = float(args[2])
@@ -176,7 +177,7 @@ class Dimension(object):
     	else:
     	    raise Exception("Invalid initializer for Dimension.")
         
-        for (k,v) in kargs.iteritems():
+        for (k,v) in kargs.items():
             setattr(self,k,v)
             
         # Function attribute assignments
@@ -539,7 +540,7 @@ class Grid(object):
             or replace any values already in it.
         """
         data = Data(data_files=data_path)
-        for (k,v) in data.iteritems():
+        for (k,v) in data.items():
             self.aux_global[k] = v
         
         
@@ -727,7 +728,7 @@ class Grid(object):
         dim_string = ','.join( ('self.mbc:-self.mbc' for name in self._dimensions) )
         exec("qbc[%s,:] = self.q" % dim_string)
         
-        for i in xrange(len(self._dimensions)):
+        for i in range(len(self._dimensions)):
             dim = getattr(self,self._dimensions[i])
             
             # If a user defined boundary condition is being used, send it on,
@@ -760,7 +761,7 @@ class Grid(object):
         
         if recompute or not len(self._p_center) == len(self._dimensions):
             # Initialize array
-            self._p_center = [None for i in xrange(self.ndim)]
+            self._p_center = [None for i in range(self.ndim)]
 
             # Special case
             if self.ndim == 1:
@@ -789,7 +790,7 @@ class Grid(object):
                 p = self.mapc2p(self,array_list)
             
                 # Reshape arrays for storage
-                for i in xrange(self.ndim):
+                for i in range(self.ndim):
                     self._p_center[i] = np.reshape(p[i], 
                                                 self.get_dim_attribute('n'))
 
@@ -810,7 +811,7 @@ class Grid(object):
         
         if recompute or not len(self._p_edge) == len(self._dimensions):
             # Initialize array
-            self._p_edge = [None for i in xrange(self.ndim)]
+            self._p_edge = [None for i in range(self.ndim)]
 
             if self.ndim == 1:        
                 self._p_edge[0] = self.mapc2p(self,self.dimensions[0].edge)
@@ -837,7 +838,7 @@ class Grid(object):
                 p = self.mapc2p(self,array_list)
             
                 # Reshape arrays for storage
-                for i in xrange(self.ndim):
+                for i in range(self.ndim):
                     self._p_edge[i] = np.reshape(p[i], 
                                 [n+1 for n in self.get_dim_attribute('n')])
                                 
@@ -858,7 +859,7 @@ class Grid(object):
         """
         
         if recompute or not len(self._c_center) == len(self._dimensions):
-            self._c_center = [None for i in xrange(self.ndim)]
+            self._c_center = [None for i in range(self.ndim)]
             
             # For one dimension, the center and edge arrays are equivalent
             if self.ndim == 1:
@@ -873,7 +874,7 @@ class Grid(object):
             
                 # Create c_center array
                 index_str = ','.join((':' for dim in self._dimensions))
-                for i in xrange(self.ndim):
+                for i in range(self.ndim):
                     exec("self._c_center[i] = self.dimensions[i].center[index[i,%s]]" % index_str)
                     
                     
@@ -893,7 +894,7 @@ class Grid(object):
         """
 
         if recompute or not len(self._c_edge) == len(self._dimensions):
-            self._c_edge = [None for i in xrange(self.ndim)]
+            self._c_edge = [None for i in range(self.ndim)]
             
             if self.ndim == 1:
                 self._c_edge[0] = self.dimensions[0].edge
@@ -907,7 +908,7 @@ class Grid(object):
             
                 # Create c_center array
                 index_str = ','.join((':' for dim in self._dimensions))
-                for i in xrange(self.ndim):
+                for i in range(self.ndim):
                     exec("self._c_edge[i] = self.dimensions[i].edge[index[i,%s]]" % index_str)
 
 
@@ -1137,8 +1138,8 @@ class Solution(object):
                 defaults = {'format':'ascii','path':'./','file_prefix':None,
                     'read_aux':True,'options':{}}
    
-                for (k,v) in defaults.iteritems():    
-                    if kargs.has_key(k):
+                for (k,v) in defaults.items():    
+                    if k in kargs:
                         exec("%s = kargs['%s']" % (k,k))
                     else:
                         exec('%s = v' % k)

@@ -80,7 +80,7 @@ def rp_nel_1d(q_l,q_r,aux_l,aux_r,aux_global):
     s[:,1] = cr
     
     # Compute the left going and right going fluctuations
-    for m in xrange(meqn):
+    for m in range(meqn):
         amdq[:,m] = fwave[:,m,0]
         apdq[:,m] = fwave[:,m,1]
     

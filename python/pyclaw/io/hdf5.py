@@ -110,8 +110,8 @@ def write_hdf5(solution,frame,path,file_prefix='claw',write_aux=False,
     # Option parsing
     option_defaults = {'compression':None,'compression_opts':None,
                        'chunks':None,'shuffle':False,'fletcher32':False}
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -192,8 +192,8 @@ def read_hdf5(solution,frame,path='./',file_prefix='claw',read_aux=True,
     
     # Option parsing
     option_defaults = {}
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -231,12 +231,12 @@ def read_hdf5(solution,frame,path='./',file_prefix='claw',read_aux=True,
                 setattr(grid,attr,subgroup.attrs[attr])
             
             # Read in q
-            index_str = ','.join( [':' for i in xrange(len(subgroup['q'].shape))] )
+            index_str = ','.join( [':' for i in range(len(subgroup['q'].shape))] )
             exec("grid.q = subgroup['q'][%s]" % index_str)
             
             # Read in aux if applicable
             if read_aux and subgroup.get('aux',None) is not None:
-                index_str = ','.join( [':' for i in xrange(len(subgroup['aux'].shape))] )
+                index_str = ','.join( [':' for i in range(len(subgroup['aux'].shape))] )
                 exec("grid.aux = subgroup['aux'][%s]" % index_str)
                 
             solution.grids.append(grid)

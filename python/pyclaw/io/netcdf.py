@@ -47,7 +47,7 @@ except:
   try: 
     from scipy.io import netcdf as NetCDF
   except:
-    print "*** Could not import NetCDF from Scientific.IO or scipy.io"
+    print("*** Could not import NetCDF from Scientific.IO or scipy.io")
 if not use_netcdf3:
   try:
       import netCDF4
@@ -63,7 +63,7 @@ if not (use_netcdf3 or use_netcdf4):
             "one of the available modules for netcdf files.  Refer to this " +
             "modules doc_string for more information.")
         #raise Exception(error_msg)
-        print error_msg
+        print(error_msg)
 
 def write_netcdf(solution,frame,path,file_prefix='fort',write_aux=False,
                     options={}):
@@ -175,8 +175,8 @@ def write_netcdf(solution,frame,path,file_prefix='fort',write_aux=False,
                        'chunksizes':None,'endian':'native',
                        'least_significant_digit':None,'fill_value':None,
                        'clobber':True,'description':{}}
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -190,7 +190,7 @@ def write_netcdf(solution,frame,path,file_prefix='fort',write_aux=False,
         
         # Loop through description dictionary and add the attributes to the
         # root group
-        for (k,v) in description.iteritems():
+        for (k,v) in list(description.items()):
             exec('f.%s = %s' % (k,v))
         
         # Create Global Dimensions
@@ -249,7 +249,7 @@ def write_netcdf(solution,frame,path,file_prefix='fort',write_aux=False,
         
         # Loop through description dictionary and add the attributes to the
         # root group
-        for (k,v) in description.iteritems():
+        for (k,v) in list(description.items()):
             exec('f.%s = %s' % (k,v))
         
         # For each grid, write out attributes
@@ -324,8 +324,8 @@ def read_netcdf(solution,frame,path='./',file_prefix='fort',read_aux=True,
     
     # Option parsing
     option_defaults = {}
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -337,7 +337,7 @@ def read_netcdf(solution,frame,path='./',file_prefix='fort',read_aux=True,
         from Scientific.IO import NetCDF
         import numpy
         # Open file
-        print filename
+        print(filename)
         f = NetCDF.NetCDFFile(filename,'r')
         # Each file written by the fortran code has 
         # Dimensions:
@@ -364,7 +364,7 @@ def read_netcdf(solution,frame,path='./',file_prefix='fort',read_aux=True,
         ndims=numpy.squeeze(f.variables['ndim'].getValue())
         meqn=f.dimensions['meqn']
 #        print time,ngrids,naux,ndims,meqn
-        for var_name in f.variables.keys():
+        for var_name in list(f.variables.keys()):
           if var_name[:4]=='grid':
             var=f.variables[var_name]
             gridno=numpy.squeeze(getattr(var,'gridno'))
@@ -428,7 +428,7 @@ def read_netcdf(solution,frame,path='./',file_prefix='fort',read_aux=True,
         
         # We only expect subgroups of grids, otherwise we need to put some
         # sort of conditional here
-        for subgroup in f.groups.itervalues():
+        for subgroup in list(f.groups.values()):
             # Construct each dimension
             dimensions = []
             
@@ -454,11 +454,11 @@ def read_netcdf(solution,frame,path='./',file_prefix='fort',read_aux=True,
                 setattr(grid,attr,getattr(subgroup,attr))
                 
             # Read in q
-            index_str = ','.join( [':' for i in xrange(grid.ndim+1)] )
+            index_str = ','.join( [':' for i in range(grid.ndim+1)] )
             exec("grid.q = subgroup.variables['q'][%s]" % index_str)
             
             # Read in aux if applicable
-            if read_aux and subgroup.dimensions.has_key('maux'):
+            if read_aux and 'maux' in subgroup.dimensions:
                 exec("grid.aux = subgroup.variables['aux'][%s]" % index_str)
         
             solution.grids.append(grid)
@@ -477,8 +477,8 @@ def read_netcdf(solution,frame,path='./',file_prefix='fort',read_aux=True,
 def read_netcdf_t(frame,path='./',file_prefix='fort'):
     # Option parsing
     option_defaults = {}
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -492,5 +492,5 @@ def read_netcdf_t(frame,path='./',file_prefix='fort'):
         # Open file
         f = NetCDF.NetCDFFile(filename,'r')
         t = numpy.squeeze(f.variables['timedimension'].getValue())
-        print t 
+        print(t) 
         return t

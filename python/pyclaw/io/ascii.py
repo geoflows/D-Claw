@@ -52,8 +52,8 @@ def write_ascii(solution,frame,path,file_prefix='fort',write_aux=False,
 
     # Option parsing
     option_defaults = {}
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -98,21 +98,21 @@ def write_ascii(solution,frame,path,file_prefix='fort',write_aux=False,
             q = grid.q
             dims = grid.dimensions
             if grid.ndim == 1:
-                for k in xrange(dims[0].n):
-                    for m in xrange(solution.meqn):
+                for k in range(dims[0].n):
+                    for m in range(solution.meqn):
                         q_file.write("%16.8e" % q[k,m])
                     q_file.write('\n')
             elif grid.ndim == 2:
-                for j in xrange(dims[1].n):
-                    for k in xrange(dims[0].n):
-                        for m in xrange(solution.meqn):
+                for j in range(dims[1].n):
+                    for k in range(dims[0].n):
+                        for m in range(solution.meqn):
                             q_file.write("%16.8e" % q[k,j,m])
                         q_file.write('\n')
                     q_file.write('\n')
             elif grid.ndim == 3:
-                for l in xrange(dims[2].n):
-                    for j in xrange(dims[1].n):
-                        for k in xrange(dims[0].n):
+                for l in range(dims[2].n):
+                    for j in range(dims[1].n):
+                        for k in range(dims[0].n):
                             for m in range(solution.meqn):
                                 q_file.write("%16.8e" % q[k,j,l,m])
                             q_file.write('\n')
@@ -136,22 +136,22 @@ def write_ascii(solution,frame,path,file_prefix='fort',write_aux=False,
 
                 aux_file.write("\n")
                 if grid.ndim == 1:
-                    for k in xrange(grid.dimensions[0]):
-                        for m in xrange(grid.maux):
+                    for k in range(grid.dimensions[0]):
+                        for m in range(grid.maux):
                             aux_file.write("%16.8e" % aux[k,m])
                         aux_file.write('\n')
                 elif grid.ndim == 2:
-                    for j in xrange(grid.dimensions[1].n):
-                        for k in xrange(grid.dimension[0].n):
-                            for m in xrange(grid.maux):
+                    for j in range(grid.dimensions[1].n):
+                        for k in range(grid.dimension[0].n):
+                            for m in range(grid.maux):
                                 aux_file.write("%16.8e" % aux[k,j,m])
                             aux_file.write('\n')
                         aux_file.write('\n')
                 elif grid.ndim == 3:
-                    for l in xrange(grid.dimensions[2].n):
-                        for j in xrange(grid.dimensions[1].n):
-                            for k in xrange(grid.dimensions[0].n):
-                                for m in xrange(grid.maux):
+                    for l in range(grid.dimensions[2].n):
+                        for j in range(grid.dimensions[1].n):
+                            for k in range(grid.dimensions[0].n):
+                                for m in range(grid.maux):
                                     aux_file.write("%16.8e" % aux[k,j,l,m])
                                 aux_file.write('\n')
                             aux_file.write('\n')
@@ -160,7 +160,8 @@ def write_ascii(solution,frame,path,file_prefix='fort',write_aux=False,
         q_file.close()
         if grid.maux > 0 and write_aux:
             aux_file.close()
-    except IOError, (errno, strerror):
+    except IOError as xxx_todo_changeme:
+        (errno, strerror) = xxx_todo_changeme.args
         logger.error("Error writing file: %s" % os.path.join(path,file_name))
         logger.error("I/O error(%s): %s" % (errno, strerror))
         raise
@@ -194,8 +195,8 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
     # Option parsing
     option_defaults = {}
 
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             exec("%s = options['%s']" % (k,k))
         else:
             exec('%s = v' % k)
@@ -218,7 +219,7 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
 
         # Loop through every grid setting the appropriate information
         # for ng in range(len(solution.grids)):
-        for m in xrange(ngrids):
+        for m in range(ngrids):
 
             # Read in base header for this grid
             gridno = read_data_line(f,type='int')
@@ -226,11 +227,11 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
             n = np.zeros((ndim))
             lower = np.zeros((ndim))
             d = np.zeros((ndim))
-            for i in xrange(ndim):
+            for i in range(ndim):
                 n[i] = read_data_line(f,type='int')
-            for i in xrange(ndim):
+            for i in range(ndim):
                 lower[i] = read_data_line(f)
-            for i in xrange(ndim):
+            for i in range(ndim):
                 d[i] = read_data_line(f)
 
             blank = f.readline()
@@ -240,7 +241,7 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
             # the assumed dimensions x,y,z
             names = ['x','y','z']
             dimensions = []
-            for i in xrange(ndim):
+            for i in range(ndim):
                 dimensions.append(
                     pyclaw.solution.Dimension(names[i],lower[i],lower[i] + n[i]*d[i],n[i]))
             grid = pyclaw.solution.Grid(dimensions)
@@ -259,33 +260,33 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
             # Fill in q values
             grid.empty_q()
             if grid.ndim == 1:
-                for i in xrange(grid.dimensions[0].n):
+                for i in range(grid.dimensions[0].n):
                     l = []
                     while len(l)<grid.meqn:
                         line = f.readline()
                         l = l + line.split()
-                    for m in xrange(grid.meqn):
+                    for m in range(grid.meqn):
                         grid.q[i,m] = float(l[m])
             elif grid.ndim == 2:
-                for j in xrange(grid.dimensions[1].n):
-                    for i in xrange(grid.dimensions[0].n):
+                for j in range(grid.dimensions[1].n):
+                    for i in range(grid.dimensions[0].n):
                         l = []
                         while len(l)<grid.meqn:
                             line = f.readline()
                             l = l + line.split()
-                        for m in xrange(grid.meqn):
+                        for m in range(grid.meqn):
                             grid.q[i,j,m] = float(l[m])
                     blank = f.readline()
             elif grid.ndim == 3:
                 raise NotImplementedError("3d still does not work!")
-                for k in xrange(grid.dimensions[2].n):
-                    for j in xrange(grid.dimensions[1].n):
-                        for i in xrange(grid.dimensions[0].n):
+                for k in range(grid.dimensions[2].n):
+                    for j in range(grid.dimensions[1].n):
+                        for i in range(grid.dimensions[0].n):
                             l=[]
                             while len(l) < grid.meqn:
                                 line = f.readline()
                                 l = l + line.split()
-                            for m in xrange(grid.meqn):
+                            for m in range(grid.meqn):
                                 grid.q[i,j,k,m] = float(l[m])
                         blank = f.readline()
                     blank = f.readline()
@@ -325,7 +326,7 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
             f = open(fname,'r')
 
             # Read in aux file
-            for n in xrange(len(solution.grids)):
+            for n in range(len(solution.grids)):
                 # Fetch correct grid
                 gridno = read_data_line(f,type='int')
                 grid = solution.grids[gridno-1]
@@ -346,32 +347,32 @@ def read_ascii(solution,frame,path='./',file_prefix='fort',read_aux=False,
 
                 # Read in auxillary array
                 if grid.ndim == 1:
-                    for i in xrange(grid.dimensions[0].n):
+                    for i in range(grid.dimensions[0].n):
                         l = []
                         while len(l)<grid.maux:
                             line = f.readline()
                             l = l + line.split()
-                        for m in xrange(grid.maux):
+                        for m in range(grid.maux):
                             grid.aux[i,m] = float(l[m])
                 elif grid.ndim == 2:
-                    for j in xrange(grid.dimensions[1].n):
-                        for i in xrange(grid.dimensions[0].n):
+                    for j in range(grid.dimensions[1].n):
+                        for i in range(grid.dimensions[0].n):
                             l = []
                             while len(l)<grid.maux:
                                 line = f.readline()
                                 l = l + line.split()
-                            for m in xrange(grid.maux):
+                            for m in range(grid.maux):
                                 grid.aux[i,j,m] = float(l[m])
                         blank = f.readline()
                 elif grid.ndim == 3:
-                    for k in xrange(grid.dimensions[2].n):
-                        for j in xrange(grid.dimensions[1].n):
-                            for i in xrange(grid.dimensions[0].n):
+                    for k in range(grid.dimensions[2].n):
+                        for j in range(grid.dimensions[1].n):
+                            for i in range(grid.dimensions[0].n):
                                 l = []
                                 while len(l)<grid.maux:
                                     line = f.readline()
                                     l = l + line.split()
-                                for m in xrange(grid.maux):
+                                for m in range(grid.maux):
                                     grid.aux[i,j,k,m] = float(l[m])
                             blank = f.readline()
                         blank = f.readline()
@@ -421,7 +422,7 @@ def read_ascii_t(frame,path='./',file_prefix='fort'):
         raise
     except:
         logger.error("File " + t_fname + " should contain t, meqn, ngrids, maux, ndim")
-        print "File " + t_fname + " should contain t, meqn, ngrids, maux, ndim"
+        print(("File " + t_fname + " should contain t, meqn, ngrids, maux, ndim"))
         raise
 
     return t,meqn,ngrids,maux,ndim

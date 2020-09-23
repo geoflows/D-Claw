@@ -26,6 +26,6 @@ from pyclaw.data import Data
 from pyclaw.solution import Dimension, Grid, Solution
 
 # Sub-packages
-import evolve
+from . import evolve
 from pyclaw.evolve import *
 __all__.extend(evolve.__all__)

@@ -32,7 +32,7 @@ Authors: Dave George and Randy LeVeque
 import numpy as np
 import os
 import string
-from datatools import *
+from .datatools import *
 
 # These don't seem to be needed now...  but maybe missed something.
 # Best to not import * to avoid cluttering up namespace.
@@ -63,66 +63,66 @@ def get_topo(topo_fname, remote_directory, force=None):
     and if this exists use its value.  This is useful for the script
     python/run_examples.py that runs all examples so it won't stop to prompt.
     """
-    import urllib
+    import urllib.request, urllib.parse, urllib.error
 
     if force is None:
         CTD = os.environ.get('CLAW_TOPO_DOWNLOAD', None)
         force = (CTD in [True, 'True'])
-    print 'force = ',force
+    print('force = ',force)
 
     if os.path.exists(topo_fname):
-        print "*** Not downloading topo file (already exists): %s " % topo_fname
+        print("*** Not downloading topo file (already exists): %s " % topo_fname)
     else:
         remote_fname = topo_fname
         local_fname = topo_fname
         remote_fname_txt = remote_fname + '.txt'
         local_fname_txt = local_fname + '.txt'
 
-        print "Require remote file ", remote_fname
-        print "      from ", remote_directory
+        print("Require remote file ", remote_fname)
+        print("      from ", remote_directory)
         if not force:
-            ans=raw_input("  Ok to download topo file?  \n"  +\
+            ans=input("  Ok to download topo file?  \n"  +\
                           "     Type y[es], n[o] or ? to first retrieve and print metadata  ")
             if ans.lower() not in ['y','yes','?']:
-                print "*** Aborting!   Missing: ", local_fname
+                print("*** Aborting!   Missing: ", local_fname)
                 return
             if ans=="?":
                 try:
-                    print "Retrieving remote file ", remote_fname_txt
-                    print "      from ", remote_directory
+                    print("Retrieving remote file ", remote_fname_txt)
+                    print("      from ", remote_directory)
                     url = os.path.join(remote_directory, remote_fname_txt)
-                    urllib.urlretrieve(url, local_fname_txt)
+                    urllib.request.urlretrieve(url, local_fname_txt)
                     os.system("cat %s" % local_fname_txt)
                 except:
-                    print "*** Error retrieving metadata file!"
-                ans=raw_input("  Ok to download topo file?  ")
+                    print("*** Error retrieving metadata file!")
+                ans=input("  Ok to download topo file?  ")
                 if ans.lower() not in ['y','yes','?']:
-                    print "*** Aborting!   Missing: ", local_fname
+                    print("*** Aborting!   Missing: ", local_fname)
                     return
 
         if not os.path.exists(local_fname_txt):
             try:
-                print "Retrieving metadata file ", remote_fname_txt
-                print "      from ", remote_directory
+                print("Retrieving metadata file ", remote_fname_txt)
+                print("      from ", remote_directory)
                 url = os.path.join(remote_directory, remote_fname_txt)
-                urllib.urlretrieve(url, local_fname_txt)
+                urllib.request.urlretrieve(url, local_fname_txt)
             except:
-                print "*** Error retrieving metadata file!"
+                print("*** Error retrieving metadata file!")
 
         try:
-            print "Retrieving topo file ", remote_fname
-            print "      from ", remote_directory
+            print("Retrieving topo file ", remote_fname)
+            print("      from ", remote_directory)
             url = os.path.join(remote_directory, remote_fname)
-            urllib.urlretrieve(url, local_fname)
+            urllib.request.urlretrieve(url, local_fname)
         except:
-            print "*** Error retrieving file!  Missing: ", local_fname
+            print("*** Error retrieving file!  Missing: ", local_fname)
             raise Exception("Error from urllib.urlretrieve")
         try:
             firstline = open(local_fname,'r').readline()
             if firstline.find('DOC') > -1:
-                print "*** Possible error -- check the file ", local_fname
+                print("*** Possible error -- check the file ", local_fname)
             else:
-                print "Saved to ", local_fname
+                print("Saved to ", local_fname)
         except:
             raise Exception("Error opening file %s" % local_fname)
 
@@ -151,16 +151,16 @@ def topo1writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints):
     Z = topo(X,Y).T
 
 
-    for jj in xrange(0,nypoints):
+    for jj in range(0,nypoints):
         y = yupper - jj*dy
-        for i in xrange(0,nxpoints):
+        for i in range(0,nxpoints):
             x =  xlower + i*dx
             j = nypoints - 1 - jj
             z = Z[i,j]
             fout.write("%22.15e  %22.15e  %22.15e\n" % (x,y,z))
 
     fout.close
-    print "Created file ",outfile
+    print("Created file ",outfile)
 
 
 #==========================================================================
@@ -191,8 +191,8 @@ def topo2writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints, \
     dx = (xupper-xlower)/(nxpoints-1)
     dy = (yupper-ylower)/(nypoints-1)
     if abs(dx-dy) > 1.e-8:
-        print "*** Error in topo2writer, need dx=dy"
-        print "    dx = %s, dy = %s" % (dx,dy)
+        print("*** Error in topo2writer, need dx=dy")
+        print("    dx = %s, dy = %s" % (dx,dy))
         return
     cellsize = dx
 
@@ -215,13 +215,13 @@ def topo2writer (outfile,topo,xlower,xupper,ylower,yupper,nxpoints,nypoints, \
     Z = topo(X,Y).T
 
 
-    for jj in xrange(0,nrows):
-        for i in xrange(0,ncols):
+    for jj in range(0,nrows):
+        for i in range(0,ncols):
             j = nypoints - 1 - jj
             fout.write("%22.15e\n" % Z[i,j])
 
     fout.close
-    print "Created file ",outfile
+    print("Created file ",outfile)
 
 
 #==========================================================
@@ -343,8 +343,8 @@ def scatter2gridded (scatterdatafile=" ",boundarydatafile=" ", headerfile=" ", o
     #write the output file =====================:
     if outputfile != " ":
         fout=topoheaderwrite(topoheader,outputfile,closefile=False)
-        for i in xrange(topoheader['nrows']) :
-            for j in xrange(topoheader['ncols']) :
+        for i in range(topoheader['nrows']) :
+            for j in range(topoheader['ncols']) :
                 fout.write("%s\n" % Z[i,j])
         fout.close()
     return (X,Y,Z)
@@ -403,7 +403,7 @@ def topoheaderread (inputfile, closefile=True):
          float nodata_value
     """
     topoheader={'ncols':0,'nrows':0,'xll':0.0,'yll':0.0,'cellsize':0.0,'nodata_value':0}
-    keylist=topoheader.keys()
+    keylist=list(topoheader.keys())
 
     keymap = {'ncols':'ncols','nrows':'nrows','xll':'xll','yll':'yll','cellsize':'cellsize','nodata_value':'nodata_value', \
     'xllcenter':'xll','yllcenter':'yll','xllcorner':'xll','yllcorner':'yll'}
@@ -413,17 +413,17 @@ def topoheaderread (inputfile, closefile=True):
     while keyleft> 0 :
         line=string.split(fid.readline())
         if line:
-            if line[0].lower() in keymap.keys():
+            if line[0].lower() in list(keymap.keys()):
                 topoheader[keymap[line[0].lower()]]= iotools.convertd2e(line[1])
                 keyleft=keyleft-1
-            if line[1].lower() in keymap.keys():
+            if line[1].lower() in list(keymap.keys()):
                 topoheader[keymap[line[1].lower()]]= iotools.convertd2e(line[0])
                 keyleft=keyleft-1
 
     #check if passes convert strings values to numeric
     for key in keylist :
         if not key in topoheader:
-            print('ERROR: topoheader not fully specified in %s' % (inputfile))
+            print(('ERROR: topoheader not fully specified in %s' % (inputfile)))
             exit
         else:
             if '.' in topoheader[key] or 'nan' in topoheader[key].lower() or 'e' in topoheader[key].lower():
@@ -457,10 +457,10 @@ def topofile2griddata (inputfile,topotype=2):
         (fin,topoheader)=topoheaderread(inputfile,closefile=False)
         zdata=fin.readlines()
         fin.close()
-        for row in xrange(len(zdata)):
+        for row in range(len(zdata)):
             zdata[row]=iotools.convertd2e(zdata[row])
             zdata[row]=string.split(zdata[row])
-            for col in xrange(len(zdata[row])) :
+            for col in range(len(zdata[row])) :
                 zdata[row][col]=float(zdata[row][col])
 
         Z=np.array(zdata)
@@ -530,29 +530,29 @@ def griddata2topofile (X,Y,Z,outputfile,topotype=2,nodata_value_in=9999.,nodata_
     if ((abs(cellsizeX-cellsizeY)<-1.e-9)&(topotype>1)):
         print ("geotools.topotools.griddata2topofile:")
         print ("WARNING: cellsize is not uniform in x and y")
-        print ("cellsize in the x-direction %s" % cellsizeX)
-        print ("cellsize in the y-direction %s" % cellsizeY)
+        print(("cellsize in the x-direction %s" % cellsizeX))
+        print(("cellsize in the y-direction %s" % cellsizeY))
         print ("Consider changing to topotype=1")
 
     if topotype==2:
         fout=topoheaderwrite(topoheader,outputfile,closefile=False)
-        for i in xrange(nrows) :
-            for j in xrange(ncols) :
+        for i in range(nrows) :
+            for j in range(ncols) :
                 fout.write("%s\n" % (Z[i,j]))
         fout.close()
 
     elif topotype==3:
         fout=topoheaderwrite(topoheader,outputfile,closefile=False)
-        for i in xrange(nrows) :
-            for j in xrange(ncols) :
+        for i in range(nrows) :
+            for j in range(ncols) :
                 fout.write("%s   " % (Z[i,j]))
             fout.write("\n")
         fout.close()
 
     else:
         fout=open(outputfile,'w')
-        for i in xrange(nrows) :
-            for j in xrange(ncols) :
+        for i in range(nrows) :
+            for j in range(ncols) :
                 fout.write("%s %s %s\n" % (X[i,j],Y[i,j],Z[i,j]))
         fout.close()
 
@@ -616,8 +616,8 @@ def topofilefindz (pts,inputfile,topotypein=2):
         y=pts[i][1]
 
         if ((x<X[0,0])|(x>X[0,-1])|(y<Y[-1,0])|(y>Y[0,0])):
-            print('WARNING: point %i is outside data file: (x,y)= (%g,%g)' % (i+1,x,y))
-            print('**file corners are (X0,Y0)= (%g,%g), and (X1,Y1) = (%g,%g)' % (X[0,0],Y[0,0],X[-1,-1],Y[-1,-1]))
+            print(('WARNING: point %i is outside data file: (x,y)= (%g,%g)' % (i+1,x,y)))
+            print(('**file corners are (X0,Y0)= (%g,%g), and (X1,Y1) = (%g,%g)' % (X[0,0],Y[0,0],X[-1,-1],Y[-1,-1])))
             z.append(nan)
         else:
 
@@ -737,14 +737,14 @@ def topofilesubset (inputfile,outputfile,topotypein=2,topotypeout=2,xlow=-1.e6,x
 
         if topotypein>1:
             while outpts>0:
-                for row in xrange(nrows) :
+                for row in range(nrows) :
                     y=yupper-row*cellsize
-                    for col in xrange(ncols) :
+                    for col in range(ncols) :
                         x=xll + col*cellsize
                         zdata=fidin.readline()
                         zdata=string.split(zdata)
                         w=writtenpts
-                        for jj in xrange(len(zdata)):
+                        for jj in range(len(zdata)):
                             if ((xlow<=x<=xhi)&(ylow<=y<yhi)):
                                 fidout.write("%s  " % zdata[jj])
                                 outpts=outpts-1
@@ -802,12 +802,12 @@ def removenodata_value (inputfile,outputfile,topotypein=2,topotypeout=2,nodata_v
         topoheader=topoheaderread(inputfile)
         nodata_value=topoheader['nodata_value']
     elif not nodata_value:
-        print 'provide a value for nodata_value when using topotype1'
+        print('provide a value for nodata_value when using topotype1')
 
     if method=='fill':
         ind=fixdata.findbadindices(Z,nodata_value)
         if size(ind)>0:
-            print("Changing %s nodata_value points" % size(ind))
+            print(("Changing %s nodata_value points" % size(ind)))
         Z=fixdata.fillbaddata(Z,ind)
         griddata2topofile(X,Y,Z,outputfile,topotypeout,nodata_value,nodata_value)
         return
@@ -829,7 +829,7 @@ def removenodata_value (inputfile,outputfile,topotypein=2,topotypeout=2,nodata_v
 
     ptsremove=npts-len(Z)
     if ptsremove>0:
-        print("Removing %s nodata_value points" % ptsremove)
+        print(("Removing %s nodata_value points" % ptsremove))
 
     Z = pylab.griddata(X,Y,Z,xi,yi)
     (X,Y)=np.meshgrid(xi,yi)
@@ -854,7 +854,7 @@ def changenodata_value (inputfile,outputfile,topotypein,topotypeout=None,\
         topoheader=topoheaderread(inputfile)
         nodata_valuein=topoheader['nodata_value']
     elif not nodata_valuein:
-        print 'provide a value for nodata_valuein when using topotype1'
+        print('provide a value for nodata_valuein when using topotype1')
 
     if not topotypeout:
         topotypeout=topotypein
@@ -868,7 +868,7 @@ def changenodata_value (inputfile,outputfile,topotypein,topotypeout=None,\
 
 
     if size(ind)>0:
-        print("Changing %s nodata_value points" % size(ind))
+        print(("Changing %s nodata_value points" % size(ind)))
 
     griddata2topofile(X,Y,Z,outputfile,topotypeout,nodata_valuein,nodata_valueout)
 

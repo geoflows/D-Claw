@@ -34,7 +34,7 @@ def read_header(fname):
         header[key] = value
 
     header['header_lines'] = header_lines
-    print header_lines
+    print(header_lines)
     f.close()
     return header
 
@@ -72,9 +72,9 @@ def read_dtopo(fname, topotype=1):
                 mt = len(inddiff)+1
         my = len(xcol)/(mx*mt)
         if my != int(len(xcol)/float(mx*mt)):
-            print "*** found mx = %s, mt = %s" % (mx,mt)
+            print("*** found mx = %s, mt = %s" % (mx,mt))
             raise ValueError("*** mx*mt does not divide length of data")
-        print "Found mt = %s times with mx = %s, my = %s" % (mt,mx,my)
+        print("Found mt = %s times with mx = %s, my = %s" % (mt,mx,my))
         if tcol is None:
             t = []
         else:

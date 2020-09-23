@@ -167,11 +167,11 @@ def read_topo_file(path,topo_type,verbose=False):
     nodata_value = float(topo_file.readline().split()[0])
     
     if verbose:
-        print "Header:"
-        print "  (nx,ny) = (%s,%s)" % (nx,ny)
-        print "  (xl,yl) = (%s,%s)" % (xll,yll)
-        print "  (dx,dy) = (%s,%s)" % (dx,dx)
-        print "  nodata  = %s" % nodata_value
+        print("Header:")
+        print("  (nx,ny) = (%s,%s)" % (nx,ny))
+        print("  (xl,yl) = (%s,%s)" % (xll,yll))
+        print("  (dx,dy) = (%s,%s)" % (dx,dx))
+        print("  nodata  = %s" % nodata_value)
     
     # Create Z matrix
     dy = dx
@@ -181,20 +181,20 @@ def read_topo_file(path,topo_type,verbose=False):
     
     if topo_type == 1:
         for j in -np.linspace(-ny+1,0,ny):
-            for i in xrange(0,nx):
+            for i in range(0,nx):
                 temp = topo_file.readline()
                 Z[i,j] = float(temp.split()[-1])
     elif topo_type == 2:
         for j in -np.linspace(-ny+1,0,ny):
-            for i in xrange(0,nx):
+            for i in range(0,nx):
                 Z[i,j] = float(topo_file.readline())
     elif topo_type == 3:
         for j in -np.linspace(-ny+1,0,ny):
             line = topo_file.readline().split()
-            for i in xrange(0,nx):
+            for i in range(0,nx):
                 Z[i,j] = float(line[i])
     else:
-        print >> sys.stderr, "Invalid topo type %s" % topo_type
+        print("Invalid topo type %s" % topo_type, file=sys.stderr)
         return None
     
     return x,y,Z
@@ -235,7 +235,7 @@ def create_topo_func(loc,verbose=False):
     """
     
     cmd_str = "lambda x,y: (x <= %s) * %s" % (loc[0][0],loc[0][1])
-    for i in xrange(0,len(loc)-1):
+    for i in range(0,len(loc)-1):
         loc_str = " + (%s < x) * (x <= %s)" % (loc[i][0],loc[i+1][0])
         loc_str = "".join((loc_str," * ((%s - %s) " % (loc[i][1],loc[i+1][1])))
         loc_str = "".join((loc_str," / (%s - %s)" % (loc[i][0],loc[i+1][0])))
@@ -244,7 +244,7 @@ def create_topo_func(loc,verbose=False):
     cmd_str = "".join((cmd_str," + (%s < x) * %s" % (loc[-1][0],loc[-1][1])))
     
     if verbose:
-        print cmd_str
+        print(cmd_str)
     return eval(cmd_str)
     
 
@@ -329,13 +329,13 @@ def compile_library(source_list,module_name,interface_functions=[],
     
     # Fetch environment variables we need for compilation
     if FC is None:
-        if os.environ.has_key('FC'):
+        if 'FC' in os.environ:
             FC = os.environ['FC']
         else:
             FC = 'gfortran'
       
     if FFLAGS is None:          
-        if os.environ.has_key('FFLAGS'):
+        if 'FFLAGS' in os.environ:
             FFLAGS = os.environ['FFLAGS']
         else:
             FFLAGS = ''
@@ -470,7 +470,7 @@ def construct_function_handle(path,function_name=None):
         suffix = path.split('.')[-1]
         # This is a python file and we just need to read it and map it
         if suffix in ['py']:
-            execfile(full_path,globals())
+            exec(compile(open(full_path, "rb").read(), full_path, 'exec'),globals())
             return eval('%s' % function_name)
         else:
             raise Exception("Invalid file type for function handle.")
@@ -539,8 +539,8 @@ def read_data_line(inputfile,num_entries=1,type='float'):
         l = line.split()
     val = np.empty(num_entries,type)
     if num_entries > len(l):
-        print 'Error in read_data_line: num_entries = ', num_entries
-        print '  is larger than length of l = ',l
+        print('Error in read_data_line: num_entries = ', num_entries)
+        print('  is larger than length of l = ',l)
     try:
         for i in range(num_entries):
             exec("val[i] = %s(l[i])" % type)
@@ -548,8 +548,8 @@ def read_data_line(inputfile,num_entries=1,type='float'):
             return val[0]
         return val
     except(ValueError):
-        print "Invalid type for the %s value in %s" % (i,l)
-        print "  type = ",type
+        print("Invalid type for the %s value in %s" % (i,l))
+        print("  type = ",type)
         return None
     except:
         raise
@@ -567,7 +567,7 @@ def convert_fort_double_to_float(number):
 
     """
     a = number.split('d')
-    print float(a[0])*10**float(a[1])
+    print(float(a[0])*10**float(a[1]))
     return float(a[0])*10**float(a[1])
 
 #-----------------------------

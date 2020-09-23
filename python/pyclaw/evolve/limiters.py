@@ -121,11 +121,11 @@ def limit(meqn,wave,s,limiter,dtdx):
     r.fill_value = 0
     r = r.filled()
     
-    for mw in xrange(wave.shape[2]):
+    for mw in range(wave.shape[2]):
         # skip waves that are marked as not needing a limiter
         limit_func = limiter_functions.get(limiter[mw])
         if limit_func is not None:
-            for m in xrange(meqn):
+            for m in range(meqn):
                 cfl = np.abs(s[1:-1,mw]*(dtdx[1:-2]*spos[:,mw] 
                                                 + (1-spos[:,mw])*dtdx[2:-1]))
                 wlimitr = limit_func(r[:,mw],cfl)

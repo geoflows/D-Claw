@@ -107,8 +107,8 @@ def rp_euler_roe_1d(q_l,q_r,aux_l,aux_r,aux_global):
     else:
         # Godunov update
         s_index = np.zeros((nrp,2))
-        for m in xrange(meqn):
-            for mw in xrange(mwaves):
+        for m in range(meqn):
+            for mw in range(mwaves):
                 s_index[:,0] = s[:,mw]
                 amdq[:,m] += np.min(s_index,axis=1) * wave[:,m,mw]
                 apdq[:,m] += np.max(s_index,axis=1) * wave[:,m,mw]

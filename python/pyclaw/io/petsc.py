@@ -57,8 +57,8 @@ def write_petsc(solution,frame,path='./',file_prefix='claw',write_aux=False,opti
     # Option parsing
     option_defaults = {'format':'binary','clobber':True}
 
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             pass
         else:
             options[k] = option_defaults[k]
@@ -142,8 +142,8 @@ def read_petsc(solution,frame,path='./',file_prefix='claw',read_aux=False,option
     # Option parsing
     option_defaults = {'format':'binary'}
 
-    for (k,v) in option_defaults.iteritems():
-        if options.has_key(k):
+    for (k,v) in list(option_defaults.items()):
+        if k in options:
             pass
         else:
             options[k] = option_defaults[k]
@@ -177,7 +177,7 @@ def read_petsc(solution,frame,path='./',file_prefix='claw',read_aux=False,option
     else:
         raise IOError('format type %s not supported' % options['format'])
 
-    for m in xrange(ngrids):
+    for m in range(ngrids):
         grid_dict = pickle.load(pickle_file)
 
         gridno  = grid_dict['gridno']
@@ -188,7 +188,7 @@ def read_petsc(solution,frame,path='./',file_prefix='claw',read_aux=False,option
         d       = grid_dict['d']
                 
         dimensions = []
-        for i in xrange(ndim):
+        for i in range(ndim):
             dimensions.append(
                 pyclaw.solution.Dimension(names[i],lower[i],lower[i] + n[i]*d[i],n[i]))
         grid = pyclaw.solution.Grid(dimensions)

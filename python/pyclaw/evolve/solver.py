@@ -99,7 +99,7 @@ class Solver(object):
         self.logger = logging.getLogger('evolve')
 
         # Set default values
-        for (k,v) in self._default_attr_values.iteritems():
+        for (k,v) in list(self._default_attr_values.items()):
             self.__dict__.setdefault(k,v)
 
         # Set data values based on the data object
@@ -123,7 +123,7 @@ class Solver(object):
         
     def __str__(self):
         output = "Solver Status:\n"
-        for (k,v) in self.status.iteritems():
+        for (k,v) in list(self.status.items()):
             output = "\n".join((output,"%s = %s" % (k.rjust(25),v)))
         return output
 
@@ -147,7 +147,7 @@ class Solver(object):
         """
         valid = True
         for key in self._required_attrs:
-            if not self.__dict__.has_key(key):
+            if key not in self.__dict__:
                 self.logger.info('%s is not present.' % key)
                 valid = False
         return valid
@@ -227,7 +227,7 @@ class Solver(object):
             self.max_steps = 0
                 
         # Main time stepping loop
-        for n in xrange(self.max_steps):
+        for n in range(self.max_steps):
         
             # Adjust dt so that we hit tend exactly if we are near tend
             if solutions['n'].t + self.dt > tend and tstart < tend and not take_one_step:

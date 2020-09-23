@@ -111,7 +111,7 @@ class Data(object):
                 self.add_attribute(attr,None,None)
 
         # Read data files from data_files list
-        if isinstance(data_files, basestring):
+        if isinstance(data_files, str):
             data_files = [data_files]
         elif not isinstance(data_files, list):
             raise Exception("data_files must be a list of strings")
@@ -123,7 +123,7 @@ class Data(object):
     def __str__(self):
         output = "%s%s%s\n" % ("Name".ljust(25),"Value".ljust(12),
                                     "Owner".ljust(12))
-        for (k,v) in self.iteritems():
+        for (k,v) in self.items():
             output += "%s%s%s\n" % (str(k).ljust(25),
                                     str(v).ljust(12),
                                     str(self.__owners[k]).ljust(12))
@@ -216,7 +216,7 @@ class Data(object):
          - (list) - Returns a list of owners
         """
         owners = []
-        for (key,owner) in self.__owners.iteritems():
+        for (key,owner) in self.__owners.items():
             if owner is None:
                 self.__owners[key] = supplementary_file
             # This simultaneously finds one instance of an owner and tests
@@ -251,7 +251,7 @@ class Data(object):
         data_paths : Path to a data file to be read in, can also be a list
                     of files to be read in.
         """
-        if isinstance(data_paths, basestring):
+        if isinstance(data_paths, str):
             data_paths = [data_paths]
 
         for filename in data_paths:
@@ -337,8 +337,9 @@ class Data(object):
                     for key in self.__attributes:
                         temp_file.write("1 =: %s\n" % key)
                     temp_file.close()
-                except IOError, (errno, strerror):
-                    print "I/O error(%s): %s" % (errno, strerror)
+                except IOError as xxx_todo_changeme:
+                    (errno, strerror) = xxx_todo_changeme.args
+                    print("I/O error(%s): %s" % (errno, strerror))
                     raise
                 except:
                     raise
@@ -349,7 +350,7 @@ class Data(object):
             for path in data_files:
                 path = os.path.abspath(path)
                 if not(path in owners):
-                    print "%s is not a registered owner!"
+                    print("%s is not a registered owner!")
                     return
             file_list = data_files
         else:
@@ -382,7 +383,7 @@ class Data(object):
                     'temp.' + os.path.basename(data_path))
                 temp_file = open(temp_path,'w')
             except(IOError):
-                print "IOERROR"
+                print("IOERROR")
                 raise
 
             try:
@@ -416,8 +417,8 @@ class Data(object):
                             line = line.replace(result.group('values') + "=:", \
                                 newstart + " =:")
                         else:
-                            print "Error writing out %s" % name
-                            raise AttributeError, name
+                            print("Error writing out %s" % name)
+                            raise AttributeError(name)
 
                     # Write the new line
                     temp_file.write(line)
@@ -516,7 +517,7 @@ class ClawInputData(Data):
             raise AttributeError("Only ndim=1 or 2 supported so far")
 
     def write(self):
-        print 'Creating data file claw.data for use with xclaw'
+        print('Creating data file claw.data for use with xclaw')
         make_clawdatafile(self)
 
 
@@ -630,11 +631,11 @@ class AmrclawInputData(Data):
             self.add_attribute('tprint',False)
             self.add_attribute('uprint',False)
         else:
-            print '*** Error: only ndim=1 or 2 supported so far ***'
+            print('*** Error: only ndim=1 or 2 supported so far ***')
             raise AttributeError("Only ndim=1 or 2 supported so far")
 
     def write(self):
-        print 'Creating data file amr2ez.data for use with xamr'
+        print('Creating data file amr2ez.data for use with xamr')
         make_amrclawdatafile(self)
         make_setgauges_datafile(self)
 
@@ -720,7 +721,7 @@ class SharpclawInputData(Data):
             raise AttributeError("Only ndim=1 or 2 supported so far")
 
     def write(self):
-        print 'Creating data file sharpclaw.data for use with xsclaw'
+        print('Creating data file sharpclaw.data for use with xsclaw')
         make_sharpclawdatafile(self)
 
 
@@ -775,8 +776,8 @@ def data_write(file, dataobj, name=None, descr=''):
         try:
             value = getattr(dataobj, name)
         except:
-            print "Variable missing: ",name
-            print "  from dataobj = ", dataobj
+            print("Variable missing: ",name)
+            print("  from dataobj = ", dataobj)
             raise
         # Convert value to an appropriate string repr
         import numpy
@@ -830,7 +831,7 @@ def make_clawdatafile(clawdata):
         data_write(file, clawdata, 'tfinal', '(final time)')
 
     else:
-        print '*** Error: unrecognized outstyle'
+        print('*** Error: unrecognized outstyle')
         raise
         return
 
@@ -937,7 +938,7 @@ def make_amrclawdatafile(clawdata):
         data_write(file, clawdata, 'output_time_interval', '(between outputs)')
         data_write(file, clawdata, 'tfinal', '(final time)')
     else:
-        print '*** Error: unrecognized outstyle'
+        print('*** Error: unrecognized outstyle')
         raise
         return
 
@@ -960,8 +961,8 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, 'maux', '(number of aux variables)')
     if len(clawdata.auxtype) != clawdata.maux:
         file.close()
-        print "*** Error: An auxtype array must be specified of length maux"
-        raise AttributeError, "require len(clawdata.auxtype) == clawdata.maux"
+        print("*** Error: An auxtype array must be specified of length maux")
+        raise AttributeError("require len(clawdata.auxtype) == clawdata.maux")
     for i in range(clawdata.maux):
         file.write("'%s'\n" % clawdata.auxtype[i])
     data_write(file, clawdata, None)
@@ -1051,7 +1052,7 @@ def make_sharpclawdatafile(clawdata):
     elif clawdata.outstyle == 3:
         data_write(file, clawdata, 'iout', '(output every iout steps)')
     else:
-        print '*** Error: unrecognized outstyle'
+        print('*** Error: unrecognized outstyle')
         raise
         return
 
@@ -1132,7 +1133,7 @@ def make_setgauges_datafile(clawdata):
     gauges = getattr(clawdata,'gauges',[])
     ngauges = len(gauges)
 
-    print 'Creating data file setgauges.data'
+    print('Creating data file setgauges.data')
     # open file and write a warning header:
     file = open_datafile('setgauges.data')
     file.write("%4i   =: ngauges\n" % ngauges)
@@ -1140,7 +1141,7 @@ def make_setgauges_datafile(clawdata):
     for gauge in gauges:
         gaugeno = gauge[0]
         if gaugeno in gaugeno_used:
-            print "*** Gauge number %s used more than once! " % gaugeno
+            print("*** Gauge number %s used more than once! " % gaugeno)
             raise Exception("Repeated gauge number")
         else:
             gaugeno_used.append(gauge[0])
@@ -1256,7 +1257,7 @@ class UserData(Data):
          self.__descr[name] = descr
 
     def write(self):
-         print 'Creating data file %s' % self.__fname
+         print('Creating data file %s' % self.__fname)
          make_userdatafile(self)
 
 class GaugeData(Data):
@@ -1275,7 +1276,7 @@ class GaugeData(Data):
         self.ngauges = len(self.__gauge_dict)
 
     def write(self):
-        print 'Creating data file gauges.data'
+        print('Creating data file gauges.data')
 
         # open file and write a warning header:
         file = open_datafile('gauges.data')
@@ -1286,7 +1287,7 @@ class GaugeData(Data):
         ndim = self.ndim
 
         # write a line for each gauge:
-        for (gaugeno, gdata) in self.__gauge_dict.iteritems():
+        for (gaugeno, gdata) in self.__gauge_dict.items():
             tmin = gdata[2][0]
             tmax = gdata[2][1]
             if isinstance(gdata[1],(list,tuple)):
@@ -1328,7 +1329,7 @@ class GeoclawInputData(Data):
 
     def write(self):
 
-        print 'Creating data file setgeo.data'
+        print('Creating data file setgeo.data')
         # open file and write a warning header:
         file = open_datafile('setgeo.data')
         data_write(file, self, 'igravity')
@@ -1339,7 +1340,7 @@ class GeoclawInputData(Data):
         data_write(file, self, 'variable_dt_refinement_ratios')
         file.close()
 
-        print 'Creating data file settsunami.data'
+        print('Creating data file settsunami.data')
         # open file and write a warning header:
         file = open_datafile('settsunami.data')
         data_write(file, self, 'sealevel')
@@ -1352,7 +1353,7 @@ class GeoclawInputData(Data):
         data_write(file, self, 'frictiondepth')
         file.close()
 
-        print 'Creating data file settopo.data'
+        print('Creating data file settopo.data')
         # open file and write a warning header:
         file = open_datafile('settopo.data')
         self.ntopofiles = len(self.topofiles)
@@ -1361,13 +1362,13 @@ class GeoclawInputData(Data):
             try:
                 fname = os.path.abspath(tfile[-1])
             except:
-                print "*** Error: file not found: ",tfile[-1]
+                print("*** Error: file not found: ",tfile[-1])
                 raise MissingFile("file not found")
             file.write("\n'%s' \n " % fname)
             file.write("%3i %3i %3i %20.10e %20.10e \n" % tuple(tfile[:-1]))
         file.close()
 
-        print 'Creating data file setdtopo.data'
+        print('Creating data file setdtopo.data')
         # open file and write a warning header:
         file = open_datafile('setdtopo.data')
         self.mdtopofiles = len(self.dtopofiles)
@@ -1377,13 +1378,13 @@ class GeoclawInputData(Data):
             try:
                 fname = "'%s'" % os.path.abspath(tfile[-1])
             except:
-                print "*** Error: file not found: ",tfile[-1]
+                print("*** Error: file not found: ",tfile[-1])
                 raise MissingFile("file not found")
             file.write("\n%s \n" % fname)
             file.write("%3i %3i %3i\n" % tuple(tfile[:-1]))
         file.close()
 
-        print 'Creating data file setqinit.data'
+        print('Creating data file setqinit.data')
         # open file and write a warning header:
         file = open_datafile('setqinit.data')
         # self.iqinit tells which component of q is perturbed!
@@ -1394,13 +1395,13 @@ class GeoclawInputData(Data):
             try:
                 fname = "'%s'" % os.path.abspath(tfile[-1])
             except:
-                print "*** Error: file not found: ",tfile[-1]
+                print("*** Error: file not found: ",tfile[-1])
                 raise MissingFile("file not found")
             file.write("\n%s  \n" % fname)
             file.write("%3i %3i %3i %3i \n" % tuple(tfile[:-1]))
         file.close()
 
-        print 'Creating data file setauxinit.data'
+        print('Creating data file setauxinit.data')
         # open file and write a warning header:
         file = open_datafile('setauxinit.data')
         # self.iauxinit tells which component of q is perturbed!
@@ -1411,7 +1412,7 @@ class GeoclawInputData(Data):
             try:
                 fname = "'%s'" % os.path.abspath(tfile[-1])
             except:
-                print "*** Error: file not found: ",tfile[-1]
+                print("*** Error: file not found: ",tfile[-1])
                 raise MissingFile("file not found")
             file.write("\n%s  \n" % fname)
             file.write("%3i %3i %3i %3i \n" % tuple(tfile[:-1]))
@@ -1438,7 +1439,7 @@ class GeoclawInputData(Data):
 #        file.close()
 
 
-        print 'Creating data file setfixedgrids.data'
+        print('Creating data file setfixedgrids.data')
         # open file and write a warning header:
         file = open_datafile('setfixedgrids.data')
         self.nfixedgrids = len(self.fixedgrids)
@@ -1449,7 +1450,7 @@ class GeoclawInputData(Data):
         file.close()
 
 
-        print 'Creating data file setregions.data'
+        print('Creating data file setregions.data')
         # open file and write a warning header:
         file = open_datafile('setregions.data')
         self.nregions = len(self.regions)
@@ -1459,7 +1460,7 @@ class GeoclawInputData(Data):
             file.write(8*"%g  " % tuple(regions) +"\n")
         file.close()
 
-        print 'Creating data file setflowgrades.data'
+        print('Creating data file setflowgrades.data')
         # open file and write a warning header:
         file = open_datafile('setflowgrades.data')
         self.nflowgrades = len(self.flowgrades)
@@ -1501,7 +1502,7 @@ class DigclawInputData(Data):
 
     def write(self):
 
-        print 'Creating data file setdig.data'
+        print('Creating data file setdig.data')
         # open file and write a warning header:
         file = open_datafile('setdig.data')
         data_write(file, self, 'rho_s',    'solid grain density (kg/m^3)')
@@ -1523,7 +1524,7 @@ class DigclawInputData(Data):
         data_write(file, self, 'entrainment_rate', 'rate of entrainment parameter 0-1')
         file.close()
 
-        print 'Creating data file setpinit.data'
+        print('Creating data file setpinit.data')
         # open file and write a warning header:
         file = open_datafile('setpinit.data')
         data_write(file, self, 'init_ptype', '0 = hydro, 1 = failure, 2= p(t)')

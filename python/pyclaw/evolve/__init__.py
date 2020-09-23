@@ -11,5 +11,5 @@ Copyright (c) 2008 University of Washington. All rights reserved.
 # should be done depending on the solver needed
 
 __all__ = ['ClawSolver1D','rp']
-from clawpack import ClawSolver1D
-from rp import *
+from .clawpack import ClawSolver1D
+from .rp import *

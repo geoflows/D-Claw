@@ -29,7 +29,7 @@ def make_colormap(colors):
     from matplotlib.colors import LinearSegmentedColormap, ColorConverter
     from numpy import sort
     
-    z = sort(colors.keys())
+    z = sort(list(colors.keys()))
     n = len(z)
     z1 = min(z)
     zn = max(z)
@@ -144,6 +144,6 @@ def make_amrcolors(nlevels=4):
         linecolors = linecolors[:nlevels]
         bgcolors = bgcolors[:nlevels]
     else:
-        print "*** Warning, suggest nlevels <= 16"
+        print("*** Warning, suggest nlevels <= 16")
 
     return (linecolors, bgcolors)
