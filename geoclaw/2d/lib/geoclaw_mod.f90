@@ -20,7 +20,7 @@ module geoclaw_module
     ! ========================================================================
     double precision :: grav,drytolerance,Rearth,R1,R2,pi,sealevel
     double precision :: wavetolerance,coeffmanning,depthdeep
-    double precision :: frictiondepth
+    double precision :: frictiondepth,dtv2
     integer :: icoordsys,maxleveldeep,minlevelwet,maxleveldry
     integer :: icoriolis,ifriction
     integer, parameter :: GEO_PARM_UNIT = 78
