@@ -230,6 +230,8 @@ In addition, topography can be specified at multiple scales. From the docs:
 
 > More than one topo file can be specified (see Topography data file parameters) that might cover overlapping regions at different resolutions. The union of all the topo files should cover the full computational domain specified (and may extend outside it). Internally in GeoClaw a single piecewise-bilinear function is constructed from the union of the topo files, using the best information available in regions of overlap. This function is then integrated over computational grid cells to obtain the single topo value in each grid cell needed when solving depth averaged equations such as the shallow water equations with these finite volume methods. Note that this has the feature that if a grid cell is refined at some stage in the computation, the topo used in the fine cells have an average value that is equal to the coarse cell value. This is crucial in maintaining the ocean-at-rest steady state, for example.
 
+Note. There may be some line ending requirements for .tt3 files. I'm not 100% sure, but I've had some issues fortran reading in topo files with files made on windows that are "fixed" when I read a .tt3 file into a python array and then back out to .tt3 using the topotools. 
+
 #### 2.5.2. Displacement
 This is unlikely to be used by D-Claw and is meant more for tsunami initiation.
 
@@ -344,7 +346,7 @@ Also, if variable dt refinement is used the dt_initial seems to be ignored. That
 
 Also, the dt_max refers to the max at the coarsest AMR level. It not clear if its presently being honored, but we are working on it over at [PR 13](https://github.com/geoflows/D-Claw/pull/13).
 
-The reason for two Courant numbers is written right above the variables in setrun.py. There is computational expense in both taking small timesteps and in taking a timestep that is too big such that the wavespeeds known at the end of the timestep mean that the timestep was in violation of the cfl_max value. So giving a range between cfl_desired and cfl_max means that D-Claw will aim for clf_desired and won't need to retake timesteps so long as it doesn't exceed cfl_max. Remember, end of timestep wavespeeds are not know at the beinning of the timestep. 
+The reason for two Courant numbers is written right above the variables in setrun.py. There is computational expense in both taking small timesteps and in taking a timestep that is too big such that the wavespeeds known at the end of the timestep mean that the timestep was in violation of the cfl_max value. So giving a range between cfl_desired and cfl_max means that D-Claw will aim for clf_desired and won't need to retake timesteps so long as it doesn't exceed cfl_max. Remember, end of timestep wavespeeds are not know at the beinning of the timestep.
 
 ### 2.8 Definition of output writing.
 
