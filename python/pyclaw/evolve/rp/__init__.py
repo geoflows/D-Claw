@@ -7,8 +7,17 @@ Created by Kyle Mandli on 2008-09-15.
 Copyright (c) 2008 University of Washington. All rights reserved.
 """
 
-rp_solver_list_1d = ['advection','vc_advection','acoustics','burgers','shallow_roe',
-                  'shallow_hll','shallow_exact','euler_roe','nel']
+rp_solver_list_1d = [
+    "advection",
+    "vc_advection",
+    "acoustics",
+    "burgers",
+    "shallow_roe",
+    "shallow_hll",
+    "shallow_exact",
+    "euler_roe",
+    "nel",
+]
 rp_solver_list_2d = []
 rp_solver_list_3d = []
 

@@ -12,7 +12,7 @@ import os
 import logging, logging.config
 
 # Default logging configuration file
-_DEFAULT_LOG_CONFIG_PATH = os.path.join(os.path.dirname(__file__),'log.config')
+_DEFAULT_LOG_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "log.config")
 
 # Setup loggers
 logging.config.fileConfig(_DEFAULT_LOG_CONFIG_PATH)
@@ -20,7 +20,7 @@ logging.config.fileConfig(_DEFAULT_LOG_CONFIG_PATH)
 __all__ = []
 
 # Module imports
-__all__.extend(['Controller','Data','Dimension','Grid','Solution'])
+__all__.extend(["Controller", "Data", "Dimension", "Grid", "Solution"])
 from pyclaw.controller import Controller
 from pyclaw.data import Data
 from pyclaw.solution import Dimension, Grid, Solution
@@ -28,4 +28,5 @@ from pyclaw.solution import Dimension, Grid, Solution
 # Sub-packages
 from . import evolve
 from pyclaw.evolve import *
+
 __all__.extend(evolve.__all__)

@@ -14,13 +14,13 @@ Pyclaw utility methods
 #      Copyright (C) 2008 Kyle T. Mandli <mandli@amath.washington.edu>
 #      Copyright (C) 2009 Randall J. LeVeque <rjl@amath.washington.edu>
 #
-#  Distributed under the terms of the Berkeley Software Distribution (BSD) 
+#  Distributed under the terms of the Berkeley Software Distribution (BSD)
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
 import time
-import os,sys,shutil,glob
+import os, sys, shutil, glob
 import re
 import subprocess
 import logging
@@ -31,7 +31,7 @@ import numpy as np
 # ============================================================================
 #  Geoclaw Topography Utility Functions
 # ============================================================================
-def write_topo_file(path,z_func,nx,ny,lower_coord,upper_coord,topo_type=1):
+def write_topo_file(path, z_func, nx, ny, lower_coord, upper_coord, topo_type=1):
     r"""
     Write out a topo1 file to the file at path.
     
@@ -95,49 +95,50 @@ def write_topo_file(path,z_func,nx,ny,lower_coord,upper_coord,topo_type=1):
 
     The order of topo files in the list above should not matter.
     """
-    
+
     # Open file
-    file = open(path,'w')
-    
+    file = open(path, "w")
+
     # Calculate header values
     nrows = ny
     ncols = nx
-    dx = (upper_coord[0]-lower_coord[0]) / nx
-    dy = (upper_coord[1]-lower_coord[1]) / ny
-    
-    if not(dx == dy):
-        raise ValueError("dx != dy, dx = %s, dy = %s" % (dx,dy))
+    dx = (upper_coord[0] - lower_coord[0]) / nx
+    dy = (upper_coord[1] - lower_coord[1]) / ny
+
+    if not (dx == dy):
+        raise ValueError("dx != dy, dx = %s, dy = %s" % (dx, dy))
         return 13
     cellsize = dx
-    
+
     # Write header
-    header = '%s ncols' % ncols
-    header = '\n'.join((header,'%s nrows' % nrows))
-    header = '\n'.join((header,'%s xllcorner' % lower_coord[0]))
-    header = '\n'.join((header,'%s yllcorner' % lower_coord[1]))
-    header = '\n'.join((header,'%s cellsize' % cellsize))
-    header = '\n'.join((header,'%s NODATA_value\n' % -9999.0))
+    header = "%s ncols" % ncols
+    header = "\n".join((header, "%s nrows" % nrows))
+    header = "\n".join((header, "%s xllcorner" % lower_coord[0]))
+    header = "\n".join((header, "%s yllcorner" % lower_coord[1]))
+    header = "\n".join((header, "%s cellsize" % cellsize))
+    header = "\n".join((header, "%s NODATA_value\n" % -9999.0))
     file.write(header)
-    
+
     # Write out function give topography type requested
     if topo_type == 1:
-        for y in -np.linspace(-upper_coord[1],-lower_coord[1],ny):
-            for x in np.linspace(lower_coord[0],upper_coord[0],nx):
-                file.write("%s %s %s\n" % (x,y,z_func(x,y)))
+        for y in -np.linspace(-upper_coord[1], -lower_coord[1], ny):
+            for x in np.linspace(lower_coord[0], upper_coord[0], nx):
+                file.write("%s %s %s\n" % (x, y, z_func(x, y)))
     elif topo_type == 2:
-        for y in -np.linspace(-upper_coord[1],-lower_coord[1],ny):
-            for x in np.linspace(lower_coord[0],upper_coord[0],nx):
-                file.write("%s\n" % z_func(x,y))
+        for y in -np.linspace(-upper_coord[1], -lower_coord[1], ny):
+            for x in np.linspace(lower_coord[0], upper_coord[0], nx):
+                file.write("%s\n" % z_func(x, y))
     elif topo_type == 3:
-        for y in -np.linspace(-upper_coord[1],-lower_coord[1],ny):
-            for x in np.linspace(lower_coord[0],upper_coord[0],nx):
-                file.write("%s " % z_func(x,y))
+        for y in -np.linspace(-upper_coord[1], -lower_coord[1], ny):
+            for x in np.linspace(lower_coord[0], upper_coord[0], nx):
+                file.write("%s " % z_func(x, y))
             file.write("\n")
-     
+
     # Close file
     file.close()
-    
-def read_topo_file(path,topo_type,verbose=False):
+
+
+def read_topo_file(path, topo_type, verbose=False):
     r"""
     Read in a topography file from path of type topo_type.
     
@@ -155,9 +156,9 @@ def read_topo_file(path,topo_type,verbose=False):
      - (ndarray(:)) Y-Coordinate array
      - (ndarray(:,:)) Z values stored in topography file
     """
-    
-    topo_file = open(path,'r')
-    
+
+    topo_file = open(path, "r")
+
     # Read in topography file header
     nx = int(topo_file.readline().split()[0])
     ny = int(topo_file.readline().split()[0])
@@ -165,42 +166,42 @@ def read_topo_file(path,topo_type,verbose=False):
     yll = float(topo_file.readline().split()[0])
     dx = float(topo_file.readline().split()[0])
     nodata_value = float(topo_file.readline().split()[0])
-    
+
     if verbose:
         print("Header:")
-        print("  (nx,ny) = (%s,%s)" % (nx,ny))
-        print("  (xl,yl) = (%s,%s)" % (xll,yll))
-        print("  (dx,dy) = (%s,%s)" % (dx,dx))
+        print("  (nx,ny) = (%s,%s)" % (nx, ny))
+        print("  (xl,yl) = (%s,%s)" % (xll, yll))
+        print("  (dx,dy) = (%s,%s)" % (dx, dx))
         print("  nodata  = %s" % nodata_value)
-    
+
     # Create Z matrix
     dy = dx
-    x = np.linspace(xll,xll + nx * dx,nx)
-    y = np.linspace(yll,yll + ny * dy,ny)
-    Z = np.empty((nx,ny))
-    
+    x = np.linspace(xll, xll + nx * dx, nx)
+    y = np.linspace(yll, yll + ny * dy, ny)
+    Z = np.empty((nx, ny))
+
     if topo_type == 1:
-        for j in -np.linspace(-ny+1,0,ny):
-            for i in range(0,nx):
+        for j in -np.linspace(-ny + 1, 0, ny):
+            for i in range(0, nx):
                 temp = topo_file.readline()
-                Z[i,j] = float(temp.split()[-1])
+                Z[i, j] = float(temp.split()[-1])
     elif topo_type == 2:
-        for j in -np.linspace(-ny+1,0,ny):
-            for i in range(0,nx):
-                Z[i,j] = float(topo_file.readline())
+        for j in -np.linspace(-ny + 1, 0, ny):
+            for i in range(0, nx):
+                Z[i, j] = float(topo_file.readline())
     elif topo_type == 3:
-        for j in -np.linspace(-ny+1,0,ny):
+        for j in -np.linspace(-ny + 1, 0, ny):
             line = topo_file.readline().split()
-            for i in range(0,nx):
-                Z[i,j] = float(line[i])
+            for i in range(0, nx):
+                Z[i, j] = float(line[i])
     else:
         print("Invalid topo type %s" % topo_type, file=sys.stderr)
         return None
-    
-    return x,y,Z
+
+    return x, y, Z
 
 
-def create_topo_func(loc,verbose=False):
+def create_topo_func(loc, verbose=False):
     """Given a set of (x,z) locations, create a lambda function
     
     Create a lambda function that when evaluated will give the topgraphy 
@@ -233,27 +234,36 @@ def create_topo_func(loc,verbose=False):
         
         
     """
-    
-    cmd_str = "lambda x,y: (x <= %s) * %s" % (loc[0][0],loc[0][1])
-    for i in range(0,len(loc)-1):
-        loc_str = " + (%s < x) * (x <= %s)" % (loc[i][0],loc[i+1][0])
-        loc_str = "".join((loc_str," * ((%s - %s) " % (loc[i][1],loc[i+1][1])))
-        loc_str = "".join((loc_str," / (%s - %s)" % (loc[i][0],loc[i+1][0])))
-        loc_str = "".join((loc_str," * (x - %s) + %s)" % (loc[i][0],loc[i][1])))
-        cmd_str = "".join((cmd_str,loc_str))
-    cmd_str = "".join((cmd_str," + (%s < x) * %s" % (loc[-1][0],loc[-1][1])))
-    
+
+    cmd_str = "lambda x,y: (x <= %s) * %s" % (loc[0][0], loc[0][1])
+    for i in range(0, len(loc) - 1):
+        loc_str = " + (%s < x) * (x <= %s)" % (loc[i][0], loc[i + 1][0])
+        loc_str = "".join((loc_str, " * ((%s - %s) " % (loc[i][1], loc[i + 1][1])))
+        loc_str = "".join((loc_str, " / (%s - %s)" % (loc[i][0], loc[i + 1][0])))
+        loc_str = "".join((loc_str, " * (x - %s) + %s)" % (loc[i][0], loc[i][1])))
+        cmd_str = "".join((cmd_str, loc_str))
+    cmd_str = "".join((cmd_str, " + (%s < x) * %s" % (loc[-1][0], loc[-1][1])))
+
     if verbose:
         print(cmd_str)
     return eval(cmd_str)
-    
+
 
 # ============================================================================
 #  F2PY Utility Functions
 # ============================================================================
-def compile_library(source_list,module_name,interface_functions=[],
-                        local_path='./',library_path='./',f2py_flags='',
-                        FC=None,FFLAGS=None,recompile=False,clean=False):
+def compile_library(
+    source_list,
+    module_name,
+    interface_functions=[],
+    local_path="./",
+    library_path="./",
+    f2py_flags="",
+    FC=None,
+    FFLAGS=None,
+    recompile=False,
+    clean=False,
+):
     r"""
     Compiles and wraps fortran source into a callable module in python.
     
@@ -311,39 +321,39 @@ def compile_library(source_list,module_name,interface_functions=[],
        False
      - *clean* - (bool) Force a clean build of all source files
     """
-    
-    # Setup logger    
-    logger = logging.getLogger('f2py')
+
+    # Setup logger
+    logger = logging.getLogger("f2py")
     temp_file = tempfile.TemporaryFile()
-    logger.info('Compiling %s' % module_name)
-    
+    logger.info("Compiling %s" % module_name)
+
     # Force recompile if the clean flag is set
     if clean:
         recompile = True
-    
+
     # Expand local_path and library_path
     local_path = os.path.expandvars(local_path)
     local_path = os.path.expanduser(local_path)
     library_path = os.path.expandvars(library_path)
     library_path = os.path.expanduser(library_path)
-    
+
     # Fetch environment variables we need for compilation
     if FC is None:
-        if 'FC' in os.environ:
-            FC = os.environ['FC']
+        if "FC" in os.environ:
+            FC = os.environ["FC"]
         else:
-            FC = 'gfortran'
-      
-    if FFLAGS is None:          
-        if 'FFLAGS' in os.environ:
-            FFLAGS = os.environ['FFLAGS']
+            FC = "gfortran"
+
+    if FFLAGS is None:
+        if "FFLAGS" in os.environ:
+            FFLAGS = os.environ["FFLAGS"]
         else:
-            FFLAGS = ''
-    
+            FFLAGS = ""
+
     # Create the list of paths to sources
     path_list = []
     for source in source_list:
-        # Check to see if the source looks like a path, i.e. it contains the 
+        # Check to see if the source looks like a path, i.e. it contains the
         # os.path.sep character
         if source.find(os.path.sep) >= 0:
             source = os.path.expandvars(source)
@@ -355,28 +365,30 @@ def compile_library(source_list,module_name,interface_functions=[],
             # Otherwise, take the last part of the path and try searching for
             # it in the resolution order
             source = os.path.split(source)
-        
+
         # Search for the source file in local_path and then library_path
-        if os.path.exists(os.path.join(local_path,source)):
-            path_list.append(os.path.join(local_path,source))
+        if os.path.exists(os.path.join(local_path, source)):
+            path_list.append(os.path.join(local_path, source))
             continue
-        elif os.path.exists(os.path.join(library_path,source)):
-            path_list.append(os.path.join(library_path,source))
+        elif os.path.exists(os.path.join(library_path, source)):
+            path_list.append(os.path.join(library_path, source))
             continue
         else:
-            raise IOError('Could not find source file %s' % source)
-            
+            raise IOError("Could not find source file %s" % source)
+
     # Compile each of the source files if the object files are not present or
     # if the modification date of the source file is newer than the object
     # file's creation date
     object_list = []
     src_list = []
     for path in path_list:
-        object_path = os.path.join(os.path.split(path)[0],
-            '.'.join((os.path.split(path)[1].split('.')[:-1][0],'o')))
-        
+        object_path = os.path.join(
+            os.path.split(path)[0],
+            ".".join((os.path.split(path)[1].split(".")[:-1][0], "o")),
+        )
+
         # Check to see if this path contains one of the interface functions
-        if os.path.split(path)[1].split('.')[:-1][0] in interface_functions:
+        if os.path.split(path)[1].split(".")[:-1][0] in interface_functions:
             src_list.append(path)
             continue
         # If there are no interface functions specified, then all source files
@@ -384,7 +396,7 @@ def compile_library(source_list,module_name,interface_functions=[],
         elif len(interface_functions) == 0:
             src_list.append(path)
             continue
-            
+
         if os.path.exists(object_path) and not clean:
             # Check to see if the modification date of the source file is
             # greater than the object file
@@ -392,14 +404,14 @@ def compile_library(source_list,module_name,interface_functions=[],
                 object_list.append(object_path)
                 continue
         # Compile the source file into the object file
-        command = '%s %s -c %s -o %s' % (FC,FFLAGS,path,object_path)
+        command = "%s %s -c %s -o %s" % (FC, FFLAGS, path, object_path)
         logger.debug(command)
-        subprocess.call(command,shell=True,stdout=temp_file)
+        subprocess.call(command, shell=True, stdout=temp_file)
         object_list.append(object_path)
-        
+
     # Check to see if recompile is needed
     if not recompile:
-        module_path = os.path.join('.','.'.join((module_name,'so')))
+        module_path = os.path.join(".", ".".join((module_name, "so")))
         if os.path.exists(module_path):
             for src in src_list:
                 if os.path.getmtime(module_path) < os.path.getmtime(src):
@@ -408,7 +420,7 @@ def compile_library(source_list,module_name,interface_functions=[],
             for obj in object_list:
                 if os.path.getmtime(module_path) < os.path.getmtime(obj):
                     recompile = True
-                    break  
+                    break
         else:
             recompile = True
 
@@ -416,26 +428,28 @@ def compile_library(source_list,module_name,interface_functions=[],
         # Wrap the object files into a python module
         f2py_command = "f2py -c"
         # Add standard compiler flags
-        f2py_command = ' '.join((f2py_command,f2py_flags))
-        f2py_command = ' '.join((f2py_command,"--f90flags='%s'" % FFLAGS))
+        f2py_command = " ".join((f2py_command, f2py_flags))
+        f2py_command = " ".join((f2py_command, "--f90flags='%s'" % FFLAGS))
         # Add module names
-        f2py_command = ' '.join((f2py_command,'-m %s' % module_name))
+        f2py_command = " ".join((f2py_command, "-m %s" % module_name))
         # Add source files
-        f2py_command = ' '.join((f2py_command,' '.join(src_list)))
+        f2py_command = " ".join((f2py_command, " ".join(src_list)))
         # Add object files
-        f2py_command = ' '.join((f2py_command,' '.join(object_list)))
+        f2py_command = " ".join((f2py_command, " ".join(object_list)))
         # Add interface functions
         if len(interface_functions) > 0:
-            f2py_command = ' '.join( (f2py_command,'only:') )
+            f2py_command = " ".join((f2py_command, "only:"))
             for interface in interface_functions:
-                f2py_command = ' '.join( (f2py_command,interface) )
-            f2py_command = ''.join( (f2py_command,' :') )
+                f2py_command = " ".join((f2py_command, interface))
+            f2py_command = "".join((f2py_command, " :"))
         logger.debug(f2py_command)
-        status = subprocess.call(f2py_command,shell=True,stdout=temp_file)
+        status = subprocess.call(f2py_command, shell=True, stdout=temp_file)
         if status == 0:
             logger.info("Module %s compiled" % module_name)
         else:
-            logger.info("Module %s failed to compile with code %s" % (module_name,status))
+            logger.info(
+                "Module %s failed to compile with code %s" % (module_name, status)
+            )
             sys.exit(13)
     else:
         logger.info("Module %s is up to date." % module_name)
@@ -444,7 +458,8 @@ def compile_library(source_list,module_name,interface_functions=[],
     logger.debug(temp_file.read())
     temp_file.close()
 
-def construct_function_handle(path,function_name=None):
+
+def construct_function_handle(path, function_name=None):
     r"""
     Constructs a function handle from the file at path.
     
@@ -463,23 +478,24 @@ def construct_function_handle(path,function_name=None):
     """
     # Determine the resulting function_name
     if function_name is None:
-        function_name = path.split('/')[-1].split('.')[0]
-    
+        function_name = path.split("/")[-1].split(".")[0]
+
     full_path = os.path.abspath(path)
     if os.path.exists(full_path):
-        suffix = path.split('.')[-1]
+        suffix = path.split(".")[-1]
         # This is a python file and we just need to read it and map it
-        if suffix in ['py']:
-            exec(compile(open(full_path, "rb").read(), full_path, 'exec'),globals())
-            return eval('%s' % function_name)
+        if suffix in ["py"]:
+            exec(compile(open(full_path, "rb").read(), full_path, "exec"), globals())
+            return eval("%s" % function_name)
         else:
             raise Exception("Invalid file type for function handle.")
     else:
         raise Exception("Invalid file path %s" % path)
 
-#-----------------------------
+
+# -----------------------------
 class FrameCounter:
-#-----------------------------
+    # -----------------------------
     r"""
     Simple frame counter
 
@@ -489,6 +505,7 @@ class FrameCounter:
 
     Initializes to 0
     """
+
     def __init__(self):
         self.__frame = 0
 
@@ -500,16 +517,19 @@ class FrameCounter:
         Increment the counter by one
         """
         self.__frame += 1
-    def set_counter(self,new_frame_num):
+
+    def set_counter(self, new_frame_num):
         r"""
         Set the counter to new_frame_num
         """
         self.__frame = new_frame_num
+
     def get_counter(self):
         r"""
         Get the current frame number
         """
         return self.__frame
+
     def reset_counter(self):
         r"""
         Reset the counter to 0
@@ -517,9 +537,9 @@ class FrameCounter:
         self.__frame = 0
 
 
-#---------------------------------------------------------
-def read_data_line(inputfile,num_entries=1,type='float'):
-#---------------------------------------------------------
+# ---------------------------------------------------------
+def read_data_line(inputfile, num_entries=1, type="float"):
+    # ---------------------------------------------------------
     r"""
     Read data a single line from an input file
 
@@ -534,29 +554,30 @@ def read_data_line(inputfile,num_entries=1,type='float'):
 
     """
     l = []
-    while  l==[]:  # skip over blank lines
+    while l == []:  # skip over blank lines
         line = inputfile.readline()
         l = line.split()
-    val = np.empty(num_entries,type)
+    val = np.empty(num_entries, type)
     if num_entries > len(l):
-        print('Error in read_data_line: num_entries = ', num_entries)
-        print('  is larger than length of l = ',l)
+        print("Error in read_data_line: num_entries = ", num_entries)
+        print("  is larger than length of l = ", l)
     try:
         for i in range(num_entries):
             exec("val[i] = %s(l[i])" % type)
-        if num_entries == 1:  # This is a convenience for calling functions    
+        if num_entries == 1:  # This is a convenience for calling functions
             return val[0]
         return val
-    except(ValueError):
-        print("Invalid type for the %s value in %s" % (i,l))
-        print("  type = ",type)
+    except (ValueError):
+        print("Invalid type for the %s value in %s" % (i, l))
+        print("  type = ", type)
         return None
     except:
         raise
 
-#----------------------------------------
+
+# ----------------------------------------
 def convert_fort_double_to_float(number):
-#----------------------------------------
+    # ----------------------------------------
     r"""
     Converts a fortran format double to a float
 
@@ -566,43 +587,43 @@ def convert_fort_double_to_float(number):
     be of the form "1.0d0"
 
     """
-    a = number.split('d')
-    print(float(a[0])*10**float(a[1]))
-    return float(a[0])*10**float(a[1])
+    a = number.split("d")
+    print(float(a[0]) * 10 ** float(a[1]))
+    return float(a[0]) * 10 ** float(a[1])
 
-#-----------------------------
+
+# -----------------------------
 def current_time(addtz=False):
-#-----------------------------
+    # -----------------------------
     # determine current time and reformat:
     time1 = time.asctime()
     year = time1[-5:]
     day = time1[:-14]
     hour = time1[-13:-5]
-    current_time = day + year + ' at ' + hour
+    current_time = day + year + " at " + hour
     if addtz:
-        current_time = current_time + ' ' + time.tzname[time.daylight]
+        current_time = current_time + " " + time.tzname[time.daylight]
     return current_time
 
 
-
-#---------------------------------
+# ---------------------------------
 def svn_revision(dir="CLAW"):
-#---------------------------------
+    # ---------------------------------
     r"""
     Determine the svn revision number of the version of code being used.
     If dir="CLAW" it returns the revision number of the claw directory.
     This only checks the top most level and assumes this is accurate.
     """
-   
-    if dir=="CLAW":
-        dir  = os.environ['CLAW']
-    svn_entries = dir + '/.svn/entries'
+
+    if dir == "CLAW":
+        dir = os.environ["CLAW"]
+    svn_entries = dir + "/.svn/entries"
     try:
-        f = open(svn_entries,'r')
+        f = open(svn_entries, "r")
         lines = f.readlines()
         revision = int(lines[3])  # fourth line of file, converted to int
         f.close()
     except:
         revision = None
-    
+
     return revision

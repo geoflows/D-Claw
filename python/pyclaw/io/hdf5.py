@@ -20,43 +20,47 @@ To install either, you must also install the hdf5 library from the website:
 # ============================================================================
 #      Copyright (C) 2009 Kyle T. Mandli <mandli@amath.washington.edu>
 #
-#  Distributed under the terms of the Berkeley Software Distribution (BSD) 
+#  Distributed under the terms of the Berkeley Software Distribution (BSD)
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os,sys
+import os, sys
 import logging
 
 import numpy as np
 
 import pyclaw.solution
 
-logger = logging.getLogger('io')
+logger = logging.getLogger("io")
 
 # Import appropriate hdf5 package
 use_h5py = False
 use_PyTables = False
 try:
     import h5py
+
     use_h5py = True
 except:
     pass
 if use_h5py:
     try:
         import tables
+
         use_PyTables = True
     except:
-        error_msg = ("Could not import h5py or PyTables, please install " +
-            "either h5py or PyTables.  See the doc_string for more " +
-            "information.")
+        error_msg = (
+            "Could not import h5py or PyTables, please install "
+            + "either h5py or PyTables.  See the doc_string for more "
+            + "information."
+        )
         raise Exception(error_msg)
 
 if not use_h5py and not use_PyTables:
     logging.critical("Could not import h5py or PyTables!")
 
-def write_hdf5(solution,frame,path,file_prefix='claw',write_aux=False,
-                options={}):
+
+def write_hdf5(solution, frame, path, file_prefix="claw", write_aux=False, options={}):
     r"""
     Write out a Solution to a HDF5 file.
     
@@ -106,63 +110,82 @@ def write_hdf5(solution,frame,path,file_prefix='claw',write_aux=False,
     |                 | be used with or without compression.                 |
     +-----------------+------------------------------------------------------+
     """
-    
+
     # Option parsing
-    option_defaults = {'compression':None,'compression_opts':None,
-                       'chunks':None,'shuffle':False,'fletcher32':False}
-    for (k,v) in list(option_defaults.items()):
+    option_defaults = {
+        "compression": None,
+        "compression_opts": None,
+        "chunks": None,
+        "shuffle": False,
+        "fletcher32": False,
+    }
+    for (k, v) in list(option_defaults.items()):
         if k in options:
-            exec("%s = options['%s']" % (k,k))
+            exec("%s = options['%s']" % (k, k))
         else:
-            exec('%s = v' % k)
-    
+            exec("%s = v" % k)
+
     # File name
-    filename = os.path.join(path,'%s%s.hdf' % 
-                                (file_prefix,str(frame).zfill(4)))
-    
+    filename = os.path.join(path, "%s%s.hdf" % (file_prefix, str(frame).zfill(4)))
+
     # Write out using h5py
     if use_h5py:
-        f = h5py.File(filename,'w')
-        
+        f = h5py.File(filename, "w")
+
         # For each grid, write out attributes
         for grid in solution.grids:
             # Create group for this grid
-            subgroup = f.create_group('grid%s' % grid.gridno)
-            
+            subgroup = f.create_group("grid%s" % grid.gridno)
+
             # General grid properties
-            for attr in ['t','meqn','mbc','gridno','level']:
-                if hasattr(grid,attr):
-                    if getattr(grid,attr) is not None:
-                        subgroup.attrs[attr] = getattr(grid,attr)
-                    
+            for attr in ["t", "meqn", "mbc", "gridno", "level"]:
+                if hasattr(grid, attr):
+                    if getattr(grid, attr) is not None:
+                        subgroup.attrs[attr] = getattr(grid, attr)
+
             # Add the dimension names as a attribute
-            subgroup.attrs['dimensions'] = grid.get_dim_attribute('name')
-                    
+            subgroup.attrs["dimensions"] = grid.get_dim_attribute("name")
+
             # Dimension properties
             for dim in grid.dimensions:
-                for attr in ['n','lower','d','upper','mthbc_lower',
-                             'mthbc_upper','units']:
-                    if hasattr(dim,attr):
-                        if getattr(dim,attr) is not None:
-                            attr_name = '%s.%s' % (dim.name,attr)
-                            subgroup.attrs[attr_name] = getattr(dim,attr)
-            
+                for attr in [
+                    "n",
+                    "lower",
+                    "d",
+                    "upper",
+                    "mthbc_lower",
+                    "mthbc_upper",
+                    "units",
+                ]:
+                    if hasattr(dim, attr):
+                        if getattr(dim, attr) is not None:
+                            attr_name = "%s.%s" % (dim.name, attr)
+                            subgroup.attrs[attr_name] = getattr(dim, attr)
+
             # Write out q
-            subgroup.create_dataset('q',data=grid.q,
-                                        compression=compression,
-                                        compression_opts=compression_opts,
-                                        chunks=chunks,shuffle=shuffle,
-                                        fletcher32=fletcher32)
+            subgroup.create_dataset(
+                "q",
+                data=grid.q,
+                compression=compression,
+                compression_opts=compression_opts,
+                chunks=chunks,
+                shuffle=shuffle,
+                fletcher32=fletcher32,
+            )
             if write_aux and grid.maux > 0:
-                subgroup.create_dataset('aux',data=grid.aux,
-                                        compression=compression,
-                                        compression_opts=compression_opts,
-                                        chunks=chunks,shuffle=shuffle,
-                                        fletcher32=fletcher32)
-    
+                subgroup.create_dataset(
+                    "aux",
+                    data=grid.aux,
+                    compression=compression,
+                    compression_opts=compression_opts,
+                    chunks=chunks,
+                    shuffle=shuffle,
+                    fletcher32=fletcher32,
+                )
+
         # Flush and close the file
         f.close()
-        
+
     # Write out using PyTables
     elif use_PyTables:
         # f = tables.openFile(filename, mode = "w", title = options['title'])
@@ -174,8 +197,9 @@ def write_hdf5(solution,frame,path,file_prefix='claw',write_aux=False,
         raise Exception(err_msg)
 
 
-def read_hdf5(solution,frame,path='./',file_prefix='claw',read_aux=True,
-                options={}):
+def read_hdf5(
+    solution, frame, path="./", file_prefix="claw", read_aux=True, options={}
+):
     r"""
     Read in a HDF5 file into a Solution
     
@@ -189,61 +213,62 @@ def read_hdf5(solution,frame,path='./',file_prefix='claw',read_aux=True,
        auxiliary array should be written out.  ``default = False``     
      - *options* - (dict) Optional argument dictionary, unused for reading.
     """
-    
+
     # Option parsing
     option_defaults = {}
-    for (k,v) in list(option_defaults.items()):
+    for (k, v) in list(option_defaults.items()):
         if k in options:
-            exec("%s = options['%s']" % (k,k))
+            exec("%s = options['%s']" % (k, k))
         else:
-            exec('%s = v' % k)
-    
+            exec("%s = v" % k)
+
     # File name
-    filename = os.path.join(path,'%s%s.hdf' % 
-                                (file_prefix,str(frame).zfill(4)))
+    filename = os.path.join(path, "%s%s.hdf" % (file_prefix, str(frame).zfill(4)))
 
     if use_h5py:
-        f = h5py.File(filename,'r')
-        
+        f = h5py.File(filename, "r")
+
         for subgroup in f.iterobjects():
 
             # Construct each dimension
             dimensions = []
-            dim_names = subgroup.attrs['dimensions']
+            dim_names = subgroup.attrs["dimensions"]
             for dim_name in dim_names:
                 # Create dimension
-                dim = pyclaw.solution.Dimension(dim_name,
-                                    subgroup.attrs["%s.lower" % dim_name],
-                                    subgroup.attrs["%s.upper" % dim_name],
-                                    subgroup.attrs["%s.n" % dim_name])                    
+                dim = pyclaw.solution.Dimension(
+                    dim_name,
+                    subgroup.attrs["%s.lower" % dim_name],
+                    subgroup.attrs["%s.upper" % dim_name],
+                    subgroup.attrs["%s.n" % dim_name],
+                )
                 # Optional attributes
-                for attr in ['mthbc_lower','mthbc_upper','units']:
-                    attr_name = "%s.%s" % (dim_name,attr)
+                for attr in ["mthbc_lower", "mthbc_upper", "units"]:
+                    attr_name = "%s.%s" % (dim_name, attr)
                     if subgroup.attrs.get(attr_name, None):
-                        setattr(dim,attr,subgroup.attrs["%s.%s" % (dim_name,attr)])
+                        setattr(dim, attr, subgroup.attrs["%s.%s" % (dim_name, attr)])
                 dimensions.append(dim)
-            
+
             # Create grid
             grid = pyclaw.solution.Grid(dimensions)
-                
+
             # Fetch general grid properties
-            for attr in ['t','meqn','gridno','level']:
-                setattr(grid,attr,subgroup.attrs[attr])
-            
+            for attr in ["t", "meqn", "gridno", "level"]:
+                setattr(grid, attr, subgroup.attrs[attr])
+
             # Read in q
-            index_str = ','.join( [':' for i in range(len(subgroup['q'].shape))] )
+            index_str = ",".join([":" for i in range(len(subgroup["q"].shape))])
             exec("grid.q = subgroup['q'][%s]" % index_str)
-            
+
             # Read in aux if applicable
-            if read_aux and subgroup.get('aux',None) is not None:
-                index_str = ','.join( [':' for i in range(len(subgroup['aux'].shape))] )
+            if read_aux and subgroup.get("aux", None) is not None:
+                index_str = ",".join([":" for i in range(len(subgroup["aux"].shape))])
                 exec("grid.aux = subgroup['aux'][%s]" % index_str)
-                
+
             solution.grids.append(grid)
-            
+
         # Flush and close the file
         f.close()
-            
+
     elif use_PyTables:
         # f = tables.openFile(filename, mode = "r", title = options['title'])
         logging.critical("PyTables has not been implemented yet.")
@@ -252,4 +277,3 @@ def read_hdf5(solution,frame,path='./',file_prefix='claw',read_aux=True,
         err_msg = "No hdf5 python modules available."
         logging.critical(err_msg)
         raise Exception(err_msg)
-        
