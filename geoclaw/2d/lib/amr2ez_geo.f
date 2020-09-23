@@ -220,11 +220,6 @@ c             # if it's a lot less, add another tout at tfinal:
       read(inunit,*) cflv1
       read(inunit,*) cfl
       read(inunit,*) nv1
-      write(*,*)"  possk(1) ",possk(1)
-      write(*,*)"  dtv2 ",dtv2
-      write(*,*)"  cflv1 ",cflv1
-      write(*,*)"  cfl ",cfl
-      write(*,*)"  nv1 ",nv1
       if (outstyle.eq.1 .or. outstyle.eq.2) then
          nstop = nv1
       endif
