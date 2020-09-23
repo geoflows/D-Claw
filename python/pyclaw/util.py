@@ -5,9 +5,9 @@ Pyclaw utility methods
 
 :Authors:
     Kyle T. Mandli (2008-08-07) Initial version
-    
+
     Randall J. LeVeque (2009-01-01) Added svn revision
-    
+
     Kyle T. Mandli (2009-03-01) Added topo file utilities
 """
 # ============================================================================
@@ -35,10 +35,10 @@ import numpy as np
 def write_topo_file(path, z_func, nx, ny, lower_coord, upper_coord, topo_type=1):
     r"""
     Write out a topo1 file to the file at path.
-    
-    This utility function is for use with GeoClaw.  Please to refer to 
+
+    This utility function is for use with GeoClaw.  Please to refer to
     GeoClaw's documentation for more details.
-    
+
     :Input:
      - *path* - (string) Path to file
      - *z_func* - (func) Funtion determining z values (depth or topography)
@@ -48,7 +48,7 @@ def write_topo_file(path, z_func, nx, ny, lower_coord, upper_coord, topo_type=1)
      - *upper_coord* - (float) Upper right coordinate of the domain
      - *topo_type* - (int) Type of topography file to write, can be one of the
        following types.
-       
+
     +---------------+--------------------------------------------------------+
     | Topo Type     | Description                                            |
     +===============+========================================================+
@@ -61,7 +61,7 @@ def write_topo_file(path, z_func, nx, ny, lower_coord, upper_coord, topo_type=1)
     +---------------+--------------------------------------------------------+
 
     Header format is ::
-    
+
         xxxx     ncols
         xxxx     nrows
         xxxx     xllcorner
@@ -78,15 +78,15 @@ def write_topo_file(path, z_func, nx, ny, lower_coord, upper_coord, topo_type=1)
     The region covered by this file should be refined to at least minlevel
     and at most maxlevel over the time interval specified.
 
-    If a point is covered by several regions, the largest values of minlevel 
+    If a point is covered by several regions, the largest values of minlevel
     and maxlevel from all such regions are used.
 
     Refinement may also be forced or allowed by the minlevel and maxlevel
-    parameters for the regions specified in setregions.data or 
+    parameters for the regions specified in setregions.data or
     setmovetopo.data.
 
     At points that lie far from shore (where h is greater than depthdeep),
-    refinement is only allowed to level maxleveldeep.  These parameters are 
+    refinement is only allowed to level maxleveldeep.  These parameters are
     set in setgeo.data.
 
     In setting topography in a computation, the finest topography available
@@ -142,16 +142,16 @@ def write_topo_file(path, z_func, nx, ny, lower_coord, upper_coord, topo_type=1)
 def read_topo_file(path, topo_type, verbose=False):
     r"""
     Read in a topography file from path of type topo_type.
-    
-    This utility function is for use with GeoClaw.  Please to refer to 
+
+    This utility function is for use with GeoClaw.  Please to refer to
     GeoClaw's documentation for more details.
-    
+
     :Input:
      - *path* - (string) Path to topography file
-     - *topo_type* - (int) Type of topography file, see 
+     - *topo_type* - (int) Type of topography file, see
        :meth:`write_topo_file` for valid types.
      - *verbose* - (bool) Verbose output, ``default = False``
-    
+
     :Output:
      - (ndarray(:)) X-Coordinate array
      - (ndarray(:)) Y-Coordinate array
@@ -204,36 +204,36 @@ def read_topo_file(path, topo_type, verbose=False):
 
 def create_topo_func(loc, verbose=False):
     """Given a set of (x,z) locations, create a lambda function
-    
-    Create a lambda function that when evaluated will give the topgraphy 
+
+    Create a lambda function that when evaluated will give the topgraphy
     height at the point (x,y).
-    
-    :Example: 
+
+    :Example:
     >>> f = create_topo_profile_func(loc)
     >>> b = f(x,y)
-    
+
     :Input:
      - *loc* (list) - Create a topography file with the profile denoted by the
-       tuples inside of loc.  A sample set of points are shown below.  Note 
-       that the first value of the list is the x location and the second is 
+       tuples inside of loc.  A sample set of points are shown below.  Note
+       that the first value of the list is the x location and the second is
        the height of the topography.
-        
+
         z (m)
         ^                                                  o loc[5]  o
-        |                                                    
-        |                                          loc[4]   
+        |
+        |                                          loc[4]
         |--------------------------------------------o-----> x (m) (sea level)
-        |                                            
+        |
         |                                o loc[2] o loc[3]
-        |                         
-        |                         
+        |
+        |
         |                           o loc[1]
-        |           
-        |                               
+        |
+        |
         |__________________o loc[0]
-        0.0               
-        
-        
+        0.0
+
+
     """
 
     cmd_str = "lambda x,y: (x <= %s) * %s" % (loc[0][0], loc[0][1])
@@ -267,58 +267,58 @@ def compile_library(
 ):
     r"""
     Compiles and wraps fortran source into a callable module in python.
-    
+
     This function uses f2py to create an interface from python to the fortran
     sources in source_list.  The source_list can either be a list of names
     of source files in which case compile_library will search for the file in
     local_path and then in library_path.  If a path is given, the file will be
     checked to see if it exists, if not it will look for the file in the above
     resolution order.  If any source file is not found, an IOException is
-    raised.  
-    
-    The list interface_functions allows the user to specify which fortran 
+    raised.
+
+    The list interface_functions allows the user to specify which fortran
     functions are actually available to python.  The interface functions are
     assumed to be in the file with their name, i.e. claw1 is located in
     'claw1.f95' or 'claw1.f'.
-    
+
     The interface from fortran may be different than the original function
-    call in fortran so the user should make sure to check the automatically 
+    call in fortran so the user should make sure to check the automatically
     created doc string for the fortran module for proper use.
-    
+
     Source files will not be recompiled if they have not been changed.
-    
+
     One set of options of note is for enabling OpenMP, it requires the usual
     fortran flags but the OpenMP library also must be compiled in, this is
     done with the flag -lgomp.  The call to compile_library would then be:
-    
+
     compile_library(src,module_name,f2py_flags='-lgomp',FFLAGS='-fopenmp')
-    
+
     For complete optimization use:
-    
+
     FFLAGS='-O3 -fopenmp -funroll-loops -finline-functions -fdefault-real-8'
-    
+
     :Input:
-     - *source_list* - (list of strings) List of source files, if these are 
+     - *source_list* - (list of strings) List of source files, if these are
        just names of the source files, i.e. 'bc1.f' then they will be searched
-       for in the default source resolution order, if an explicit path is 
+       for in the default source resolution order, if an explicit path is
        given, i.e. './bc1.f', then the function will use that source if it can
        find it.
      - *module_name* - (string) Name of the resulting module
-     - *interface_functions* - (list of strings) List of function names to 
-       provide access to, if empty, all functions are accessible to python.  
+     - *interface_functions* - (list of strings) List of function names to
+       provide access to, if empty, all functions are accessible to python.
        Defaults to [].
-     - *local_path* - (string) The base path for source resolution, defaults 
+     - *local_path* - (string) The base path for source resolution, defaults
        to './'.
-     - *library_path* - (string) The library path for source resolution, 
+     - *library_path* - (string) The library path for source resolution,
        defaults to './'.
      - *f2py_flags* - (string) f2py flags to be passed
-     - *FC* - (string) Override the environment variable FC and use it to 
-       compile, note that this does not replace the compiler that f2py uses, 
-       only the object file compilation (functions that do not have 
+     - *FC* - (string) Override the environment variable FC and use it to
+       compile, note that this does not replace the compiler that f2py uses,
+       only the object file compilation (functions that do not have
        interfaces)
-     - *FFLAGS* - (string) Override the environment variable FFLAGS and pass 
+     - *FFLAGS* - (string) Override the environment variable FFLAGS and pass
        them to the fortran compiler
-     - *recompile* - (bool) Force recompilation of the library, defaults to 
+     - *recompile* - (bool) Force recompilation of the library, defaults to
        False
      - *clean* - (bool) Force a clean build of all source files
     """
@@ -463,16 +463,16 @@ def compile_library(
 def construct_function_handle(path, function_name=None):
     r"""
     Constructs a function handle from the file at path.
-    
+
     This function will attempt to construct a function handle from the python
     file at path.
-    
+
     :Input:
      - *path* - (string) Path to the file containing the function
-     - *function_name* - (string) Name of the function defined in the file 
-       that the handle will point to.  Defaults to the same name as the file 
+     - *function_name* - (string) Name of the function defined in the file
+       that the handle will point to.  Defaults to the same name as the file
        without the extension.
-       
+
     :Output:
      - (func) Function handle to the constructed function, None if this has
        failed.
@@ -501,7 +501,7 @@ class FrameCounter:
     Simple frame counter
 
     Simple frame counter to keep track of current frame number.  This can
-    also be used to keep multiple runs frames seperated by having multiple 
+    also be used to keep multiple runs frames seperated by having multiple
     counters at once.
 
     Initializes to 0
@@ -584,7 +584,7 @@ def convert_fort_double_to_float(number):
 
     Converts a fortran format double to a python float.
 
-    number: is a string representation of the double.  Number should 
+    number: is a string representation of the double.  Number should
     be of the form "1.0d0"
 
     """
