@@ -926,19 +926,19 @@ def make_amrclawdatafile(clawdata):
                 % max(abs(clawdata.mxnest) - 1, 1)
             )
         data_write(file, clawdata, "inraty", "(refinement ratios)")
-    if ndim == 3:
-        if len(clawdata.inratz) < max(abs(clawdata.mxnest) - 1, 1):
+        if ndim == 3:
+            if len(clawdata.inratz) < max(abs(clawdata.mxnest) - 1, 1):
+                raise ValueError(
+                    "*** Error in data parameter: require len(inratz) >= %s "
+                    % max(abs(clawdata.mxnest) - 1, 1)
+                )
+            data_write(file, clawdata, "inratz", "(refinement ratios)")
+        if len(clawdata.inratt) < max(abs(clawdata.mxnest) - 1, 1):
             raise ValueError(
-                "*** Error in data parameter: require len(inratz) >= %s "
+                "*** Error in data parameter: require len(inratt) >= %s "
                 % max(abs(clawdata.mxnest) - 1, 1)
             )
-        data_write(file, clawdata, "inratz", "(refinement ratios)")
-    if len(clawdata.inratt) < max(abs(clawdata.mxnest) - 1, 1):
-        raise ValueError(
-            "*** Error in data parameter: require len(inratt) >= %s "
-            % max(abs(clawdata.mxnest) - 1, 1)
-        )
-    data_write(file, clawdata, "inratt", "(refinement ratios)")
+        data_write(file, clawdata, "inratt", "(refinement ratios)")
 
     data_write(file, clawdata, None)  # writes blank line
 
