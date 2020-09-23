@@ -12,7 +12,7 @@ The following summarizes my understanding of the core things that an end-user (e
 - Carefully looking through the `dclaw-apps/USGS_Flume/gate_release_example` files and inputs.
 - Asking Dave George lots of questions, which he thoughtfully answered.
 
-Before getting into the details of how one modifies and specifies a D-Claw run, I'll write some background. This is likely most usesful to someone who has never used anything in the Clawpack ecosystem before (where I started).
+Before getting into the details of how one modifies and specifies a D-Claw run, I'll write some background. This is likely most useful to someone who has never used anything in the Clawpack ecosystem before (which is where I started).
 
 ## 1. General Clawpack, Geoclaw, D-Claw introduction
 The basic D-Claw workflow inherits from Clawpack workflows. There are four main clawpack solvers:
@@ -118,9 +118,8 @@ DG: The rise to failure option starts a p_b =0, raises it uniformly everywhere (
 
 KRB: How is the rate of rise specified?
 
-
 #### 1.5.4
-DGNOTES: I think for future development the (non-qinitfile) options should be 0, hydrostatic, failure (which is P_scaled = min_domain (p_b/h) such that failure occurs , applied everywhere: p_b = P_scaled*h). All of these options could occur at t=0 with no time interval used...Qinit files should override every other option.  
+NOTES from DG: For future development the (non-qinitfile) options should be 0, hydrostatic, failure (which is P_scaled = min_domain (p_b/h) such that failure occurs , applied everywhere: p_b = P_scaled*h). All of these options could occur at t=0 with no time interval used...Qinit files should override every other option.  
 
 ### 1.6 A note about coordinate system and slope normals
 
@@ -132,6 +131,12 @@ Optional, TODO.
 ### 1.8 Best practices with respect to topography, grid definition, and AMR
 
 TODO: Want to summarize here best practices for how desired/anticipated AMR, grid definition, and topography input scales all interact.
+
+Key concept is that the AMR gridding is topography resolution agnostic. If you define topography at a resolution of X and amr refines to 0.1X it will interpolate based on the underlying spline methods. If you define topo at X and AMR is operating at 10X it will conservatively represent an integral of the topo at its resolution.
+
+Only way in which AMR "cares" about topo resolution is that if multiple topography files are provided it will use the highest resolution one at any given space.
+
+Note, the min and max AMR levels defined when topo and qinit files are initialized define AMR "regions" of the permissible refinement levels. See discussion of "regions" below.
 
 ### 1.8 Overspecification
 
@@ -288,13 +293,9 @@ clawdata.inraty = [5,5,2,4]
 clawdata.inratt = [5,5,2,4]
 ```
 
-TODO: How does the domain resolution and its AMR counterparts need to relate to the resolution/alignment of the topography inputs from geodata.topofiles. Do they need to align perfectly? Is topography at a specific refinement level required?
+AMR levels are 1 indexed. AMR level 1 is coarsest.
 
-To some extent this is controlled by the amr level indicated in the topo input, yes
-
-Is AMR level 1 coarsest or finest? I think coarsest.
-
-AMR level is zero indexed or 1 indexed?
+If variable t refinement is used, then inratt is only used to help improve the "guess" at time refinement when moving from coarse to fine grids. If you don't have a really good reason to make these three inratX values different, you should keep them the same.
 
 [Link to example AMRCLAW setrun.py from v4.6](http://depts.washington.edu/clawpack/users-4.6/amrclaw/setrun_amrclaw_sample.html?highlight=mxnest)
 
@@ -337,6 +338,14 @@ clawdata.cfl_max = 0.9
 clawdata.max_steps = 100000
 ```
 
+Note, in order for variable dt to be used the geoclaw flag `geodata.variable_dt_refinement_ratios` must be set to `True`. This `clawdata.dt_variable` is an older flag that is trumped by the variable dt refinement.
+
+Also, if variable dt refinement is used the dt_initial seems to be ignored. That is an initial value for dt at the highest level is identified using the CFL condition and the wavespeeds rather than this dt_initial.
+
+Also, the dt_max refers to the max at the coarsest AMR level. It not clear if its presently being honored, but we are working on it over at [PR 13](https://github.com/geoflows/D-Claw/pull/13).
+
+The reason for two Courant numbers is written right above the variables in setrun.py. There is computational expense in both taking small timesteps and in taking a timestep that is too big such that the wavespeeds known at the end of the timestep mean that the timestep was in violation of the cfl_max value. So giving a range between cfl_desired and cfl_max means that D-Claw will aim for clf_desired and won't need to retake timesteps so long as it doesn't exceed cfl_max. Remember, end of timestep wavespeeds are not know at the beinning of the timestep. 
+
 ### 2.8 Definition of output writing.
 
 In the Clawpack v5.7 docs the following options are listed in the [example AMRClaw setrun.py file](http://www.clawpack.org/setrun_amrclaw_sample.html#setrun-amrclaw-sample).
@@ -351,7 +360,22 @@ clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
 
 ### 2.9 Flowgrades and AMR control
 
-Flowgrades controlls AMR refinement in D-CLAW. Refinement occurs where one of the three flow grade variables exceeds a specified flow grade value.
+There are two ways that AMR refinement is controlled in D-Claw. The first is a set of AMR regions which define the permissible range of AMR refinement over a region. Note that if you have a large region which permits refinement between levels 1 and 4, and then a smaller contained region which indicates refinement between levels 2 and 3, the larger,  more permissive region with trump. In other words, regions can't be used to "restrict" AMR levels, unless they are the ONLY region that applies to an area.
+
+Regions are specified as bounding boxes.
+
+```python
+geodata.regions=[]
+geodata.regions.append([minlevel,maxlevel,t1,t2,x1,x2,y1,y2])
+```
+where
+`minlevel` and `maxlevel` are the minimum and maximum AMR levels.
+`t1` and `t2` are the bounding times
+and `x1`, `x2`, `y1`, `y2` define the bounding box.
+
+Providing a topography or qinit file implicitly defines a region around these data sources.
+
+In addition to regions D-Claw controls refinement through flowgrades. Refinement occurs where one of the three flow grade variables exceeds a specified flow grade value.
 
 Specified as
 ```python
@@ -368,10 +392,7 @@ where
     - 1 = norm(flowgradevariable)
     - 2 = norm(grad(flowgradevariable))
 
-TODO: Here norm probably means the combination of x and y components of depth and momentum or the absolute value of option 3. True?
-
-and    
-`flowgrademinlevel` indicates that the refinement will occur to at least this level if `flowgradevalue` is exceeded.
+If the `flowgradevalue` is exceeded then D-Claw will refine up to at least the level indicated by `flowgrademinlevel` unless refinement is limited by AMR refinement limits defined by AMR regions.
 
 ### 2.10 Source terms and  the source .f90 file
 
