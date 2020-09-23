@@ -160,7 +160,10 @@ c        even if initial timestep was good could be too small
 c        try automatically resetting 
 c        RANDY: do you like this option
 c
+         write(*,*)"  possk(1) ",possk(1)
          possk(1) = cfl/spoh(1)
+         write(*,*)"  possk(1) ",possk(1)
+         write(*,*)"  dtv2 ",dtv2
          possk(1) = min(possk(1),dtv2)    ! check if faster than max allowable timestep
          write(*,*)"  automatically setting initial dt to ",possk(1)
 
