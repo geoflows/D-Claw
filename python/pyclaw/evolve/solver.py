@@ -9,7 +9,7 @@ Module specifying the interface to every solver in pyclaw.
 # ============================================================================
 #      Copyright (C) 2008 Kyle T. Mandli <mandli@amath.washington.edu>
 #
-#  Distributed under the terms of the Berkeley Software Distribution (BSD) 
+#  Distributed under the terms of the Berkeley Software Distribution (BSD)
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
@@ -23,6 +23,7 @@ import numpy as np
 
 # Clawpack modules
 from pyclaw.data import Data
+
 
 class Solver(object):
     r"""
@@ -76,55 +77,69 @@ class Solver(object):
     
     :Version: 1.0 (2008-08-19)
     """
-    
+
     # Note that some of these names are for compatibility with the claw.data
     # files and the data objects, they are not actually required and do not
     # exist past initialization
-    _required_attrs = ['dt_initial','dt_max','cfl_max','cfl_desired',
-            'max_steps','dt_variable']
-            
-    _default_attr_values = {'dt_initial':0.1, 'dt_max':1e99, 'cfl_max':1.0, 
-        'cfl_desired':0.9, 'max_steps':1000, 'dt_variable':True}
-    
+    _required_attrs = [
+        "dt_initial",
+        "dt_max",
+        "cfl_max",
+        "cfl_desired",
+        "max_steps",
+        "dt_variable",
+    ]
+
+    _default_attr_values = {
+        "dt_initial": 0.1,
+        "dt_max": 1e99,
+        "cfl_max": 1.0,
+        "cfl_desired": 0.9,
+        "max_steps": 1000,
+        "dt_variable": True,
+    }
+
     #  ======================================================================
     #   Initialization routines
     #  ======================================================================
-    def __init__(self,data=None):
+    def __init__(self, data=None):
         r"""
         Initialize a Solver object
         
         See :class:`Solver` for full documentation
-        """ 
+        """
         # Setup solve logger
-        self.logger = logging.getLogger('evolve')
+        self.logger = logging.getLogger("evolve")
 
         # Set default values
-        for (k,v) in self._default_attr_values.iteritems():
-            self.__dict__.setdefault(k,v)
+        for (k, v) in list(self._default_attr_values.items()):
+            self.__dict__.setdefault(k, v)
 
         # Set data values based on the data object
-        if data is not None and isinstance(data,Data):
+        if data is not None and isinstance(data, Data):
             for attr in self._required_attrs:
-                if hasattr(data,attr):
-                    setattr(self,attr,getattr(data,attr))
-        
+                if hasattr(data, attr):
+                    setattr(self, attr, getattr(data, attr))
+
         # Initialize time stepper values
-        self.dt = self._default_attr_values['dt_initial']
-        self.cfl = self._default_attr_values['cfl_desired']
-        
+        self.dt = self._default_attr_values["dt_initial"]
+        self.cfl = self._default_attr_values["cfl_desired"]
+
         # Status Dictionary
-        self.status = {'cflmax':self.cfl,
-                    'dtmin':self.dt, 
-                    'dtmax':self.dt,
-                    'numsteps':0 }
-        
+        self.status = {
+            "cflmax": self.cfl,
+            "dtmin": self.dt,
+            "dtmax": self.dt,
+            "numsteps": 0,
+        }
+
         # Profile times
         self.times = []
-        
+
     def __str__(self):
         output = "Solver Status:\n"
-        for (k,v) in self.status.iteritems():
-            output = "\n".join((output,"%s = %s" % (k.rjust(25),v)))
+        for (k, v) in list(self.status.items()):
+            output = "\n".join((output, "%s = %s" % (k.rjust(25), v)))
         return output
 
     # ========================================================================
@@ -147,11 +162,11 @@ class Solver(object):
         """
         valid = True
         for key in self._required_attrs:
-            if not self.__dict__.has_key(key):
-                self.logger.info('%s is not present.' % key)
+            if key not in self.__dict__:
+                self.logger.info("%s is not present." % key)
                 valid = False
         return valid
-        
+
     def setup(self):
         r"""
         Stub for solver setup routines.
@@ -164,11 +179,11 @@ class Solver(object):
         This function is just a stub here.
         """
         pass
-        
+
     # ========================================================================
     #  Evolution routines
     # ========================================================================
-    def evolve_to_time(self,*args):
+    def evolve_to_time(self, *args):
         r"""
         Evolve solutions['n'] to tend
         
@@ -189,7 +204,7 @@ class Solver(object):
         :Output:
          - (dict) - Returns the status dictionary of the solver
         """
-        
+
         # Parse arguments
         solutions = args[0]
         if len(args) > 1:
@@ -198,19 +213,19 @@ class Solver(object):
         else:
             tend = None
             take_one_step = True
-            
+
         # Profile time
         timing = time.time()
 
         # Parameters for time stepping
         retake_step = False
-        tstart = solutions['n'].t
+        tstart = solutions["n"].t
 
         # Reset status dictionary
-        self.status['cflmax'] = self.cfl
-        self.status['dtmin'] = self.dt
-        self.status['dtmax'] = self.dt
-        self.status['numsteps'] = 0
+        self.status["cflmax"] = self.cfl
+        self.status["dtmin"] = self.dt
+        self.status["dtmax"] = self.dt
+        self.status["numsteps"] = 0
 
         # Setup for the run
         if not self.dt_variable:
@@ -218,75 +233,84 @@ class Solver(object):
                 self.max_steps = 1
             else:
                 self.max_steps = int((tend - tstart + 1e-10) / self.dt)
-                if abs(self.max_steps*self.dt - (tend - tstart)) > 1e-5 * (tend-tstart):
-                    raise Exception('dt does not divide (tend-tstart) and dt is fixed!')
+                if abs(self.max_steps * self.dt - (tend - tstart)) > 1e-5 * (
+                    tend - tstart
+                ):
+                    raise Exception("dt does not divide (tend-tstart) and dt is fixed!")
         if self.dt_variable == 1 and self.cfl_desired > self.cfl_max:
-            raise Exception('Variable time stepping and desired CFL > maximum CFL')
+            raise Exception("Variable time stepping and desired CFL > maximum CFL")
         if tend == tstart:
             self.logger.info("Already at end time, no evolution required.")
             self.max_steps = 0
-                
+
         # Main time stepping loop
-        for n in xrange(self.max_steps):
-        
+        for n in range(self.max_steps):
+
             # Adjust dt so that we hit tend exactly if we are near tend
-            if solutions['n'].t + self.dt > tend and tstart < tend and not take_one_step:
-                self.dt = tend - solutions['n'].t 
+            if (
+                solutions["n"].t + self.dt > tend
+                and tstart < tend
+                and not take_one_step
+            ):
+                self.dt = tend - solutions["n"].t
 
             # In case we need to retake a time step
             if self.dt_variable:
                 old_solution = copy.deepcopy(solutions["n"])
             retake_step = False  # Reset flag
-            
+
             # Take one time step defined by the subclass
             self.step(solutions)
 
             # Check to make sure that the Courant number was not too large
             if self.cfl <= self.cfl_max:
                 # Accept this step
-                self.status['cflmax'] = max(self.cfl, self.status['cflmax'])
-                solutions['n'].t += self.dt 
+                self.status["cflmax"] = max(self.cfl, self.status["cflmax"])
+                solutions["n"].t += self.dt
                 # Verbose messaging
-                self.logger.debug("Step %i  CFL = %f   dt = %f   t = %f"
-                    % (n,self.cfl,self.dt,solutions['n'].t))
-                    
+                self.logger.debug(
+                    "Step %i  CFL = %f   dt = %f   t = %f"
+                    % (n, self.cfl, self.dt, solutions["n"].t)
+                )
+
                 # Increment number of time steps completed
-                self.status['numsteps'] += 1
+                self.status["numsteps"] += 1
                 # See if we are finished yet
-                if solutions['n'].t >= tend or take_one_step:
+                if solutions["n"].t >= tend or take_one_step:
                     break
             else:
                 # Reject this step
                 self.logger.debug("Rejecting time step, CFL number too large")
                 if self.dt_variable:
-                    solutions['n'] = old_solution
+                    solutions["n"] = old_solution
                     # Retake step
                     retake_step = True
                 else:
                     # Give up, we cannot adapt, abort
-                    self.status['cflmax'] = \
-                        max(self.cfl, self.status['cflmax'])
-                    raise Exception('CFL to large, giving up!')
-                    
+                    self.status["cflmax"] = max(self.cfl, self.status["cflmax"])
+                    raise Exception("CFL to large, giving up!")
+
             # Choose new time step
             if self.dt_variable:
                 if self.cfl > 0.0:
-                    self.dt = min(self.dt_max,self.dt * self.cfl_desired 
-                                    / self.cfl)
-                    self.status['dtmin'] = min(self.dt, self.status['dtmin'])
-                    self.status['dtmax'] = max(self.dt, self.status['dtmax'])
+                    self.dt = min(self.dt_max, self.dt * self.cfl_desired / self.cfl)
+                    self.status["dtmin"] = min(self.dt, self.status["dtmin"])
+                    self.status["dtmax"] = max(self.dt, self.status["dtmax"])
                 else:
                     self.dt = self.dt_max
-        
+
         # End of main time stepping loop -------------------------------------
 
-        if self.dt_variable and solutions['n'].t < tend \
-                and self.status['numsteps'] == self.max_steps:
+        if (
+            self.dt_variable
+            and solutions["n"].t < tend
+            and self.status["numsteps"] == self.max_steps
+        ):
             raise Exception("Maximum number of timesteps have been taken")
 
         # Profile time
         self.times.append(time.time() - timing)
-        
+
         return self.status
 
     def step(self):

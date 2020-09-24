@@ -7,3 +7,7 @@ xgeoclaw
 *.html
 _output/
 _plots/
+
+setenv.bash
+
+setenv.csh
