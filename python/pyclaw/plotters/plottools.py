@@ -1,5 +1,4 @@
-
-def fix_long_tick_labels(xlimits='auto',ylimits='auto',kwargs={}):
+def fix_long_tick_labels(xlimits="auto", ylimits="auto", kwargs={}):
     """
     Utility to stop matplotlib from only displaying part of long
     tickmark labels.
@@ -15,12 +14,12 @@ def fix_long_tick_labels(xlimits='auto',ylimits='auto',kwargs={}):
     """
 
     from pylab import figure, xticks, yticks, xlim, ylim
-    if xlimits != 'auto':
-        xlim(xlimits)
-    if ylimits != 'auto':
-        ylim(ylimits)
-    locs,labels = xticks()
-    xticks(locs, [str(loc) for loc in locs], rotation=20, **kwargs)
-    locs,labels = yticks()
-    yticks(locs, [str(loc) for loc in locs], **kwargs)
 
+    if xlimits != "auto":
+        xlim(xlimits)
+    if ylimits != "auto":
+        ylim(ylimits)
+    locs, labels = xticks()
+    xticks(locs, [str(loc) for loc in locs], rotation=20, **kwargs)
+    locs, labels = yticks()
+    yticks(locs, [str(loc) for loc in locs], **kwargs)
