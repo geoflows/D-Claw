@@ -5,14 +5,19 @@ c
 c
       implicit double precision (a-h,o-z)
       character*10  matname1, matname2, matname3
-
+      double precision :: locmaxmom
+      double precision momh, momvel, momm, momrho, momprop
       include  "call.i"
 
       logical outaux
 
+      logical            amidoneyet
+      double precision   globmaxmom
+
+      common /amidone/ amidoneyet,globmaxmom
+
       iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
       iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
-
 
 c ::::::::::::::::::::::::::: VALOUT ::::::::::::::::::::::::::::::::::;
 c graphics output of soln values for contour or surface plots.
@@ -44,6 +49,9 @@ c        ###  make the file names and open output files
      .       form='formatted')
 
          level = lst
+         locmaxmom = 0. ! initialize local max momentum as zero.
+         write(6,47) locmaxmom, globmaxmom
+47       format('GeoClaw: Starting momentum calc ', d12.6, " ", d12.6)
          ngrids = 0
  65      if (level .gt. lfine) go to 90
             mptr = lstart(level)
@@ -80,6 +88,23 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                   alloc(iadd(i,j,ivar)) = 0.d0
                endif
             enddo
+
+            if (level .eq. lst ) then
+              ! calculate and add to momentum to get a level one momentum sum.
+              momh = alloc(iadd(i,j,1))
+              if (momh .gt. 0.0001) then ! if substantial thickness.
+
+                momvel = (  (alloc(iadd(i,j,2))/momh)**2.
+     &                    + (alloc(iadd(i,j,3))/momh)**2.)**0.5
+                momm = alloc(iadd(i,j,4)) / momh
+                momrho = (2700. * momm) + ((1.-momm) * 1000.)
+                ! hard code values for sediment and fluid density, but
+                ! better than nothing and prob approx right.
+                locmaxmom = locmaxmom ! momentum = (mass * velocity) = density * volume * velocity.
+     &                  + (momh * hxposs(level) * hyposs(level)
+     &                     * momrho * momvel)
+              endif
+            endif
             surface = alloc(iadd(i,j,1)) + alloc(iaddaux(i,j,1))
      &              - alloc(iadd(i,j,7))
             write(matunit1,109) (alloc(iadd(i,j,ivar)), ivar=1,nvar),
@@ -96,6 +121,23 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
          go to 65
 
  90     continue
+
+        ! local step_max. if in excess of 0.05 of total max change amidoneyet.
+        ! set max to new max.
+        if (locmaxmom .gt. globmaxmom) then
+          globmaxmom = locmaxmom
+        endif
+        ! calculate new momentum proportion.
+        momprop = locmaxmom / globmaxmom
+        ! test if done condition is met.
+        if (momprop .le. 0.05) then
+          amidoneyet = .True. ! assign amidoneyet as true if done.
+        endif
+        write(6,112) momprop, locmaxmom, globmaxmom, time
+ 112    format('GeoClaw: Current momentum proportion ', d12.6,
+     &         ' ( ', d12.6 ' / ', d12.6,
+     &         ') at t = ', d12.6,/)
+
 
         if (outaux) then
 c        # output aux array to fort.aXXXX

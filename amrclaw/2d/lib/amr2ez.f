@@ -80,6 +80,12 @@ c
       character * 20     parmfile
       character * 25 fname
       logical            vtime,rest
+
+      logical            amidoneyet
+      double precision   globmaxmom
+
+      common /amidone/ amidoneyet,globmaxmom
+
       dimension          tout(maxout)
       dimension          tchk(maxout)
 
@@ -505,6 +511,8 @@ c
       write(6,*) 'Done reading data, starting computation ...  '
       write(6,*) ' '
 
+      globmaxmom = 0. ! initialize values for global max momentum
+      amidoneyet = .False. ! and momentum based stopping criterion.
 
       call outtre (mstart,printout,nvar,naux)
       write(outunit,*) "  original total mass ..."
