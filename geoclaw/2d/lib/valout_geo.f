@@ -3,6 +3,7 @@ c -----------------------------------------------------
 c
       subroutine valout (lst, lend, time, nvar, naux)
 c
+c      from digclaw_module use rho_f,rho_s
       implicit double precision (a-h,o-z)
       character*10  matname1, matname2, matname3
       double precision :: locmaxmom
@@ -97,7 +98,7 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                 momvel = (  (alloc(iadd(i,j,2))/momh)**2.
      &                    + (alloc(iadd(i,j,3))/momh)**2.)**0.5
                 momm = alloc(iadd(i,j,4)) / momh
-                momrho = (2700. * momm) + ((1.-momm) * 1000.)
+                momrho = (rho_s * momm) + ((1.-momm) * rho_f)
                 ! hard code values for sediment and fluid density, but
                 ! better than nothing and prob approx right.
                 locmaxmom = locmaxmom ! momentum = (mass * velocity) = density * volume * velocity.
