@@ -12,7 +12,7 @@ deg2rad = np.pi/180.0
 
 def fitnorm(x,x1,y1,x2,y2,alpha1,alpha2):
     """
-    least squares fit log spiral intersecting x1,y1,x2,y2 
+    least squares fit log spiral intersecting x1,y1,x2,y2
     with tangents alpha1 and alpha2 (angles with horizontal)
     ... -90.0 < alpha1 < 0.0 (scarp angle)
     ... -90.0 < alpha2 < 90.0 (toe angle)
@@ -80,7 +80,7 @@ def fitnorm(x,x1,y1,x2,y2,alpha1,alpha2):
 
 def fitprime(x,x1,y1,x2,y2,alpha1,alpha2):
     """
-    least squares fit log spiral intersecting x1,y1,x2,y2 
+    least squares fit log spiral intersecting x1,y1,x2,y2
     with tangents alpha1 and alpha2 (angles with horizontal)
     ... -90.0 < alpha1 < 0.0 (scarp angle)
     ... -90.0 < alpha2 < 90.0 (toe angle)
@@ -249,7 +249,7 @@ def spiral(x1,y1,x2,y2,alpha1,alpha2,npoints=100):
 
     (x,j1,j2) = scio.fmin_tnc(fitnorm,x0,fprime=fitprime,args=(x1,y1,x2,y2,alpha1,alpha2),approx_grad=False,bounds=bounds)
     (x,j1,j2) = scio.fmin_l_bfgs_b(fitnorm,x0,fprime=fitprime,args=(x1,y1,x2,y2,alpha1,alpha2),approx_grad=False,bounds=bounds)
-    
+
     #(x,j1,j2) = scio.differential_evolution(fitnorm,bounds=bounds,args=(x1,y1,x2,y2,alpha1,alpha2))
 
     xc = x[0]
@@ -266,14 +266,14 @@ def spiral(x1,y1,x2,y2,alpha1,alpha2,npoints=100):
 
     #import matplotlib.pyplot as plt
     #plt.plot(xv,yv,[x1,x2],[y1,y2],'ro',[x1,x1+20*np.cos(psi1)],[y1,y1+20*np.sin(psi1)],'k-',[x2,x2+20.*np.cos(psi2)],[y2,y2+20.*np.sin(psi2)],'k-')
-    
+
     #plt.show()
 
     return (xv,yv)
 
 def test_grad(x1,y1,x2,y2,alpha1,alpha2):
 
-    
+
     import numpy as np
     # initial guess
     xc0 = 0.5*(x1+x2)
@@ -297,12 +297,12 @@ def test_grad(x1,y1,x2,y2,alpha1,alpha2):
     xargs=(x1,y1,x2,y2,alpha1,alpha2)
     err=scio.check_grad(objectf_4x4,objectfprime_4x4,x0,x1,y1,x2,y2,alpha1,alpha2)
 
-    print err
+    print(err)
 
 def objectf_4x4_scalar(x,x1,y1,x2,y2,alpha1,alpha2):
 
     """
-    least squares fit log spiral intersecting x1,y1,x2,y2 
+    least squares fit log spiral intersecting x1,y1,x2,y2
     with tangents alpha1 and alpha2 (angles with horizontal)
     ... -90.0 < alpha1 < 0.0 (scarp angle)
     ... -90.0 < alpha2 < 90.0 (toe angle)
@@ -333,7 +333,7 @@ def objectf_4x4_scalar(x,x1,y1,x2,y2,alpha1,alpha2):
     linelength = np.sqrt((y2-y1)**2.0 + (x2-x1)**2.0)
     alength = a*np.sqrt(1.0+b**2.0)*(np.exp(b*theta2)-np.exp(b*theta1))/b -1.0*linelength
 
-    f = f1**2.0 + f2**2.0 + falpha1**2.0 + falpha2**2.0 
+    f = f1**2.0 + f2**2.0 + falpha1**2.0 + falpha2**2.0
 
     return f
 
@@ -413,7 +413,7 @@ def objectfprime_4x4_scalar(x,x1,y1,x2,y2,alpha1,alpha2,npoints=100):
 def objectf_4x4(x,x1,y1,x2,y2,alpha1,alpha2):
 
     """
-    least squares fit log spiral intersecting x1,y1,x2,y2 
+    least squares fit log spiral intersecting x1,y1,x2,y2
     with tangents alpha1 and alpha2 (angles with horizontal)
     ... -90.0 < alpha1 < 0.0 (scarp angle)
     ... -90.0 < alpha2 < 90.0 (toe angle)
@@ -445,7 +445,7 @@ def objectf_4x4(x,x1,y1,x2,y2,alpha1,alpha2):
     f[0] = f1
     f[1] = f2
     f[2] = falpha1
-    f[3] = falpha2 
+    f[3] = falpha2
 
     return f
 
@@ -531,14 +531,14 @@ def objectD_4x4(x,x1,y1,x2,y2,alpha1,alpha2):
     return D
 
 
-    
+
 def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True):
     """
     return parameters to uniquely define the logspiral (2d ...x along a transect)
     """
     import numpy as np
 
-    slopeangle = np.arctan2(y2-y1,x2-x1) 
+    slopeangle = np.arctan2(y2-y1,x2-x1)
 
     deg2rad = np.pi/180.0
     psi1 = (alpha1)*deg2rad
@@ -564,7 +564,7 @@ def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True)
          '*************for a better fit decrease alpha1 or decrease alpha2 \n'+\
         ('           0.3>(slopeangle-alpha1)/(alpha2-slopeangle)=%s \n' % anglerat1)+\
         ('           slopeangle= %s \n' % slopeangledeg)
-        print errstr
+        print(errstr)
         #raise Exception(errstr)
 
     if (toediff/scarpdiff<0.3):
@@ -572,7 +572,7 @@ def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True)
          '*************for a better fit increase alpha1 or increase alpha2 \n'+\
         ('           0.3>(alpha2-slopeangle)/(slopeangle-alpha1)=%s \n' % anglerat2)+\
         ('           slopeangle= %s \n' % slopeangledeg)
-        print errstr
+        print(errstr)
         #raise Exception(errstr)
 
     # initial guess
@@ -592,7 +592,7 @@ def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True)
     x0[3] = b0
 
     (x,cov_x,infodict,mesg,ier) = scio.leastsq(objectf_4x4,x0,args=(x1,y1,x2,y2,alpha1,alpha2),maxfev=10000,col_deriv=False,Dfun=objectD_4x4,full_output=True)
-    
+
     xc = x[0]
     yc = x[1]
     a  = x[2]
@@ -622,15 +622,15 @@ def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True)
 
 
     if verbose:
-        print mesg
-        print ('logspiral parameters:\n xc=%s \n yc=%s \n a=%s \n b=%s '% (xc,yc,a,b))
+        print(mesg)
+        print(('logspiral parameters:\n xc=%s \n yc=%s \n a=%s \n b=%s '% (xc,yc,a,b)))
 
     if verbose:
-        print '\n Goodness of fit:\n'
-        print ('error in scarp angle: %s (degrees)\n' %erroralpha1)
-        print ('error in toe angle: %s (degrees)\n' %erroralpha2)
-        print ('error in (x1,y1): %s (meters)\n' %errorx1)
-        print ('error in (x2,y2): %s (meters)\n' %errorx2)
+        print('\n Goodness of fit:\n')
+        print(('error in scarp angle: %s (degrees)\n' %erroralpha1))
+        print(('error in toe angle: %s (degrees)\n' %erroralpha2))
+        print(('error in (x1,y1): %s (meters)\n' %errorx1))
+        print(('error in (x2,y2): %s (meters)\n' %errorx2))
 
     if (max((erroralpha1,erroralpha2))>5.0):
         errstr = '***WARNING: poor fit: Angle error> 5 degrees\n'+\
@@ -667,7 +667,7 @@ def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True)
 
     #import matplotlib.pyplot as plt
     #plt.plot(xv,yv,[x1,x2],[y1,y2],'ro',[x1,x1+20*np.cos(psi1)],[y1,y1+20*np.sin(psi1)],'k-',[x2,x2+20.*np.cos(psi2)],[y2,y2+20.*np.sin(psi2)],'k-')
-    
+
     #plt.show()
 
     theta = np.linspace(theta1,theta2,npoints)

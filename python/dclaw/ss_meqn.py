@@ -140,7 +140,7 @@ def integrate(m0,h0,u0,pe0,npoints=100,tend=10.0):
     pe[0]= pe0
     m_eqn[0]=m_crit
 
-    for n in xrange(1,npoints):
+    for n in range(1,npoints):
         (f,meqn) = rhs(m[n-1],h[n-1],u[n-1],pe[n-1])
         m[n] = max(0.0,m[n-1] + dt*f[0])
         m[n] = min(1.0,m[n])
@@ -257,7 +257,7 @@ def integrate2(m0,h0,u0,pe0,npoints=100,tend=10.0):
     pe[0]= pe0
     m_eqn[0]=m_crit
 
-    for n in xrange(0,npoints-1):
+    for n in range(0,npoints-1):
         q0 = np.array([m[n],h[n],u[n],pe[n]])
         argstup = (m[n],h[n],u[n],pe[n],dt,mu,compress,k0,a0,gz,rho_f,rho_s,delta,m_crit)
         (q,cov_x,infodict,mesg,ier) = scio.leastsq(fobject,q0,args=argstup,maxfev=10000,col_deriv=False,Dfun=None,full_output=True)

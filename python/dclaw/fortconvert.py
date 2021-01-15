@@ -92,7 +92,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
             ncols = kwargs['ncols']
             cellsize=kwargs['cellsize']
         except:
-            print 'using grid parameters from fort.qXXXX files'
+            print('using grid parameters from fort.qXXXX files')
             xll = None
             yll = None
             nrows = None
@@ -114,7 +114,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
             my = kwargs['my']
 
         except:
-            print 'for outputtype==fortuniform you must provide xlower,ylower,xupper,yupper,mx,my as kwargs'
+            print('for outputtype==fortuniform you must provide xlower,ylower,xupper,yupper,mx,my as kwargs')
             raise SystemExit(0)
 
 
@@ -127,7 +127,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
         fin.close()
     elif isinstance(nplots,int):
         nplots = np.arange(nplots+1)
-        print ('converting frames 0 - %s' % (nplots))
+        print(('converting frames 0 - %s' % (nplots)))
         print ('to convert individual frames, call with nplots = a list of frames')
     else:
         nplots = np.array(nplots,dtype=int)
@@ -139,10 +139,10 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
         framenostr = numstring[1:]
         forttname = 'fort.t'+framenostr
         fortqname = 'fort.q'+framenostr
-        print 'converting '+os.path.join(fortdir,fortqname)
+        print('converting '+os.path.join(fortdir,fortqname))
         outfname = os.path.join(outdir,outputname+framenostr)
 
-        print 'writing to ' +outfname
+        print('writing to ' +outfname)
 
         if (outputtype=='scattered'):
             fort2xyqscattered(frameno,outfname,components)
@@ -228,9 +228,9 @@ def fort2xyqscattered(framenumber,outfile=None,components='all'):
                 XYQ = np.vstack((XYQ,np.hstack((X,Y,Q))))
             else:  #need to loop to find points
                 row = 0
-                for j in xrange(grid['my']):
+                for j in range(grid['my']):
                     y = grid['ylow'] + grid['dy']*(0.5 + float(j))
-                    for i in xrange(grid['mx']):
+                    for i in range(grid['mx']):
                         x = grid['xlow'] + grid['dx']*(0.5 + float(i))
                         q = grid['data'][row,qlst]
                         #check point
@@ -319,9 +319,9 @@ def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,component
     if (not outfortq):
         Q = np.empty((mx*my,len(qlst)))
 
-        for j in xrange(my):
+        for j in range(my):
             y = ylow + (j+0.5)*dy
-            for i in xrange(mx):
+            for i in range(mx):
                 x = xlow + (i+0.5)*dx
                 qv = pointfromfort((x,y),solutionlist)
                 qout = qv[qlst]
@@ -333,10 +333,10 @@ def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,component
         foutt.close()
         fortqheaderwrite(fortheader,foutq,closefile=False)
 
-        for j in xrange(my):
+        for j in range(my):
             foutq.write("\n")
             y = ylow + (j+0.5)*dy
-            for i in xrange(mx):
+            for i in range(mx):
                 x = xlow + (i+0.5)*dx
                 qv = pointfromfort((x,y),solutionlist)
                 qout = qv[qlst]
@@ -418,9 +418,9 @@ def fort2refined(framenumber,outfortq,outfortt,components='all'):
     if (not outfortq):
         Q = np.empty((mx*my,len(qlst)))
 
-        for j in xrange(my):
+        for j in range(my):
             y = ylow + (j+0.5)*dy
-            for i in xrange(mx):
+            for i in range(mx):
                 x = xlow + (i+0.5)*dx
                 qv = pointfromfort((x,y),solutionlist)
                 qout = qv[qlst]
@@ -432,10 +432,10 @@ def fort2refined(framenumber,outfortq,outfortt,components='all'):
         foutt.close()
         fortqheaderwrite(fortheader,foutq,closefile=False)
 
-        for j in xrange(my):
+        for j in range(my):
             foutq.write("\n")
             y = ylow + (j+0.5)*dy
-            for i in xrange(mx):
+            for i in range(mx):
                 x = xlow + (i+0.5)*dx
                 qv = pointfromfort((x,y),solutionlist)
                 qout = qv[qlst]
@@ -501,17 +501,17 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
     Q = np.zeros(np.shape(X))
 
     if (m=='topo'):
-        for j in xrange(ncols):
+        for j in range(ncols):
             xp = X[0,j]
-            for i in xrange(nrows):
+            for i in range(nrows):
                 yp = Y[i,0]
                 qv = pointfromfort((xp,yp),solutionlist)
                 Q[i,j] = qv[meqn-1]-qv[0]
 
     elif (m=='depth'):
-        for j in xrange(ncols):
+        for j in range(ncols):
             xp = X[0,j]
-            for i in xrange(nrows):
+            for i in range(nrows):
                 yp = Y[i,0]
                 qv = pointfromfort((xp,yp),solutionlist)
                 depth = qv[0]
@@ -520,9 +520,9 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
                 Q[i,j] = depth
 
     elif (m=='eta'):
-        for j in xrange(ncols):
+        for j in range(ncols):
             xp = X[0,j]
-            for i in xrange(nrows):
+            for i in range(nrows):
                 yp = Y[i,0]
                 qv = pointfromfort((xp,yp),solutionlist)
                 eta = qv[meqn-1]
@@ -532,18 +532,18 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
 
     elif (m=='all'):
         Q = np.zeros((ncols*nrows,meqn))
-        for i in xrange(nrows):
+        for i in range(nrows):
             yp = Y[i,0]
-            for j in xrange(ncols):
+            for j in range(ncols):
                 xp = X[0,j]
                 k = i*ncols + j
                 qv = pointfromfort((xp,yp),solutionlist)
                 Q[k]=qv
 
     else:
-        for j in xrange(ncols):
+        for j in range(ncols):
             xp = X[0,j]
-            for i in xrange(nrows):
+            for i in range(nrows):
                 yp = Y[i,0]
                 qv = pointfromfort((xp,yp),solutionlist)
                 Q[i,j] = qv[m-1]
@@ -591,9 +591,9 @@ def fort2griddata(framenumber,xll,yll,cellsize,ncols,nrows,m=1):
 
     Q = np.zeros(np.shape(X))
 
-    for j in xrange(ncols):
+    for j in range(ncols):
         xp = X[0,j]
-        for i in xrange(nrows):
+        for i in range(nrows):
             yp = Y[i,0]
             qv = pointfromfort((xp,yp),solutionlist)
             Q[i,j] = qv[m-1]
@@ -795,7 +795,7 @@ def fort2list(fortqname,forttname):
     ngrids = fortt['ngrids']
     solutionlist = []
 
-    for gridinlist in xrange(ngrids):
+    for gridinlist in range(ngrids):
         fin,fortq = fortqheaderread(fin,closefile=False)
         griddict = {}
         griddict.update(fortt)
@@ -805,9 +805,9 @@ def fort2list(fortqname,forttname):
         rows = griddict['mx']*griddict['my']
         grid = np.zeros((rows,griddict['meqn']))
         row = 0
-        for my in xrange(griddict['my']):
+        for my in range(griddict['my']):
             fin.readline()
-            for mx in xrange(griddict['mx']):
+            for mx in range(griddict['mx']):
                 line1 = string.split(fin.readline())
                 #line2 = string.split(fin.readline())
                 grid[row,:] = np.array((line1),dtype=float)
@@ -824,13 +824,13 @@ def fort2list(fortqname,forttname):
     xhidomain = -np.inf
     yhidomain = -np.inf
     maxlevel = 0
-    for gridinlist in xrange(ngrids):
+    for gridinlist in range(ngrids):
         xlowdomain = min(xlowdomain,solutionlist[gridinlist]['xlow'])
         ylowdomain = min(ylowdomain,solutionlist[gridinlist]['ylow'])
         xhidomain = max(xhidomain,solutionlist[gridinlist]['xupper'])
         yhidomain = max(yhidomain,solutionlist[gridinlist]['yupper'])
         maxlevel = max(maxlevel,solutionlist[gridinlist]['AMR_level'])
-    for gridinlist in xrange(ngrids):
+    for gridinlist in range(ngrids):
         solutionlist[gridinlist]['xlowdomain'] = xlowdomain
         solutionlist[gridinlist]['ylowdomain'] = ylowdomain
         solutionlist[gridinlist]['xhidomain'] = xhidomain
@@ -860,10 +860,10 @@ def pointfromfort(point,solutionlist):
                         (yp>=griddict['ylowdomain'])&(yp<=griddict['yhidomain'])
 
     if (not dintersection):
-        print 'ERROR: point outside of domain:'
-        print ('point x= %d y=%d' %(point))
-        print ('domain x bounds: %d -- %d' %(griddict['xlowdomain'],griddict['xhidomain']))
-        print ('domain y bounds: %d -- %d' %(griddict['ylowdomain'],griddict['yhidomain']))
+        print('ERROR: point outside of domain:')
+        print(('point x= %d y=%d' %(point)))
+        print(('domain x bounds: %d -- %d' %(griddict['xlowdomain'],griddict['xhidomain'])))
+        print(('domain y bounds: %d -- %d' %(griddict['ylowdomain'],griddict['yhidomain'])))
         raise SystemExit(0)
 
     intersection = False
@@ -886,8 +886,8 @@ def pointfromfort(point,solutionlist):
         my = grid['my']
         data = grid['data']
     except:
-        print ('point is possibly on amr grid edge: x= %s y=%s' %(point))
-        print ('intersection? %s' %(intersection))
+        print(('point is possibly on amr grid edge: x= %s y=%s' %(point)))
+        print(('intersection? %s' %(intersection)))
         print ('taking data from adjacent grid')
         eps = 1e-5
 
@@ -909,10 +909,10 @@ def pointfromfort(point,solutionlist):
             my = grid['my']
             data = grid['data']
         except:
-            print ('point is possibly on amr grid edge: x= %s y=%s' %(point))
+            print(('point is possibly on amr grid edge: x= %s y=%s' %(point)))
             domain = (griddict['xlowdomain'],griddict['xhidomain'], griddict['ylowdomain'], griddict['yhidomain'])
-            print ('Domain xlow,xhi,ylow,yhi: [%s , %s] , [%s , %s]' %(domain))
-            print ('intersection? %s' %(intersection))
+            print(('Domain xlow,xhi,ylow,yhi: [%s , %s] , [%s , %s]' %(domain)))
+            print(('intersection? %s' %(intersection)))
             print ('quitting in protest.')
 
             raise SystemExit(0)

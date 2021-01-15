@@ -65,7 +65,7 @@ def fortgaugeread (datafile="fort.gauge",setgaugefile="setgauges.data"):
 
     allgaugedata=[]
 
-    for n in xrange(mgauges) :
+    for n in range(mgauges) :
         onegaugedata=data[mlab.find(data[:,0]==int(gaugelocs[n][0]))]
         dict={}
         dict['gauge']=int(gaugelocs[n][0])
@@ -75,7 +75,7 @@ def fortgaugeread (datafile="fort.gauge",setgaugefile="setgauges.data"):
         dict['level']=onegaugedata[:,1]
         dict['t']=onegaugedata[:,2]
         dict['mq'] = len(onegaugedata[0])-3
-        for m in xrange(dict['mq']) :
+        for m in range(dict['mq']) :
             dict['q'+str(m+1)]=onegaugedata[:,3 + m]
 
         allgaugedata.append(dict)
@@ -94,14 +94,14 @@ def selectgauge (gaugenumber, allgaugedata=[], datafile="fort.gauge", \
 
     if allgaugedata==[]:
         allgaugedata=fortgaugeread(datafile,setgaugefile)
-    for g in xrange(len(allgaugedata)):
+    for g in range(len(allgaugedata)):
         gnumber = allgaugedata[g]['gauge']
         if gnumber==gaugenumber:
             gg = g
     try:
         gaugedata = allgaugedata[gg]
     except:
-        print 'Gauge number %i does not exist in %s' % (gaugenumber,datafile)
+        print('Gauge number %i does not exist in %s' % (gaugenumber,datafile))
 
     return gaugedata
 
@@ -137,7 +137,7 @@ def writegdata (gaugedata,fname='',level=1,var='q1'):
     fid.write(sep.join(varstrlist))
     fid.write('\n')
 
-    for tp in xrange(len(dict['t'])):
+    for tp in range(len(dict['t'])):
         fid.write(" %012.6e %012.6e %012.6e %012.6e %012.6e %012.6e \n" % (dict['t'][tp],dict['h'][tp],dict['hu'][tp],dict['hv'][tp],dict['eta'][tp],dict['b'][tp]))
 
     fid.close()
@@ -156,14 +156,14 @@ def plotfortgauge (gaugenumber, allgaugedata=[],gaugevar1='t',gaugevar2='q1',\
 
     if allgaugedata==[]:
         allgaugedata=fortgaugeread(datafile,setgaugefile)
-    for g in xrange(len(allgaugedata)):
+    for g in range(len(allgaugedata)):
         gnumber == allgaugedata[g]['gauge']
         if gnumber==gaugenumber:
             gg = g
     try:
         plotdata = allgaugedata[gg]
     except:
-        print 'Gauge number %i does not exist in %s' % (gaugenumber,datafile)
+        print('Gauge number %i does not exist in %s' % (gaugenumber,datafile))
 
     plotdata1=plotdata[gaugevar1]
 
@@ -223,7 +223,7 @@ def readgdata (fname):
 
     data=np.loadtxt(fname,skiprows=4)
     keylist=['t','h','hu','hv','eta','b']
-    for i in xrange(len(keylist)) :
+    for i in range(len(keylist)) :
         gaugedata[keylist[i]]=data[:,i]
 
     fid.close()
@@ -246,7 +246,7 @@ def fortgauge2gdata (indatafile="fort.gauge",setgaugefile="setgauges.data"):
 
     N=len(allgaugedata)
 
-    for ig in xrange(N):
+    for ig in range(N):
         writegdata(allgaugedata[ig],fname=allgaugedata[ig]['gauge'])
     return
 
@@ -344,7 +344,7 @@ def getgaugedata(fortfile='fort.gauges',setgaugefile='setgauges.data'):
     xgauges=[]
     ygauges=[]
     gauge_nums=[]
-    for gauge in xrange(mgauges):
+    for gauge in range(mgauges):
         xgauges.append(allgaugedata[gauge]['x'])
         ygauges.append(allgaugedata[gauge]['y'])
         gauge_nums.append(allgaugedata[gauge]['gauge'])
@@ -364,7 +364,7 @@ def Lagrangian_Xoft(allgaugedata,xgauges,gauge_nums,x0,t):
     dt = t[1]-t[0]
     Xoft=np.hstack((Xoft,x0))
 
-    for nt in xrange(len(t)-1):
+    for nt in range(len(t)-1):
         tn = t[nt]
         tnp= t[nt+1]
         x = Xoft[nt]
