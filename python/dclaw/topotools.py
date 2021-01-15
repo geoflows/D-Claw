@@ -443,7 +443,7 @@ def topoheaderread (inputfile, closefile=True):
     fid=open(inputfile,'r')
     keyleft=len(keylist)
     while keyleft> 0 :
-        line=string.split(fid.readline())
+        line=fid.readline().split()
         if line:
             if line[0].lower() in list(keymap.keys()):
                 topoheader[keymap[line[0].lower()]]= iotools.convertd2e(line[1])
@@ -490,8 +490,7 @@ def topofile2griddata (inputfile,topotype=2):
         zdata=fin.readlines()
         fin.close()
         for row in range(len(zdata)):
-            zdata[row]=iotools.convertd2e(zdata[row])
-            zdata[row]=string.split(zdata[row])
+            zdata[row]=iotools.convertd2e(zdata[row]).split()
             for col in range(len(zdata[row])) :
                 zdata[row][col]=float(zdata[row][col])
 
@@ -846,8 +845,7 @@ def topofilesubset (inputfile,outputfile,topotypein=2,topotypeout=2,xlow=-1.e6,x
                     y=yupper-row*cellsize
                     for col in range(ncols) :
                         x=xll + col*cellsize
-                        zdata=fidin.readline()
-                        zdata=string.split(zdata)
+                        zdata=fidin.readline().split()
                         w=writtenpts
                         for jj in range(len(zdata)):
                             if ((xlow<=x<=xhi)&(ylow<=y<yhi)):
