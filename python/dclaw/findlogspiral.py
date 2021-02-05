@@ -660,6 +660,7 @@ def spiral2(x1,y1,x2,y2,alpha1,alpha2,npoints=100,plotspiral=False,verbose=True)
         xvp = xc + a*np.exp(b*thetap)*np.cos(thetap)
         yvp = yc + a*np.exp(b*thetap)*np.sin(thetap)
         import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
         plt.plot(xvp,yvp,[x1,x2],[y1,y2],'ro',[x1,x1+20*np.cos(psi1)],[y1,y1+20*np.sin(psi1)],'k-',[x2,x2+20.*np.cos(psi2)],[y2,y2+20.*np.sin(psi2)],'k-')
         plt.plot(xc,yc,'ko')
         plt.axis('equal')
