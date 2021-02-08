@@ -47,7 +47,7 @@ c        ###  make the file names and open output files
      .       form='formatted')
 
          level = lst
-         if (mom_autostop) then
+         if (mom_autostop .eqv. .TRUE.) then
            locmaxmom = 0. ! initialize local max momentum as zero. if
            ! using mom_autostop
          endif
@@ -90,7 +90,7 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                   alloc(iadd(i,j,ivar)) = 0.d0
                endif
             enddo
-            if (mom_autostop) then
+            if (mom_autostop .eqv. .TRUE.) then
               if (level .eq. lst ) then
                 ! calculate and add to momentum to get a level one momentum sum.
                 momh = alloc(iadd(i,j,1))
@@ -127,7 +127,7 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
         ! If using mom_autostop then make calculations.
         ! local step_max. if in excess of mom_perc of total max change amidoneyet.
         ! set max to new max.
-        if (mom_autostop) then
+        if (mom_autostop .eqv. .TRUE.) then
           ! if current max is largest, increase the global max
           if (locmaxmom .gt. globmaxmom) then
             globmaxmom = locmaxmom
