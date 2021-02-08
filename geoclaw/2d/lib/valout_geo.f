@@ -3,7 +3,9 @@ c -----------------------------------------------------
 c
       subroutine valout (lst, lend, time, nvar, naux)
 c
-c      from digclaw_module use rho_f,rho_s
+      use digclaw_module, only : rho_f,rho_s,mom_autostop,mom_perc
+      use digclaw_module, only: amidoneyet,globmaxmom
+
       implicit double precision (a-h,o-z)
       character*10  matname1, matname2, matname3
       double precision :: locmaxmom
@@ -11,11 +13,6 @@ c      from digclaw_module use rho_f,rho_s
       include  "call.i"
 
       logical outaux
-
-      logical            amidoneyet
-      double precision   globmaxmom
-
-      common /amidone/ amidoneyet,globmaxmom
 
       iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
       iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
@@ -50,7 +47,11 @@ c        ###  make the file names and open output files
      .       form='formatted')
 
          level = lst
-         locmaxmom = 0. ! initialize local max momentum as zero.
+         if (mom_autostop) then
+           locmaxmom = 0. ! initialize local max momentum as zero. if
+           ! using mom_autostop
+         endif
+
          write(6,47) locmaxmom, globmaxmom
 47       format('GeoClaw: Starting momentum calc ', d12.6, " ", d12.6)
          ngrids = 0
@@ -89,21 +90,22 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                   alloc(iadd(i,j,ivar)) = 0.d0
                endif
             enddo
+            if (mom_autostop) then
+              if (level .eq. lst ) then
+                ! calculate and add to momentum to get a level one momentum sum.
+                momh = alloc(iadd(i,j,1))
+                if (momh .gt. 0.0001) then ! if substantial thickness.
 
-            if (level .eq. lst ) then
-              ! calculate and add to momentum to get a level one momentum sum.
-              momh = alloc(iadd(i,j,1))
-              if (momh .gt. 0.0001) then ! if substantial thickness.
-
-                momvel = (  (alloc(iadd(i,j,2))/momh)**2.
-     &                    + (alloc(iadd(i,j,3))/momh)**2.)**0.5
-                momm = alloc(iadd(i,j,4)) / momh
-                momrho = (rho_s * momm) + ((1.-momm) * rho_f)
-                ! hard code values for sediment and fluid density, but
-                ! better than nothing and prob approx right.
-                locmaxmom = locmaxmom ! momentum = (mass * velocity) = density * volume * velocity.
-     &                  + (momh * hxposs(level) * hyposs(level)
-     &                     * momrho * momvel)
+                  momvel = (  (alloc(iadd(i,j,2))/momh)**2.
+     &                      + (alloc(iadd(i,j,3))/momh)**2.)**0.5
+                  momm = alloc(iadd(i,j,4)) / momh
+                  momrho = (rho_s * momm) + ((1.-momm) * rho_f)
+                  ! hard code values for sediment and fluid density, but
+                  ! better than nothing and prob approx right.
+                  locmaxmom = locmaxmom ! momentum = (mass * velocity) = density * volume * velocity.
+     &                        + (momh * hxposs(level) * hyposs(level)
+     &                        * momrho * momvel)
+                endif
               endif
             endif
             surface = alloc(iadd(i,j,1)) + alloc(iaddaux(i,j,1))
@@ -122,23 +124,31 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
          go to 65
 
  90     continue
-
-        ! local step_max. if in excess of 0.05 of total max change amidoneyet.
+        ! If using mom_autostop then make calculations.
+        ! local step_max. if in excess of mom_perc of total max change amidoneyet.
         ! set max to new max.
-        if (locmaxmom .gt. globmaxmom) then
-          globmaxmom = locmaxmom
-        endif
-        ! calculate new momentum proportion.
-        momprop = locmaxmom / globmaxmom
-        ! test if done condition is met.
-        if (momprop .le. 0.05) then
-          amidoneyet = .True. ! assign amidoneyet as true if done.
-        endif
-        write(6,112) momprop, locmaxmom, globmaxmom, time
- 112    format('GeoClaw: Current momentum proportion ', d12.6,
-     &         ' ( ', d12.6 ' / ', d12.6,
-     &         ') at t = ', d12.6,/)
+        if (mom_autostop) then
+          ! if current max is largest, increase the global max
+          if (locmaxmom .gt. globmaxmom) then
+            globmaxmom = locmaxmom
+          endif
 
+          ! calculate new momentum proportion.
+          momprop = locmaxmom / globmaxmom
+
+          ! test if done condition is met.
+          if (momprop .le. mom_perc) then
+            amidoneyet = .True. ! assign amidoneyet as true if done.
+          endif
+
+          ! write current status to the log.
+          write(6,112) momprop, locmaxmom, globmaxmom, time
+ 112      format('GeoClaw: Current momentum proportion ', d12.6,
+     &           ' ( ', d12.6 ' / ', d12.6,
+     &           ') at t = ', d12.6,/)
+
+      endif
+      ! end if mom_autostop
 
         if (outaux) then
 c        # output aux array to fort.aXXXX

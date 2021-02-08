@@ -81,11 +81,6 @@ c
       character * 25 fname
       logical            vtime,rest
 
-      logical            amidoneyet
-      double precision   globmaxmom
-
-      common /amidone/ amidoneyet,globmaxmom
-
       dimension          tout(maxout)
       dimension          tchk(maxout)
 
@@ -112,7 +107,7 @@ c
       open(dbugunit,file=dbugfile,status='unknown',form='formatted')
       open(parmunit,file=parmfile,status='unknown',form='formatted')
 c
-c     ## New in 4.4:  
+c     ## New in 4.4:
 c     ## Open file and skip over leading lines with # comments:
       fname = 'amr2ez.data'
       call opendatafile(inunit,fname)
@@ -151,7 +146,7 @@ c         # ratios in x,y,t from next three lines:
              kratio(i)  = intratx(i)
           enddo
       endif
-          
+
 c      if (intrat(1) .lt. 0) then
 c          # this flags the situation where we do not want to refine in t
 c           write(6,*) '*** No refinement in time!'
@@ -504,15 +499,12 @@ c
      *       ' refinement ratios       ',6i5,/,/)
 119   format(' no. auxiliary vars.     ',i9)
 129   format('       var ',i5,' of type ', a10)
-139   format(' refinement ratios:       ',6i5,/)  
+139   format(' refinement ratios:       ',6i5,/)
 149   format(' capacity fn. is aux. var',i9)
 
       write(6,*) ' '
       write(6,*) 'Done reading data, starting computation ...  '
       write(6,*) ' '
-
-      globmaxmom = 0. ! initialize values for global max momentum
-      amidoneyet = .False. ! and momentum based stopping criterion.
 
       call outtre (mstart,printout,nvar,naux)
       write(outunit,*) "  original total mass ..."

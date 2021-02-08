@@ -5,6 +5,7 @@ c
      &                naux,nout,tout,tchk,t0,rest)
 c
       use  geoclaw_module
+      use digclaw_module, only : amidoneyet,globmaxmom
 
       implicit double precision (a-h,o-z)
 
@@ -15,10 +16,6 @@ c
       dimension tout(nout)
       dimension tchk(maxout)
 
-      logical            amidoneyet
-      double precision   globmaxmom
-
-      common /amidone/ amidoneyet,globmaxmom
 c
 c :::::::::::::::::::::::::::: TICK :::::::::::::::::::::::::::::
 c  main driver routine.  controls:
