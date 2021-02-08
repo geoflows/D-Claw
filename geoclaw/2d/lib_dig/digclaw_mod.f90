@@ -22,8 +22,11 @@ module digclaw_module
     ! ========================================================================
     double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
-    double precision :: mom_perc,globmaxmom
-    logical :: mom_autostop,amidoneyet
+    double precision :: mom_perc
+    logical :: mom_autostop
+
+    double precision :: globmaxmom = 0. ! initialize values for global max momentum
+    logical :: amidoneyet = .False. ! and momentum based stopping criterion.
 
     integer :: init_ptype,p_initialized,bed_normal,entrainment
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
@@ -125,10 +128,6 @@ contains
          write(DIG_PARM_UNIT,*) '    entrainment_rate:', entrainment_rate
          write(DIG_PARM_UNIT,*) '    mom_autostop:', mom_autostop
          write(DIG_PARM_UNIT,*) '    mom_perc:', mom_perc
-
-
-         globmaxmom = 0. ! initialize values for global max momentum
-         amidoneyet = .False. ! and momentum based stopping criterion.
 
    end subroutine set_dig
 
