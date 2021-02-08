@@ -50,10 +50,12 @@ c        ###  make the file names and open output files
          if (mom_autostop .eqv. .TRUE.) then
            locmaxmom = 0. ! initialize local max momentum as zero. if
            ! using mom_autostop
+
+
+          write(6,47) locmaxmom, globmaxmom
+47        format('GeoClaw: Starting momentum calc ', d12.6, " ", d12.6)
          endif
 
-         write(6,47) locmaxmom, globmaxmom
-47       format('GeoClaw: Starting momentum calc ', d12.6, " ", d12.6)
          ngrids = 0
  65      if (level .gt. lfine) go to 90
             mptr = lstart(level)
