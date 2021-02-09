@@ -243,6 +243,11 @@ c
           tlevel(level) = tlevel(level) + possk(level)
           icheck(level) = icheck(level) + 1
 c
+          if (level .eq. 1) then
+             if (dtnew(1) .gt. dtv2) then
+               dtnew(1) = dtv2
+             endif
+          endif
           if (level .lt. lfine) then
              level = level + 1
 c            #  check if should adjust finer grid time step to start wtih
