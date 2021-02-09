@@ -5,6 +5,7 @@ c
      &                naux,nout,tout,tchk,t0,rest)
 c
       use  geoclaw_module
+      use digclaw_module, only : amidoneyet,globmaxmom
 
       implicit double precision (a-h,o-z)
 
@@ -313,6 +314,13 @@ c
        if ((mod(ncycle,iout).eq.0) .or. dumpout) then
          call valout(1,lfine,time,nvar,naux)
          if (printout) call outtre(mstart,.true.,nvar,naux)
+
+         ! check whether simulation should be halted.
+         if (amidoneyet) then ! if end time based on momentum.
+           time = tfinal ! set time as time final.
+           ncycle = nstop  ! set number of cycles as max
+           goto 999 ! go to end of time look.
+         endif
        endif
 
       if ( .not. vtime) go to 201
