@@ -1547,6 +1547,9 @@ class DigclawInputData(Data):
         self.add_attribute("entrainment", 0, "flag for entrainment, 0 = no entrainment")
         self.add_attribute("entrainment_rate", 0.2, "rate of entrainment parameter 0-1")
 
+        self.add_attribute("mom_autostop", False, "flag for momentum autostop F = no autostop, T = autostop")
+        self.add_attribute("mom_perc", 0.05, "percentage of max momentum for autostop, default is 0.05 (5%)")
+
     def write(self):
 
         print("Creating data file setdig.data")
@@ -1584,7 +1587,11 @@ class DigclawInputData(Data):
         data_write(
             file, self, "entrainment", "flag for entrainment, 0 = no entrainment"
         )
+
         data_write(file, self, "entrainment_rate", "rate of entrainment parameter 0-1")
+        data_write(file, self, "mom_autostop", "flag for momentum autostop F = no autostop, T = autostop")
+        data_write(file, self, "mom_perc", "percentage of max momentum for autostop, default is 0.05 (5%)")
+
         file.close()
 
         print("Creating data file setpinit.data")
