@@ -21,6 +21,10 @@ Some tidbits from Dave
    that interpolation in m doesn't create a spurious ring of water
    around the sediment domain.
 
+   It also appears that it is important to require a minimum grid level 
+   surrounding the region with buffered m0 values that resolves the 
+   buffered grid cells. This is important to prevent spurious boundary water. 
+   
    Note, setqinit for m takes m not hm.
 
 3. Can use a value of h or eta at a landslide source that doesn't include
