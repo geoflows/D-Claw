@@ -506,8 +506,10 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         fortheader["meqn"] = len(components)
 
     if (not outfortq) or (topotype is not None):
-        Q = np.empty((mx * my, len(qlst)))
 
+        # prepare to return an array, OR write to topo file.
+
+        Q = np.empty((mx * my, len(qlst)))
         for j in range(my):
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
@@ -516,6 +518,8 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                 qout = qv[qlst]
                 Q[j * mx + i] = qout
 
+        # if topotype is specified, write out as topotype instead of
+        # array or standard fort.q
         if topotype is not None:
             xv = np.array(xlow + dx * np.arange(mx))
             yv = np.array(ylow + dy * np.arange(my))
@@ -538,7 +542,6 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                     )
 
                 outfile = outfortq
-
                 if topotype == "gdal":
                     gt.griddata2topofile(
                         X, Y, Q, ".tmpfile", nodata_value_out=nodata_value
@@ -554,7 +557,6 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             return fortheader, Q
 
     else:
-        print('writing standard output')
         forttheaderwrite(fortheader, foutt)
         foutt.close()
         fortqheaderwrite(fortheader, foutq, closefile=False)

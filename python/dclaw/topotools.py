@@ -682,7 +682,7 @@ def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=
     )
 
     out_profile["height"], out_profile["width"] = X.shape
-    out_profile["dtype"] = Q.dtype
+    out_profile["dtype"] = "float64"
     out_profile["count"] = meqn
     out_profile["driver"] = "GTiff"
     out_profile["nodata"] = nodata_value_out
