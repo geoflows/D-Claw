@@ -687,7 +687,7 @@ def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=
     out_profile["driver"] = "GTiff"
     out_profile["nodata"] = nodata_value_out
 
-    if (abs(cellsizeX - cellsizeY) < -1.0e-9) & (topotype > 1):
+    if (abs(cellsizeX - cellsizeY) < -1.0e-9):
         print("geotools.topotools.griddata2topofile:")
         print("WARNING: cellsize is not uniform in x and y")
         print(("cellsize in the x-direction %s" % cellsizeX))
