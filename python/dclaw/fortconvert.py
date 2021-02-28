@@ -507,6 +507,10 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         fortheader["meqn"] = len(components)
 
     if (not outfortq) or (topotype is not None):
+        # write t file close q file.
+        forttheaderwrite(fortheader, foutt)
+        foutt.close()
+        foutq.close()
 
         # prepare to return an array, OR write to topo file.
 
@@ -522,10 +526,6 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         # if topotype is specified, write out as topotype instead of
         # array or standard fort.q
         if topotype is not None:
-            # this file not needed, close and remove.
-            foutq.close()
-            if isinstance(outfortq, str):
-                os.remove(outfortq)
 
             xv = np.array(xlow + dx * np.arange(mx))
             yv = np.array(ylow + dy * np.arange(my))
@@ -534,10 +534,11 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
 
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
+
                 gt.griddata2gtif(
                     X,
                     Y,
-                    np.flip(np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1),
+                    np.flip(np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (2, 1, 0)), axis=1),
                     # reshape into nr, nc, neq, and shift axis so neq is at front,
                     # finally flip along axis 1 so that up is up.
                     outfile,
