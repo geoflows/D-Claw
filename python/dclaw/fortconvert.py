@@ -571,23 +571,25 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
                 qv = pointfromfort((xp,yp),solutionlist)
                 Q[i,j] = qv[m-1]
 
-    if m=='all':
-        headerstring="""
+    if topotype == "gtif": # gtif can handle all or part.
 
-
-                    """
-        np.savetxt(outfile,Q)#,header=headerstring) save for new numpy version
-    elif (topotype=='gdal'):
-        gt.griddata2topofile(X,Y,Q,'.tmpfile',nodata_value_out=nodata_value)
-        infile = '.tmpfile'
-        gt.esriheader(infile,outfile)
-        os.system('rm .tmpfile')
-    elif topotype == "gtif":
         outtif = outfile.replace(".", "_")+".tif"
         gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outtif, nodata_value_out=nodata_value)
         # reshape into 3d array.
     else:
-        gt.griddata2topofile(X,Y,Q,outfile,topotype,nodata_value_out=nodata_value)
+        if m=='all':
+            headerstring="""
+
+
+                        """
+            np.savetxt(outfile,Q)#,header=headerstring) save for new numpy version
+        elif (topotype=='gdal'):
+            gt.griddata2topofile(X,Y,Q,'.tmpfile',nodata_value_out=nodata_value)
+            infile = '.tmpfile'
+            gt.esriheader(infile,outfile)
+            os.system('rm .tmpfile')
+        else:
+            gt.griddata2topofile(X,Y,Q,outfile,topotype,nodata_value_out=nodata_value)
 
 #==============================================================================
 def fort2griddata(framenumber,xll,yll,cellsize,ncols,nrows,m=1):
