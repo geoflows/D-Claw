@@ -522,9 +522,10 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         # if topotype is specified, write out as topotype instead of
         # array or standard fort.q
         if topotype is not None:
-            # this file not needed, close and remove. 
+            # this file not needed, close and remove.
             foutq.close()
-            os.remove(foutq)
+            if isinstance(outfortq, str):
+                os.path.remove(outfortq)
 
             xv = np.array(xlow + dx * np.arange(mx))
             yv = np.array(ylow + dy * np.arange(my))
