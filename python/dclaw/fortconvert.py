@@ -543,7 +543,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                 Qrshp = Q.reshape((my, mx, len(qlst)))
                 print(Qrshp.shape)
                 # reorder into my, mx, meqn by shift axis so meq is at front,
-                Qrd = np.moveaxis(Qrshp, (0, 1, 2), (2, 0, 1))
+                Qrd = np.moveaxis(Qrshp, (0, 1, 2), (1, 2, 0))
                 print(Qrd.shape)
 
                 gt.griddata2gtif(
