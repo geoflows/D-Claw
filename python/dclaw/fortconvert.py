@@ -39,6 +39,7 @@ import string
 
 import numpy as np
 
+import dclaw.topotools as gt
 
 # ================================================================================
 def convertfortdir(
@@ -585,11 +586,6 @@ def fort2topotype(
     without xll, yll, cellsize, ncols, nrows...the domain will be the same as input frame
     and coarse resolution.
     """
-
-    try:
-        import geotools.topotools as gt
-    except:
-        import clawpack.geoclaw.topotools as gt
 
     numstring = str(10000 + framenumber)
     framenostr = numstring[1:]
