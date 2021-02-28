@@ -522,6 +522,10 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         # if topotype is specified, write out as topotype instead of
         # array or standard fort.q
         if topotype is not None:
+            # this file not needed, close and remove. 
+            foutq.close()
+            os.remove(foutq)
+
             xv = np.array(xlow + dx * np.arange(mx))
             yv = np.array(ylow + dy * np.arange(my))
             (X, Y) = np.meshgrid(xv, yv)
