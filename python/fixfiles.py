@@ -6,7 +6,9 @@
 # Now supports wildcards in list of targetfiles.
 #
 
-import os,sys,glob
+import glob
+import os
+import sys
 
 rootdir = '..'
 targetfiles = ['README.txt']

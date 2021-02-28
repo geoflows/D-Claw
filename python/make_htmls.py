@@ -9,7 +9,9 @@ Use make_clean.py to first remove old versions if desired, or
 set remove_first to True below.
 """
 
-import os,sys,glob
+import glob
+import os
+import sys
 
 remove_first = False   # to force remaking of htmls
                        # only set to True if you're sure

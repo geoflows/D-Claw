@@ -2,7 +2,9 @@
 Module for converting MOST data and output to GeoClaw format.
 """
 
-import os, glob, re
+import glob
+import os
+import re
 
 
 def most2tt3(fname):

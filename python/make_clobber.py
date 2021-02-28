@@ -2,7 +2,10 @@
 Performs 'make clobber' in each subdirectory of the specified directory.
 """
 
-import os,sys,glob
+import glob
+import os
+import sys
+
 
 def make_clobber(rootdir):
 

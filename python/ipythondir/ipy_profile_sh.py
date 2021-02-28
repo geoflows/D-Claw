@@ -7,13 +7,15 @@ shell mode and is recommended for users who don't care about pysh-mode
 compatibility)
 """
 
+import os
+import textwrap
+
+import ipy_defaults
 from IPython import ipapi
-import os,textwrap
 
 # The import below effectively obsoletes your old-style ipythonrc[.ini],
 # so consider yourself warned!
 
-import ipy_defaults
 
 def main():    
     ip = ipapi.get()
@@ -31,8 +33,8 @@ def main():
     
     # beefed up %env is handy in shell mode
     import envpersist
-    import ipy_which
     import ipy_stock_completers
+    import ipy_which
     
     
     ip.ex('import os')
@@ -44,9 +46,10 @@ def main():
     o.prompt_in2= r'\C_Green|\C_LightGreen\D\C_Green> '
     o.prompt_out= '<\#> '
     
+    import sys
+
     from IPython import Release
 
-    import sys
     # I like my banner minimal.
     o.banner = "Py %s IPy %s\n" % (sys.version.split('\n')[0],Release.version)
     
@@ -95,8 +98,9 @@ def extend_shell_behavior(ip):
     # mark the IPSHELL with this signature
     ip.IP.user_ns['__builtins__'].__dict__['__sig__'] = ip.IP.__sig__
 
-    from IPython.Itpl import ItplNS
     from IPython.genutils import shell
+    from IPython.Itpl import ItplNS
+
     # utility to expand user variables via Itpl
     # xxx do something sensible with depth?
     ip.IP.var_expand = lambda cmd, lvars=None, depth=2: \
@@ -109,6 +113,7 @@ def extend_shell_behavior(ip):
             on the IPSHELL stack without worrying about their scope rules
         """
         import sys
+
         # note lambda expression constitues a function call
         # hence fno should be incremented by one
         getsig = lambda fno: sys._getframe(fno+1).f_globals \

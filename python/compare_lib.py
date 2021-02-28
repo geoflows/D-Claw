@@ -7,12 +7,11 @@ libraries.
 This is not quite done yet!  Use at your own risk...
 """
 
-import sys
 import getopt
 import glob
 import os
+import sys
 import time
-
 
 help_message = '''
 Run diff on all files in two directories, primarily used for comparing

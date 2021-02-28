@@ -12,13 +12,14 @@ Specify output directory other than _output by adding the outdir to this line:
 
 """
 
-from pylab import *
-from pyclaw.plotters import geoplot, colormaps, plotpages
-from plottools import fix_long_tick_labels
-
 import os
+
 from numpy import ma
+from plottools import fix_long_tick_labels
+from pylab import *
+
 from pyclaw.data import Data
+from pyclaw.plotters import colormaps, geoplot, plotpages
 
 
 class ClawPlotFGData(Data):

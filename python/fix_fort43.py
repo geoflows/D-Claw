@@ -1,6 +1,7 @@
 
 def fix_fortt(ndim=None):
-    import glob, os
+    import glob
+    import os
     if ndim==None:
         if os.path.exists('claw1ez.data'): 
             ndim = 1

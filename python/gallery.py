@@ -10,7 +10,6 @@ You should use the script python/run_examples.py to do this first.
 
 import os
 
-
 # Main root for html links:
 claw_html_root='http://localhost:50005'     
 

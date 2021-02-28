@@ -3,8 +3,8 @@ find log spiral given two points and two angles
 call with xhi, zhi, xlo, zlo, alpha1, alpha2
 """
 
-import scipy.optimize as scio
 import numpy as np
+import scipy.optimize as scio
 
 beta1 = 1.0e0
 beta2 = 1.0e0

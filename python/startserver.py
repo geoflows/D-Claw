@@ -1,7 +1,7 @@
 
-import sys, traceback
 import http.server
-import http.server
+import sys
+import traceback
 
 protocol="HTTP/1.0"
 HandlerClass = http.server.CGIHTTPRequestHandler

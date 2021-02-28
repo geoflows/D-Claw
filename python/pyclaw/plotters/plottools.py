@@ -13,7 +13,7 @@ def fix_long_tick_labels(xlimits="auto", ylimits="auto", kwargs={}):
     Problem with this way of doing it:  Ticks are fixed if you zoom in on plot.
     """
 
-    from pylab import figure, xticks, yticks, xlim, ylim
+    from pylab import figure, xlim, xticks, ylim, yticks
 
     if xlimits != "auto":
         xlim(xlimits)

@@ -3,7 +3,9 @@
 # Cleans up by deleting object files, executable, and _output directory.
 # Use after run_examples to clean up stuff not needed on webpages.
 
-import os,sys,glob
+import glob
+import os
+import sys
 
 clawdir = os.path.expandvars('$CLAW')
 print("Will remove all .o, _output from ",clawdir)

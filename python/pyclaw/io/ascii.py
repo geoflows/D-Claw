@@ -14,13 +14,14 @@ Routines for reading and writing an ascii output file
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os, sys
 import logging
+import os
+import sys
 
 import numpy as np
 
-from pyclaw.util import read_data_line
 import pyclaw.solution
+from pyclaw.util import read_data_line
 
 logger = logging.getLogger("io")
 

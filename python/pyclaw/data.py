@@ -25,11 +25,12 @@ objects.
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import shutil
-import os
 import copy
-import re
 import logging
+import os
+import re
+import shutil
+
 
 # ========== Parse Value Utility Function ====================================
 def _parse_value(value):

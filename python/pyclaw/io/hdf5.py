@@ -25,8 +25,9 @@ To install either, you must also install the hdf5 library from the website:
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os, sys
 import logging
+import os
+import sys
 
 import numpy as np
 

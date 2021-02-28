@@ -7,7 +7,10 @@ solution must be created.
 Sends output and errors to separate files to simplify looking for errors.
 """
 
-import os,sys,glob
+import glob
+import os
+import sys
+
 try:
     import subprocess
 except:

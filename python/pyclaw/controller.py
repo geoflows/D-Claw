@@ -22,20 +22,20 @@ running of compiled fortran binaries.
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import logging
-import sys
-import os
 import copy
+import logging
+import os
 import shutil
+import sys
 import time
+from functools import reduce
 
 import numpy as np
 
 from .data import Data
-from .solution import Solution
 from .evolve.solver import Solver
+from .solution import Solution
 from .util import FrameCounter
-from functools import reduce
 
 
 class Controller(object):
@@ -421,7 +421,9 @@ class Controller(object):
         This function returns the returncode from the process running xclawcmd,
         which will be nonzero if a runtime error occurs.
         """
-        import os, shutil, glob
+        import glob
+        import os
+        import shutil
 
         try:
             import subprocess

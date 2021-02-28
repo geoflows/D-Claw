@@ -29,9 +29,11 @@ Authors: Dave George and Randy LeVeque
 
 """
 
-import numpy as np
 import os
 import string
+
+import numpy as np
+
 from .datatools import *
 
 # These don't seem to be needed now...  but maybe missed something.
@@ -64,7 +66,9 @@ def get_topo(topo_fname, remote_directory, force=None):
     and if this exists use its value.  This is useful for the script
     python/run_examples.py that runs all examples so it won't stop to prompt.
     """
-    import urllib.request, urllib.parse, urllib.error
+    import urllib.error
+    import urllib.parse
+    import urllib.request
 
     if force is None:
         CTD = os.environ.get("CLAW_TOPO_DOWNLOAD", None)
@@ -241,7 +245,7 @@ def gcdist(x1, y1, x2, y2, Rsphere=Rearth, units="degrees"):
     (x1,y1) and (x2,y2), where:
     x = longitude, y = latitude
     """
-    from numpy import pi, sin, cos, arccos, arcsin, sqrt
+    from numpy import arccos, arcsin, cos, pi, sin, sqrt
 
     if units == "degrees":
         # convert to radians:
@@ -275,7 +279,7 @@ def dx_from_gcdist(d, x1, y1, y2, Rsphere=Rearth, units="degrees"):
     The corresponding x2 can be x1+dx or x1-dx.
     May return NaN if no solution.
     """
-    from numpy import pi, sin, cos, arccos
+    from numpy import arccos, cos, pi, sin
 
     if units == "degrees":
         # convert to radians:

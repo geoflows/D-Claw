@@ -1,6 +1,7 @@
-from pyclaw.data import Data
 import numpy as np
 import pylab
+
+from pyclaw.data import Data
 
 
 def read_header(fname):

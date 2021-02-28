@@ -12,8 +12,9 @@ iotools
 
 """
 
-import string
 import re
+import string
+
 import numpy
 
 

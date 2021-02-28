@@ -14,15 +14,15 @@ Module containing all Pyclaw solution objects
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os
 import copy
 import logging
+import os
+from functools import reduce
 
 import numpy as np
 
-from .data import Data
 from . import io
-from functools import reduce
+from .data import Data
 
 # ============================================================================
 #  Default function definitions

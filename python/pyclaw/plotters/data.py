@@ -12,10 +12,11 @@ Plotting Data Module
 Contains the general class definition and the subclasses of the Clawpack
 data objects specific to plotting.
 """
-import os
 import copy
-import re
 import logging
+import os
+import re
+
 from pyclaw.data import Data
 
 
@@ -377,10 +378,12 @@ class ClawPlotData(Data):
         """
 
         import os
+
         import numpy as np
         from matplotlib.mlab import find
-        from pyclaw.plotters import gaugetools
         from StringIO import StringIO
+
+        from pyclaw.plotters import gaugetools
 
         fname = outdir + "/fort.gauge"
         if not os.path.isfile(fname):

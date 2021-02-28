@@ -33,10 +33,12 @@ file: fortconvert
 
 """
 
-import numpy as np
-import string
 import copy
 import os
+import string
+
+import numpy as np
+
 
 # ================================================================================
 def convertfortdir(

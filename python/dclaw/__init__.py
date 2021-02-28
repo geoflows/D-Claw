@@ -1,4 +1,3 @@
+version = 4.0
 
-version=4.0
-
-__all__ = ['dplot','topotools','iotools','fixdata','fortconvert','gaugedata']
+__all__ = ["dplot", "topotools", "iotools", "fixdata", "fortconvert", "gaugedata"]

@@ -1,5 +1,6 @@
-import os, re, sys
-
+import os
+import re
+import sys
 
 # -----------------------------------------------------------
 # |\""""""""""""""""""""""""|\
@@ -146,7 +147,9 @@ def compare_directories(outdir, regression_dir, tolerance, results_file):
 
 
 def fetch_regression_data(outdir):
-    import urllib.request, urllib.parse, urllib.error
+    import urllib.error
+    import urllib.parse
+    import urllib.request
 
     clawdir = os.environ["CLAW"] + "/"
     thisdir = os.getcwd()

@@ -1,5 +1,10 @@
 
-import os,sys,glob,re,shutil
+import glob
+import os
+import re
+import shutil
+import sys
+
 
 #=================================================================
 def convert():
