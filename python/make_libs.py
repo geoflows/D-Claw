@@ -12,15 +12,15 @@ import sys
 try:
     import subprocess
 except:
-    print('*** Error: require subprocess module from Python 2.4 or greater')
+    print("*** Error: require subprocess module from Python 2.4 or greater")
     raise ImportError()
 
 
 def make_libs(rootdir):
 
-    if rootdir==[]:   
+    if rootdir == []:
         # if called from command line with no argument
-        clawdir = os.path.expandvars('$CLAW')
+        clawdir = os.path.expandvars("$CLAW")
         rootdir = clawdir
     else:
         # called with an argument, try to use this for rootdir:
@@ -30,20 +30,19 @@ def make_libs(rootdir):
     print("Will 'make .objs' in library subdirectories of")
     print("    ", rootdir)
     ans = input("Ok? ")
-    if ans.lower() not in ['y','yes']:
+    if ans.lower() not in ["y", "yes"]:
         print("Aborting.")
         sys.exit()
-    
-    fname_output = 'make_libs_output.txt'
-    fout = open(fname_output, 'w')
+
+    fname_output = "make_libs_output.txt"
+    fout = open(fname_output, "w")
     fout.write("ALL OUTPUT FROM MAKING LIBRARIES\n\n")
 
-    fname_errors = 'make_libs_errors.txt'
-    ferr = open(fname_errors, 'w')
+    fname_errors = "make_libs_errors.txt"
+    ferr = open(fname_errors, "w")
     ferr.write("ALL ERRORS FROM MAKING LIBRARIES\n\n")
 
-
-    #os.chdir(rootdir)
+    # os.chdir(rootdir)
     goodlist = []
     badlist = []
 
@@ -51,7 +50,7 @@ def make_libs(rootdir):
                  geoclaw/2d/lib""".split()
 
     for lib in liblist:
-        libdir = os.path.join(rootdir,lib)
+        libdir = os.path.join(rootdir, lib)
         if os.path.isdir(libdir):
             os.chdir(libdir)
             fout.write("\n=============================================\n")
@@ -65,9 +64,8 @@ def make_libs(rootdir):
             fout.flush()
             ferr.flush()
 
-            print("Running 'make .objs' in ",libdir)
-            job = subprocess.Popen(['make','.objs'], \
-                             stdout=fout, stderr=ferr)
+            print("Running 'make .objs' in ", libdir)
+            job = subprocess.Popen(["make", ".objs"], stdout=fout, stderr=ferr)
             return_code = job.wait()
             if return_code == 0:
                 print("   Successful completion")
@@ -76,25 +74,25 @@ def make_libs(rootdir):
                 print("   *** Errors encountered: see ", fname_errors)
                 badlist.append(lib)
         else:
-            print("*** Library not found:",libdir)
+            print("*** Library not found:", libdir)
 
-    
-    print(' ')
-    print('Libraries created:')
+    print(" ")
+    print("Libraries created:")
     for d in goodlist:
-        print('   ',d)
-    print(' ')
-    
+        print("   ", d)
+    print(" ")
+
     if len(badlist) > 0:
-        print('Errors encountered in the following libraries:')
+        print("Errors encountered in the following libraries:")
         for d in badlist:
-            print('   ',d)
-        print(' ')
-    
+            print("   ", d)
+        print(" ")
+
     fout.close()
     ferr.close()
-    print('For all output see ', fname_output)
-    print('For all errors see ', fname_errors)
+    print("For all output see ", fname_output)
+    print("For all errors see ", fname_errors)
 
-if __name__=='__main__':
+
+if __name__ == "__main__":
     make_libs(sys.argv[1:])

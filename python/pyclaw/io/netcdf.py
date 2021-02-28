@@ -22,6 +22,7 @@ To install the netCDF 4 library, please see:
     Josh Jacobs (2011-04-22) NetCDF 3 Support
 """
 import logging
+
 # ============================================================================
 #      Copyright (C) 2009 Kyle T. Mandli <mandli@amath.washington.edu>
 #      Copyright (C) 2011 J. Jacobs

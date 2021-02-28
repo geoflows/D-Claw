@@ -11,9 +11,8 @@ import os
 
 import gallery as G
 
-G.claw_html_root='http://kingkong.amath.washington.edu/clawpack/trunk'
-G.gallery_dir_default = os.path.join(G.clawdir_default,'doc','gallery')  
+G.claw_html_root = "http://kingkong.amath.washington.edu/clawpack/trunk"
+G.gallery_dir_default = os.path.join(G.clawdir_default, "doc", "gallery")
 G.remake = True
 
 G.make_all()
-

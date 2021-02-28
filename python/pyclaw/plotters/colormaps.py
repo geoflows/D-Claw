@@ -60,8 +60,7 @@ def make_colormap(colors):
 
 
 def showcolors(cmap):
-    from pylab import (axes, axis, clf, colorbar, linspace, meshgrid, pcolor,
-                       show, title)
+    from pylab import axes, axis, clf, colorbar, linspace, meshgrid, pcolor, show, title
 
     # from scitools.easyviz.matplotlib_ import colorbar, clf, axes, linspace,\
     # pcolor, meshgrid, show, colormap
