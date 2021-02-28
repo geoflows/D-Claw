@@ -583,7 +583,8 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
         gt.esriheader(infile,outfile)
         os.system('rm .tmpfile')
     elif topotype == "gtif":
-        gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outfile, nodata_value_out=nodata_value)
+        outtif = outfile.replace(".", "_")+".tif"
+        gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outtif, nodata_value_out=nodata_value)
         # reshape into 3d array.
     else:
         gt.griddata2topofile(X,Y,Q,outfile,topotype,nodata_value_out=nodata_value)
