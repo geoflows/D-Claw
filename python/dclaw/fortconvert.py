@@ -80,6 +80,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
     elif (not os.path.isdir(outdir)):
         os.system(('mkdir '+outdir))
 
+    curdir = os.abspath(os.path.curdir())
     fortdir = os.path.abspath(fortdir)
     outdir = os.path.abspath(outdir)
 
@@ -158,7 +159,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
             outfortt = os.path.join(outdir,'fort.t'+framenostr)
             fort2uniform(frameno,outfname,outfortt,xlower,xupper,ylower,yupper,mx,my,components)
 
-
+    os.chdir(curdir)
 
 #=============================================================================
 def fort2xyqscattered(framenumber,outfile=None,components='all'):
@@ -204,7 +205,7 @@ def fort2xyqscattered(framenumber,outfile=None,components='all'):
             (X,Y) = np.meshgrid(x,y)
             X = np.reshape(X,(grid['mx']*grid['my'],1))
             Y = np.reshape(Y,(grid['mx']*grid['my'],1))
-            
+
             try:
                 XYQ = np.vstack((XYQ,np.hstack((X,Y,Q))))
             except:
@@ -455,7 +456,7 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
     specifying xll, yll, cellsize, ncols, nrows will result in interpolation of AMR data
 
     without xll, yll, cellsize, ncols, nrows...the domain will be the same as input frame
-    and coarse resolution. 
+    and coarse resolution.
     """
 
     try:
@@ -495,7 +496,7 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
     yv = np.array(yll + cellsize*np.arange(nrows))
 
     (X,Y) = np.meshgrid(xv,yv)
-    
+
     Y = np.flipud(Y)
 
     Q = np.zeros(np.shape(X))
@@ -586,7 +587,7 @@ def fort2griddata(framenumber,xll,yll,cellsize,ncols,nrows,m=1):
     yv = np.array(yll + cellsize*np.arange(nrows))
 
     (X,Y) = np.meshgrid(xv,yv)
-    
+
     Y = np.flipud(Y)
 
     Q = np.zeros(np.shape(X))
@@ -841,7 +842,7 @@ def fort2list(fortqname,forttname):
         orderedlist.reverse()
 
     return orderedlist
-    
+
 
 
 #===============================================================================
@@ -982,8 +983,3 @@ def intersection(rectangle1,rectangle2):
     intersection = not nonintersection
 
     return intersection
-
-
-
-
-
