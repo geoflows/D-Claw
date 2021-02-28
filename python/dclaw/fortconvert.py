@@ -623,19 +623,19 @@ def forttheaderread (inputfile, closefile=True):
 
     forttheader={}
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     forttheader['time']=float(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     forttheader['meqn']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     forttheader['ngrids']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     forttheader['naux']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     forttheader['ndim']=int(field[0])
 
     if closefile:
@@ -706,28 +706,28 @@ def fortqheaderread (inputfile, closefile=True):
 
     fortqheader={}
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['grid_number']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['AMR_level']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['mx']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['my']=int(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['xlow']=float(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['ylow']=float(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['dx']=float(field[0])
 
-    field=string.split(fin.readline())
+    field=fin.readline().split()
     fortqheader['dy']=float(field[0])
 
     if closefile:
@@ -809,8 +809,8 @@ def fort2list(fortqname,forttname):
         for my in range(griddict['my']):
             fin.readline()
             for mx in range(griddict['mx']):
-                line1 = string.split(fin.readline())
-                #line2 = string.split(fin.readline())
+                line1 = fin.readline().split()
+                #line2 = fin.readline().split()
                 grid[row,:] = np.array((line1),dtype=float)
                 row = row+1
 
