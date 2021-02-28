@@ -503,9 +503,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
     else:
         fortheader["meqn"] = len(components)
 
-    print("starting outputs")
     if (not outfortq) or (topotype is not None):
-        print("I might write a gtif")
         Q = np.empty((mx * my, len(qlst)))
 
         for j in range(my):
@@ -521,11 +519,8 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             yv = np.array(ylow + dy * np.arange(my))
             (X, Y) = np.meshgrid(xv, yv)
 
-            print("here")
             if topotype == "gtif":
-                print("gtif")
                 outfile = outfortq.replace(".", "_") + ".tif"
-
                 gt.griddata2gtif(
                     X,
                     Y,
