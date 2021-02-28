@@ -222,7 +222,7 @@ def convertfortdir(
     else:
         # loop through prepared args.
         for args in arg_list:
-            _func(args)
+            _func(*args)
 
     # return to curdir if changed.
     os.chdir(curdir)
