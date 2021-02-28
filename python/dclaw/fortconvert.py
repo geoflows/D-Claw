@@ -76,7 +76,11 @@ def convertfortdir(
         fortdir: location of fort.q files if not ./
         parallel: bool flag whether to use parallel processing (needs joblib, default false)
         num_cores: num cores to use if doing parallel (default 1)
-        **kwargs: for topotype:  xll,yll,cellsize,ncols,nrows,topotype = 1,2,3,'gdal' (for standard gdal/esri header)
+        topotype: topotype to output to. If provided when using "fortrefined" or "fortuniform",
+                    output will get written to the specified topotype instead of to the standard
+                    fort.qXXX file type. A fort.tXXXX will also get written. The geotiff will have
+                    the name fort_qXXXX.tif
+        **kwargs: for topotype:  xll,yll,cellsize,ncols,nrows,topotype = 1,2,3,'gdal', 'gtif' (for standard gdal/esri header)
                 for fortuniform: xlower,ylower,mx,my
                 if kwargs are omitted the grid parameters are taken from the fort file with finest level spacing
 
@@ -406,7 +410,7 @@ def fort2uniform(
                 Q[j * mx + i] = qout
 
         if topotype is not None:
-            Xtotopo(fortqheader, Q, topotype)
+            raise NotImplementedError()
         else:
             return fortheader, Q
     else:
@@ -497,7 +501,9 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
     else:
         fortheader["meqn"] = len(components)
 
+    print("starting outputs")
     if (not outfortq) or (topotype is not None):
+        print("I might write a gtif")
         Q = np.empty((mx * my, len(qlst)))
 
         for j in range(my):
@@ -513,7 +519,9 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             yv = np.array(yll + cellsize * np.arange(my))
             (X, Y) = np.meshgrid(xv, yv)
 
+            print("here")
             if topotype == "gtif":
+                print("gtif")
                 outfile = outfortq.replace(".", "_") + ".tif"
 
                 gt.griddata2gtif(
@@ -547,6 +555,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             return fortheader, Q
 
     else:
+        print('writing standard output')
         forttheaderwrite(fortheader, foutt)
         foutt.close()
         fortqheaderwrite(fortheader, foutq, closefile=False)
