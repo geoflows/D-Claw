@@ -188,12 +188,14 @@ def convertfortdir(
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
             topotype = kwargs.get("topotype", None)
             _func = fort2refined
+
             arg_list.append([frameno, outfname, outfortt, components, topotype])
 
         elif outputtype == "fortuniform":
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
             topotype = kwargs.get("topotype", None)
             func = fort2uniform
+
             _arg_list.append(
                 [
                     frameno,
@@ -515,8 +517,8 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                 Q[j * mx + i] = qout
 
         if topotype is not None:
-            xv = np.array(xll + cellsize * np.arange(mx))
-            yv = np.array(yll + cellsize * np.arange(my))
+            xv = np.array(xlow + dx * np.arange(mx))
+            yv = np.array(ylow + dy * np.arange(my))
             (X, Y) = np.meshgrid(xv, yv)
 
             print("here")
