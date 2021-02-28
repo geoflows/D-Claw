@@ -701,8 +701,8 @@ def fortqheaderread (inputfile, closefile=True):
     """
     if isinstance(inputfile,str):
         fin=open(inputfile, 'r')
-    elif isinstance(inputfile,file):
-        fin = inputfile
+    #elif isinstance(inputfile,file):
+    #    fin = inputfile
 
     fortqheader={}
 
