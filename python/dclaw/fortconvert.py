@@ -500,7 +500,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
     else:
         foutf = outfortt
 
-    if (not outfortq) or (topotype is not None):
+    if topotype is not None:
         # write t file close q file.
         forttheaderwrite(fortheader, foutt)
         foutt.close()
