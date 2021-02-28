@@ -41,6 +41,7 @@ import numpy as np
 
 import dclaw.topotools as gt
 
+
 # ================================================================================
 def convertfortdir(
     outputtype,

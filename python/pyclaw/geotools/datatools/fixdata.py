@@ -12,12 +12,14 @@ fixdata
 
 """
 
-import string
 import re
+import string
+
 import numpy
 from numpy import *
 
 from . import iotools
+
 
 # ==============================================================================
 def findbadindices(Z, badvalue=inf, removenans=True):

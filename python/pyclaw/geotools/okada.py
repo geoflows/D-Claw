@@ -19,10 +19,8 @@ import string
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as pyplot
 import numpy
-
 # from scipy import *
 from matplotlib import *
-
 # import scipy
 from numpy import *
 
