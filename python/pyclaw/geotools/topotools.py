@@ -69,63 +69,63 @@ def get_topo(topo_fname, remote_directory, force=None):
     if force is None:
         CTD = os.environ.get("CLAW_TOPO_DOWNLOAD", None)
         force = CTD in [True, "True"]
-    print("force = ", force)
+    print(("force = ", force))
 
     if os.path.exists(topo_fname):
-        print("*** Not downloading topo file (already exists): %s " % topo_fname)
+        print(("*** Not downloading topo file (already exists): %s " % topo_fname))
     else:
         remote_fname = topo_fname
         local_fname = topo_fname
         remote_fname_txt = remote_fname + ".txt"
         local_fname_txt = local_fname + ".txt"
 
-        print("Require remote file ", remote_fname)
-        print("      from ", remote_directory)
+        print(("Require remote file ", remote_fname))
+        print(("      from ", remote_directory))
         if not force:
-            ans = input(
+            ans = eval(input(
                 "  Ok to download topo file?  \n"
                 + "     Type y[es], n[o] or ? to first retrieve and print metadata  "
-            )
+            ))
             if ans.lower() not in ["y", "yes", "?"]:
-                print("*** Aborting!   Missing: ", local_fname)
+                print(("*** Aborting!   Missing: ", local_fname))
                 return
             if ans == "?":
                 try:
-                    print("Retrieving remote file ", remote_fname_txt)
-                    print("      from ", remote_directory)
+                    print(("Retrieving remote file ", remote_fname_txt))
+                    print(("      from ", remote_directory))
                     url = os.path.join(remote_directory, remote_fname_txt)
                     urllib.request.urlretrieve(url, local_fname_txt)
                     os.system("cat %s" % local_fname_txt)
                 except:
                     print("*** Error retrieving metadata file!")
-                ans = input("  Ok to download topo file?  ")
+                ans = eval(input("  Ok to download topo file?  "))
                 if ans.lower() not in ["y", "yes", "?"]:
-                    print("*** Aborting!   Missing: ", local_fname)
+                    print(("*** Aborting!   Missing: ", local_fname))
                     return
 
         if not os.path.exists(local_fname_txt):
             try:
-                print("Retrieving metadata file ", remote_fname_txt)
-                print("      from ", remote_directory)
+                print(("Retrieving metadata file ", remote_fname_txt))
+                print(("      from ", remote_directory))
                 url = os.path.join(remote_directory, remote_fname_txt)
                 urllib.request.urlretrieve(url, local_fname_txt)
             except:
                 print("*** Error retrieving metadata file!")
 
         try:
-            print("Retrieving topo file ", remote_fname)
-            print("      from ", remote_directory)
+            print(("Retrieving topo file ", remote_fname))
+            print(("      from ", remote_directory))
             url = os.path.join(remote_directory, remote_fname)
             urllib.request.urlretrieve(url, local_fname)
         except:
-            print("*** Error retrieving file!  Missing: ", local_fname)
+            print(("*** Error retrieving file!  Missing: ", local_fname))
             raise Exception("Error from urllib.urlretrieve")
         try:
             firstline = open(local_fname, "r").readline()
             if firstline.find("DOC") > -1:
-                print("*** Possible error -- check the file ", local_fname)
+                print(("*** Possible error -- check the file ", local_fname))
             else:
-                print("Saved to ", local_fname)
+                print(("Saved to ", local_fname))
         except:
             raise Exception("Error opening file %s" % local_fname)
 
@@ -161,7 +161,7 @@ def topo1writer(outfile, topo, xlower, xupper, ylower, yupper, nxpoints, nypoint
             fout.write("%22.15e  %22.15e  %22.15e\n" % (x, y, z))
 
     fout.close
-    print("Created file ", outfile)
+    print(("Created file ", outfile))
 
 
 # ==========================================================================
@@ -201,7 +201,7 @@ def topo2writer(
     dy = (yupper - ylower) / (nypoints - 1)
     if abs(dx - dy) > 1.0e-8:
         print("*** Error in topo2writer, need dx=dy")
-        print("    dx = %s, dy = %s" % (dx, dy))
+        print(("    dx = %s, dy = %s" % (dx, dy)))
         return
     cellsize = dx
 
@@ -229,7 +229,7 @@ def topo2writer(
             fout.write("%22.15e\n" % Z[i, j])
 
     fout.close
-    print("Created file ", outfile)
+    print(("Created file ", outfile))
 
 
 # ==========================================================

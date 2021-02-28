@@ -9,7 +9,7 @@ def fix_fortt(ndim=None):
         elif os.path.exists('claw3ez.data'): 
             ndim = 3
         else:
-            print 'No clawNez.data file, cannot deduce ndim'
+            print('No clawNez.data file, cannot deduce ndim')
             return
     fortfiles = glob.glob('fort.t*')
     for file in fortfiles:

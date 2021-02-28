@@ -16,17 +16,17 @@ def convert():
     elif os.path.isfile('amr2ez.data'):
         ndim = 2
         #rundata = make_rundata(2, amr=True)
-        print "2d amr not yet implemented"
+        print("2d amr not yet implemented")
     elif os.path.isfile('claw3ez.data'):
         ndim = 3
         #rundata = make_rundata(3)
-        print "3d not yet implemented"
+        print("3d not yet implemented")
     elif os.path.isfile('amr3ez.data'):
         ndim = 3
         #rundata = make_rundata(2, amr=True)
-        print "3d amr not yet implemented"
+        print("3d amr not yet implemented")
     else:
-        print "Could not find a clawpack data file"
+        print("Could not find a clawpack data file")
 
     make_README(ndim)
     fix_setprob(ndim)
@@ -39,9 +39,9 @@ def make_rundata(ndim):
     if not os.path.isfile(fname43):
         try:
 	    shutil.move(fname, fname43)
-	    print "=== Moved %s to %s"  % (fname, fname43)
+	    print("=== Moved %s to %s"  % (fname, fname43))
 	except:
-	    print "*** Could not find ", fname
+	    print("*** Could not find ", fname)
             raise
 	    return
     clawdata_file = open(fname43,'r')
@@ -58,7 +58,7 @@ def make_rundata(ndim):
         if outstyle!=1:
             outstyle = 1
             tfinal = 1.0
-            print "*** Warning: need to check outstyle in setrun.py"
+            print("*** Warning: need to check outstyle in setrun.py")
         dt_initial  = float(next(lines))
         dt_max      = float(next(lines))
         cfl_max     = float(next(lines))
@@ -115,7 +115,7 @@ def next(lines):
         numstring = result.group('string')
         numstring = numstring.replace('d','e')  # for floating notation
     except:
-        print '*** Failed on line: ',line
+        print('*** Failed on line: ',line)
 	numstring = '0'
     return numstring
 
@@ -386,7 +386,7 @@ if __name__ == '__main__':
 
 
     setrun.close()
-    print "=== Created setrun.py"
+    print("=== Created setrun.py")
     # end of make_setrun
 
 #========================================================================
@@ -466,7 +466,7 @@ def setplot(plotdata):
 
     """)
     setplot.close()
-    print "=== Created setplot.py"
+    print("=== Created setplot.py")
     # end of make_setplot1
 
 #========================================================================
@@ -549,7 +549,7 @@ def setplot(plotdata):
 
     """)
     setplot.close()
-    print "=== Created setplot.py"
+    print("=== Created setplot.py")
 
     # end of make_setplot2
 
@@ -558,9 +558,9 @@ def make_Makefile1():
     if not os.path.isfile('Makefile.claw43'):
         try:
 	    shutil.move('Makefile','Makefile.claw43')
-	    print "=== Moved Makefile to Makefile.claw43"
+	    print("=== Moved Makefile to Makefile.claw43")
 	except:
-	    print "*** Could not find Makefile"
+	    print("*** Could not find Makefile")
             raise
 	    return
     oldmake = open('Makefile.claw43','r')
@@ -605,7 +605,7 @@ FFLAGS =
     if result:
         objs = result.group('objs')  # local object files
     else:
-        print "*** No local files?"
+        print("*** No local files?")
 
     newmake.write("\nCLAW_SOURCES =")
     objs = objs.replace('.o','.f',100)
@@ -621,7 +621,7 @@ CLAW_LIB = $(CLAW)/clawpack/1d/lib
     if result:
         libobjs = result.group('libobjs')  # library object files
     else:
-        print "*** No library files?"
+        print("*** No library files?")
 
     libobjs = libobjs.replace('.o','.f',100)
     libobjs = libobjs.replace(r'$(CLAW)/clawpack/1d/lib','$(CLAW_LIB)',100)
@@ -644,7 +644,7 @@ include $(CLAWMAKE)
     """)
 
     newmake.close()
-    print "=== Created Makefile"
+    print("=== Created Makefile")
 
     ## end of make_Makefile1
 
@@ -655,9 +655,9 @@ def make_Makefile2():
     if not os.path.isfile('Makefile.claw43'):
         try:
 	    shutil.move('Makefile','Makefile.claw43')
-	    print "=== Moved Makefile to Makefile.claw43"
+	    print("=== Moved Makefile to Makefile.claw43")
 	except:
-	    print "*** Could not find Makefile"
+	    print("*** Could not find Makefile")
             raise
 	    return
     oldmake = open('Makefile.claw43','r')
@@ -702,7 +702,7 @@ FFLAGS =
     if result:
         objs = result.group('objs')  # local object files
     else:
-        print "*** No local files?"
+        print("*** No local files?")
 
     newmake.write("\nCLAW_SOURCES =")
     objs = objs.replace('.o','.f',100)
@@ -718,7 +718,7 @@ CLAW_LIB = $(CLAW)/clawpack/2d/lib
     if result:
         libobjs = result.group('libobjs')  # library object files
     else:
-        print "*** No library files?"
+        print("*** No library files?")
 
     libobjs = libobjs.replace('.o','.f',100)
     libobjs = libobjs.replace(r'$(CLAW)/clawpack/2d/lib','$(CLAW_LIB)',100)
@@ -745,7 +745,7 @@ include $(CLAWMAKE)
     """)
 
     newmake.close()
-    print "=== Created Makefile"
+    print("=== Created Makefile")
 
     ## end of make_Makefile1
 
@@ -900,7 +900,7 @@ end_html
 
     """ % (ndim,ndim,ndim))
     readme.close()
-    print "=== Created README.txt"
+    print("=== Created README.txt")
 
     ## end of make_README
 
@@ -915,7 +915,7 @@ def fix_setprob(ndim):
     if (os.path.isfile('setprob.f') and \
           (not os.path.isfile('setprob.f.claw43'))):
 	shutil.move('setprob.f','setprob.f.claw43')
-	print "=== Moved setprob.f to setprob.f.claw43"
+	print("=== Moved setprob.f to setprob.f.claw43")
         lines = open('setprob.f.claw43','r').readlines()
         setprob = open('setprob.f','w')
 	for line in lines:
@@ -928,8 +928,8 @@ def fix_setprob(ndim):
 		if result:
 		    iunit = result.group('iunit')
 		else:
-		    print '*** Oops, expected to find unit number in setprob.f'
-		    print '*** setprob.f is corrupted, revert from setprob.f.claw43'
+		    print('*** Oops, expected to find unit number in setprob.f')
+		    print('*** setprob.f is corrupted, revert from setprob.f.claw43')
 		    setprob.close()
                     raise
 		    return
@@ -945,7 +945,7 @@ c     # comment lines starting with #:
 	        setprob.write(line)
 	setprob.close()
   
-	print "=== Modified setprob.f"
+	print("=== Modified setprob.f")
 
     ## end of fix_setprob
    
@@ -956,6 +956,6 @@ c     # comment lines starting with #:
 if __name__ == "__main__":
     try:
         convert()
-        print "Done converting."
+        print("Done converting.")
     except:
-        print "Problem converting"
+        print("Problem converting")

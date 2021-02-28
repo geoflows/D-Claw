@@ -140,10 +140,10 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
         framenostr = numstring[1:]
         forttname = 'fort.t'+framenostr
         fortqname = 'fort.q'+framenostr
-        print('converting '+os.path.join(fortdir,fortqname))
+        print(('converting '+os.path.join(fortdir,fortqname)))
         outfname = os.path.join(outdir,outputname+framenostr)
 
-        print('writing to ' +outfname)
+        print(('writing to ' +outfname))
 
         if (outputtype=='scattered'):
             fort2xyqscattered(frameno,outfname,components)

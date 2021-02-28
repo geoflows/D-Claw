@@ -202,7 +202,7 @@ class Dimension(object):
         else:
             raise Exception("Invalid initializer for Dimension.")
 
-        for (k, v) in kargs.items():
+        for (k, v) in list(kargs.items()):
             setattr(self, k, v)
 
         # Function attribute assignments
@@ -648,7 +648,7 @@ class Grid(object):
             or replace any values already in it.
         """
         data = Data(data_files=data_path)
-        for (k, v) in data.items():
+        for (k, v) in list(data.items()):
             self.aux_global[k] = v
 
     # ========== Dimension Manipulation ======================================
@@ -1379,7 +1379,7 @@ class Solution(object):
                     "options": {},
                 }
 
-                for (k, v) in defaults.items():
+                for (k, v) in list(defaults.items()):
                     if k in kargs:
                         exec("%s = kargs['%s']" % (k, k))
                     else:

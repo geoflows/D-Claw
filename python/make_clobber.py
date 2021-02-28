@@ -15,11 +15,11 @@ def make_clobber(rootdir):
         rootdir = rootdir[0]
         rootdir = os.path.abspath(rootdir)
     
-    print "Will execute 'make clobber' in every subdirectory of "
-    print "    ", rootdir
-    ans = raw_input("Ok? ")
+    print("Will execute 'make clobber' in every subdirectory of ")
+    print("    ", rootdir)
+    ans = input("Ok? ")
     if ans.lower() not in ['y','yes']:
-        print "Aborting."
+        print("Aborting.")
         sys.exit()
     
     os.chdir(rootdir)
@@ -29,7 +29,7 @@ def make_clobber(rootdir):
         os.chdir(os.path.abspath(dirpath))
         
         if os.path.isfile('Makefile'):
-            print 'In directory ',dirpath
+            print('In directory ',dirpath)
             try:
                 os.system('make clobber')
             except:

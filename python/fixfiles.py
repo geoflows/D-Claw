@@ -29,9 +29,9 @@ for (dirpath, subdirs, files) in os.walk(rootdir):
 
         if lines.find(oldpat) > -1:
             lines = lines.replace(oldpat, newpat)
-            print "Fixed file   ",dirpath + '/' + file
+            print("Fixed file   ",dirpath + '/' + file)
         else:
-            print "No change to ",dirpath + '/' + file
+            print("No change to ",dirpath + '/' + file)
 
         outfile = open(file,'w')
         outfile.write(lines)

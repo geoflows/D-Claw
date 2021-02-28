@@ -18,7 +18,7 @@ claw_html_root='http://localhost:50005'
 # Determine Clawpack directory:
 clawdir_default = os.environ.get('CLAW',None)
 if clawdir_default is None:
-    print "*** Error: set environment variable CLAW"
+    print("*** Error: set environment variable CLAW")
 
 # Location for gallery files:
 gallery_dir_default = os.path.join(clawdir_default,'doc','gallery')  
@@ -66,18 +66,18 @@ class Gallery(object):
         if gallery_dir is None:
             gallery_dir = gallery_dir_default
 
-        print "Gallery files will be created in directory "
-        print "   ", gallery_dir
+        print("Gallery files will be created in directory ")
+        print("   ", gallery_dir)
 
         try:
             if not os.path.isdir(gallery_dir):
                 os.system('mkdir %s' % gallery_dir)
-                print "Created directory ",gallery_dir
+                print("Created directory ",gallery_dir)
             start_dir = os.getcwd()
             os.chdir(gallery_dir)
         except:
-            print "*** Error moving to directory ",gallery_dir
-            print "*** Gallery not created"
+            print("*** Error moving to directory ",gallery_dir)
+            print("*** Gallery not created")
             raise
 
         gfile = open(fname, 'w')
@@ -111,11 +111,11 @@ class Gallery(object):
                     src_name = os.path.join(self.clawdir,src_name)
                     src_png = src_name + '.png'
                     if not os.path.isdir('thumbnails'):
-                        print "Creating directory thumbnails"
+                        print("Creating directory thumbnails")
                         os.system('mkdir thumbnails')
                     thumb_file = os.path.join('thumbnails',thumb_name + '.png')
                     if os.path.isfile(thumb_file) and (not remake):
-                        print "Thumbnail exists: ",thumb_file
+                        print("Thumbnail exists: ",thumb_file)
                     else:
                         scale = 0.3
                         make_thumb(src_png ,thumb_file, scale)
@@ -124,7 +124,7 @@ class Gallery(object):
                 gfile.write('<p><hr><p>')
 
         gfile.write("\n</html>\n")
-        print "Created ",fname, " in directory ", os.getcwd()
+        print("Created ",fname, " in directory ", os.getcwd())
         os.chdir(start_dir)
                     
 
@@ -132,14 +132,14 @@ def make_thumb(src_file, thumb_file, scale):
     
     from numpy import floor 
     if not os.path.exists(src_file):
-        print '*** Error in make_thumb: cannot find file ',src_file
+        print('*** Error in make_thumb: cannot find file ',src_file)
     else:
         # convert scale to percent:
         scale = int(floor(scale*100))
         os.system('convert -resize %s' % scale + '% ' + \
             '%s %s' % (src_file, thumb_file))
-        print "Converted ",src_file
-        print "   to     ",thumb_file
+        print("Converted ",src_file)
+        print("   to     ",thumb_file)
 
    
 

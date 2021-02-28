@@ -101,7 +101,7 @@ def selectgauge (gaugenumber, allgaugedata=[], datafile="fort.gauge", \
     try:
         gaugedata = allgaugedata[gg]
     except:
-        print('Gauge number %i does not exist in %s' % (gaugenumber,datafile))
+        print(('Gauge number %i does not exist in %s' % (gaugenumber,datafile)))
 
     return gaugedata
 
@@ -163,7 +163,7 @@ def plotfortgauge (gaugenumber, allgaugedata=[],gaugevar1='t',gaugevar2='q1',\
     try:
         plotdata = allgaugedata[gg]
     except:
-        print('Gauge number %i does not exist in %s' % (gaugenumber,datafile))
+        print(('Gauge number %i does not exist in %s' % (gaugenumber,datafile)))
 
     plotdata1=plotdata[gaugevar1]
 

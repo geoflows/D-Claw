@@ -11,7 +11,7 @@ import os,sys,glob
 try:
     import subprocess
 except:
-    print '*** Error: require subprocess module from Python 2.4 or greater'
+    print('*** Error: require subprocess module from Python 2.4 or greater')
     raise ImportError()
 
 
@@ -26,11 +26,11 @@ def make_all(rootdir, cleanup=True):
         rootdir = rootdir[0]
         rootdir = os.path.abspath(rootdir)
 
-    print "Will try to 'source make_all.sh' or 'make all' in every subdirectory of "
-    print "    ", rootdir
-    ans = raw_input("Ok? ")
+    print("Will try to 'source make_all.sh' or 'make all' in every subdirectory of ")
+    print("    ", rootdir)
+    ans = input("Ok? ")
     if ans.lower() not in ['y','yes']:
-        print "Aborting."
+        print("Aborting.")
         sys.exit()
     
     fname_output = 'make_all_output.txt'
@@ -71,7 +71,7 @@ def make_all(rootdir, cleanup=True):
             fout.flush()
             ferr.flush()
 
-            print "Executing commands in make_all.sh in ",rootdirpath
+            print("Executing commands in make_all.sh in ",rootdirpath)
     
             try:
                 os.system('make clobber')
@@ -79,10 +79,10 @@ def make_all(rootdir, cleanup=True):
                 pass
             all_ok = run_make_all(ferr)
             if all_ok:
-                print "   Successful completion"
+                print("   Successful completion")
                 goodlist.append(dirpath)
             else:
-                print "   *** Errors encountered: see ", fname_errors
+                print("   *** Errors encountered: see ", fname_errors)
                 badlist.append(dirpath)
             if cleanup:
                 os.system("make clean; rm -rf _output")
@@ -105,15 +105,15 @@ def make_all(rootdir, cleanup=True):
             except:
                 pass
 
-            print "Running 'make all' in ",rootdirpath
+            print("Running 'make all' in ",rootdirpath)
             job = subprocess.Popen(['make','all'], \
                              stdout=fout, stderr=ferr)
             return_code = job.wait()
             if return_code == 0:
-                print "   Successful completion"
+                print("   Successful completion")
                 goodlist.append(dirpath)
             else:
-                print "   *** Errors encountered: see ", fname_errors
+                print("   *** Errors encountered: see ", fname_errors)
                 badlist.append(dirpath)
             if cleanup:
                 os.system("make clean; rm -rf _output")
@@ -121,22 +121,22 @@ def make_all(rootdir, cleanup=True):
         os.chdir(currentdir)
         
     
-    print ' '
-    print 'Ran Clawpack and created output in directories:'
+    print(' ')
+    print('Ran Clawpack and created output in directories:')
     for d in goodlist:
-        print '   ',d
-    print ' '
+        print('   ',d)
+    print(' ')
     
     if len(badlist) > 0:
-        print 'Errors encountered in the following directories:'
+        print('Errors encountered in the following directories:')
         for d in badlist:
-            print '   ',d
-        print ' '
+            print('   ',d)
+        print(' ')
     
     fout.close()
     ferr.close()
-    print 'For all output see ', fname_output
-    print 'For all errors see ', fname_errors
+    print('For all output see ', fname_output)
+    print('For all errors see ', fname_errors)
 
 
 def run_make_all(ferr):
@@ -147,12 +147,12 @@ def run_make_all(ferr):
         if (len(line)==0) or (line[0]=='#'):
             pass  # ignore blank lines or comments
         else:
-            print 'Executing: ',line
+            print('Executing: ',line)
             return_code = os.system(line)
             if return_code != 0:
                 errmsg = "return_code = %s from executing '%s'" \
                            % (return_code,line)
-                print errmsg
+                print(errmsg)
                 ferr.write(errmsg)
                 all_ok = False
     return all_ok

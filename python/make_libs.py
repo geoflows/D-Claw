@@ -9,7 +9,7 @@ import os,sys,glob
 try:
     import subprocess
 except:
-    print '*** Error: require subprocess module from Python 2.4 or greater'
+    print('*** Error: require subprocess module from Python 2.4 or greater')
     raise ImportError()
 
 
@@ -24,11 +24,11 @@ def make_libs(rootdir):
         rootdir = rootdir[0]
         rootdir = os.path.abspath(rootdir)
 
-    print "Will 'make .objs' in library subdirectories of"
-    print "    ", rootdir
-    ans = raw_input("Ok? ")
+    print("Will 'make .objs' in library subdirectories of")
+    print("    ", rootdir)
+    ans = input("Ok? ")
     if ans.lower() not in ['y','yes']:
-        print "Aborting."
+        print("Aborting.")
         sys.exit()
     
     fname_output = 'make_libs_output.txt'
@@ -62,36 +62,36 @@ def make_libs(rootdir):
             fout.flush()
             ferr.flush()
 
-            print "Running 'make .objs' in ",libdir
+            print("Running 'make .objs' in ",libdir)
             job = subprocess.Popen(['make','.objs'], \
                              stdout=fout, stderr=ferr)
             return_code = job.wait()
             if return_code == 0:
-                print "   Successful completion"
+                print("   Successful completion")
                 goodlist.append(lib)
             else:
-                print "   *** Errors encountered: see ", fname_errors
+                print("   *** Errors encountered: see ", fname_errors)
                 badlist.append(lib)
         else:
-            print "*** Library not found:",libdir
+            print("*** Library not found:",libdir)
 
     
-    print ' '
-    print 'Libraries created:'
+    print(' ')
+    print('Libraries created:')
     for d in goodlist:
-        print '   ',d
-    print ' '
+        print('   ',d)
+    print(' ')
     
     if len(badlist) > 0:
-        print 'Errors encountered in the following libraries:'
+        print('Errors encountered in the following libraries:')
         for d in badlist:
-            print '   ',d
-        print ' '
+            print('   ',d)
+        print(' ')
     
     fout.close()
     ferr.close()
-    print 'For all output see ', fname_output
-    print 'For all errors see ', fname_errors
+    print('For all output see ', fname_output)
+    print('For all errors see ', fname_errors)
 
 if __name__=='__main__':
     make_libs(sys.argv[1:])

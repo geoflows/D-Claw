@@ -5,7 +5,7 @@ def send_outdir(outdir="_output"):
     clawdir = os.environ["CLAW"] + "/"
     thisdir = os.getcwd()
     thisdir = thisdir.replace(clawdir, "")
-    print("+++ ", thisdir)
+    print(("+++ ", thisdir))
     if thisdir[0] == "/":
         raise Exception(
             "This directory is not a subdirectory of clawdir = %s" % clawdir
@@ -23,7 +23,7 @@ def send_outdir(outdir="_output"):
 
     remote_regdir = "clawpack@homer.u.washington.edu:public_html/regression_data/"
 
-    print("Trying to scp %s to %s" % (tarfile, remote_regdir))
+    print(("Trying to scp %s to %s" % (tarfile, remote_regdir)))
 
     try:
         os.system("scp %s %s" % (tarfile, remote_regdir))

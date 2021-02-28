@@ -73,11 +73,11 @@ def main():
     
     syscmds = db.get("syscmdlist",[] )
     if not syscmds:
-        print textwrap.dedent("""
+        print(textwrap.dedent("""
         System command list not initialized, probably the first run...
         running %rehashx to refresh the command list. Run %rehashx
         again to refresh command list (after installing new software etc.)
-        """)
+        """))
         ip.magic('rehashx')
         syscmds = db.get("syscmdlist")
     for cmd in syscmds:

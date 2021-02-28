@@ -34,7 +34,7 @@ def main(argv=None):
     try:
         try:
             opts, args = getopt.getopt(argv[3:], "hp:d:", ["help", "pattern=","diff="])
-        except getopt.error, msg:
+        except getopt.error as msg:
             raise Usage(msg)
     
         # Defaults
@@ -54,21 +54,21 @@ def main(argv=None):
             if option in ("-d", "--diff"):
                 diff = value
     
-    except Usage, err:
-        print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
-        print >> sys.stderr, "\t for help use --help"
+    except Usage as err:
+        print(sys.argv[0].split("/")[-1] + ": " + str(err.msg), file=sys.stderr)
+        print("\t for help use --help", file=sys.stderr)
         return 2
     
     os.chdir(dir1)
-    print "In directory ",dir1
+    print("In directory ",dir1)
 
     for fname in glob.glob(pattern):
         f2 = dir2 + '/' + fname[:-6] + '.f'
         if os.path.isfile(f2):
-            print 'comparing %s to %s' % (fname,f2)
+            print('comparing %s to %s' % (fname,f2))
             os.system('%s -w %s %s' % (diff,fname,f2))
         else:
-            print 'no file %s ' % f2
+            print('no file %s ' % f2)
         time.sleep(1)
 
 
