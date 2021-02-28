@@ -535,22 +535,15 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
 
-                print(my, mx, len(qlst), my*mx)
-                print(Q.shape)
-                print(X.shape)
-
+                # manipulate shape.order of Q
                 # written row by row, so shape into my, mx, meqn
-                Qrshp = Q.reshape((my, mx, len(qlst)))
-                print(Qrshp.shape)
                 # reorder into my, mx, meqn by shift axis so meq is at front,
-                Qrd = np.moveaxis(Qrshp, (0, 1, 2), (1, 2, 0))
-                print(Qrd.shape)
+                # finally flip along axis 1 so that up is up.
 
                 gt.griddata2gtif(
                     X,
                     Y,
-                    np.flip(Qrd, axis=1),
-                    # finally flip along axis 1 so that up is up.
+                    np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1),
                     outfile,
                 )
 
