@@ -159,13 +159,15 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
 
         elif (outputtype=='fortrefined'):
             outfortt = os.path.join(outdir,'fort.t'+framenostr)
+            topotype = kwargs.get("topotype", None)
             _func = fort2refined
-            arg_list.append([frameno,outfname,outfortt,components])
+            arg_list.append([frameno,outfname,outfortt,components, topotype])
 
         elif (outputtype=='fortuniform'):
             outfortt = os.path.join(outdir,'fort.t'+framenostr)
+            topotype = kwargs.get("topotype", None)
             func = fort2uniform
-            _arg_list.append([frameno,outfname,outfortt,xlower,xupper,ylower,yupper,mx,my,components])
+            _arg_list.append([frameno,outfname,outfortt,xlower,xupper,ylower,yupper,mx,my,components, topotype])
 
     # now run in parallel based on func and arg list
     if parallel:
@@ -277,7 +279,7 @@ def fort2xyqscattered(framenumber,outfile=None,components='all'):
         fout.close()
 
 #==============================================================================
-def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,components='all'):
+def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,components='all', topotype=None):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
     Resolution is user defined.
@@ -339,7 +341,7 @@ def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,component
     else:
         fortheader['meqn']=len(components)
 
-    if (not outfortq):
+    if (not outfortq) or (topotype is not None):
         Q = np.empty((mx*my,len(qlst)))
 
         for j in range(my):
@@ -350,7 +352,10 @@ def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,component
                 qout = qv[qlst]
                 Q[j*mx + i] = qout
 
-        return fortheader,Q
+        if topotype is not None:
+            Xtotopo(fortqheader, Q, topotype)
+        else:
+            return fortheader,Q
     else:
         forttheaderwrite(fortheader,foutt)
         foutt.close()
@@ -369,7 +374,7 @@ def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,component
         foutq.close()
 
 #==============================================================================
-def fort2refined(framenumber,outfortq,outfortt,components='all'):
+def fort2refined(framenumber,outfortq,outfortt,components='all', topotype=None):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
     Resolution is at that of the highest level grids.
@@ -438,7 +443,7 @@ def fort2refined(framenumber,outfortq,outfortt,components='all'):
     else:
         fortheader['meqn']=len(components)
 
-    if (not outfortq):
+    if (not outfortq) or (topotype is not None):
         Q = np.empty((mx*my,len(qlst)))
 
         for j in range(my):
@@ -449,7 +454,32 @@ def fort2refined(framenumber,outfortq,outfortt,components='all'):
                 qout = qv[qlst]
                 Q[j*mx + i] = qout
 
-        return fortheader,Q
+        if topotype is not None:
+            xv = np.array(xll + cellsize*np.arange(mx))
+            yv = np.array(yll + cellsize*np.arange(my))
+            (X,Y) = np.meshgrid(xv,yv)
+
+            if topotype == "gtif":
+                outfile = outfortq.replace(".", "_") +'.tif'
+
+                gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outfile, nodata_value_out=nodata_value)
+
+            else:
+                if fortheader['meqn'] >1
+                    raise ValueError("refined/uniform to topo only can take 1 element, for all use gtif")
+
+                outfile = outfortq
+                
+                if (topotype=='gdal'):
+                    gt.griddata2topofile(X,Y,Q,'.tmpfile',nodata_value_out=nodata_value)
+                    infile = '.tmpfile'
+                    gt.esriheader(infile,outfile)
+                    os.system('rm .tmpfile')
+                else:
+                    gt.griddata2topofile(X,Y,Q,outfile,topotype,nodata_value_out=nodata_value)
+        else:
+            return fortheader,Q
+
     else:
         forttheaderwrite(fortheader,foutt)
         foutt.close()
@@ -582,9 +612,6 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
         infile = '.tmpfile'
         gt.esriheader(infile,outfile)
         os.system('rm .tmpfile')
-    elif topotype == "gtif":
-        gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outfile, nodata_value_out=nodata_value)
-        # reshape into 3d array.
     else:
         gt.griddata2topofile(X,Y,Q,outfile,topotype,nodata_value_out=nodata_value)
 
