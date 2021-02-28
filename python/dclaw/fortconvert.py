@@ -178,7 +178,7 @@ def fort2xyqscattered(framenumber,outfile=None,components='all'):
 
     if isinstance(outfile,str):
         fout = open(outfile,'w')
-    elif (isinstance(outfile)==file):
+    else:
         fout = outfile
 
     numstring = str(10000 + framenumber)
@@ -274,12 +274,12 @@ def fort2uniform(framenumber,outfortq,outfortt,xlow,xhi,ylow,yhi,mx,my,component
 
     if isinstance(outfortq,str):
         foutq = open(outfortq,'w')
-    elif (isinstance(outfortq)==file):
+    else:
         foutq = outfortq
 
     if isinstance(outfortt,str):
         foutt = open(outfortt,'w')
-    elif (isinstance(outfortt)==file):
+    else:
         foutf = outfortt
 
     numstring = str(10000 + framenumber)
@@ -368,12 +368,12 @@ def fort2refined(framenumber,outfortq,outfortt,components='all'):
 
     if isinstance(outfortq,str):
         foutq = open(outfortq,'w')
-    elif (isinstance(outfortq)==file):
+    else:
         foutq = outfortq
 
     if isinstance(outfortt,str):
         foutt = open(outfortt,'w')
-    elif (isinstance(outfortt)==file):
+    else:
         foutf = outfortt
 
     numstring = str(10000 + framenumber)
@@ -618,7 +618,7 @@ def forttheaderread (inputfile, closefile=True):
 
     if isinstance(inputfile,str):
         fin=open(inputfile, 'r')
-    elif isinstance(inputfile,file):
+    else:
         fin = inputfile
 
     forttheader={}
@@ -667,7 +667,7 @@ def forttheaderwrite (forttheader,outputfile,closefile=True):
 
     if isinstance(outputfile,str):
         fout=open(outputfile, 'w')
-    elif isinstance(outputfile,file):
+    else:
         fout = outputfile
 
     fout.write("%s %s\n" % (float(forttheader['time']),"time"))
@@ -701,8 +701,8 @@ def fortqheaderread (inputfile, closefile=True):
     """
     if isinstance(inputfile,str):
         fin=open(inputfile, 'r')
-    #elif isinstance(inputfile,file):
-    #    fin = inputfile
+    else:
+        fin = inputfile
 
     fortqheader={}
 
@@ -764,7 +764,7 @@ def fortqheaderwrite (fortqheader,outfile,closefile=True):
 
     if isinstance(outfile,str):
         fout = open(outfile,'w')
-    elif isinstance(outfile,file):
+    else:
         fout = outfile
 
     fout.write("%s %s\n" % (int(fortqheader['grid_number']),"grid_number"))
