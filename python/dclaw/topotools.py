@@ -673,10 +673,10 @@ def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=
     # define rasterio profile
     out_profile = {}
     out_profile["transform"] = rasterio.transform.from_bounds(
-        westest - cellsizeX / 2,
-        southest - cellsizeX / 2,
-        eastest + cellsizeX / 2,
-        northest + cellsizeX / 2,
+        xll - cellsizeX / 2,
+        yll - cellsizeX / 2,
+        xupper + cellsizeX / 2,
+        yupper + cellsizeX / 2,
         nrows,
         ncols,
     )

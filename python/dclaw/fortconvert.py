@@ -225,7 +225,7 @@ def convertfortdir(
     else:
         # loop through prepared args.
         for args in arg_list:
-            print("Converting {}.".format(args[1]))
+            print("Converting {}".format(args[1]))
             _func(*args)
 
     # return to curdir if changed.
@@ -523,7 +523,6 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
 
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
-                print("write "+outfile)
                 gt.griddata2gtif(
                     X,
                     Y,
