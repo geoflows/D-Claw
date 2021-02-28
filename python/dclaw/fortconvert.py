@@ -40,7 +40,7 @@ import os
 
 #================================================================================
 def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
-     components='all',outdir=None,fortdir=None,parallel=Fals, num_cores=1,**kwargs):
+     components='all',outdir=None,fortdir=None,parallel=False, num_cores=1,**kwargs):
 
     """
     convert an entire directory of fort.q files to another form
