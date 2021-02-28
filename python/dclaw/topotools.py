@@ -642,7 +642,7 @@ def griddata2topofile(
     # end griddata2topofile ======================================================================
 
 
-def griddata2gtif(X, Y, Z, outputfile, nodata_value_in=9999.0, nodata_value_out=9999.0):
+def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=9999.0):
     """
     griddata2gtif takes gridded data and produces a geotif
 
@@ -653,8 +653,8 @@ def griddata2gtif(X, Y, Z, outputfile, nodata_value_in=9999.0, nodata_value_out=
     except ImportError:
         raise ImportError("rasterio needed for griddata2gtif")
 
-    nrows = len(Z[:, 0])
-    ncols = len(Z[0, :])
+    nrows = len(X[:, 0])
+    ncols = len(X[0, :])
     meqn = Q.shape[0]
     xll = X[0, 0]
     yll = Y[-1, 0]
