@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="dclaw",
-    version=versioneer.get_version(),
+    version=4.0,
     author="",
     author_email="",
     description="",
