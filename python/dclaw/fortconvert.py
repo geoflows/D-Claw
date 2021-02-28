@@ -37,12 +37,10 @@ import numpy as np
 import string
 import copy
 import os
-import multiprocessing
-from joblib import Parallel, delayed
 
 #================================================================================
 def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
-     components='all',outdir=None,fortdir=None,num_cores=1,**kwargs):
+     components='all',outdir=None,fortdir=None,parallel=Fals, num_cores=1,**kwargs):
 
     """
     convert an entire directory of fort.q files to another form
@@ -65,7 +63,8 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
 
         outdir: specify a directory for files to go in relative to cwd
         fortdir: location of fort.q files if not ./
-
+        parallel: bool flag whether to use parallel processing (needs joblib, default false)
+        num_cores: num cores to use if doing parallel (default 1)
         **kwargs: for topotype:  xll,yll,cellsize,ncols,nrows,topotype = 1,2,3,'gdal' (for standard gdal/esri header)
                 for fortuniform: xlower,ylower,mx,my
                 if kwargs are omitted the grid parameters are taken from the fort file with finest level spacing
@@ -169,7 +168,17 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
             _arg_list.append([frameno,outfname,outfortt,xlower,xupper,ylower,yupper,mx,my,components])
 
     # now run in parallel based on func and arg list
-    Parallel(n_jobs=num_cores)(delayed(_func)(*args) for args in arg_list)
+    if parallel:
+        try:
+            from joblib import Parallel, delayed
+            Parallel(n_jobs=num_cores)(delayed(_func)(*args) for args in arg_list)
+        except ImportError:
+            raise ImportError("joblib needed for parallel functionality")
+
+    else:
+        # loop through prepared args.
+        for args in arg_list:
+            _func(args)
 
     # return to curdir if changed.
     os.chdir(curdir)
