@@ -80,7 +80,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
     elif (not os.path.isdir(outdir)):
         os.system(('mkdir '+outdir))
 
-    curdir = os.abspath(os.path.curdir)
+    curdir = os.path.abspath(os.path.curdir)
     fortdir = os.path.abspath(fortdir)
     outdir = os.path.abspath(outdir)
 
