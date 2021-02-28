@@ -522,10 +522,12 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
 
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
+
                 gt.griddata2gtif(
                     X,
                     Y,
-                    Q.reshape((ncols, nrows, meqn)),
+                    np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (1, 2, 0)),
+                    # reshape and shift axis. 
                     outfile,
                     nodata_value_out=nodata_value,
                 )
