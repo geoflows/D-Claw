@@ -525,7 +525,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             # this file not needed, close and remove.
             foutq.close()
             if isinstance(outfortq, str):
-                os.path.remove(outfortq)
+                os.remove(outfortq)
 
             xv = np.array(xlow + dx * np.arange(mx))
             yv = np.array(ylow + dy * np.arange(my))
