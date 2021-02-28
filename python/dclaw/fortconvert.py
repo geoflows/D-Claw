@@ -538,8 +538,9 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                 gt.griddata2gtif(
                     X,
                     Y,
-                    np.flip(np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (2, 1, 0)), axis=1),
-                    # reshape into nr, nc, neq, and shift axis so neq is at front,
+                    np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (2, 0, 1)), axis=1),
+                    # written row by row, so shape into my, mx, meqn
+                    # reorder into my, mx, meqn by shift axis so meq is at front,
                     # finally flip along axis 1 so that up is up.
                     outfile,
                 )
