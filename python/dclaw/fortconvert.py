@@ -525,7 +525,8 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             xv = np.array(xlow + dx * np.arange(mx))
             yv = np.array(ylow + dy * np.arange(my))
             (X, Y) = np.meshgrid(xv, yv)
-
+            Y = np.flipud(Y)
+            
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
                 gt.griddata2gtif(
