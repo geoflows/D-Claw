@@ -237,7 +237,8 @@ class Controller(object):
 
         # Check to make sure the initial solutions are valid
         if not reduce(
-            lambda x, y: x * y, [sol.is_valid() for sol in list(self.solutions.values())]
+            lambda x, y: x * y,
+            [sol.is_valid() for sol in list(self.solutions.values())],
         ):
             raise Exception("Initial solutions are not valid.")
 
@@ -469,7 +470,9 @@ class Controller(object):
                 pass
                 # os.system('make')
             except:
-                print(("== controller: Warning: no make file in directory xdir = ", xdir))
+                print(
+                    ("== controller: Warning: no make file in directory xdir = ", xdir)
+                )
 
         if os.path.isfile(outdir):
             print("== controller: Error: outdir specified is a file")
@@ -493,20 +496,26 @@ class Controller(object):
                 second,
             )
             if verbose:
-                print((
-                    "== controller: Directory already exists: ",
-                    os.path.split(outdir)[1],
-                ))
+                print(
+                    (
+                        "== controller: Directory already exists: ",
+                        os.path.split(outdir)[1],
+                    )
+                )
                 if restart:
-                    print((
-                        "== controller: Copying directory to:      ",
-                        os.path.split(outdir_backup)[1],
-                    ))
+                    print(
+                        (
+                            "== controller: Copying directory to:      ",
+                            os.path.split(outdir_backup)[1],
+                        )
+                    )
                 else:
-                    print((
-                        "== controller: Moving directory to:      ",
-                        os.path.split(outdir_backup)[1],
-                    ))
+                    print(
+                        (
+                            "== controller: Moving directory to:      ",
+                            os.path.split(outdir_backup)[1],
+                        )
+                    )
                 time.sleep(1)
 
             try:
@@ -526,9 +535,12 @@ class Controller(object):
         try:
             os.chdir(outdir)
         except:
-            print((
-                "== controller: *** Error in runxclaw: cannot move to outdir = ", outdir
-            ))
+            print(
+                (
+                    "== controller: *** Error in runxclaw: cannot move to outdir = ",
+                    outdir,
+                )
+            )
             raise
             return
 
@@ -541,7 +553,9 @@ class Controller(object):
                 os.remove(file)
         elif restart:
             if verbose:
-                print(("== controller: Restart: leaving original fort files in ", outdir))
+                print(
+                    ("== controller: Restart: leaving original fort files in ", outdir)
+                )
         else:
             if len(fortfiles) > 1:
                 print("== controller: *** Remove fort.* and try again,")
@@ -587,10 +601,12 @@ class Controller(object):
             if returncode == 0:
                 print("\n== controller: Finished executing\n")
             else:
-                print((
-                    "\n == controller: *** Runtime error: return code = %s\n "
-                    % returncode
-                ))
+                print(
+                    (
+                        "\n == controller: *** Runtime error: return code = %s\n "
+                        % returncode
+                    )
+                )
         except:
             raise Exception("Could not execute command %s" % xclawcmd)
             return

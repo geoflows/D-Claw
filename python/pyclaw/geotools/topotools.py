@@ -82,10 +82,12 @@ def get_topo(topo_fname, remote_directory, force=None):
         print(("Require remote file ", remote_fname))
         print(("      from ", remote_directory))
         if not force:
-            ans = eval(input(
-                "  Ok to download topo file?  \n"
-                + "     Type y[es], n[o] or ? to first retrieve and print metadata  "
-            ))
+            ans = eval(
+                input(
+                    "  Ok to download topo file?  \n"
+                    + "     Type y[es], n[o] or ? to first retrieve and print metadata  "
+                )
+            )
             if ans.lower() not in ["y", "yes", "?"]:
                 print(("*** Aborting!   Missing: ", local_fname))
                 return
