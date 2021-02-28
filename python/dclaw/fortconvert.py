@@ -527,9 +527,8 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                     X,
                     Y,
                     np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (1, 2, 0)),
-                    # reshape and shift axis. 
+                    # reshape and shift axis.
                     outfile,
-                    nodata_value_out=nodata_value,
                 )
 
             else:
