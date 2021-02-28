@@ -526,14 +526,15 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             yv = np.array(ylow + dy * np.arange(my))
             (X, Y) = np.meshgrid(xv, yv)
             Y = np.flipud(Y)
-            
+
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
                 gt.griddata2gtif(
                     X,
                     Y,
-                    np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (1, 2, 0)),
-                    # reshape and shift axis.
+                    np.flip(np.moveaxis(Q.reshape((mx, my, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1),
+                    # reshape into nr, nc, neq, and shift axis so neq is at front,
+                    # finally flip along axis 1 so that up is up.
                     outfile,
                 )
 

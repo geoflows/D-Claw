@@ -677,8 +677,8 @@ def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=
         yll - cellsizeX / 2,
         xupper + cellsizeX / 2,
         yupper + cellsizeX / 2,
-        nrows,
         ncols,
+        nrows,
     )
 
     out_profile["height"], out_profile["width"] = X.shape
