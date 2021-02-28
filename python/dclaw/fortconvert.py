@@ -465,11 +465,11 @@ def fort2refined(framenumber,outfortq,outfortt,components='all', topotype=None):
                 gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outfile, nodata_value_out=nodata_value)
 
             else:
-                if fortheader['meqn'] >1
+                if fortheader['meqn'] > 1:
                     raise ValueError("refined/uniform to topo only can take 1 element, for all use gtif")
 
                 outfile = outfortq
-                
+
                 if (topotype=='gdal'):
                     gt.griddata2topofile(X,Y,Q,'.tmpfile',nodata_value_out=nodata_value)
                     infile = '.tmpfile'
