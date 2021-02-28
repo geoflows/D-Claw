@@ -455,17 +455,6 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             if =None routine returns a numpy array
         components: list of q components eg. [1,3,5] or 'all' for all components
     """
-
-    if isinstance(outfortq, str):
-        foutq = open(outfortq, "w")
-    else:
-        foutq = outfortq
-
-    if isinstance(outfortt, str):
-        foutt = open(outfortt, "w")
-    else:
-        foutf = outfortt
-
     numstring = str(10000 + framenumber)
     framenostr = numstring[1:]
     forttname = "fort.t" + framenostr
@@ -505,6 +494,11 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         fortheader["meqn"] = solutionlist[0]["meqn"]
     else:
         fortheader["meqn"] = len(components)
+
+    if isinstance(outfortt, str):
+        foutt = open(outfortt, "w")
+    else:
+        foutf = outfortt
 
     if (not outfortq) or (topotype is not None):
         # write t file close q file.
@@ -569,6 +563,11 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             return fortheader, Q
 
     else:
+        if isinstance(outfortq, str):
+            foutq = open(outfortq, "w")
+        else:
+            foutq = outfortq
+
         forttheaderwrite(fortheader, foutt)
         foutt.close()
         fortqheaderwrite(fortheader, foutq, closefile=False)
