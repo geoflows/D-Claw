@@ -37,10 +37,12 @@ import numpy as np
 import string
 import copy
 import os
+import multiprocessing
+from joblib import Parallel, delayed
 
 #================================================================================
 def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
-     components='all',outdir=None,fortdir=None,**kwargs):
+     components='all',outdir=None,fortdir=None,num_cores=1,**kwargs):
 
     """
     convert an entire directory of fort.q files to another form
@@ -135,30 +137,41 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
 
     os.chdir(fortdir)
 
+
+    arg_list = []
+
     for frameno in nplots:
         numstring = str(10000 + frameno)
         framenostr = numstring[1:]
         forttname = 'fort.t'+framenostr
         fortqname = 'fort.q'+framenostr
-        print(('converting '+os.path.join(fortdir,fortqname)))
+        #print(('converting '+os.path.join(fortdir,fortqname)))
         outfname = os.path.join(outdir,outputname+framenostr)
 
-        print(('writing to ' +outfname))
+        #print(('writing to ' +outfname))
 
         if (outputtype=='scattered'):
-            fort2xyqscattered(frameno,outfname,components)
+            _func = fort2xyqscattered
+            arg_list.append([frameno,outfname,components])
 
         elif (outputtype=='topotype'):
-            fort2topotype(frameno,outfname,fortdir,xll,yll,cellsize,ncols,nrows,components,topotype)
+            _func = fort2topotype
+            arg_list.append([frameno,outfname,fortdir,xll,yll,cellsize,ncols,nrows,components,topotype])
 
         elif (outputtype=='fortrefined'):
             outfortt = os.path.join(outdir,'fort.t'+framenostr)
-            fort2refined(frameno,outfname,outfortt,components)
+            _func = fort2refined
+            arg_list.append([frameno,outfname,outfortt,components])
 
         elif (outputtype=='fortuniform'):
             outfortt = os.path.join(outdir,'fort.t'+framenostr)
-            fort2uniform(frameno,outfname,outfortt,xlower,xupper,ylower,yupper,mx,my,components)
+            func = fort2uniform
+            _arg_list.append([frameno,outfname,outfortt,xlower,xupper,ylower,yupper,mx,my,components])
 
+    # now run in parallel based on func and arg list
+    Parallel(n_jobs=num_cores)(delayed(_func)(*args) for args in arg_list)
+
+    # return to curdir if changed. 
     os.chdir(curdir)
 
 #=============================================================================
