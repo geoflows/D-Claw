@@ -225,6 +225,7 @@ def convertfortdir(
     else:
         # loop through prepared args.
         for args in arg_list:
+            print("Converting {}.".format(args[1]))
             _func(*args)
 
     # return to curdir if changed.
