@@ -501,13 +501,11 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
         foutf = outfortt
 
     if topotype is not None:
-        # write t file close q file.
+        # write t file.
         forttheaderwrite(fortheader, foutt)
         foutt.close()
-        foutq.close()
 
         # prepare to return an array, OR write to topo file.
-
         Q = np.empty((mx * my, len(qlst)))
         for j in range(my):
             y = ylow + (j + 0.5) * dy
