@@ -523,7 +523,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
 
             if topotype == "gtif":
                 outfile = outfortq.replace(".", "_") + ".tif"
-
+                print("write "+outfile)
                 gt.griddata2gtif(
                     X,
                     Y,
