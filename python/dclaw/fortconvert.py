@@ -171,7 +171,7 @@ def convertfortdir(outputtype,nplots='fort.nplot',outputname='fort.q',\
     # now run in parallel based on func and arg list
     Parallel(n_jobs=num_cores)(delayed(_func)(*args) for args in arg_list)
 
-    # return to curdir if changed. 
+    # return to curdir if changed.
     os.chdir(curdir)
 
 #=============================================================================
@@ -573,6 +573,9 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
         infile = '.tmpfile'
         gt.esriheader(infile,outfile)
         os.system('rm .tmpfile')
+    elif topotype == "gtif":
+        gt.griddata2gtif(X,Y,Q.reshape((ncols, nrows, meqn)), outfile, nodata_value_out=nodata_value)
+        # reshape into 3d array.
     else:
         gt.griddata2topofile(X,Y,Q,outfile,topotype,nodata_value_out=nodata_value)
 
