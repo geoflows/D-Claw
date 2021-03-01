@@ -360,16 +360,6 @@ def fort2uniform(
         components: list of q components eg. [1,3,5] or 'all' for all components
     """
 
-    if isinstance(outfortq, str):
-        foutq = open(outfortq, "w")
-    else:
-        foutq = outfortq
-
-    if isinstance(outfortt, str):
-        foutt = open(outfortt, "w")
-    else:
-        foutf = outfortt
-
     numstring = str(10000 + framenumber)
     framenostr = numstring[1:]
     forttname = "fort.t" + framenostr
@@ -403,9 +393,18 @@ def fort2uniform(
     else:
         fortheader["meqn"] = len(components)
 
-    if (not outfortq) or (topotype is not None):
-        Q = np.empty((mx * my, len(qlst)))
+    if isinstance(outfortt, str):
+        foutt = open(outfortt, "w")
+    else:
+        foutf = outfortt
 
+    if topotype is not None:
+        # write t file.
+        forttheaderwrite(fortheader, foutt)
+        foutt.close()
+
+        # prepare to return an array, OR write to topo file.
+        Q = np.empty((mx * my, len(qlst)))
         for j in range(my):
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
@@ -414,11 +413,57 @@ def fort2uniform(
                 qout = qv[qlst]
                 Q[j * mx + i] = qout
 
+        # if topotype is specified, write out as topotype instead of
+        # array or standard fort.q
         if topotype is not None:
-            raise NotImplementedError()
+
+            xv = np.array(xlow + dx * np.arange(mx))
+            yv = np.array(ylow + dy * np.arange(my))
+            (X, Y) = np.meshgrid(xv, yv)
+            Y = np.flipud(Y)
+
+            if topotype == "gtif":
+                outfile = outfortq.replace(".", "_") + ".tif"
+
+                # manipulate shape.order of Q
+                # written row by row, so shape into my, mx, meqn
+                # reorder into my, mx, meqn by shift axis so meq is at front,
+                # finally flip along axis 1 so that up is up.
+
+                gt.griddata2gtif(
+                    X,
+                    Y,
+                    np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1),
+                    outfile,
+                )
+
+            else:
+                if fortheader["meqn"] > 1:
+                    raise ValueError(
+                        "refined/uniform to topo only can take 1 element, for all use gtif"
+                    )
+
+                outfile = outfortq
+                if topotype == "gdal":
+                    gt.griddata2topofile(
+                        X, Y, Q, ".tmpfile", nodata_value_out=nodata_value
+                    )
+                    infile = ".tmpfile"
+                    gt.esriheader(infile, outfile)
+                    os.system("rm .tmpfile")
+                else:
+                    gt.griddata2topofile(
+                        X, Y, Q, outfile, topotype, nodata_value_out=nodata_value
+                    )
         else:
             return fortheader, Q
+
     else:
+        if isinstance(outfortq, str):
+            foutq = open(outfortq, "w")
+        else:
+            foutq = outfortq
+
         forttheaderwrite(fortheader, foutt)
         foutt.close()
         fortqheaderwrite(fortheader, foutq, closefile=False)
