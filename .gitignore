@@ -11,3 +11,5 @@ _plots/
 setenv.bash
 
 setenv.csh
+
+python/dclaw.egg-info/*
