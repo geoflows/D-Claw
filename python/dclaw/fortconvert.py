@@ -196,9 +196,9 @@ def convertfortdir(
         elif outputtype == "fortuniform":
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
             topotype = kwargs.get("topotype", None)
-            func = fort2uniform
+            _func = fort2uniform
 
-            _arg_list.append(
+            arg_list.append(
                 [
                     frameno,
                     outfname,
