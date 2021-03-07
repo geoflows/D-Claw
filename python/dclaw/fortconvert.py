@@ -423,7 +423,7 @@ def fort2uniform(
             Y = np.flipud(Y)
 
             if topotype == "gtif":
-                outfile = outfortq.replace(".", "_") + ".tif"
+                outfile = outfortq.replace("fortq.", "fortq_") + ".tif"
 
                 # manipulate shape.order of Q
                 # written row by row, so shape into my, mx, meqn
