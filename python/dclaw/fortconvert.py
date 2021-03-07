@@ -425,7 +425,7 @@ def fort2uniform(
             if topotype == "gtif":
                 outfile = outfortq.replace("fortq.", "fortq_") + ".tif"
                 # this should only change the file name.
-                
+
                 # manipulate shape.order of Q
                 # written row by row, so shape into my, mx, meqn
                 # reorder into my, mx, meqn by shift axis so meq is at front,
@@ -571,7 +571,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             Y = np.flipud(Y)
 
             if topotype == "gtif":
-                outfile = outfortq.replace(".", "_") + ".tif"
+                outfile = outfortq.replace("fortq.", "fortq_") + ".tif"
 
                 # manipulate shape.order of Q
                 # written row by row, so shape into my, mx, meqn
