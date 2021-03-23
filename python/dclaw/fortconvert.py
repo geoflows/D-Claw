@@ -102,6 +102,8 @@ def convertfortdir(
     fortdir = os.path.abspath(fortdir)
     outdir = os.path.abspath(outdir)
 
+    write_level = kwargs.get("write_level", False)
+
     if outputtype == "topotype":
         try:
             xll = kwargs["xll"]
@@ -191,7 +193,7 @@ def convertfortdir(
             topotype = kwargs.get("topotype", None)
             _func = fort2refined
 
-            arg_list.append([frameno, outfname, outfortt, components, topotype])
+            arg_list.append([frameno, outfname, outfortt, components, topotype, write_level])
 
         elif outputtype == "fortuniform":
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
@@ -343,6 +345,7 @@ def fort2uniform(
     my,
     components="all",
     topotype=None,
+    write_level=False,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -409,7 +412,7 @@ def fort2uniform(
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist)
                 qout = qv[qlst]
                 Q[j * mx + i] = qout
 
@@ -474,7 +477,7 @@ def fort2uniform(
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist)
                 qout = qv[qlst]
                 for q in qout:
                     foutq.write("%s " % float(q))
@@ -483,7 +486,8 @@ def fort2uniform(
 
 
 # ==============================================================================
-def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=None):
+def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=None, write_level=False,
+):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
     Resolution is at that of the highest level grids.
@@ -553,13 +557,19 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
 
         # prepare to return an array, OR write to topo file.
         Q = np.empty((mx * my, len(qlst)))
+        if write_level:
+            source_level = np.empty((my, mx))
+
         for j in range(my):
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist)
                 qout = qv[qlst]
                 Q[j * mx + i] = qout
+
+                if write_level:
+                    source_level[j, i] = lev
 
         # if topotype is specified, write out as topotype instead of
         # array or standard fort.q
@@ -577,11 +587,18 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                 # written row by row, so shape into my, mx, meqn
                 # reorder into my, mx, meqn by shift axis so meq is at front,
                 # finally flip along axis 1 so that up is up.
+                Q_out = np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1)
+                if write_level:
+                    source_level = np.flipud(source_level)
+                    Q_out = np.concatenate(
+                    (np.atleast_3d(Q_out),
+                    source_level.reshape((1, my, mx))),
+                    axis=0)
 
                 gt.griddata2gtif(
                     X,
                     Y,
-                    np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1),
+                    Q_out,
                     outfile,
                 )
 
@@ -621,7 +638,7 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist)
                 qout = qv[qlst]
                 for q in qout:
                     foutq.write("%s " % float(q))
@@ -687,7 +704,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist)
                 Q[i, j] = qv[meqn - 1] - qv[0]
 
     elif m == "depth":
@@ -695,7 +712,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist)
                 depth = qv[0]
                 if depth <= 1.0e-3:
                     depth = nodata_value
@@ -706,7 +723,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist)
                 eta = qv[meqn - 1]
                 if qv[0] <= 1.0e-3:
                     eta = nodata_value
@@ -719,7 +736,7 @@ def fort2topotype(
             for j in range(ncols):
                 xp = X[0, j]
                 k = i * ncols + j
-                qv = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist)
                 Q[k] = qv
 
     else:
@@ -727,7 +744,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist)
                 Q[i, j] = qv[m - 1]
 
     if m == "all":
@@ -778,7 +795,7 @@ def fort2griddata(framenumber, xll, yll, cellsize, ncols, nrows, m=1):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv = pointfromfort((xp, yp), solutionlist)
+            qv, lev = pointfromfort((xp, yp), solutionlist)
             Q[i, j] = qv[m - 1]
 
     return X, Y, Q
@@ -1088,6 +1105,7 @@ def pointfromfort(point, solutionlist):
         mx = grid["mx"]
         my = grid["my"]
         data = grid["data"]
+        level = grid["AMR_level"]
     except:
         print(("point is possibly on amr grid edge: x= %s y=%s" % (point)))
         print(("intersection? %s" % (intersection)))
@@ -1115,6 +1133,7 @@ def pointfromfort(point, solutionlist):
             mx = grid["mx"]
             my = grid["my"]
             data = grid["data"]
+            level = grid["AMR_level"]
         except:
             print(("point is possibly on amr grid edge: x= %s y=%s" % (point)))
             domain = (
@@ -1172,7 +1191,7 @@ def pointfromfort(point, solutionlist):
     )
     q = q / (dx * dy)
 
-    return q
+    return q, level
 
 
 # ===============================================================================
