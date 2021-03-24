@@ -103,6 +103,10 @@ def convertfortdir(
     outdir = os.path.abspath(outdir)
 
     write_level = kwargs.get("write_level", False)
+    east=kwargs.get("east", None)
+    west=kwargs.get("west", None)
+    south=kwargs.get("south", None)
+    north=kwargs.get("north", None)
 
     if outputtype == "topotype":
         try:
@@ -193,7 +197,16 @@ def convertfortdir(
             topotype = kwargs.get("topotype", None)
             _func = fort2refined
 
-            arg_list.append([frameno, outfname, outfortt, components, topotype, write_level])
+            arg_list.append([frameno,
+                outfname,
+                outfortt,
+                components,
+                topotype,
+                write_level,
+                west,
+                east,
+                south,
+                north,])
 
         elif outputtype == "fortuniform":
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
@@ -213,6 +226,7 @@ def convertfortdir(
                     my,
                     components,
                     topotype,
+                    write_level,
                 ]
             )
 
@@ -408,155 +422,6 @@ def fort2uniform(
 
         # prepare to return an array, OR write to topo file.
         Q = np.empty((mx * my, len(qlst)))
-        for j in range(my):
-            y = ylow + (j + 0.5) * dy
-            for i in range(mx):
-                x = xlow + (i + 0.5) * dx
-                qv, lev = pointfromfort((x, y), solutionlist)
-                qout = qv[qlst]
-                Q[j * mx + i] = qout
-
-        # if topotype is specified, write out as topotype instead of
-        # array or standard fort.q
-        if topotype is not None:
-
-            xv = np.array(xlow + dx * np.arange(mx))
-            yv = np.array(ylow + dy * np.arange(my))
-            (X, Y) = np.meshgrid(xv, yv)
-            Y = np.flipud(Y)
-
-            if topotype == "gtif":
-                outfile = outfortq.replace("fortq.", "fortq_") + ".tif"
-                # this should only change the file name.
-
-                # manipulate shape.order of Q
-                # written row by row, so shape into my, mx, meqn
-                # reorder into my, mx, meqn by shift axis so meq is at front,
-                # finally flip along axis 1 so that up is up.
-
-                gt.griddata2gtif(
-                    X,
-                    Y,
-                    np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1),
-                    outfile,
-                )
-
-            else:
-                if fortheader["meqn"] > 1:
-                    raise ValueError(
-                        "refined/uniform to topo only can take 1 element, for all use gtif"
-                    )
-
-                outfile = outfortq
-                if topotype == "gdal":
-                    gt.griddata2topofile(
-                        X, Y, Q, ".tmpfile", nodata_value_out=nodata_value
-                    )
-                    infile = ".tmpfile"
-                    gt.esriheader(infile, outfile)
-                    os.system("rm .tmpfile")
-                else:
-                    gt.griddata2topofile(
-                        X, Y, Q, outfile, topotype, nodata_value_out=nodata_value
-                    )
-        else:
-            return fortheader, Q
-
-    else:
-        if isinstance(outfortq, str):
-            foutq = open(outfortq, "w")
-        else:
-            foutq = outfortq
-
-        forttheaderwrite(fortheader, foutt)
-        foutt.close()
-        fortqheaderwrite(fortheader, foutq, closefile=False)
-
-        for j in range(my):
-            foutq.write("\n")
-            y = ylow + (j + 0.5) * dy
-            for i in range(mx):
-                x = xlow + (i + 0.5) * dx
-                qv, lev = pointfromfort((x, y), solutionlist)
-                qout = qv[qlst]
-                for q in qout:
-                    foutq.write("%s " % float(q))
-                foutq.write("\n")
-        foutq.close()
-
-
-# ==============================================================================
-def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=None, write_level=False,
-):
-    """
-    convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
-    Resolution is at that of the highest level grids.
-    Format is still standard clawpack fort.qXXXX /fort.tXXXX and can be plotted with clawpack utilities
-    Should call with outdir being a new directory to keep original fort.q/fort.t files. Names are the same
-
-    future plans:
-                  this routine could be more efficient by directly assigning the highest level data
-                  for simplicity, now it just loops point by point.
-    arguments
-    ----------
-        framenumber : of fort.qXXXX
-        outfortq: name of output fort.qXXXX file
-        outfortt: name of output fort.tXXXX file
-            if =None routine returns a numpy array
-        components: list of q components eg. [1,3,5] or 'all' for all components
-    """
-    numstring = str(10000 + framenumber)
-    framenostr = numstring[1:]
-    forttname = "fort.t" + framenostr
-    fortqname = "fort.q" + framenostr
-
-    solutionlist = fort2list(fortqname, forttname)
-
-    if components == "all":
-        qlst = np.arange(solutionlist[0]["meqn"])
-    else:
-        qlst = np.array(components, dtype=int) - 1
-
-    levels = solutionlist[0]["AMR_maxlevel"]
-    xlow = solutionlist[0]["xlowdomain"]
-    ylow = solutionlist[0]["ylowdomain"]
-    xhi = solutionlist[0]["xhidomain"]
-    yhi = solutionlist[0]["yhidomain"]
-    dx = solutionlist[0]["dx"]
-    dy = solutionlist[0]["dy"]
-    mx = int((xhi - xlow) / dx)
-    my = int((yhi - ylow) / dy)
-
-    fortheader = {}
-    fortheader["grid_number"] = 1
-    fortheader["AMR_level"] = 1
-    fortheader["mx"] = mx
-    fortheader["my"] = my
-    fortheader["xlow"] = xlow
-    fortheader["ylow"] = ylow
-    fortheader["dx"] = dx
-    fortheader["dy"] = dy
-    fortheader["naux"] = solutionlist[0]["naux"]
-    fortheader["time"] = solutionlist[0]["time"]
-    fortheader["ndim"] = solutionlist[0]["ndim"]
-    fortheader["ngrids"] = 1
-    if components == "all":
-        fortheader["meqn"] = solutionlist[0]["meqn"]
-    else:
-        fortheader["meqn"] = len(components)
-
-    if isinstance(outfortt, str):
-        foutt = open(outfortt, "w")
-    else:
-        foutf = outfortt
-
-    if topotype is not None:
-        # write t file.
-        forttheaderwrite(fortheader, foutt)
-        foutt.close()
-
-        # prepare to return an array, OR write to topo file.
-        Q = np.empty((mx * my, len(qlst)))
         if write_level:
             source_level = np.empty((my, mx))
 
@@ -582,11 +447,13 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
 
             if topotype == "gtif":
                 outfile = outfortq.replace("fortq.", "fortq_") + ".tif"
+                # this should only change the file name.
 
                 # manipulate shape.order of Q
                 # written row by row, so shape into my, mx, meqn
                 # reorder into my, mx, meqn by shift axis so meq is at front,
                 # finally flip along axis 1 so that up is up.
+
                 Q_out = np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1)
                 if write_level:
                     source_level = np.flipud(source_level)
@@ -645,6 +512,96 @@ def fort2refined(framenumber, outfortq, outfortt, components="all", topotype=Non
                 foutq.write("\n")
         foutq.close()
 
+
+# ==============================================================================
+def fort2refined(
+    framenumber,
+    outfortq,
+    outfortt,
+    components="all",
+    topotype=None,
+    write_level=False,
+    west=None,
+    east=None,
+    south=None,
+    north=None,
+):
+    """
+    convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
+    Resolution is at that of the highest level grids.
+    Format is still standard clawpack fort.qXXXX /fort.tXXXX and can be plotted with clawpack utilities
+    Should call with outdir being a new directory to keep original fort.q/fort.t files. Names are the same
+
+    future plans:
+                  this routine could be more efficient by directly assigning the highest level data
+                  for simplicity, now it just loops point by point.
+    arguments
+    ----------
+        framenumber : of fort.qXXXX
+        outfortq: name of output fort.qXXXX file
+        outfortt: name of output fort.tXXXX file
+            if =None routine returns a numpy array
+        components: list of q components eg. [1,3,5] or 'all' for all components
+        topotype:
+        write_level: bool, to write the level from which values are taken.
+    """
+    numstring = str(10000 + framenumber)
+    framenostr = numstring[1:]
+    forttname = "fort.t" + framenostr
+    fortqname = "fort.q" + framenostr
+
+    solutionlist = fort2list(fortqname, forttname)
+
+    if components == "all":
+        qlst = np.arange(solutionlist[0]["meqn"])
+    else:
+        qlst = np.array(components, dtype=int) - 1
+
+    levels = solutionlist[0]["AMR_maxlevel"]
+    xlow = solutionlist[0]["xlowdomain"]
+    ylow = solutionlist[0]["ylowdomain"]
+    xhi = solutionlist[0]["xhidomain"]
+    yhi = solutionlist[0]["yhidomain"]
+    dx = solutionlist[0]["dx"]
+    dy = solutionlist[0]["dy"]
+
+    mx = int((xhi - xlow) / dx)
+    my = int((yhi - ylow) / dy)
+    print(west, east, south, north)
+    print(xlow, xhi, ylow, yhi, mx, my)
+    # if any of nsew is not none crop extent.
+    if east is not None or west is not None:
+        xs = np.linspace(xlow, xhi, mx)
+        if east is not None:
+            xhi = np.max(xs[xs < east])
+        if west is not None:
+            xlow = np.min(xs[xs > west])
+    if north is not None or south is not None:
+        ys = np.linspace(ylow, yhi, my)
+        if north is not None:
+            yhi = np.max(ys[ys < north])
+        if south is not None:
+            ylow = np.min(ys[ys > south])
+
+    print(xlow, xhi, ylow, yhi, mx, my)
+
+    mx = int((xhi - xlow) / dx)
+    my = int((yhi - ylow) / dy)
+
+    return fort2uniform(
+        framenumber,
+        outfortq,
+        outfortt,
+        xlow,
+        xhi,
+        ylow,
+        yhi,
+        mx,
+        my,
+        components,
+        topotype,
+        write_level,
+    )
 
 # ==============================================================================
 def fort2topotype(
@@ -1106,7 +1063,8 @@ def pointfromfort(point, solutionlist):
         my = grid["my"]
         data = grid["data"]
         level = grid["AMR_level"]
-    except:
+    except KeyError:
+
         print(("point is possibly on amr grid edge: x= %s y=%s" % (point)))
         print(("intersection? %s" % (intersection)))
         print("taking data from adjacent grid")
@@ -1134,7 +1092,8 @@ def pointfromfort(point, solutionlist):
             my = grid["my"]
             data = grid["data"]
             level = grid["AMR_level"]
-        except:
+        except KeyError:
+
             print(("point is possibly on amr grid edge: x= %s y=%s" % (point)))
             domain = (
                 griddict["xlowdomain"],
