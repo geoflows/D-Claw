@@ -567,8 +567,6 @@ def fort2refined(
 
     mx = int((xhi - xlow) / dx)
     my = int((yhi - ylow) / dy)
-    print(west, east, south, north)
-    print(xlow, xhi, ylow, yhi, mx, my)
     # if any of nsew is not none crop extent.
     if east is not None or west is not None:
         xs = np.linspace(xlow, xhi, mx)
@@ -576,17 +574,14 @@ def fort2refined(
             xhi = np.max(xs[xs < east])
         if west is not None:
             xlow = np.min(xs[xs > west])
+        mx = int((xhi - xlow) / dx)
     if north is not None or south is not None:
         ys = np.linspace(ylow, yhi, my)
         if north is not None:
             yhi = np.max(ys[ys < north])
         if south is not None:
             ylow = np.min(ys[ys > south])
-
-    print(xlow, xhi, ylow, yhi, mx, my)
-
-    mx = int((xhi - xlow) / dx)
-    my = int((yhi - ylow) / dy)
+        my = int((yhi - ylow) / dy)
 
     return fort2uniform(
         framenumber,
