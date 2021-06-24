@@ -168,8 +168,15 @@ c     #prepare slopes - use min-mod limiters
                   velmax = 0.d0
                   velmin = 0.d0
                   if (ivar.eq.4) then
-                     velmax=m0
-                     velmin=m0
+                    ! used only when completely dry cell is filled based on surrounding or sea-level
+                    ! so, makes sense to have 0 minimum for water, if m0 is used for granular material
+                    ! note: if an adjacent cell has m>0...that will set a higher maximum.
+                    ! keeping if clause for now in case we rethink this
+                    ! change below 2021-06-24 dlg, kbarnhart, rpjones
+                    !velmax=m0
+                    !velmin=m0
+                    velmax = 0.d0
+                    velmin = 0.d0
                   elseif (ivar.eq.5) then
                      velmax = rho_f*grav
                      velmin = rho_f*grav
