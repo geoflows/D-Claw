@@ -21,6 +21,7 @@ To install the netCDF 4 library, please see:
     Kyle T. Mandli (2009-02-17) Initial version
     Josh Jacobs (2011-04-22) NetCDF 3 Support
 """
+import logging
 # ============================================================================
 #      Copyright (C) 2009 Kyle T. Mandli <mandli@amath.washington.edu>
 #      Copyright (C) 2011 J. Jacobs
@@ -29,8 +30,8 @@ To install the netCDF 4 library, please see:
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
-import os, sys
-import logging
+import os
+import sys
 
 import pyclaw.solution
 
@@ -384,8 +385,8 @@ def read_netcdf(
     filename = os.path.join(path, "%s.q%s.nc" % (file_prefix, str(frame).zfill(4)))
     # jj-2010.02.04-added support for netcdf classic format
     if use_netcdf3:
-        from Scientific.IO import NetCDF
         import numpy
+        from Scientific.IO import NetCDF
 
         # Open file
         print(filename)
@@ -544,8 +545,8 @@ def read_netcdf_t(frame, path="./", file_prefix="fort"):
     filename = os.path.join(path, "%s.q%s.nc" % (file_prefix, str(frame).zfill(4)))
     #    print filename
     if use_netcdf3:
-        from Scientific.IO import NetCDF
         import numpy
+        from Scientific.IO import NetCDF
 
         # Open file
         f = NetCDF.NetCDFFile(filename, "r")

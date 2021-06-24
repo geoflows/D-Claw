@@ -1,5 +1,6 @@
-import os, re, sys
-
+import os
+import re
+import sys
 
 # -----------------------------------------------------------
 # |\""""""""""""""""""""""""|\
@@ -87,15 +88,15 @@ def compare_directories(outdir, regression_dir, tolerance, results_file):
 
     regdir = regression_dir
     print("\n===============================================================")
-    print("Comparing fort.q files in directory %s " % outdir)
-    print("  to regression directory           %s" % regdir)
+    print(("Comparing fort.q files in directory %s " % outdir))
+    print(("  to regression directory           %s" % regdir))
     output_object = open(results_file, "w")
 
     # ==== Locate data files in the regression_data directory ====
     try:
         regression_files = os.listdir(regression_dir)
     except:
-        print("*** Problem accessing regression directory: ", regression_dir)
+        print(("*** Problem accessing regression directory: ", regression_dir))
         raise
     data_pattern = re.compile("fort.q\d{4}")
     data_files = []
@@ -105,7 +106,7 @@ def compare_directories(outdir, regression_dir, tolerance, results_file):
             data_files.append(file_name)
 
     if data_files == []:
-        print("*** No fort.q files found in regression_dir: ", regression_dir)
+        print(("*** No fort.q files found in regression_dir: ", regression_dir))
 
     # ==== Compare each data file to the same file in _output ====
     difference_detected = False
@@ -138,20 +139,22 @@ def compare_directories(outdir, regression_dir, tolerance, results_file):
         # for file_name in regression_files:
         # output_object.write(" " + file_name)
         output_object.write("\nNo change detected.\n")
-        print("All fort.q files are identical to tolerance ", tolerance)
+        print(("All fort.q files are identical to tolerance ", tolerance))
 
     output_object.close()
-    print("Regression results are in ", results_file)
+    print(("Regression results are in ", results_file))
     print("===============================================================")
 
 
 def fetch_regression_data(outdir):
-    import urllib.request, urllib.parse, urllib.error
+    import urllib.error
+    import urllib.parse
+    import urllib.request
 
     clawdir = os.environ["CLAW"] + "/"
     thisdir = os.getcwd()
     thisdir = thisdir.replace(clawdir, "")
-    print("+++ ", thisdir)
+    print(("+++ ", thisdir))
     if thisdir[0] == "/":
         raise Exception(
             "This directory is not a subdirectory of clawdir = %s" % clawdir
@@ -163,7 +166,7 @@ def fetch_regression_data(outdir):
     # remote_regdir = "clawpack@homer.u.washington.edu:public_html/regression_data/"
     url = "http://www.clawpack.org/regression_data"
 
-    print("Trying to retrieve %s \n   from %s" % (tarfile, url))
+    print(("Trying to retrieve %s \n   from %s" % (tarfile, url)))
 
     try:
         url = os.path.join(url, tarfile)
@@ -177,7 +180,7 @@ def fetch_regression_data(outdir):
 
     try:
         os.system("tar -zxf %s" % tarfile)
-        print("Regression data should be in ", regdir)
+        print(("Regression data should be in ", regdir))
     except:
         raise Exception("*** Problem untarring %s" % tarfile)
     return regdir, tarfile
@@ -205,7 +208,7 @@ if __name__ == "__main__":
     compare_directories(outdir, regression_dir, tolerance, results_file)
 
     if retrieve:
-        print("\nDownloaded a tar file and created directory ", regression_dir)
-        ans = input("  Cleanup by removing these? ")
+        print(("\nDownloaded a tar file and created directory ", regression_dir))
+        ans = eval(input("  Cleanup by removing these? "))
         if ans.lower() in ["y", "yes"]:
             os.system("rm -rf %s %s" % (regression_dir, tarfile))

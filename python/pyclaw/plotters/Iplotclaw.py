@@ -10,12 +10,15 @@ For options during looping type:
 
 """
 
-import cmd, os, sys, string
-
+import cmd
+import os
+import string
+import sys
 
 if 'matplotlib' not in sys.modules:
     try:
         import matplotlib
+
         # Override system defaults before importing pylab
         # If you set the backend here, you must start ipython w/o pylab
         # before importing this package.
@@ -66,7 +69,7 @@ class Iplotclaw(cmd.Cmd):
     Other arguments of Iplotclaw rarely need to be changed:
        completekey='tab', stdin=None, stdout=None
     """
-    from pyclaw.plotters import frametools, data
+    from pyclaw.plotters import data, frametools
 
     # initialization:
     # ---------------
@@ -201,7 +204,8 @@ class Iplotclaw(cmd.Cmd):
     # next frame:
     # -----------
     def do_n(self, rest):
-        from pyclaw.plotters import frametools, data
+        from pyclaw.plotters import data, frametools
+
         #print '    frameno = ',self.frameno
         self.frameno = self.frameno+1
 	self.current_data = frametools.plotframe(self.frameno, self.plotdata)

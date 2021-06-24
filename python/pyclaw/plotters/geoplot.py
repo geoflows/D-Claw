@@ -2,11 +2,11 @@
 Useful things for plotting GeoClaw results.
 """
 
-from pyclaw.plotters import colormaps
 from matplotlib.colors import Normalize
-from pyclaw.geotools import topotools
 from numpy import ma
 
+from pyclaw.geotools import topotools
+from pyclaw.plotters import colormaps
 
 # Colormaps from geoclaw
 # Color attributes, single instance per run
@@ -97,8 +97,8 @@ colormaps_list = {
 def plot_colormaps():
     r"""Plots all colormaps avaiable or the ones specified"""
 
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
 
     a = np.linspace(0, 1, 256).reshape(1, -1)
     a = np.vstack((a, a))
@@ -253,7 +253,9 @@ def plot_topo_file(topoplotdata):
     """
 
     import os
+
     import pylab
+
     from pyclaw.data import Data
 
     fname = topoplotdata.fname

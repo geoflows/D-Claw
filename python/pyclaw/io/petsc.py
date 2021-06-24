@@ -17,16 +17,18 @@ These routines preserve petclaw/pyclaw syntax for i/o while taking advantage of 
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os, sys
 import logging
+import os
+import sys
 
 import pyclaw.solution
 
 logger = logging.getLogger("io")
 
-from petsc4py import PETSc
-from mpi4py import MPI
 import pickle
+
+from mpi4py import MPI
+from petsc4py import PETSc
 
 
 def write_petsc(

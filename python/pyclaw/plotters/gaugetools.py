@@ -2,11 +2,14 @@
 Tools for plotting data from gauges, gauge locations, etc.
 """
 
-import os, sys, shutil, glob
-import string, re
+import glob
+import os
+import re
+import shutil
+import string
+import sys
 import time
 import traceback
-
 
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
@@ -361,9 +364,11 @@ def read_setgauges(datadir):
     Read the info from setgauges.data.
     """
     import os
+
     import numpy as np
-    from pyclaw.data import Data
     from matplotlib.mlab import find
+
+    from pyclaw.data import Data
 
     setgauges = Data()
 
@@ -460,7 +465,7 @@ def plot_gauge_locations(
     produced by running the code.
     """
 
-    from pylab import figure, plot, clf, title, text
+    from pylab import clf, figure, plot, text, title
 
     datadir = plotdata.outdir  # this should contain setgauges.data
 
@@ -544,6 +549,7 @@ def printgauges(plotdata=None, verbose=True):
     """
 
     import glob
+
     from pyclaw.plotters.data import ClawPlotData
 
     if not sys.modules.has_key("matplotlib"):

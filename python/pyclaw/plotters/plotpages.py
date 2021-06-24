@@ -6,7 +6,10 @@ latex/pdf pages displaying the plots.
 """
 
 
-import os, time, string, glob
+import glob
+import os
+import string
+import time
 
 # Clawpack logo... not used on plot pages currently.
 clawdir = os.getenv("CLAW")
@@ -1235,7 +1238,7 @@ def timeframes2latex(plot_pages_data):
 def test(makeplots=True):
     # ============================
     try:
-        from pylab import linspace, clf, plot, title, savefig, mod
+        from pylab import clf, linspace, mod, plot, savefig, title
     except:
         print "*** Error: could not import pylab"
         return
@@ -2046,10 +2049,14 @@ def plotclaw_driver(plotdata, verbose=False):
     If plotdata.setplot is a function then this function will be used.
     """
 
-    import glob, sys, os
+    import glob
+    import os
+    import sys
+
     import numpy as np
-    from pyclaw.plotters.data import ClawPlotData
+
     from pyclaw.plotters import frametools, gaugetools, plotpages
+    from pyclaw.plotters.data import ClawPlotData
 
     datadir = os.getcwd()  # assume data files in this directory
 

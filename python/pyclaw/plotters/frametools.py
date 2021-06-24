@@ -3,15 +3,19 @@ Module frametools for plotting frames of time-dependent data.
 
 """
 
-import os, sys, shutil, glob
-import string, re
+import glob
+import os
+import re
+import shutil
+import string
+import sys
 import time
 import traceback
 
+from matplotlib.colors import Normalize
 
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-from matplotlib.colors import Normalize
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
@@ -662,6 +666,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     """
 
     import numpy as np
+
     from pyclaw.plotters import colormaps
 
     plotdata = plotitem._plotdata
@@ -1133,6 +1138,7 @@ def printframes(plotdata=None, verbose=True):
     """
 
     import glob
+
     from pyclaw.plotters.data import ClawPlotData
 
     if not sys.modules.has_key("matplotlib"):
@@ -1478,7 +1484,9 @@ def only_most_recent(framenos, outdir=".", verbose=True):
     Returns the filtered list.
     """
 
-    import glob, time, os
+    import glob
+    import os
+    import time
 
     startdir = os.getcwd()
     if outdir != ".":

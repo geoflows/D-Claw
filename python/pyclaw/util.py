@@ -18,16 +18,20 @@ Pyclaw utility methods
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
-from __future__ import print_function
 
-import time
-import os, sys, shutil, glob
-import re
-import subprocess
+
+import glob
 import logging
+import os
+import re
+import shutil
+import subprocess
+import sys
 import tempfile
+import time
 
 import numpy as np
+
 
 # ============================================================================
 #  Geoclaw Topography Utility Functions

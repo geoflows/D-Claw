@@ -25,7 +25,7 @@ def make_colormap(colors):
     html hex string, e.g. "#ff0000" for red.
     """
 
-    from matplotlib.colors import LinearSegmentedColormap, ColorConverter
+    from matplotlib.colors import ColorConverter, LinearSegmentedColormap
     from numpy import sort
 
     z = sort(list(colors.keys()))
@@ -60,7 +60,8 @@ def make_colormap(colors):
 
 
 def showcolors(cmap):
-    from pylab import colorbar, clf, axes, linspace, pcolor, meshgrid, show, axis, title
+    from pylab import (axes, axis, clf, colorbar, linspace, meshgrid, pcolor,
+                       show, title)
 
     # from scitools.easyviz.matplotlib_ import colorbar, clf, axes, linspace,\
     # pcolor, meshgrid, show, colormap
@@ -77,7 +78,7 @@ def schlieren_colormap(color=[0, 0, 0]):
     """
     For Schlieren plots:
     """
-    from numpy import linspace, array
+    from numpy import array, linspace
 
     if color == "k":
         color = [0, 0, 0]

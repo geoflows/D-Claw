@@ -12,19 +12,20 @@ okada
     Xiaoming Wang.
 
 """
+import os
 import pdb
-import numpy
+import string
 
+import matplotlib.mlab as mlab
+import matplotlib.pyplot as pyplot
+import numpy
+# from scipy import *
+from matplotlib import *
 # import scipy
 from numpy import *
 
-# from scipy import *
-from matplotlib import *
-import matplotlib.mlab as mlab
-import matplotlib.pyplot as pyplot
-import os
-import string
 from .datatools import *
+
 
 # =================================================================================
 def builddeffile(okadaparamfile, faultparamfile, outfile):
