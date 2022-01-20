@@ -418,12 +418,12 @@ def esriheaderwrite(topoheader, outputfile, closefile=True):
 
     The header is of the following form with columns containing the topoheader key and value respectively.
 
-         ncols int
-         nrows int
-         xll float
-         yll float
-         cellsize float
-         nodata_value float
+         NCOLS int
+         NROWS int
+         XLLCORNER float
+         YLLCORNER float
+         CELLSIZE float
+         NODATA_VALUE float
 
 
     if closefile==True: the file is closed. Otherwise return the open file object.
@@ -431,12 +431,12 @@ def esriheaderwrite(topoheader, outputfile, closefile=True):
 
     fout = open(outputfile, "w")
 
-    fout.write("%s %s\n" % ("ncols", topoheader["ncols"]))
-    fout.write("%s %s\n" % ("nrows", topoheader["nrows"]))
-    fout.write("%s %s\n" % ("xll", float(topoheader["xll"])))
-    fout.write("%s %s\n" % ("yll", float(topoheader["yll"])))
-    fout.write("%s %s\n" % ("cellsize", float(topoheader["cellsize"])))
-    fout.write("%s %s\n" % ("nodata_value", topoheader["nodata_value"]))
+    fout.write("%s %s\n" % ("NCOLS",topoheader['ncols']))
+    fout.write("%s %s\n" % ("NROWS",topoheader['nrows']))
+    fout.write("%s %s\n" % ("XLLCORNER", float(topoheader['xll'])))
+    fout.write("%s %s\n" % ("YLLCORNER",float(topoheader['yll'])))
+    fout.write("%s %s\n" % ("CELLSIZE",float(topoheader['cellsize'])))
+    fout.write("%s %s\n" % ("NODATA_VALUE",topoheader['nodata_value']))
     if closefile:
         fout.close()
     else:
@@ -769,7 +769,8 @@ def topofilefindz(pts, inputfile, topotypein=2):
     else:
         (X, Y, Z) = inputfile
 
-    z = []
+
+    z=[]
 
     for i in range(len(pts)):
         x = pts[i][0]
@@ -1327,7 +1328,9 @@ def burnin_nodata_value(
     outputfile: output topo file (burned in)
     """
 
-    (X, Y, Z) = topofile2griddata(inputfile1, topotypein1)
+    (X,Y,Z)=topofile2griddata(inputfile1,topotypein1)
+
+    Znew=Z
 
     Znew = Z
 
@@ -1387,6 +1390,8 @@ def merge_topofiles(
     inputfile2: name of secondary topo file (data to be used where primary file has nodata_values, or no values)
     outputfile: output topo file
     """
+
+    Z=np.ones(np.shape(X))
 
     Z = np.ones(np.shape(X))
 
@@ -1454,9 +1459,11 @@ def clip_surface(
     (X, Y, Z) = topofile2griddata(inputfile1, topotypein1)
     (X2, Y2, Z2) = topofile2griddata(inputfile2, topotypein2)
 
-    if topotypein2 > 1 and not nodata_valuein:
-        topoheader = topoheaderread(inputfile2)
-        nodata_valuein = topoheader["nodata_value"]
+
+
+    if topotypein2>1 and not nodata_valuein:
+        topoheader=topoheaderread(inputfile2)
+        nodata_valuein=topoheader['nodata_value']
     elif not nodata_valuein:
         print("provide a value for nodata_valuein when using topotype1")
 
