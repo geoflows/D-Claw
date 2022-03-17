@@ -31,14 +31,15 @@ is the gravitational acceleration.
 # ============================================================================
 #      Copyright (C) 2009 Kyle T. Mandli <mandli@amath.washington.edu>
 #
-#  Distributed under the terms of the Berkeley Software Distribution (BSD) 
+#  Distributed under the terms of the Berkeley Software Distribution (BSD)
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
 import numpy as np
 
-def rp_shallow_roe_1d(q_l,q_r,aux_l,aux_r,aux_global):
+
+def rp_shallow_roe_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Roe shallow water solver in 1d::
     
@@ -61,50 +62,52 @@ def rp_shallow_roe_1d(q_l,q_r,aux_l,aux_r,aux_global):
             
     :Version: 1.0 (2009-02-05)
     """
-    
+
     # Array shapes
     nrp = q_l.shape[0]
     meqn = 2
     mwaves = 2
-    
+
     # Output arrays
-    wave = np.empty( (nrp, meqn, mwaves) )
-    s = np.empty( (nrp, mwaves) )
-    amdq = np.zeros( (nrp, meqn) )
-    apdq = np.zeros( (nrp, meqn) )
+    wave = np.empty((nrp, meqn, mwaves))
+    s = np.empty((nrp, mwaves))
+    amdq = np.zeros((nrp, meqn))
+    apdq = np.zeros((nrp, meqn))
 
     # Compute roe-averaged quantities
-    ubar = ( (q_l[:,1]/np.sqrt(q_l[:,0]) + q_r[:,1]/np.sqrt(q_r[:,0])) /
-        (np.sqrt(q_l[:,0]) + np.sqrt(q_r[:,0])) )
-    cbar = np.sqrt(0.5 * aux_global['g'] * (q_l[:,0] + q_r[:,0]))
-        
-    # Compute Flux structure    
+    ubar = (q_l[:, 1] / np.sqrt(q_l[:, 0]) + q_r[:, 1] / np.sqrt(q_r[:, 0])) / (
+        np.sqrt(q_l[:, 0]) + np.sqrt(q_r[:, 0])
+    )
+    cbar = np.sqrt(0.5 * aux_global["g"] * (q_l[:, 0] + q_r[:, 0]))
+
+    # Compute Flux structure
     delta = q_r - q_l
-    a1 = 0.5 * (-delta[:,1] + (ubar + cbar) * delta[:,0]) / cbar
-    a2 = 0.5 * ( delta[:,1] - (ubar - cbar) * delta[:,0]) / cbar
-        
+    a1 = 0.5 * (-delta[:, 1] + (ubar + cbar) * delta[:, 0]) / cbar
+    a2 = 0.5 * (delta[:, 1] - (ubar - cbar) * delta[:, 0]) / cbar
+
     # Compute each family of waves
-    wave[:,0,0] = a1
-    wave[:,1,0] = a1 * (ubar - cbar)
-    s[:,0] = ubar - cbar
-    
-    wave[:,0,1] = a2
-    wave[:,1,1] = a2 * (ubar + cbar)
-    s[:,1] = ubar + cbar
-        
-    if aux_global['efix']:
+    wave[:, 0, 0] = a1
+    wave[:, 1, 0] = a1 * (ubar - cbar)
+    s[:, 0] = ubar - cbar
+
+    wave[:, 0, 1] = a2
+    wave[:, 1, 1] = a2 * (ubar + cbar)
+    s[:, 1] = ubar + cbar
+
+    if aux_global["efix"]:
         raise NotImplementedError("Entropy fix has not been implemented.")
     else:
-        s_index = np.zeros((nrp,2))
-        for m in xrange(meqn):
-            for mw in xrange(mwaves):
-                s_index[:,0] = s[:,mw]
-                amdq[:,m] += np.min(s_index,axis=1) * wave[:,m,mw]
-                apdq[:,m] += np.max(s_index,axis=1) * wave[:,m,mw]
-            
+        s_index = np.zeros((nrp, 2))
+        for m in range(meqn):
+            for mw in range(mwaves):
+                s_index[:, 0] = s[:, mw]
+                amdq[:, m] += np.min(s_index, axis=1) * wave[:, m, mw]
+                apdq[:, m] += np.max(s_index, axis=1) * wave[:, m, mw]
+
     return wave, s, amdq, apdq
-    
-def rp_shallow_hll_1d(q_l,q_r,aux_l,aux_r,aux_global):
+
+
+def rp_shallow_hll_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     HLL shallow water solver ::
     
@@ -119,61 +122,68 @@ def rp_shallow_hll_1d(q_l,q_r,aux_l,aux_r,aux_global):
             
     :Version: 1.0 (2009-02-05)
     """
-    
+
     # Array shapes
     nrp = q_l.shape[0]
     meqn = 2
     mwaves = 2
-    
+
     # Output arrays
-    wave = np.empty( (nrp, meqn, mwaves) )
-    s = np.empty( (nrp, mwaves) )
-    amdq = np.zeros( (nrp, meqn) )
-    apdq = np.zeros( (nrp, meqn) )
+    wave = np.empty((nrp, meqn, mwaves))
+    s = np.empty((nrp, mwaves))
+    amdq = np.zeros((nrp, meqn))
+    apdq = np.zeros((nrp, meqn))
 
     # Compute Roe and right and left speeds
-    ubar = ( (q_l[:,1]/np.sqrt(q_l[:,0]) + q_r[:,1]/np.sqrt(q_r[:,0])) /
-        (np.sqrt(q_l[:,0]) + np.sqrt(q_r[:,0])) )
-    cbar = np.sqrt(0.5 * aux_global['g'] * (q_l[:,0] + q_r[:,0]))
-    u_r = q_r[:,1] / q_r[:,0]
-    c_r = np.sqrt(aux_global['g'] * q_r[:,0])
-    u_l = q_l[:,1] / q_l[:,0]
-    c_l = np.sqrt(aux_global['g'] * q_l[:,0])
+    ubar = (q_l[:, 1] / np.sqrt(q_l[:, 0]) + q_r[:, 1] / np.sqrt(q_r[:, 0])) / (
+        np.sqrt(q_l[:, 0]) + np.sqrt(q_r[:, 0])
+    )
+    cbar = np.sqrt(0.5 * aux_global["g"] * (q_l[:, 0] + q_r[:, 0]))
+    u_r = q_r[:, 1] / q_r[:, 0]
+    c_r = np.sqrt(aux_global["g"] * q_r[:, 0])
+    u_l = q_l[:, 1] / q_l[:, 0]
+    c_l = np.sqrt(aux_global["g"] * q_l[:, 0])
 
     # Compute Einfeldt speeds
-    s_index = np.empty((nrp,4))
-    s_index[:,0] = ubar+cbar
-    s_index[:,1] = ubar-cbar
-    s_index[:,2] = u_l + c_l
-    s_index[:,3] = u_l - c_l
-    s[:,0] = np.min(s_index,axis=1)
-    s_index[:,2] = u_r + c_r
-    s_index[:,3] = u_r - c_r
-    s[:,1] = np.max(s_index,axis=1)
+    s_index = np.empty((nrp, 4))
+    s_index[:, 0] = ubar + cbar
+    s_index[:, 1] = ubar - cbar
+    s_index[:, 2] = u_l + c_l
+    s_index[:, 3] = u_l - c_l
+    s[:, 0] = np.min(s_index, axis=1)
+    s_index[:, 2] = u_r + c_r
+    s_index[:, 3] = u_r - c_r
+    s[:, 1] = np.max(s_index, axis=1)
 
     # Compute middle state
-    q_hat = np.empty((nrp,2))
-    q_hat[:,0] = ((q_r[:,1] - q_l[:,1] - s[:,1] * q_r[:,0] 
-                            + s[:,0] * q_l[:,0]) / (s[:,0] - s[:,1]))
-    q_hat[:,1] = ((q_r[:,1]**2/q_r[:,0] + 0.5 * aux_global['g'] * q_r[:,0]**2
-                - (q_l[:,1]**2/q_l[:,0] + 0.5 * aux_global['g'] * q_l[:,0]**2)
-                - s[:,1] * q_r[:,1] + s[:,0] * q_l[:,1]) / (s[:,0] - s[:,1]))
+    q_hat = np.empty((nrp, 2))
+    q_hat[:, 0] = (
+        q_r[:, 1] - q_l[:, 1] - s[:, 1] * q_r[:, 0] + s[:, 0] * q_l[:, 0]
+    ) / (s[:, 0] - s[:, 1])
+    q_hat[:, 1] = (
+        q_r[:, 1] ** 2 / q_r[:, 0]
+        + 0.5 * aux_global["g"] * q_r[:, 0] ** 2
+        - (q_l[:, 1] ** 2 / q_l[:, 0] + 0.5 * aux_global["g"] * q_l[:, 0] ** 2)
+        - s[:, 1] * q_r[:, 1]
+        + s[:, 0] * q_l[:, 1]
+    ) / (s[:, 0] - s[:, 1])
 
     # Compute each family of waves
-    wave[:,:,0] = q_hat - q_l
-    wave[:,:,1] = q_r - q_hat
-    
+    wave[:, :, 0] = q_hat - q_l
+    wave[:, :, 1] = q_r - q_hat
+
     # Compute variations
-    s_index = np.zeros((nrp,2))
-    for m in xrange(meqn):
-        for mw in xrange(mwaves):
-            s_index[:,0] = s[:,mw]
-            amdq[:,m] += np.min(s_index,axis=1) * wave[:,m,mw]
-            apdq[:,m] += np.max(s_index,axis=1) * wave[:,m,mw]
-            
+    s_index = np.zeros((nrp, 2))
+    for m in range(meqn):
+        for mw in range(mwaves):
+            s_index[:, 0] = s[:, mw]
+            amdq[:, m] += np.min(s_index, axis=1) * wave[:, m, mw]
+            apdq[:, m] += np.max(s_index, axis=1) * wave[:, m, mw]
+
     return wave, s, amdq, apdq
-    
-def rp_shallow_exact_1d(q_l,q_r,aux_l,aux_r,aux_global):
+
+
+def rp_shallow_exact_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Exact shallow water Riemann solver
     

@@ -15,7 +15,7 @@ dimensionally dependent ones such as :class:`ClawSolver1D`.
 # ============================================================================
 #      Copyright (C) 2008 Kyle T. Mandli <mandli@amath.washington.edu>
 #
-#  Distributed under the terms of the Berkeley Software Distribution (BSD) 
+#  Distributed under the terms of the Berkeley Software Distribution (BSD)
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
@@ -24,12 +24,12 @@ import numpy as np
 
 from pyclaw.evolve.solver import Solver
 
-import limiters
+from . import limiters
 
 # ========================================================================
 #  User-defined routines
 # ========================================================================
-def start_step(solver,solutions):
+def start_step(solver, solutions):
     r"""
     Dummy routine called before each step
     
@@ -37,13 +37,15 @@ def start_step(solver,solutions):
     """
     pass
 
-def src(solver,solutions,t,dt):
+
+def src(solver, solutions, t, dt):
     r"""
     Dummy routine called to calculate a source term
     
     Replace this routine if you want to include a source term.
     """
     pass
+
 
 # ============================================================================
 #  Generic Clawpack solver class
@@ -94,28 +96,28 @@ class ClawSolver(Solver):
     
     :Version: 1.0 (2009-06-01)
     """
-    
+
     # ========== Generic Init Routine ========================================
-    def __init__(self,data=None):
+    def __init__(self, data=None):
         r"""
         See :class:`ClawSolver` for full documentation.
         """
-        
+
         # Required attributes for this solver
-        for attr in ['mthlim','order','src_split','fwave','src','start_step']:
+        for attr in ["mthlim", "order", "src_split", "fwave", "src", "start_step"]:
             self._required_attrs.append(attr)
-        
+
         # Default required attributes
-        self._default_attr_values['mthlim'] = [1]
-        self._default_attr_values['order'] = 2
-        self._default_attr_values['src_split'] = 0
-        self._default_attr_values['fwave'] = False
-        self._default_attr_values['src'] = src
-        self._default_attr_values['start_step'] = start_step
+        self._default_attr_values["mthlim"] = [1]
+        self._default_attr_values["order"] = 2
+        self._default_attr_values["src_split"] = 0
+        self._default_attr_values["fwave"] = False
+        self._default_attr_values["src"] = src
+        self._default_attr_values["start_step"] = start_step
 
         # Call general initialization function
-        super(ClawSolver,self).__init__(data)
-    
+        super(ClawSolver, self).__init__(data)
+
     # ========== Setup Routine ===============================================
     def setup(self):
         r"""
@@ -125,12 +127,12 @@ class ClawSolver(Solver):
         :class:`~pyclaw.controller.Controller`.  In the case of 
         :class:`ClawSolver` we make sure that the :attr:`mthlim` is a list.
         """
-    
+
         # Change mthlim to be an array regardless of how long it is
-        if not isinstance(self.mthlim,list) and self.mthlim is not None:
+        if not isinstance(self.mthlim, list) and self.mthlim is not None:
             self.mthlim = [self.mthlim]
-    
-    # ========== Riemann solver library routines =============================   
+
+    # ========== Riemann solver library routines =============================
     def list_riemann_solvers(self):
         r"""
         List available Riemann solvers 
@@ -148,18 +150,18 @@ class ClawSolver(Solver):
             time stepping routines.
         """
         rp_solver_list = []
-        
+
         # Construct list from each dimension list
         for rp_solver in rp_solver_list_1d:
-            rp_solver_list.append('%s_1d' % rp_solver)
+            rp_solver_list.append("%s_1d" % rp_solver)
         for rp_solver in rp_solver_list_2d:
-            rp_solver_list.append('%s_2d' % rp_solver)
+            rp_solver_list.append("%s_2d" % rp_solver)
         for rp_solver in rp_solver_list_3d:
-            rp_solver_list.append('%s_3d' % rp_solver)
-        
+            rp_solver_list.append("%s_3d" % rp_solver)
+
         return rp_solver_list
-    
-    def set_riemann_solver(self,solver_name):
+
+    def set_riemann_solver(self, solver_name):
         r"""
         Assigns the library solver solver_name as the Riemann solver.
         
@@ -167,11 +169,13 @@ class ClawSolver(Solver):
          - *solver_name* - (string) Name of the solver to be used, raises a 
            NameError if the solver does not exist.
         """
-        raise Exception("Cannot set a Riemann solver with this class," +
-                                        " use one of the derived classes.")
-         
+        raise Exception(
+            "Cannot set a Riemann solver with this class,"
+            + " use one of the derived classes."
+        )
+
     # ========== Time stepping routines ======================================
-    def step(self,solutions):
+    def step(self, solutions):
         r"""
         Evolve solutions one time step
 
@@ -202,17 +206,17 @@ class ClawSolver(Solver):
         """
 
         # Call b4step, pyclaw should be subclassed if this is needed
-        self.start_step(self,solutions)
+        self.start_step(self, solutions)
 
-        # Source term splitting, pyclaw should be subclassed if this 
+        # Source term splitting, pyclaw should be subclassed if this
         # is needed
         if self.src_split == 2:
-            self.src(self,solutions,solutions['n'].t, self.dt/2.0)
-    
+            self.src(self, solutions, solutions["n"].t, self.dt / 2.0)
+
         # Take a step on the homogeneous problem
         self.homogeneous_step(solutions)
 
-        # Check here if we violated the CFL condition, if we did, return 
+        # Check here if we violated the CFL condition, if we did, return
         # immediately to evolve_to_time and let it deal with picking a new
         # dt
         if self.cfl >= self.cfl_max:
@@ -220,22 +224,22 @@ class ClawSolver(Solver):
 
         # Strang splitting
         if self.src_split == 2:
-            self.src(self,solutions,solutions['n'].t + self.dt/2.0, self.dt/2.0)
+            self.src(self, solutions, solutions["n"].t + self.dt / 2.0, self.dt / 2.0)
 
         # Godunov Splitting
         if self.src_split == 1:
-            self.src(self,solutions,solutions['n'].t,self.dt)
-            
+            self.src(self, solutions, solutions["n"].t, self.dt)
+
         return True
-            
-    def homogeneous_step(self,solutions):
+
+    def homogeneous_step(self, solutions):
         r"""
         Take one homogeneous step on the solutions
         
         This is a dummy routine and must be overridden.
         """
         raise Exception("Dummy routine, please override!")
-            
+
 
 # ============================================================================
 #  ClawPack 1d Solver Class
@@ -266,23 +270,23 @@ class ClawSolver1D(ClawSolver):
         Kyle T. Mandli (2008-09-11) Initial version
     """
 
-    def __init__(self,data=None):
+    def __init__(self, data=None):
         r"""
         Create 1d Clawpack solver
         
         See :class:`ClawSolver1D` for more info.
-        """   
-        
-        # Add the functions as required attributes
-        self._required_attrs.append('rp')
-        self._default_attr_values['rp'] = None
-        
-        # Import Riemann solvers
-        exec('import pyclaw.evolve.rp as rp',globals())
-            
-        super(ClawSolver1D,self).__init__(data)
+        """
 
-    # ========== Riemann solver library routines =============================   
+        # Add the functions as required attributes
+        self._required_attrs.append("rp")
+        self._default_attr_values["rp"] = None
+
+        # Import Riemann solvers
+        exec("import pyclaw.evolve.rp as rp", globals())
+
+        super(ClawSolver1D, self).__init__(data)
+
+    # ========== Riemann solver library routines =============================
     def list_riemann_solvers(self):
         r"""
         List available Riemann solvers 
@@ -300,8 +304,8 @@ class ClawSolver1D(ClawSolver):
             time stepping routines.
         """
         return rp.rp_solver_list_1d
-    
-    def set_riemann_solver(self,solver_name):
+
+    def set_riemann_solver(self, solver_name):
         r"""
         Assigns the library solver solver_name as the Riemann solver.
         
@@ -310,16 +314,17 @@ class ClawSolver1D(ClawSolver):
            ``NameError`` if the solver does not exist.
         """
         import logging
+
         if solver_name in rp.rp_solver_list_1d:
             exec("self.rp = rp.rp_%s_1d" % solver_name)
         else:
-            logger = logging.getLogger('solver')
-            error_msg = 'Could not find Riemann solver with name %s' % solver_name
+            logger = logging.getLogger("solver")
+            error_msg = "Could not find Riemann solver with name %s" % solver_name
             logger.warning(error_msg)
             raise NameError(error_msg)
 
     # ========== Python Homogeneous Step =====================================
-    def homogeneous_step(self,solutions):
+    def homogeneous_step(self, solutions):
         r"""
         Take one time step on the homogeneous hyperbolic system
 
@@ -332,37 +337,37 @@ class ClawSolver1D(ClawSolver):
 
         :Version: 1.0 (2009-07-01)
         """
-    
+
         # Grid we will be working on
-        grid = solutions['n'].grids[0]
+        grid = solutions["n"].grids[0]
         # Number of equations
-        meqn = solutions['n'].meqn
+        meqn = solutions["n"].meqn
         # Limiter to use in the pth family
-        limiter = np.array(self.mthlim,ndmin=1)  
+        limiter = np.array(self.mthlim, ndmin=1)
         # Q with appended boundary conditions
         q = grid.qbc()
         # Flux vector
-        f = np.empty( (2*grid.mbc + grid.n[0], meqn) )
-    
-        dtdx = np.zeros( (2*grid.mbc+grid.n[0]) )
+        f = np.empty((2 * grid.mbc + grid.n[0], meqn))
+
+        dtdx = np.zeros((2 * grid.mbc + grid.n[0]))
 
         # Find local value for dt/dx
         if grid.capa is not None:
             dtdx = self.dt / (grid.d[0] * grid.capa)
         else:
-            dtdx += self.dt/grid.d[0]
-    
+            dtdx += self.dt / grid.d[0]
+
         # Solve Riemann problem at each interface
-        q_l=q[:-1,:]
-        q_r=q[1:,:]
+        q_l = q[:-1, :]
+        q_r = q[1:, :]
         if grid.aux is not None:
-            aux_l=grid.aux[:-1,:]
-            aux_r=grid.aux[1:,:]
+            aux_l = grid.aux[:-1, :]
+            aux_r = grid.aux[1:, :]
         else:
             aux_l = None
             aux_r = None
-        wave,s,amdq,apdq = self.rp(q_l,q_r,aux_l,aux_r,grid.aux_global)
-        
+        wave, s, amdq, apdq = self.rp(q_l, q_r, aux_l, aux_r, grid.aux_global)
+
         # Update loop limits, these are the limits for the Riemann solver
         # locations, which then update a grid cell value
         # We include the Riemann problem just outside of the grid so we can
@@ -371,48 +376,50 @@ class ClawSolver1D(ClawSolver):
         #  |  LL |     |     |     |  ...  |     |     |  UL  |     |
         #              |                               |
         LL = grid.mbc - 1
-        UL = grid.mbc + grid.n[0] + 1 
+        UL = grid.mbc + grid.n[0] + 1
 
         # Update q for Godunov update
-        for m in xrange(meqn):
-            q[LL:UL,m] -= dtdx[LL:UL]*apdq[LL-1:UL-1,m]
-            q[LL-1:UL-1,m] -= dtdx[LL-1:UL-1]*amdq[LL-1:UL-1,m]
-    
+        for m in range(meqn):
+            q[LL:UL, m] -= dtdx[LL:UL] * apdq[LL - 1 : UL - 1, m]
+            q[LL - 1 : UL - 1, m] -= dtdx[LL - 1 : UL - 1] * amdq[LL - 1 : UL - 1, m]
+
         # Compute maximum wave speed
         self.cfl = 0.0
-        for mw in xrange(wave.shape[2]):
-            smax1 = max(dtdx[LL:UL]*s[LL-1:UL-1,mw])
-            smax2 = max(-dtdx[LL-1:UL-1]*s[LL-1:UL-1,mw])
-            self.cfl = max(self.cfl,smax1,smax2)
+        for mw in range(wave.shape[2]):
+            smax1 = max(dtdx[LL:UL] * s[LL - 1 : UL - 1, mw])
+            smax2 = max(-dtdx[LL - 1 : UL - 1] * s[LL - 1 : UL - 1, mw])
+            self.cfl = max(self.cfl, smax1, smax2)
 
         # If we are doing slope limiting we have more work to do
         if self.order == 2:
             # Initialize flux corrections
-            f = np.zeros( (grid.n[0] + 2*grid.mbc, meqn) )
-        
+            f = np.zeros((grid.n[0] + 2 * grid.mbc, meqn))
+
             # Apply Limiters to waves
             if (limiter > 0).any():
-                wave = limiters.limit(grid.meqn,wave,s,limiter,dtdx)
+                wave = limiters.limit(grid.meqn, wave, s, limiter, dtdx)
 
             # Compute correction fluxes for second order q_{xx} terms
-            dtdxave = 0.5 * (dtdx[LL-1:UL-1] + dtdx[LL:UL])
+            dtdxave = 0.5 * (dtdx[LL - 1 : UL - 1] + dtdx[LL:UL])
             if self.fwave:
-                for mw in xrange(wave.shape[2]):
-                    sabs = np.abs(s[LL-1:UL-1,mw])
-                    om = 1.0 - sabs*dtdxave[:UL-LL]
-                    ssign = np.sign(s[LL-1:UL-1,mw])
-                    for m in xrange(meqn):
-                        f[LL:UL,m] += 0.5 * ssign * om * wave[LL-1:UL-1,m,mw]
+                for mw in range(wave.shape[2]):
+                    sabs = np.abs(s[LL - 1 : UL - 1, mw])
+                    om = 1.0 - sabs * dtdxave[: UL - LL]
+                    ssign = np.sign(s[LL - 1 : UL - 1, mw])
+                    for m in range(meqn):
+                        f[LL:UL, m] += 0.5 * ssign * om * wave[LL - 1 : UL - 1, m, mw]
             else:
-                for mw in xrange(wave.shape[2]):
-                    sabs = np.abs(s[LL-1:UL-1,mw])
-                    om = 1.0 - sabs*dtdxave[:UL-LL]
-                    for m in xrange(meqn):
-                        f[LL:UL,m] += 0.5 * sabs * om * wave[LL-1:UL-1,m,mw]
+                for mw in range(wave.shape[2]):
+                    sabs = np.abs(s[LL - 1 : UL - 1, mw])
+                    om = 1.0 - sabs * dtdxave[: UL - LL]
+                    for m in range(meqn):
+                        f[LL:UL, m] += 0.5 * sabs * om * wave[LL - 1 : UL - 1, m, mw]
 
             # Update q by differencing correction fluxes
-            for m in xrange(meqn):
-                q[LL:UL-1,m] -= dtdx[LL:UL-1] * (f[LL+1:UL,m] - f[LL:UL-1,m]) 
-            
+            for m in range(meqn):
+                q[LL : UL - 1, m] -= dtdx[LL : UL - 1] * (
+                    f[LL + 1 : UL, m] - f[LL : UL - 1, m]
+                )
+
         # Reset q update
-        grid.q = q[grid.mbc:-grid.mbc][:]
+        grid.q = q[grid.mbc : -grid.mbc][:]
