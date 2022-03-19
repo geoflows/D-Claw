@@ -573,7 +573,7 @@ def fort2topotype(framenumber,outfile,fortdir,xll,yll,cellsize,ncols,nrows,m=1,t
 def griddata2fort(X,Y,Q,qoutputfile,toutputfile,time=0.0,naux=0,ndim=2,grid_number=1,AMR_level=1):
     """
     !!!!WIP -- NOT TESTED!!!
-    griddata2fortfile creates a clawpack fort file from grid datasets
+    griddata2fort creates a clawpack fort file from grid datasets
     Q - numpy array, shape(Q)=(mx,my,meqn)
     """
 
@@ -604,7 +604,7 @@ def array2fort(Q,fort_q_outfile,fort_t_outfile,xlow,ylow,mx,my,dx,dy,time=0.0,na
     Assumed that shape(Q) = (mx*my,meqn); ie: array Q is not reshaped.
     """
 
-    meqn=np.shape(Q)[1] + 1
+    meqn=np.shape(Q)[1]
 
     # creat header for toutputfile
     forttheader = forttheader={}
