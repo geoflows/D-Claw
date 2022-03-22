@@ -590,7 +590,79 @@ def griddata2topofile (X,Y,Z,outputfile,topotype=2,nodata_value_in=9999.,nodata_
         fout.close()
 
     # end griddata2topofile ======================================================================
+    # end griddata2topofile ======================================================================
 
+def griddata2gtif (X,Y,Z,outputfile,nodata_value_in=9999.,nodata_value_out=9999.):
+    """
+    griddata2gtif takes gridded data and produces a geotif
+
+    """
+    try:
+        import rasterio
+        import rasterio.transform
+    except ImportError:
+        raise ImportError("rasterio needed for griddata2gtif")
+
+    nrows=len(Z[:,0])
+    ncols=len(Z[0,:])
+    meqn =Q.shape[0]
+    xll=X[0,0]
+    yll=Y[-1,0]
+    nodata_value=nodata_value_out
+    xupper=X[0,-1]
+    yupper=Y[0,0]
+
+    if (yupper<yll):
+        print ("geotools.topotools.griddata2topofile:")
+        print ("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
+        print ("The matrix Y, should advance from north to south rowwise")
+
+
+    cellsizeX= (xupper-xll)/(ncols-1)
+    cellsizeY= (yupper-yll)/(nrows-1)
+
+    # define rasterio profile
+    out_profile = {}
+    out_profile["transform"] = rasterio.transform.from_bounds(
+            westest - cellsizeX / 2,
+            southest - cellsizeX / 2,
+            eastest + cellsizeX / 2,
+            northest + cellsizeX / 2,
+            nrows,
+            ncols,
+        )
+
+    out_profile["height"], out_profile["width"] = X.shape
+    out_profile["dtype"] = "float32"
+    out_profile["count"] = meqn
+    out_profile["driver"] = "GTiff"
+    out_profile["nodata"] = nodata_value_out
+
+    if ((abs(cellsizeX-cellsizeY)<-1.e-9)&(topotype>1)):
+        print ("geotools.topotools.griddata2topofile:")
+        print ("WARNING: cellsize is not uniform in x and y")
+        print(("cellsize in the x-direction %s" % cellsizeX))
+        print(("cellsize in the y-direction %s" % cellsizeY))
+        print ("Consider changing to topotype=1")
+
+    with rasterio.open(outputfile, 'w', **out_profile) as dst:
+            for i in range(meqn):
+
+                # get band values
+                band = i +1
+                vals = (Q[i, :, :]).reshape((nrows, ncols))
+
+                # remap nodata if necessary
+                if nodata_value_in != nodata_value_out:
+                    nodata = vals == nodata_value_in
+                    vals[nodata] = nodata_value_out
+
+                # write to band.
+                dst.write(vals, band)
+
+    # end griddata2gtif ======================================================================
+
+    
 #================================================================================================
 def converttopotype (inputfile,outputfile,topotypein=1,topotypeout=2,nodata_value=None):
     """
