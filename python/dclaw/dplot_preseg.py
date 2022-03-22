@@ -302,8 +302,8 @@ def liquefaction_ratio(current_data):
 
 def topo(current_data):
     """
-   Return topography = eta - h.
-   """
+    Return topography = eta - h.
+    """
     q = current_data.q
     h = q[:, :, 0]
     eta = q[:, :, i_eta]
@@ -313,8 +313,8 @@ def topo(current_data):
 
 def land(current_data):
     """
-   Return a masked array containing the surface elevation only in dry cells.
-   """
+    Return a masked array containing the surface elevation only in dry cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -340,8 +340,8 @@ def water(current_data):
 
 def depth(current_data):
     """
-   Return a masked array containing the depth of fluid only in wet cells.
-   """
+    Return a masked array containing the depth of fluid only in wet cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -354,10 +354,10 @@ def depth(current_data):
 
 def surface(current_data):
     """
-   Return a masked array containing the surface elevation only in wet cells.
-   Surface is eta = h+topo, assumed to be output as 4th column of fort.q
-   files.
-   """
+    Return a masked array containing the surface elevation only in wet cells.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -370,12 +370,12 @@ def surface(current_data):
 
 def surface_or_depth(current_data):
     """
-   Return a masked array containing the surface elevation where the topo is
-   below sea level or the water depth where the topo is above sea level.
-   Mask out dry cells.  Assumes sea level is at topo=0.
-   Surface is eta = h+topo, assumed to be output as 4th column of fort.q
-   files.
-   """
+    Return a masked array containing the surface elevation where the topo is
+    below sea level or the water depth where the topo is above sea level.
+    Mask out dry cells.  Assumes sea level is at topo=0.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
     from numpy import ma, where
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -391,8 +391,8 @@ def surface_or_depth(current_data):
 
 def velocity_u(current_data):
     """
-   Return a masked array containing velocity u in wet cells.
-   """
+    Return a masked array containing velocity u in wet cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -406,8 +406,8 @@ def velocity_u(current_data):
 
 def velocity_v(current_data):
     """
-   Return a masked array containing velocity v in wet cells.
-   """
+    Return a masked array containing velocity v in wet cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -421,8 +421,8 @@ def velocity_v(current_data):
 
 def particle_size(current_data):
     """
-   Return a masked array containing velocity v in wet cells.
-   """
+    Return a masked array containing velocity v in wet cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -436,8 +436,8 @@ def particle_size(current_data):
 
 def velocity(current_data):
     """
-   Return a masked array containing velocity v in wet cells.
-   """
+    Return a masked array containing velocity v in wet cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -452,8 +452,8 @@ def velocity(current_data):
 
 def fs(current_data):
     """
-   Return a masked array containing factor of safety.
-   """
+    Return a masked array containing factor of safety.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -468,8 +468,8 @@ def fs(current_data):
 
 def phi(current_data):
     """
-   Return a masked array containing factor of safety.
-   """
+    Return a masked array containing factor of safety.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -484,8 +484,8 @@ def phi(current_data):
 
 def cohesion(current_data):
     """
-   Return a masked array containing factor of safety.
-   """
+    Return a masked array containing factor of safety.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -500,8 +500,8 @@ def cohesion(current_data):
 
 def taudir(current_data):
     """
-   Return a masked array containing factor of safety.
-   """
+    Return a masked array containing factor of safety.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -606,7 +606,11 @@ def plot_topo_file(topoplotdata):
         if 0:
             topo = []
             for i in range(nrows):
-                topo.append(pylab.array(lines[6 + i],))
+                topo.append(
+                    pylab.array(
+                        lines[6 + i],
+                    )
+                )
             print(("+++ topo = ", topo))
             topo = pylab.array(topo)
 

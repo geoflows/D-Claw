@@ -24,7 +24,7 @@ import dclaw.iotools as iotools
 # ==============================================================================
 def findbadindices(Z, badvalue=inf, removenans=True):
     """
-        remove nans or infs from an array
+    remove nans or infs from an array
     """
 
     badind = []
