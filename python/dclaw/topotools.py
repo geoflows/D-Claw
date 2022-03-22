@@ -392,12 +392,12 @@ def esriheaderwrite (topoheader,outputfile,closefile=True):
 
     The header is of the following form with columns containing the topoheader key and value respectively.
 
-         ncols int
-         nrows int
-         xll float
-         yll float
-         cellsize float
-         nodata_value float
+         NCOLS int
+         NROWS int
+         XLLCORNER float
+         YLLCORNER float
+         CELLSIZE float
+         NODATA_VALUE float
 
 
     if closefile==True: the file is closed. Otherwise return the open file object.
@@ -405,12 +405,12 @@ def esriheaderwrite (topoheader,outputfile,closefile=True):
 
     fout=open(outputfile,'w')
 
-    fout.write("%s %s\n" % ("ncols",topoheader['ncols']))
-    fout.write("%s %s\n" % ("nrows",topoheader['nrows']))
-    fout.write("%s %s\n" % ("xll", float(topoheader['xll'])))
-    fout.write("%s %s\n" % ("yll",float(topoheader['yll'])))
-    fout.write("%s %s\n" % ("cellsize",float(topoheader['cellsize'])))
-    fout.write("%s %s\n" % ("nodata_value",topoheader['nodata_value']))
+    fout.write("%s %s\n" % ("NCOLS",topoheader['ncols']))
+    fout.write("%s %s\n" % ("NROWS",topoheader['nrows']))
+    fout.write("%s %s\n" % ("XLLCORNER", float(topoheader['xll'])))
+    fout.write("%s %s\n" % ("YLLCORNER",float(topoheader['yll'])))
+    fout.write("%s %s\n" % ("CELLSIZE",float(topoheader['cellsize'])))
+    fout.write("%s %s\n" % ("NODATA_VALUE",topoheader['nodata_value']))
     if closefile:
         fout.close()
     else:
@@ -645,7 +645,7 @@ def topofilefindz (pts,inputfile,topotypein=2):
     else:
         (X,Y,Z)=inputfile
 
-    
+
     z=[]
 
     for i in range(len(pts)):
@@ -1118,7 +1118,7 @@ def burnin_nodata_value (inputfile1,inputfile2,outputfile,topotypein1=3,topotype
     """
 
     (X,Y,Z)=topofile2griddata(inputfile1,topotypein1)
-    
+
     Znew=Z
 
     if topotypein1>1 and not nodata_valuein:
@@ -1161,12 +1161,12 @@ def merge_topofiles (X,Y,inputfile1,inputfile2,outputfile,topotypein1=2,topotype
     """
     create a topo file from 2 others, given preference of files and input parameters specifying output grid
 
-    X,Y: gridded arrays for output file, eg. from meshgrid. 
+    X,Y: gridded arrays for output file, eg. from meshgrid.
     inputfile1: name of primary topo file (the preferred data where it exists)
     inputfile2: name of secondary topo file (data to be used where primary file has nodata_values, or no values)
-    outputfile: output topo file 
+    outputfile: output topo file
     """
-    
+
     Z=np.ones(np.shape(X))
 
     (X1,Y1,Z1)=topofile2griddata(inputfile1,topotypein1)
@@ -1211,7 +1211,7 @@ def clip_surface (inputfile1,inputfile2,outputfile,topotypein1=3,topotypein2=3,t
         nodata_valuein=None):
 
     """
-    create a surface file from 2 others using values in the primary file where they are 
+    create a surface file from 2 others using values in the primary file where they are
     not clipped in the secondary file. Clipping values where they are clipped in the secondary.
     (eg. primary file is original topo (top surface) secondary file is a clipped slip surface)
 
@@ -1225,7 +1225,7 @@ def clip_surface (inputfile1,inputfile2,outputfile,topotypein1=3,topotypein2=3,t
     (X,Y,Z)=topofile2griddata(inputfile1,topotypein1)
     (X2,Y2,Z2)=topofile2griddata(inputfile2,topotypein2)
 
-    
+
 
     if topotypein2>1 and not nodata_valuein:
         topoheader=topoheaderread(inputfile2)
@@ -1413,4 +1413,3 @@ def calculate_resolution(ratios,base_resolutions=[0.25,0.25],
         resolutions[level] = (degree_resolutions,meter_resolutions)
     return [(degree_resolutions,meter_resolutions)
                         for level in xrange(1,num_levels)]
-

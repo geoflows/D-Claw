@@ -161,6 +161,7 @@ c        try automatically resetting
 c        RANDY: do you like this option
 c
          possk(1) = cfl/spoh(1)
+         possk(1) = min(possk(1),dtv2)    ! check if faster than max allowable timestep
          write(*,*)"  automatically setting initial dt to ",possk(1)
 
 c

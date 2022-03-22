@@ -42,17 +42,21 @@ def pwcubic(xi, zl, zr, slopel, sloper, x):
 
     s = (zl[1:] - zr[:-1]) / dx
     c2 = (s - sloper[:-1]) / dx
-    c3 = (slopel[1:] - 2.*s + sloper[:-1]) / (dx**2)
+    c3 = (slopel[1:] - 2.0 * s + sloper[:-1]) / (dx ** 2)
 
     # set to linear function for x<xi[0] or x>= xi[-1]
-    z = where(x < xi[0],  zl[0] + (x-xi[0]) * slopel[0], 
-                          zr[-1] + (x-xi[-1]) * sloper[-1])
+    z = where(
+        x < xi[0], zl[0] + (x - xi[0]) * slopel[0], zr[-1] + (x - xi[-1]) * sloper[-1]
+    )
 
     # replace by appropriate cubic in intervals:
-    for i in range(len(xi)-1):
-        cubic = zr[i] + sloper[i]*(x - xi[i]) \
-                    + (x-xi[i])**2 * (c2[i] + c3[i]*(x-xi[i+1]))
-        z = where((x >= xi[i]) & (x < xi[i+1]), cubic, z)
+    for i in range(len(xi) - 1):
+        cubic = (
+            zr[i]
+            + sloper[i] * (x - xi[i])
+            + (x - xi[i]) ** 2 * (c2[i] + c3[i] * (x - xi[i + 1]))
+        )
+        z = where((x >= xi[i]) & (x < xi[i + 1]), cubic, z)
 
     return z
 
@@ -70,14 +74,14 @@ def pwlinear(xi, zl, zr, x, extrap=0):
     """
 
     from numpy import zeros
+
     slopel = zeros(len(zl))
     sloper = zeros(len(zr))
     dx = xi[1:] - xi[:-1]
-    slopel[1:]  = (zl[1:]-zr[:-1]) / dx
+    slopel[1:] = (zl[1:] - zr[:-1]) / dx
     sloper[:-1] = slopel[1:]
-    if extrap==1:
+    if extrap == 1:
         slopel[0] = sloper[0]
         sloper[-1] = slopel[-1]
     z = pwcubic(xi, zl, zr, slopel, sloper, x)
     return z
-

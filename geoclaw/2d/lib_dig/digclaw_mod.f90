@@ -22,6 +22,11 @@ module digclaw_module
     ! ========================================================================
     double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
+    double precision :: mom_perc
+    logical :: mom_autostop
+
+    double precision :: globmaxmom = 0. ! initialize values for global max momentum
+    logical :: amidoneyet = .False. ! and momentum based stopping criterion.
 
     integer :: init_ptype,p_initialized,bed_normal,entrainment
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
@@ -35,7 +40,6 @@ module digclaw_module
     integer, parameter ::  i_taudir_x = i_dig + 4
     integer, parameter ::  i_taudir_y = i_dig + 5
     integer, parameter ::  DIG_PARM_UNIT = 78
-
 
 contains
 
@@ -93,6 +97,8 @@ contains
          read(iunit,*) phi_seg_coeff
          read(iunit,*) entrainment
          read(iunit,*) entrainment_rate
+         read(iunit,*) mom_autostop
+         read(iunit,*) mom_perc
 
          close(iunit)
          alpha_seg = 1.0 - alpha_seg
@@ -120,7 +126,8 @@ contains
          write(DIG_PARM_UNIT,*) '    phi_seg_coeff:', phi_seg_coeff
          write(DIG_PARM_UNIT,*) '    entrainment:', entrainment
          write(DIG_PARM_UNIT,*) '    entrainment_rate:', entrainment_rate
-
+         write(DIG_PARM_UNIT,*) '    mom_autostop:', mom_autostop
+         write(DIG_PARM_UNIT,*) '    mom_perc:', mom_perc
 
    end subroutine set_dig
 
@@ -357,7 +364,7 @@ contains
       else
          D = 0.d0
       endif
-      
+
       tanphi = dtan(phi_bed + datan(tanpsi))! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
@@ -459,7 +466,7 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
 
       do i=2-mbc,mx+mbc-1
          do j=2-mbc,my+mbc-1
-            
+
 
             h = q(i,j,1)
             hu = q(i,j,2)
@@ -554,7 +561,7 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             call auxeval(hR,uR,vR,mR,pR,phi,theta,kappa,S,rhoR,tanpsi,D,tauR,sigbed,kperm,compress,pm)
             call auxeval(hB,uB,vB,mB,pB,phi,theta,kappa,S,rhoB,tanpsi,D,tauB,sigbed,kperm,compress,pm)
             call auxeval(hT,uT,vT,mT,pT,phi,theta,kappa,S,rhoT,tanpsi,D,tauT,sigbed,kperm,compress,pm)
-            
+
             !minmod gradients
             FxC = -gmod*h*(EtaR-EtaL)/(2.0*dx) + gmod*h*sin(theta)
             FyC = -gmod*h*(EtaT-EtaB)/(2.0*dy)
@@ -576,12 +583,12 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             else
                Fy = 0.0
             endif
-            
+
             vnorm = sqrt(hu**2 + hv**2)
             if (vnorm>0.0) then
                aux(i,j,i_taudir_x) = -hu/sqrt(hv**2+hu**2)
-               aux(i,j,i_taudir_y) = -hv/sqrt(hv**2+hu**2) 
-               
+               aux(i,j,i_taudir_y) = -hv/sqrt(hv**2+hu**2)
+
                dot = min(max(0.0,Fx*hu) , max(0.0,Fy*hv))
                if (dot>0.0) then
                   !friction should oppose direction of velocity
@@ -597,9 +604,9 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                   !no splitting, integrate friction in src
                   aux(i,j,i_fsphi) = 0.0
                endif
-               
 
-            else 
+
+            else
                !aux now have cell edge interpretation in Riemann solver
                !friction should oppose net force. resolve in Riemann solver
                if ((FxL**2+Fy**2)>0.0) then
@@ -609,9 +616,9 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                endif
 
                if ((Fx**2+FyL**2)>0.0) then
-                  aux(i,j,i_taudir_y) = -FyL/sqrt(Fx**2+FyL**2) 
+                  aux(i,j,i_taudir_y) = -FyL/sqrt(Fx**2+FyL**2)
                else
-                  !there is no motion or net force. resolve in src after Riemann 
+                  !there is no motion or net force. resolve in src after Riemann
                   aux(i,j,i_taudir_y) = 1.0
                endif
 
@@ -619,8 +626,8 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                   aux(i,j,i_fsphi) = 1.0
                else
                   aux(i,j,i_fsphi) = 0.0
-               endif               
-            endif 
+               endif
+            endif
 
          enddo
       enddo
@@ -911,7 +918,7 @@ subroutine calc_pmtanh(pm,seg,pmtanh)
       double precision, intent(out) :: pmtanh
 
       !Locals
-      
+
 
       pmtanh = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
       !pmtanh = 0.8*seg*(0.5*(tanh(40.0*(pm-0.98))+1.0))

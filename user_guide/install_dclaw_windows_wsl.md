@@ -52,7 +52,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
   b. Add miniconda to WSL. First download from anaconda.com with wget.
   ```bash
-  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86.sh
+  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
   ```
 
   c. Then install miniconda and ensure conda is updated.

@@ -1,8 +1,3 @@
+version = 1.00
 
-
-version=1.00
-
-__all__ = ['iotools','fixdata']
-
-
-
+__all__ = ["iotools", "fixdata"]
