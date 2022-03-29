@@ -204,20 +204,16 @@ def convertfortdir(
             topotype = kwargs.get("topotype", None)
             _func = fort2refined
 
-            arg_list.append(
-                [
-                    frameno,
-                    outfname,
-                    outfortt,
-                    components,
-                    topotype,
-                    write_level,
-                    west,
-                    east,
-                    south,
-                    north,
-                ]
-            )
+            arg_list.append([frameno,
+                outfname,
+                outfortt,
+                components,
+                topotype,
+                write_level,
+                west,
+                east,
+                south,
+                north,])
 
         elif outputtype == "fortuniform":
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
@@ -744,7 +740,7 @@ def griddata2fort(
 ):
     """
     !!!!WIP -- NOT TESTED!!!
-    griddata2fortfile creates a clawpack fort file from grid datasets
+    griddata2fort creates a clawpack fort file from grid datasets
     Q - numpy array, shape(Q)=(mx,my,meqn)
     """
 
