@@ -200,7 +200,8 @@ def read_topo_file(path, topo_type, verbose=False):
             for i in range(0, nx):
                 Z[i, j] = float(line[i])
     else:
-        print("Invalid topo type %s" % topo_type, file=sys.stderr)
+        with open(sys.stderr, "a") as f:
+            f.write("Invalid topo type %s \n" % topo_type)
         return None
 
     return x, y, Z
