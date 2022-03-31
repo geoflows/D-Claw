@@ -19,24 +19,24 @@ from pyclaw.plotters import plotpages
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
-    if not sys.modules.has_key("matplotlib"):
+    if "matplotlib" not in sys.modules:
         try:
             import matplotlib
 
             matplotlib.use("Agg")  # Use an image backend
         except:
-            print "*** Error: problem importing matplotlib"
+            print("*** Error: problem importing matplotlib")
 
 try:
     import pylab
 except:
-    print "*** Error: problem importing pylab"
+    print("*** Error: problem importing pylab")
 
 
 try:
     from numpy import ma
 except:
-    print "*** Error: problem importing masked array module ma"
+    print("*** Error: problem importing masked array module ma")
 
 
 # ==========================================
@@ -52,7 +52,7 @@ def plotframe(frameno, plotdata, verbose=False):
     """
 
     if verbose:
-        print "    Plotting frame %s ... " % frameno
+        print("    Plotting frame %s ... " % frameno)
 
     if plotdata.mode() == "iplotclaw":
         pylab.ion()
@@ -60,19 +60,19 @@ def plotframe(frameno, plotdata, verbose=False):
     try:
         plotfigure_dict = plotdata.plotfigure_dict
     except:
-        print "*** Error in plotframe: plotdata missing plotfigure_dict"
-        print "*** This should not happen"
+        print("*** Error in plotframe: plotdata missing plotfigure_dict")
+        print("*** This should not happen")
         return None
 
     if len(plotfigure_dict) == 0:
-        print "*** Warning in plotframe: plotdata has empty plotfigure_dict"
-        print "*** Apparently no figures to plot"
+        print("*** Warning in plotframe: plotdata has empty plotfigure_dict")
+        print("*** Apparently no figures to plot")
 
     try:
         framesoln = plotdata.getframe(frameno, plotdata.outdir)
     except:
-        print "*** Cannot find frame number ", frameno
-        print "*** looking in directory ", plotdata.outdir
+        print("*** Cannot find frame number ", frameno)
+        print("*** looking in directory ", plotdata.outdir)
         return None
 
     t = framesoln.t
@@ -94,7 +94,7 @@ def plotframe(frameno, plotdata, verbose=False):
     if beforeframe:
         if isinstance(beforeframe, str):
             # a string to be executed
-            exec (beforeframe)
+            exec(beforeframe)
         else:
             # assume it's a function
             try:
@@ -102,14 +102,14 @@ def plotframe(frameno, plotdata, verbose=False):
                 if output:
                     current_data = output
             except:
-                print "*** Error in beforeframe ***"
+                print("*** Error in beforeframe ***")
                 raise
 
     # iterate over each single plot that makes up this frame:
     # -------------------------------------------------------
 
     if plotdata._mode == "iplotclaw":
-        print "    Plotting Frame %s at t = %s" % (frameno, t)
+        print("    Plotting Frame %s at t = %s" % (frameno, t))
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -137,7 +137,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
         plotted_fignos.append(figno)
 
-        if not plotfigure.kwargs.has_key("facecolor"):
+        if "facecolor" not in plotfigure.kwargs:
             # use Clawpack's default bg color (tan)
             plotfigure.kwargs["facecolor"] = "#ffeebb"
 
@@ -151,13 +151,13 @@ def plotframe(frameno, plotdata, verbose=False):
         try:
             plotaxes_dict = plotfigure.plotaxes_dict
         except:
-            print "*** Error in plotframe: plotdata missing plotaxes_dict"
-            print "*** This should not happen"
+            print("*** Error in plotframe: plotdata missing plotaxes_dict")
+            print("*** This should not happen")
             return None
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
-            print "*** Warning in plotframe: plotdata has empty plotaxes_dict"
-            print "*** Apparently no axes to plot in figno ", figno
+            print("*** Warning in plotframe: plotdata has empty plotaxes_dict")
+            print("*** Apparently no axes to plot in figno ", figno)
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
@@ -170,8 +170,8 @@ def plotframe(frameno, plotdata, verbose=False):
             # create the axes:
             axescmd = getattr(plotaxes, "axescmd", "subplot(1,1,1)")
             axescmd = "plotaxes._handle = pylab.%s" % axescmd
-            exec (axescmd)
-            pylab.hold(True)
+            exec(axescmd)
+            #pylab.hold(True)
 
             # NOTE: This was rearranged December 2009 to
             # loop over grids first and then over plotitems so that
@@ -190,14 +190,14 @@ def plotframe(frameno, plotdata, verbose=False):
                 try:
                     framesoln = plotdata.getframe(frameno, outdir)
                 except:
-                    print "*** Cannot find frame number ", frameno
-                    print "*** looking in directory ", outdir
+                    print("*** Cannot find frame number ", frameno)
+                    print("*** looking in directory ", outdir)
                     return current_data
 
                 if framesoln.t != t:
-                    print "*** Warning: t values do not agree for frame ", frameno
-                    print "*** t = %g for outdir = %s" % (t, plotdata.outdir)
-                    print "*** t = %g for outdir = %s" % (framesoln.t, outdir)
+                    print("*** Warning: t values do not agree for frame ", frameno)
+                    print("*** t = %g for outdir = %s" % (t, plotdata.outdir))
+                    print("*** t = %g for outdir = %s" % (framesoln.t, outdir))
 
                 current_data.framesoln = framesoln
 
@@ -245,20 +245,17 @@ def plotframe(frameno, plotdata, verbose=False):
                             show_this_level = True
 
                         if plotitem._show and show_this_level:
-                            cmd = (
-                                "output = plotitem%s(framesoln,plotitem,\
-                                    current_data,gridno)"
-                                % ndim
-                            )
-
+                            if ndim == 1:
+                                output = plotitem1(framesoln,plotitem,current_data,gridno)
+                            elif ndim == 2:
+                                output = plotitem2(framesoln,plotitem,current_data,gridno)
                             try:
-                                exec (cmd)
                                 if output:
                                     current_data = output
                                 if verbose:
-                                    print "      Plotted  plotitem ", itemname
+                                    print("      Plotted  plotitem ", itemname)
                             except:
-                                print "*** Error in plotframe: problem calling plotitem%s" % ndim
+                                print("*** Error in plotframe: problem calling plotitem%s" % ndim)
                                 traceback.print_exc()
                                 return None
 
@@ -269,9 +266,9 @@ def plotframe(frameno, plotdata, verbose=False):
             for itemname in plotaxes._itemnames:
                 plotitem = plotaxes.plotitem_dict[itemname]
                 if plotitem.afteritem:
-                    print "*** ClawPlotItem.afteritem is deprecated"
-                    print "*** use ClawPlotAxes.afteraxes "
-                    print "*** or  ClawPlotItem.aftergrid instead"
+                    print("*** ClawPlotItem.afteritem is deprecated")
+                    print("*** use ClawPlotAxes.afteraxes ")
+                    print("*** or  ClawPlotItem.aftergrid instead")
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj  # most recent plot object
@@ -292,7 +289,7 @@ def plotframe(frameno, plotdata, verbose=False):
             if afteraxes:
                 if isinstance(afteraxes, str):
                     # a string to be executed
-                    exec (afteraxes)
+                    exec(afteraxes)
                 else:
                     # assume it's a function
                     try:
@@ -302,7 +299,7 @@ def plotframe(frameno, plotdata, verbose=False):
                         if output:
                             current_data = output
                     except:
-                        print "*** Error in afteraxes ***"
+                        print("*** Error in afteraxes ***")
                         raise
 
             if plotaxes.scaled:
@@ -329,7 +326,7 @@ def plotframe(frameno, plotdata, verbose=False):
     if afterframe:
         if isinstance(afterframe, str):
             # a string to be executed
-            exec (afterframe)
+            exec(afterframe)
         else:
             # assume it's a function
             try:
@@ -337,7 +334,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 if output:
                     current_data = output
             except:
-                print "*** Error in afterframe ***"
+                print("*** Error in afterframe ***")
                 raise
 
     if plotdata.mode() == "iplotclaw":
@@ -347,7 +344,7 @@ def plotframe(frameno, plotdata, verbose=False):
         pylab.draw()
 
     if verbose:
-        print "    Done with plotframe for frame %i at time %g" % (frameno, t)
+        print("    Done with plotframe for frame %i at time %g" % (frameno, t))
 
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != "iplotclaw") & plotdata.printfigs:
@@ -395,7 +392,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     for plot_param in plot_params:
         cmd = "pp_%s = getattr(plotitem, '%s',None)" % (plot_param, plot_param)
-        exec (cmd)
+        exec(cmd)
 
     if pp_mapc2p is None:
         # if this item does not have a mapping, check for a global mapping:
@@ -426,9 +423,9 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         amr_list = getattr(plotitem, amr_plot_param, [])
         if len(amr_list) > 0:
             index = min(grid.level, len(amr_list)) - 1
-            exec ("pp_%s = amr_list[%i]" % (plot_param, index))
+            exec("pp_%s = amr_list[%i]" % (plot_param, index))
         else:
-            exec ("pp_%s = getattr(plotitem, '%s', None)" % (plot_param, plot_param))
+            exec("pp_%s = getattr(plotitem, '%s', None)" % (plot_param, plot_param))
 
     if pp_plot_type == "1d":
         pp_plot_type = "1d_plot"  # '1d' is deprecated
@@ -445,8 +442,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         try:
             pylab.fill_between
         except:
-            print "*** This version of pylab is missing fill_between"
-            print "*** Reverting to 1d_plot"
+            print("*** This version of pylab is missing fill_between")
+            print("*** Reverting to 1d_plot")
             pp_plot_type = "1d_plot"
         thisgridvar = get_gridvar(grid, pp_plot_var, 1, current_data)
         thisgridvar2 = get_gridvar(grid, pp_plot_var2, 1, current_data)
@@ -461,15 +458,15 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     elif pp_plot_type == "1d_fill_between_from_2d_data":
 
         if not pp_map_2d_to_1d:
-            print "*** Error, plot_type = 1d_from_2d_data requires "
-            print "*** map_2d_to_1d function as plotitem attribute"
+            print("*** Error, plot_type = 1d_from_2d_data requires ")
+            print("*** map_2d_to_1d function as plotitem attribute")
             raise
             return
         try:
             pylab.fill_between
         except:
-            print "*** This version of pylab is missing fill_between"
-            print "*** Reverting to 1d_plot"
+            print("*** This version of pylab is missing fill_between")
+            print("*** Reverting to 1d_plot")
             pp_plot_type = "1d_plot"
 
         try:
@@ -490,15 +487,15 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             var = var.flatten()  # convert to 1d
             var2 = var2.flatten()
         except:
-            print "*** Error with map_2d_to_1d function"
-            print "map_2d_to_1d = ", pp_map_2d_to_1d
+            print("*** Error with map_2d_to_1d function")
+            print("map_2d_to_1d = ", pp_map_2d_to_1d)
             raise
             return
 
     elif pp_plot_type == "1d_from_2d_data":
         if not pp_map_2d_to_1d:
-            print "*** Error, plot_type = 1d_from_2d_data requires "
-            print "*** map_2d_to_1d function as plotitem attribute"
+            print("*** Error, plot_type = 1d_from_2d_data requires ")
+            print("*** map_2d_to_1d function as plotitem attribute")
             raise
             return
         try:
@@ -519,8 +516,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             # xc_center, var = pp_map_2d_to_1d(var,xc_center,yc_center,t)
             # xc_edge, var = pp_map_2d_to_1d(var,xc_edge,yc_edge,t)
         except:
-            print "*** Error with map_2d_to_1d function"
-            print "map_2d_to_1d = ", pp_map_2d_to_1d
+            print("*** Error with map_2d_to_1d function")
+            print("map_2d_to_1d = ", pp_map_2d_to_1d)
             raise
             return
 
@@ -545,7 +542,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         pp_MappedGrid = pp_mapc2p is not None
 
     if pp_MappedGrid & (pp_mapc2p is None):
-        print "*** Warning: MappedGrid == True but no mapc2p specified"
+        print("*** Warning: MappedGrid == True but no mapc2p specified")
     elif pp_MappedGrid:
         X_center = pp_mapc2p(xc_center)
         X_edge = pp_mapc2p(xc_edge)
@@ -555,7 +552,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # The plot commands using matplotlib:
 
-    pylab.hold(True)
+    #pylab.hold(True)
 
     if pp_plot_type in ["1d_plot", "1d_from_2d_data"]:
         if pp_color:
@@ -563,7 +560,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
         plotcommand = "pobj=pylab.plot(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
         if pp_plot_show:
-            exec (plotcommand)
+            exec(plotcommand)
 
     elif pp_plot_type == "1d_semilogy":
         if pp_color:
@@ -573,7 +570,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             "pobj=pylab.semilogy(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
         )
         if pp_plot_show:
-            exec (plotcommand)
+            exec(plotcommand)
 
     elif pp_plot_type in ["1d_fill_between", "1d_fill_between_from_2d_data"]:
         if pp_color:
@@ -589,7 +586,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         else:
             plotcommand = "pobj=pylab.fill_between(X_center,var,var2,**pp_kwargs)"
         if pp_plot_show:
-            exec (plotcommand)
+            exec(plotcommand)
 
     elif pp_plot_type == "1d_gauge_trace":
 
@@ -597,7 +594,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         gaugeq = gaugesoln.q[:, 3]
         plotcommand = "pobj=pylab.plot(gauget, gaugeq)"
         if pp_plot_show:
-            exec (plotcommand)
+            exec(plotcommand)
 
         # interpolate to the current time t:
         try:
@@ -607,7 +604,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             qt = gaugeq[i1] + slope * (t - gauget[i1])
         except:
             qt = gaugeq[0]
-            print "Warning: t out of range"
+            print("Warning: t out of range")
         pylab.plot([t], [qt], "ro")
 
     elif pp_plot_type == "1d_empty":
@@ -623,7 +620,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     if pp_aftergrid:
         if isinstance(pp_aftergrid, str):
             # a string to be executed
-            exec (pp_aftergrid)
+            exec(pp_aftergrid)
         else:
             # assume it's a function
             try:
@@ -640,7 +637,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
                 if output:
                     current_data = output
             except:
-                print "*** Error in aftergrid ***"
+                print("*** Error in aftergrid ***")
                 raise
 
     try:
@@ -682,13 +679,13 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     # Convert each plot parameter into a local variable starting with 'pp_'.
 
+    pp_dict = {}
     for plot_param in plot_params:
-        cmd = "pp_%s = getattr(plotitem, '%s',None)" % (plot_param, plot_param)
-        exec (cmd)
+        pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
 
-    if pp_mapc2p is None:
+    if pp_dict["pp_mapc2p"] is None:
         # if this item does not have a mapping, check for a global mapping:
-        pp_mapc2p = getattr(plotdata, "mapc2p", None)
+        pp_dict["pp_mapc2p"] = getattr(plotdata, "mapc2p", None)
 
     grid = framesoln.grids[gridno]
     level = grid.level
@@ -727,16 +724,15 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         amr_list = getattr(plotitem, amr_plot_param, [])
         if len(amr_list) > 0:
             index = min(grid.level, len(amr_list)) - 1
-            exec ("pp_%s = amr_list[%i]" % (plot_param, index))
+            pp_dict["pp_%s" % plot_param] = amr_list[index]
         else:
-            exec ("pp_%s = getattr(plotitem, '%s', None)" % (plot_param, plot_param))
-
+            pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
     # turn grid background color into a colormap for use with pcolor cmd:
-    pp_grid_bgcolormap = colormaps.make_colormap(
-        {0.0: pp_grid_bgcolor, 1.0: pp_grid_bgcolor}
+    pp_dict['pp_grid_bgcolormap'] = colormaps.make_colormap(
+        {0.0: pp_dict['pp_grid_bgcolor'], 1.0: pp_dict['pp_grid_bgcolor']}
     )
 
-    thisgridvar = get_gridvar(grid, pp_plot_var, 2, current_data)
+    thisgridvar = get_gridvar(grid, pp_dict['pp_plot_var'], 2, current_data)
 
     xc_center = thisgridvar.xc_center  # cell centers (on mapped grid)
     yc_center = thisgridvar.yc_center
@@ -746,21 +742,21 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     # Grid mapping:
 
-    if pp_MappedGrid is None:
-        pp_MappedGrid = pp_mapc2p is not None
+    if pp_dict["pp_MappedGrid"] is None:
+        pp_dict["pp_MappedGrid"] = pp_dict["pp_mapc2p"] is not None
 
-    if pp_MappedGrid & (pp_mapc2p is None):
-        print "*** Warning: MappedGrid == True but no mapc2p specified"
-    elif pp_MappedGrid:
-        X_center, Y_center = pp_mapc2p(xc_center, yc_center)
-        X_edge, Y_edge = pp_mapc2p(xc_edge, yc_edge)
+    if pp_dict["pp_MappedGrid"] & (pp_dict["pp_mapc2p"] is None):
+        print("*** Warning: MappedGrid == True but no mapc2p specified")
+    elif pp_dict["pp_MappedGrid"]:
+        X_center, Y_center = pp_dict["pp_mapc2p"](xc_center, yc_center)
+        X_edge, Y_edge = pp_dict["pp_mapc2p"](xc_edge, yc_edge)
     else:
         X_center, Y_center = xc_center, yc_center
         X_edge, Y_edge = xc_edge, yc_edge
 
     # The plot commands using matplotlib:
 
-    pylab.hold(True)
+    #pylab.hold(True)
 
     if ma.isMaskedArray(var):
         # If var is a masked array: plotting should work ok unless all
@@ -771,121 +767,121 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         # not a masked array, so certainly not all masked:
         var_all_masked = False
 
-    if pp_plot_type == "2d_pcolor":
+    if pp_dict["pp_plot_type"] == "2d_pcolor":
 
         pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, var, \
-                        cmap=pp_pcolor_cmap"
+                        cmap=pp_dict['pp_pcolor_cmap']"
 
-        if pp_gridlines_show:
-            pcolor_cmd += ", edgecolors=pp_gridlines_color"
+        if pp_dict["pp_gridlines_show"]:
+            pcolor_cmd += ", edgecolors=pp_dict['pp_gridlines_color']"
         else:
             pcolor_cmd += ", shading='flat'"
 
-        pcolor_cmd += ", **pp_kwargs)"
+        pcolor_cmd += ", **pp_dict['pp_kwargs'])"
 
         if not var_all_masked:
-            exec (pcolor_cmd)
+            exec(pcolor_cmd)
 
-            if (pp_pcolor_cmin not in ["auto", None]) and (
-                pp_pcolor_cmax not in ["auto", None]
+            if (pp_dict["pp_pcolor_cmin"] not in ["auto", None]) and (
+                pp_dict["pp_pcolor_cmax"] not in ["auto", None]
             ):
-                pylab.clim(pp_pcolor_cmin, pp_pcolor_cmax)
+                pylab.clim(pp_dict["pp_pcolor_cmin"], pp_dict["pp_pcolor_cmax"])
         else:
             # print '*** Not doing pcolor on totally masked array'
             pass
 
-    elif pp_plot_type == "2d_imshow":
+    elif pp_dict["pp_plot_type"] == "2d_imshow":
 
         if not var_all_masked:
-            if pp_imshow_cmin in ["auto", None]:
-                pp_imshow_cmin = np.min(var)
-            if pp_imshow_cmax in ["auto", None]:
-                pp_imshow_cmax = np.max(var)
-            color_norm = Normalize(pp_imshow_cmin, pp_imshow_cmax, clip=True)
+            if pp_dict["pp_imshow_cmin"] in ["auto", None]:
+                pp_dict["pp_imshow_cmin"] = np.min(var)
+            if pp_dict["pp_imshow_cmax"] in ["auto", None]:
+                pp_dict["pp_imshow_cmax"] = np.max(var)
+            color_norm = Normalize(pp_dict["pp_imshow_cmin"], pp_dict["pp_imshow_cmax"], clip=True)
 
             xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
             pobj = pylab.imshow(
                 pylab.flipud(var.T),
                 extent=xylimits,
-                cmap=pp_imshow_cmap,
+                cmap=pp_dict["pp_imshow_cmap"],
                 interpolation="nearest",
                 norm=color_norm,
             )
 
-            if pp_gridlines_show:
+            if pp_dict["pp_gridlines_show"]:
                 # This draws grid for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this.
-                pobj = pylab.plot(X_edge, Y_edge, color=pp_gridlines_color)
-                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_gridlines_color)
+                pobj = pylab.plot(X_edge, Y_edge, color=ppp_dict["pp_gridlines_color"])
+                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"])
 
         else:
             # print '*** Not doing imshow on totally masked array'
             pass
 
-    elif pp_plot_type == "2d_contour":
+    elif pp_dict["pp_plot_type"] == "2d_contour":
         levels_set = True
-        if pp_contour_levels is None:
+        if pp_dict["pp_contour_levels"] is None:
             levels_set = False
-            if pp_contour_nlevels is None:
-                print "*** Error in plotitem2:"
-                print "    contour_levels or contour_nlevels must be set"
+            if pp_dict["pp_contour_nlevels"] is None:
+                print("*** Error in plotitem2:")
+                print("    contour_levels or contour_nlevels must be set")
                 raise
                 return
-            if (pp_contour_min is not None) and (pp_contour_max is not None):
+            if (pp_dict["pp_contour_min"] is not None) and (pp_dict["pp_contour_max"] is not None):
 
-                pp_contour_levels = pylab.linspace(
-                    pp_contour_min, pp_contour_max, pp_contour_nlevels
+                pp_dict["pp_contour_levels"] = pylab.linspace(
+                    pp_dict["pp_contour_min"], pp_dict["pp_contour_max"], pp_dict["pp_contour_nlevels"]
                 )
                 levels_set = True
 
-        if pp_gridlines_show:
+        if pp_dict["pp_gridlines_show"]:
             pobj = pylab.pcolormesh(
                 X_edge,
                 Y_edge,
                 pylab.zeros(var.shape),
-                cmap=pp_grid_bgcolormap,
-                edgecolors=pp_gridlines_color,
+                cmap=pp_dict["pp_grid_bgcolormap"],
+                edgecolors=pp_dict["pp_gridlines_color"],
             )
-        elif pp_grid_bgcolor is not "w":
+        elif pp_dict["pp_grid_bgcolor"] != "w":
             pobj = pylab.pcolormesh(
                 X_edge,
                 Y_edge,
                 pylab.zeros(var.shape),
-                cmap=pp_grid_bgcolormap,
+                cmap=pp_dict["pp_grid_bgcolormap"],
                 edgecolors="None",
             )
-        pylab.hold(True)
+        #pylab.hold(True)
 
         # create the contour command:
         contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
         if levels_set:
-            contourcmd += "pp_contour_levels"
+            contourcmd += 'pp_dict["pp_contour_levels"]'
         else:
-            contourcmd += "pp_contour_nlevels"
+            contourcmd += 'pp_dict["pp_contour_nlevels"]'
 
-        if pp_contour_cmap:
-            if (pp_kwargs is None) or ("cmap" not in pp_kwargs):
-                contourcmd += ", cmap = pp_contour_cmap"
-        elif pp_contour_colors:
-            if (pp_kwargs is None) or ("colors" not in pp_kwargs):
-                contourcmd += ", colors = pp_contour_colors"
+        if pp_dict['pp_contour_cmap']:
+            if (pp_dict['pp_kwargs'] is None) or ("cmap" not in pp_dict['pp_kwargs']):
+                contourcmd += ", cmap = pp_dict['pp_contour_cmap']"
+        elif pp_dict['pp_contour_colors']:
+            if (pp_dict['pp_kwargs'] is None) or ("colors" not in pp_dict['pp_kwargs']):
+                contourcmd += ", colors = pp_dict['pp_contour_colors']"
 
         contourcmd += ", **pp_kwargs)"
 
-        if pp_contour_show and not var_all_masked:
+        if pp_dict['pp_contour_show'] and not var_all_masked:
             # may suppress plotting at coarse levels
-            exec (contourcmd)
+            exec(contourcmd)
 
     elif pp_plot_type == "2d_grid":
         # plot only the grids, no data:
-        if pp_gridlines_show:
+        if pp_dict['pp_gridlines_show']:
             pobj = pylab.pcolormesh(
                 X_edge,
                 Y_edge,
                 pylab.zeros(var.shape),
-                cmap=pp_grid_bgcolormap,
-                edgecolors=pp_gridlines_color,
+                cmap=pp_dict['pp_grid_bgcolormap'],
+                edgecolors=pp_dict['pp_gridlines_color'],
                 shading="faceted",
             )
         else:
@@ -893,7 +889,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 X_edge,
                 Y_edge,
                 pylab.zeros(var.shape),
-                cmap=pp_grid_bgcolormap,
+                cmap=pp_dict['pp_grid_bgcolormap'],
                 shading="flat",
             )
 
@@ -905,15 +901,15 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp_schlieren_cmap"
 
-        if pp_gridlines_show:
-            pcolor_cmd += ", edgecolors=pp_gridlines_color"
+        if pp_dict['pp_gridlines_show']:
+            pcolor_cmd += ", edgecolors=pp_dict['pp_gridlines_color']"
         else:
             pcolor_cmd += ", edgecolors='None'"
 
         pcolor_cmd += ", **pp_kwargs)"
 
         if not var_all_masked:
-            exec (pcolor_cmd)
+            exec(pcolor_cmd)
 
             if (pp_schlieren_cmin not in ["auto", None]) and (
                 pp_schlieren_cmax not in ["auto", None]
@@ -962,7 +958,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     # plot grid patch edges if desired:
 
-    if pp_gridedges_show:
+    if pp_dict['pp_gridedges_show']:
         for i in [0, X_edge.shape[0] - 1]:
             X1 = X_edge[i, :]
             Y1 = Y_edge[i, :]
@@ -971,11 +967,11 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             X1 = X_edge[:, i]
             Y1 = Y_edge[:, i]
             pylab.plot(X1, Y1, pp_gridedges_color)
-
+    pp_aftergrid = pp_dict['pp_aftergrid']
     if pp_aftergrid:
         try:
             if isinstance(pp_aftergrid, str):
-                exec (pp_aftergrid)
+                exec(pp_aftergrid)
             else:
                 # assume it's a function
                 current_data.gridno = gridno
@@ -995,7 +991,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 if output:
                     current_data = output
         except:
-            print "*** Warning: could not execute aftergrid"
+            print("*** Warning: could not execute aftergrid")
             raise
 
     try:
@@ -1034,7 +1030,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
                 # var = plot_var(grid.q, xc_center, grid.t)
                 var = plot_var(current_data)
             except:
-                print "*** Error applying function plot_var = ", plot_var
+                print("*** Error applying function plot_var = ", plot_var)
                 traceback.print_exc()
                 return
 
@@ -1063,7 +1059,7 @@ def get_gridvar(grid, plot_var, ndim, current_data):
             try:
                 var = plot_var(current_data)
             except:
-                print "*** Error applying function plot_var = ", plot_var
+                print("*** Error applying function plot_var = ", plot_var)
                 traceback.print_exc()
                 return
 
@@ -1109,7 +1105,7 @@ def printfig(fname="", frameno="", figno="", format="png", plotdir=".", verbose=
     if plotdir != ".":
         fname = os.path.join(plotdir, fname)
     if verbose:
-        print "    Saving plot to file ", fname
+        print("    Saving plot to file ", fname)
     pylab.savefig(fname)
 
 
@@ -1141,12 +1137,12 @@ def printframes(plotdata=None, verbose=True):
 
     from pyclaw.plotters.data import ClawPlotData
 
-    if not sys.modules.has_key("matplotlib"):
-        print "*** Error: matplotlib not found, no plots will be done"
+    if "matplotlib" not in sys.modules:
+        print("*** Error: matplotlib not found, no plots will be done")
         return plotdata
 
     if not isinstance(plotdata, ClawPlotData):
-        print "*** Error, plotdata must be an object of type ClawPlotData"
+        print("*** Error, plotdata must be an object of type ClawPlotData")
         return plotdata
 
     plotdata._mode = "printframes"
@@ -1168,8 +1164,8 @@ def printframes(plotdata=None, verbose=True):
         overwrite = plotdata.overwrite  # ok to overwrite?
         msgfile = plotdata.msgfile  # where to write error messages
     except:
-        print "*** Error in printframes: plotdata missing attribute"
-        print "  *** plotdata = ", plotdata
+        print("*** Error in printframes: plotdata missing attribute")
+        print("  *** plotdata = ", plotdata)
         return plotdata
 
     if fignos == "all":
@@ -1202,8 +1198,8 @@ def printframes(plotdata=None, verbose=True):
     try:
         os.chdir(rundir)
     except:
-        print "*** Error: cannot move to run directory ", rundir
-        print "rootdir = ", rootdir
+        print("*** Error: cannot move to run directory ", rundir)
+        print("rootdir = ", rootdir)
         return plotdata
 
     if msgfile != "":
@@ -1213,7 +1209,7 @@ def printframes(plotdata=None, verbose=True):
     try:
         plotpages.cd_plotdir(plotdata)
     except:
-        print "*** Error, aborting plotframes"
+        print("*** Error, aborting plotframes")
         return plotdata
 
     framefiles = glob.glob(os.path.join(plotdir, "frame*.png")) + glob.glob(
@@ -1225,8 +1221,8 @@ def printframes(plotdata=None, verbose=True):
             os.remove(file)
     else:
         if len(framefiles) > 1:
-            print "*** Remove frame*.png and frame*.html and try again,"
-            print "  or use overwrite=True in call to printframes"
+            print("*** Remove frame*.png and frame*.html and try again,")
+            print("  or use overwrite=True in call to printframes")
             return plotdata
 
     # Create each of the figures
@@ -1235,7 +1231,7 @@ def printframes(plotdata=None, verbose=True):
     try:
         os.chdir(outdir)
     except:
-        print "*** Error printframes: cannot move to outdir = ", outdir
+        print("*** Error printframes: cannot move to outdir = ", outdir)
         return plotdata
 
     fortfile = {}
@@ -1251,7 +1247,7 @@ def printframes(plotdata=None, verbose=True):
             pngfile[frameno, figno] = "frame" + file[-4:] + "fig%s.png" % figno
 
     if len(fortfile) == 0:
-        print "*** No fort.q files found in directory ", os.getcwd()
+        print("*** No fort.q files found in directory ", os.getcwd())
         return plotdata
 
     # Discard frames that are not from latest run, based on
@@ -1260,8 +1256,8 @@ def printframes(plotdata=None, verbose=True):
 
     numframes = len(framenos)
 
-    print "Will plot %i frames numbered:" % numframes, framenos
-    print "Will make %i figure(s) for each frame, numbered: " % len(fignos), fignos
+    print("Will plot %i frames numbered:" % numframes, framenos)
+    print("Will make %i figure(s) for each frame, numbered: " % len(fignos), fignos)
 
     fignames = {}
     for figname in plotdata._fignames:
@@ -1287,13 +1283,13 @@ def printframes(plotdata=None, verbose=True):
         plotpages.timeframes2html(plotdata)
 
     if not plotdata.printfigs:
-        print "Using previously printed figure files"
+        print("Using previously printed figure files")
     else:
-        print "Now making png files for all figures..."
+        print("Now making png files for all figures...")
         for frameno in framenos:
             plotframe(frameno, plotdata, verbose)
             # frametimes[frameno] = plotdata.framesoln_dict[frameno].t
-            print "Frame %i at time t = %s" % (frameno, frametimes[frameno])
+            print("Frame %i at time t = %s" % (frameno, frametimes[frameno]))
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
@@ -1302,15 +1298,15 @@ def printframes(plotdata=None, verbose=True):
     # -------
 
     if plotdata.gif_movie:
-        print "Making gif movies.  This may take some time...."
+        print("Making gif movies.  This may take some time....")
         for figno in fignos:
             try:
                 os.system(
                     "convert -delay 20 frame*fig%s.png moviefig%s.gif" % (figno, figno)
                 )
-                print "    Created moviefig%s.gif" % figno
+                print("    Created moviefig%s.gif" % figno)
             except:
-                print "*** Error creating moviefig%s.gif" % figno
+                print("*** Error creating moviefig%s.gif" % figno)
 
     os.chdir(rootdir)
 
@@ -1333,9 +1329,9 @@ def plotclaw2html(plotdata=None, verbose=True):
     """
     Old plotting routine no longer exists.
     """
-    print "*** Error: plotclaw2html name is deprecated, use printframes."
-    print "*** Plotting command syntax has also changed, you may need to"
-    print "*** update your setplot function."
+    print("*** Error: plotclaw2html name is deprecated, use printframes.")
+    print("*** Plotting command syntax has also changed, you may need to")
+    print("*** update your setplot function.")
 
 
 # ------------------------------------------------------------------
@@ -1421,15 +1417,15 @@ def var_minmax(plotdata, framenos, vars):
 
     framenos = only_most_recent(framenos, plotdata.outdir)
     if len(framenos) == 0:
-        print "*** No frames found in var_minmax!"
+        print("*** No frames found in var_minmax!")
 
-    print "Determining min and max of variables: ", vars
-    print "   over frames: ", framenos
+    print("Determining min and max of variables: ", vars)
+    print("   over frames: ", framenos)
 
     varmin = {}
     varmax = {}
     if vars == "all":
-        print "*** Error in var_minmax: vars == 'all' is not implemented yet"
+        print("*** Error in var_minmax: vars == 'all' is not implemented yet")
         return (varmin, varmax)
     for var in vars:
         varmin[var] = {"all": inf}
@@ -1493,7 +1489,7 @@ def only_most_recent(framenos, outdir=".", verbose=True):
         try:
             os.chdir(outdir)
         except:
-            print "*** Could not chdir to ", outdir
+            print("*** Could not chdir to ", outdir)
             return framenos
 
     fortfile = {}
@@ -1502,14 +1498,14 @@ def only_most_recent(framenos, outdir=".", verbose=True):
         fortfile[frameno] = file
 
     if len(fortfile) == 0:
-        print "*** No fort.q files found in directory ", os.getcwd()
+        print("*** No fort.q files found in directory ", os.getcwd())
         framenos = []
         return framenos
 
     # Figure out which files are from latest run:
     numframes = 0
     mtime = 0
-    framekeys = fortfile.keys()
+    framekeys = list(fortfile.keys())
     framekeys.sort()
     for frameno in framekeys:
         mtimeprev = mtime
@@ -1523,10 +1519,10 @@ def only_most_recent(framenos, outdir=".", verbose=True):
 
     newframes = framekeys[:numframes]
     if (numframes < len(framekeys)) & verbose:
-        print "*** Frames %s and above appear to be from an old run" % framekeys[
+        print("*** Frames %s and above appear to be from an old run" % framekeys[
             numframes
-        ]
-        print "***    and will be ignored."
+        ])
+        print("***    and will be ignored.")
         time.sleep(2)
 
     # print 'framenos = ',framenos
@@ -1553,7 +1549,7 @@ def call_setplot(setplot, plotdata, verbose=True):
 
     if not setplot:
         if verbose:
-            print "*** Warning: no setplot specified"
+            print("*** Warning: no setplot specified")
         return plotdata
 
     # rjl: Modified the way this is done, should be more robust
@@ -1572,13 +1568,12 @@ def call_setplot(setplot, plotdata, verbose=True):
             setplot = ".".join((setplot, "py"))
         setplot = os.path.abspath(setplot)
         if not os.path.exists(setplot):
-            print "*** Error, cannot find specified setplot module:"
-            print "    Looking for ", setplot
+            print("*** Error, cannot find specified setplot module:")
+            print("    Looking for ", setplot)
             raise ImportError("Missing setplot module")
         setplotdir = os.path.split(setplot)[0]
         setplotfile = os.path.split(setplot)[1]
         setplotmod = os.path.splitext(setplotfile)[0]
-
         try:
             del SetPlot
         except:
@@ -1586,7 +1581,8 @@ def call_setplot(setplot, plotdata, verbose=True):
         oldmod = sys.modules.pop(setplotmod, "")
         sys.path.insert(0, setplotdir)  # search that directory first
         try:
-            exec ("import %s as SetPlot" % setplotmod)
+            import importlib
+            SetPlot = importlib.import_module(setplotmod)
             SetPlotFile = SetPlot.__file__
             if os.path.splitext(SetPlotFile)[1] == ".pyc":
                 SetPlotFile = SetPlotFile[:-1]  # drop the 'c' at end
@@ -1594,23 +1590,23 @@ def call_setplot(setplot, plotdata, verbose=True):
                 # Error message in case file doesn't exist but found
                 # elsewhere in the path. This should never happen now
                 # because of checks above.
-                print "*** Oops... SetPlotFile: %s" % SetPlotFile
-                print "*** Expected:  %s" % os.path.join(setplotdir, setplotfile)
-                print "*** Are you sure that file exists?"
+                print("*** Oops... SetPlotFile: %s" % SetPlotFile)
+                print("*** Expected:  %s" % os.path.join(setplotdir, setplotfile))
+                print("*** Are you sure that file exists?")
         except:
-            print "*** Error attempting to import %s" % setplotfile
-            print "***       from directory %s" % setplotdir
-            print "*** For better error messages, try importing at prompt"
+            print("*** Error attempting to import %s" % setplotfile)
+            print("***       from directory %s" % setplotdir)
+            print("*** For better error messages, try importing at prompt")
             raise ImportError("Possible syntax error in setplot file")
         finally:
             junk = sys.path.pop(0)  # clean up the path
 
         try:
             setplot = SetPlot.setplot  # should be a function
-            print "Imported setplot from "
-            print "   ", SetPlotFile
+            print("Imported setplot from ")
+            print("   ", SetPlotFile)
         except:
-            print "*** Error in call_setplot: Module has no function named setplot"
+            print("*** Error in call_setplot: Module has no function named setplot")
             raise AttributeError("Missing function setplot in module %s" % SetPlotFile)
             return plotdata
     else:
@@ -1621,15 +1617,15 @@ def call_setplot(setplot, plotdata, verbose=True):
     try:
         plotdata = setplot(plotdata)
         if verbose:
-            print "Executed setplot successfully"
+            print("Executed setplot successfully")
     except:
-        print "*** Error in call_setplot: Problem executing function setplot"
+        print("*** Error in call_setplot: Problem executing function setplot")
         raise Exception("Error executing setplot function")
         return plotdata
 
     if plotdata is None:
-        print "*** Error in printframes:  plotdata is None after call to setplot"
-        print '*** Did you forget the "return plotdata" statement?'
+        print("*** Error in printframes:  plotdata is None after call to setplot")
+        print('*** Did you forget the "return plotdata" statement?')
         raise
         return plotdata
 
@@ -1687,7 +1683,7 @@ def errors_2d_vs_1d(solution, reference, var_2d, var_1d, map_2d_to_1d):
             try:
                 q = var_2d(grid.q, X_center, Y_center, t)
             except:
-                print "*** Error applying function plot_var = ", plot_var
+                print("*** Error applying function plot_var = ", plot_var)
                 traceback.print_exc()
                 return
 
@@ -1695,8 +1691,8 @@ def errors_2d_vs_1d(solution, reference, var_2d, var_1d, map_2d_to_1d):
 
         if hasattr(reference, "grids"):
             if len(reference.grids) > 1:
-                print "*** Warning in errors_2d_vs_1d: reference solution"
-                print "*** has more than one grid -- only using grid[0]"
+                print("*** Warning in errors_2d_vs_1d: reference solution")
+                print("*** has more than one grid -- only using grid[0]")
             refgrid = reference.grids[0]
         else:
             refgrid = reference  # assume this contains true solution or
@@ -1711,7 +1707,7 @@ def errors_2d_vs_1d(solution, reference, var_2d, var_1d, map_2d_to_1d):
             try:
                 qref = var_1d(refgrid.q, xref, t)
             except:
-                print "*** Error applying function var_1d"
+                print("*** Error applying function var_1d")
                 return
 
         qint1 = interp(xs1, xref, qref)
@@ -1745,12 +1741,12 @@ def set_show(plotdata):
         plotfigure._show = False
         if plotfigure.show:
             # Loop through all axes to make sure at least some item is showing
-            for plotaxes in plotfigure.plotaxes_dict.itervalues():
+            for plotaxes in plotfigure.plotaxes_dict.values():
                 plotaxes._show = False
                 if plotaxes.show:
                     # Loop through plotitems checking each item to see if it
                     # should be shown
-                    for plotitem in plotaxes.plotitem_dict.itervalues():
+                    for plotitem in plotaxes.plotitem_dict.values():
                         plotitem._show = plotitem.show
                         if plotitem.show:
                             plotaxes._show = True

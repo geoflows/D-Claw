@@ -114,7 +114,7 @@ class Dimension(object):
     _mthbc_lower = 1
 
     def mthbc_upper():
-        doc = r"""(int) - Upper boundary condition fill method. 
+        doc = r"""(int) - Upper boundary condition fill method.
                   ``default = 1``"""
 
         def fget(self):
@@ -1379,13 +1379,14 @@ class Solution(object):
                     "options": {},
                 }
 
+                # overwrite defaults where relevant.
                 for (k, v) in list(defaults.items()):
                     if k in kargs:
-                        exec("%s = kargs['%s']" % (k, k))
-                    else:
-                        exec("%s = v" % k)
-                # print format
-                self.read(frame, path, format, file_prefix, read_aux, options)
+                        defaults[k] = v
+                        #exec("%s = kargs['%s']" % (k, k))
+                    #else:
+                        #exec("%s = v" % k)
+                self.read(frame, **defaults)
             elif isinstance(arg[0], Data):
                 data = arg[0]
                 # Create dimensions
