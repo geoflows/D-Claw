@@ -171,9 +171,9 @@ class ClawPlotData(Data):
         """
         Create a new figure for Clawpack plots.
         If type='each_frame' it is a figure that will be plotted
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is a figure that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != "iplotclaw") and (name in self._fignames):
             print("*** Warning, figure named %s has already been created" % name)
@@ -238,7 +238,6 @@ class ClawPlotData(Data):
                 raise
                 return
 
-
             try:
                 framesoln = solution.Solution(frameno, format=self.format)
             except:
@@ -251,11 +250,14 @@ class ClawPlotData(Data):
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
             if key != frameno:
-                print("    Reading  Frame %s at t = %g  from outdir = %s" % (
-                    frameno,
-                    framesoln.t,
-                    outdir,
-                ))
+                print(
+                    "    Reading  Frame %s at t = %g  from outdir = %s"
+                    % (
+                        frameno,
+                        framesoln.t,
+                        outdir,
+                    )
+                )
             else:
                 print("    Reading  Frame %s at t = %g  " % (frameno, framesoln.t))
         else:
@@ -282,8 +284,8 @@ class ClawPlotData(Data):
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	Does not clear the frames of solution data already read in.
-	  For that use clearframes.
+        Does not clear the frames of solution data already read in.
+          For that use clearframes.
         """
 
         self.plotfigure_dict.clear()
@@ -533,7 +535,9 @@ class ClawPlotData(Data):
                         plotaxes = self.getaxes(axesn, fign)
                         if itemname in plotaxes._itemnames:
                             if found == True:  # already found!
-                                print("*** Ambiguous... must specify figname and/or axesname")
+                                print(
+                                    "*** Ambiguous... must specify figname and/or axesname"
+                                )
                                 print("    try getitem(itemname, axesname, figname)")
                                 return None
                             axesname = axesn
@@ -544,7 +548,9 @@ class ClawPlotData(Data):
                     plotaxes = self.getaxes(axesname, fign)
                     if itemname in plotaxes._itemnames:
                         if found == True:  # already found!
-                            print("*** Ambiguous... must specify figname and/or axesname")
+                            print(
+                                "*** Ambiguous... must specify figname and/or axesname"
+                            )
                             print("    try getitem(itemname, axesname, figname)")
                             return None
                         figname = fign
@@ -684,9 +690,9 @@ class ClawPlotFigure(Data):
         """
         Create a new axes that will be plotted in this figure.
         If type='each_frame' it is an axes that will be plotted
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is an axes that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         If type='empty' it is created without doing any plots using the
         pyclaw tools.  Presumably the user will create a plot within an
         afteraxes command, for example.

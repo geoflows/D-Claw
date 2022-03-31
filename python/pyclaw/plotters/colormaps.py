@@ -60,8 +60,7 @@ def make_colormap(colors):
 
 
 def showcolors(cmap):
-    from pylab import (axes, axis, clf, colorbar, linspace, meshgrid, pcolor,
-                       show, title)
+    from pylab import axes, axis, clf, colorbar, linspace, meshgrid, pcolor, show, title
 
     # from scitools.easyviz.matplotlib_ import colorbar, clf, axes, linspace,\
     # pcolor, meshgrid, show, colormap
@@ -125,13 +124,13 @@ schlieren_greens = schlieren_colormap("g")
 def make_amrcolors(nlevels=4):
     # -------------------------------
     """
-    Make lists of colors useful for distinguishing different grids when 
+    Make lists of colors useful for distinguishing different grids when
     plotting AMR results.
 
     INPUT::
        nlevels: maximum number of AMR levels expected.
     OUTPUT::
-       (linecolors, bgcolors) 
+       (linecolors, bgcolors)
        linecolors = list of nlevels colors for grid lines, contour lines
        bgcolors = list of nlevels pale colors for grid background
     """

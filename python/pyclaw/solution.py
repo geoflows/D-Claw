@@ -1383,9 +1383,9 @@ class Solution(object):
                 for (k, v) in list(defaults.items()):
                     if k in kargs:
                         defaults[k] = v
-                        #exec("%s = kargs['%s']" % (k, k))
-                    #else:
-                        #exec("%s = v" % k)
+                        # exec("%s = kargs['%s']" % (k, k))
+                    # else:
+                    # exec("%s = v" % k)
                 self.read(frame, **defaults)
             elif isinstance(arg[0], Data):
                 data = arg[0]

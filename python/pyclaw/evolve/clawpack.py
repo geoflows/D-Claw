@@ -33,7 +33,7 @@ from . import limiters
 def start_step(solver, solutions):
     r"""
     Dummy routine called before each step
-    
+
     Replace this routine if you want to do something before each time step.
     """
     pass
@@ -42,7 +42,7 @@ def start_step(solver, solutions):
 def src(solver, solutions, t, dt):
     r"""
     Dummy routine called to calculate a source term
-    
+
     Replace this routine if you want to include a source term.
     """
     pass
@@ -54,47 +54,47 @@ def src(solver, solutions, t, dt):
 class ClawSolver(Solver):
     r"""
     Generic classic Clawpack solver
-    
+
     All Clawpack solvers inherit from this base class.
-    
-    .. attribute:: mthlim 
-    
+
+    .. attribute:: mthlim
+
         Limiter to be used on each wave.  ``Default = [1]``
-    
+
     .. attribute:: order
-    
-        Order of the solver, either 1 for first order or 2 for second order 
+
+        Order of the solver, either 1 for first order or 2 for second order
         corrections.  ``Default = 2``
-    
+
     .. attribute:: src_split
-    
-        Whether to use a source splitting method, 0 for none, 1 for first 
+
+        Whether to use a source splitting method, 0 for none, 1 for first
         order Godunov splitting and 2 for second order Strang splitting.
         ``Default = 0``
-        
+
     .. attribute:: fwave
-    
+
         Whether to split the flux into waves, requires that the Riemann solver
         performs the splitting.  ``Default = False``
-        
+
     .. attribute:: src
-    
+
         Source term function.  Default is the stub function.
-    
+
     .. attribute:: start_step
-    
+
         Function called before each time step is taken.  Default is the stub
         function
-        
-    
+
+
     :Initialization:
-    
+
     Input:
-     - *data* - (:class:`~pyclaw.data.Data`) Data object, the solver will look 
-       for the named variables to instantiate itself.    
+     - *data* - (:class:`~pyclaw.data.Data`) Data object, the solver will look
+       for the named variables to instantiate itself.
     Output:
      - (:class:`ClawSolver`) - Initialized clawpack solver
-    
+
     :Version: 1.0 (2009-06-01)
     """
 
@@ -123,9 +123,9 @@ class ClawSolver(Solver):
     def setup(self):
         r"""
         Called before any set of time steps.
-        
+
         This routine will be called once before the solver is used via the
-        :class:`~pyclaw.controller.Controller`.  In the case of 
+        :class:`~pyclaw.controller.Controller`.  In the case of
         :class:`ClawSolver` we make sure that the :attr:`mthlim` is a list.
         """
 
@@ -136,18 +136,18 @@ class ClawSolver(Solver):
     # ========== Riemann solver library routines =============================
     def list_riemann_solvers(self):
         r"""
-        List available Riemann solvers 
-        
+        List available Riemann solvers
+
         This routine returns a list of available Riemann solvers which is
-        constructed in the Riemann solver package (:ref:`pyclaw_rp`).  In this 
+        constructed in the Riemann solver package (:ref:`pyclaw_rp`).  In this
         case it lists all Riemann solvers.
-        
+
         :Output:
          - (list) - List of Riemann solver names valid to be used with
            :meth:`set_riemann_solver`
-        
+
         .. note::
-            These Riemann solvers are currently only accessible to the python 
+            These Riemann solvers are currently only accessible to the python
             time stepping routines.
         """
         rp_solver_list = []
@@ -165,9 +165,9 @@ class ClawSolver(Solver):
     def set_riemann_solver(self, solver_name):
         r"""
         Assigns the library solver solver_name as the Riemann solver.
-        
+
         :Input:
-         - *solver_name* - (string) Name of the solver to be used, raises a 
+         - *solver_name* - (string) Name of the solver to be used, raises a
            NameError if the solver does not exist.
         """
         raise Exception(
@@ -182,27 +182,27 @@ class ClawSolver(Solver):
 
         This routine encodes the generic order in a full time step in this
         order:
-        
+
         1. The :meth:`start_step` function is called
-        
-        2. A half step on the source term :func:`src` if Strang splitting is 
+
+        2. A half step on the source term :func:`src` if Strang splitting is
            being used (:attr:`src_split` = 2)
-        
+
         3. A step on the homogeneous problem :math:`q_t + f(q)_x = 0` is taken
-        
+
         4. A second half step or a full step is taken on the source term
-           :func:`src` depending on whether Strang splitting was used 
-           (:attr:`src_split` = 2) or Godunov splitting 
+           :func:`src` depending on whether Strang splitting was used
+           (:attr:`src_split` = 2) or Godunov splitting
            (:attr:`src_split` = 1)
 
         This routine is called from the method evolve_to_time defined in the
         pyclaw.evolve.solver.Solver superclass.
 
         :Input:
-         - *solutions* - (:class:`~pyclaw.solution.Solution`) Dictionary of 
+         - *solutions* - (:class:`~pyclaw.solution.Solution`) Dictionary of
            solutions to be evolved
-         
-        :Output: 
+
+        :Output:
          - (bool) - True if full step succeeded, False otherwise
         """
 
@@ -236,7 +236,7 @@ class ClawSolver(Solver):
     def homogeneous_step(self, solutions):
         r"""
         Take one homogeneous step on the solutions
-        
+
         This is a dummy routine and must be overridden.
         """
         raise Exception("Dummy routine, please override!")
@@ -248,25 +248,25 @@ class ClawSolver(Solver):
 class ClawSolver1D(ClawSolver):
     r"""
     Clawpack evolution routine in 1D
-    
-    This class represents the 1d clawpack solver on a single grid.  Note that 
-    there are routines here for interfacing with the fortran time stepping 
-    routines and the python time stepping routines.  The ones used are 
-    dependent on the argument given to the initialization of the solver 
+
+    This class represents the 1d clawpack solver on a single grid.  Note that
+    there are routines here for interfacing with the fortran time stepping
+    routines and the python time stepping routines.  The ones used are
+    dependent on the argument given to the initialization of the solver
     (defaults to python).
-    
+
     .. attribute:: rp
-    
+
         Riemann solver function.
-        
+
     :Initialization:
-    
+
     Input:
      - *data* - (:class:`~pyclaw.data.Data`) An instance of a Data object whose
        parameters can be used to initialize this solver
     Output:
      - (:class:`ClawSolver1D`) - Initialized 1d clawpack solver
-        
+
     :Authors:
         Kyle T. Mandli (2008-09-11) Initial version
     """
@@ -274,7 +274,7 @@ class ClawSolver1D(ClawSolver):
     def __init__(self, data=None):
         r"""
         Create 1d Clawpack solver
-        
+
         See :class:`ClawSolver1D` for more info.
         """
 
@@ -290,18 +290,18 @@ class ClawSolver1D(ClawSolver):
     # ========== Riemann solver library routines =============================
     def list_riemann_solvers(self):
         r"""
-        List available Riemann solvers 
-        
+        List available Riemann solvers
+
         This routine returns a list of available Riemann solvers which is
         constructed in the Riemann solver package (_pyclaw_rp).  In this case
         it lists only the 1D Riemann solvers.
-        
+
         :Output:
          - (list) - List of Riemann solver names valid to be used with
            :meth:`set_riemann_solver`
-        
+
         .. note::
-            These Riemann solvers are currently only accessible to the python 
+            These Riemann solvers are currently only accessible to the python
             time stepping routines.
         """
         return rp.rp_solver_list_1d
@@ -309,9 +309,9 @@ class ClawSolver1D(ClawSolver):
     def set_riemann_solver(self, solver_name):
         r"""
         Assigns the library solver solver_name as the Riemann solver.
-        
+
         :Input:
-         - *solver_name* - (string) Name of the solver to be used, raises a 
+         - *solver_name* - (string) Name of the solver to be used, raises a
            ``NameError`` if the solver does not exist.
         """
         import logging
@@ -333,7 +333,7 @@ class ClawSolver1D(ClawSolver):
         appropriate Riemann solver rp.
 
         :Input:
-         - *solutions* - (:class:`~pyclaw.solution.Solution`) Solution that 
+         - *solutions* - (:class:`~pyclaw.solution.Solution`) Solution that
            will be evolved
 
         :Version: 1.0 (2009-07-01)

@@ -186,7 +186,12 @@ class ClawPlotFGData(Data):
 
         title("Eta on FG %s at time = %s" % (self.fgno, t_str))
         xlim((grid.xlow, grid.xhi))
-        ylim((grid.ylow, grid.yhi,))
+        ylim(
+            (
+                grid.ylow,
+                grid.yhi,
+            )
+        )
         fix_long_tick_labels()
         axis("tight")
         axis("scaled")
@@ -245,7 +250,12 @@ class ClawPlotFGData(Data):
             # contour(xcenter,ycenter,etamax2,[drytol],colors='r',linewidths=2)
             title("Inundated region for t <= %s" % t_str)
             xlim((grid.xlow, grid.xhi))
-            ylim((grid.ylow, grid.yhi,))
+            ylim(
+                (
+                    grid.ylow,
+                    grid.yhi,
+                )
+            )
             fix_long_tick_labels()
             axis("tight")
             axis("scaled")
@@ -282,7 +292,12 @@ class ClawPlotFGData(Data):
             else:
                 title("Exposed seabed for t <= %s" % t_str)
             xlim((grid.xlow, grid.xhi))
-            ylim((grid.ylow, grid.yhi,))
+            ylim(
+                (
+                    grid.ylow,
+                    grid.yhi,
+                )
+            )
             fix_long_tick_labels()
             axis("tight")
             axis("scaled")

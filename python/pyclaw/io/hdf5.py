@@ -64,20 +64,20 @@ if not use_h5py and not use_PyTables:
 def write_hdf5(solution, frame, path, file_prefix="claw", write_aux=False, options={}):
     r"""
     Write out a Solution to a HDF5 file.
-    
+
     :Input:
-     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw solution 
+     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw solution
        object to input into
      - *frame* - (int) Frame number
      - *path* - (string) Root path
      - *file_prefix* - (string) Prefix for the file name.  ``default = 'claw'``
-     - *write_aux* - (bool) Boolean controlling whether the associated 
-       auxiliary array should be written out.  ``default = False``     
-     - *options* - (dict) Optional argument dictionary, see 
+     - *write_aux* - (bool) Boolean controlling whether the associated
+       auxiliary array should be written out.  ``default = False``
+     - *options* - (dict) Optional argument dictionary, see
        `HDF5 Option Table`_
-    
+
     .. _`HDF5 Option Table`:
-    
+
     +-----------------+------------------------------------------------------+
     | Key             | Value                                                |
     +=================+======================================================+
@@ -203,15 +203,15 @@ def read_hdf5(
 ):
     r"""
     Read in a HDF5 file into a Solution
-    
+
     :Input:
-     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw object to be 
+     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw object to be
        output
      - *frame* - (int) Frame number
      - *path* - (string) Root path
      - *file_prefix* - (string) Prefix for the file name.  ``default = 'claw'``
-     - *write_aux* - (bool) Boolean controlling whether the associated 
-       auxiliary array should be written out.  ``default = False``     
+     - *write_aux* - (bool) Boolean controlling whether the associated
+       auxiliary array should be written out.  ``default = False``
      - *options* - (dict) Optional argument dictionary, unused for reading.
     """
 

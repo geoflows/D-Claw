@@ -80,17 +80,17 @@ def limit(meqn, wave, s, limiter, dtdx):
     Apply a limiter to the waves
 
     Function that limits the given waves using the methods contained
-    in limiter.  This is the vectorized version of the function acting on a 
+    in limiter.  This is the vectorized version of the function acting on a
     row of waves at a time.
-    
+
     :Input:
      - *wave* - (ndarray(:,meqn,mwaves)) The waves at each interface
      - *s* - (ndarray(:,mwaves)) Speeds for each wave
-     - *limiter* - (``int`` list) Array of type ``int`` determining which 
+     - *limiter* - (``int`` list) Array of type ``int`` determining which
          limiter to use
-     - *dtdx* - (ndarray(:)) :math:`\Delta t / \Delta x` ratio, used for CFL 
+     - *dtdx* - (ndarray(:)) :math:`\Delta t / \Delta x` ratio, used for CFL
         dependent limiters
-        
+
     :Output:
      - (ndarray(:,meqn,mwaves)) - Returns the limited waves
 
@@ -227,7 +227,7 @@ def arora_roe(r, cfl):
 def theta_limiter(r, cfl, theta=0.95):
     r"""
     Theta limiter
-    
+
     Additional Input:
      - *theta* =
     """
@@ -311,7 +311,7 @@ def cfl_superbee_theta(r, cfl, theta=0.95):
 def beta_limiter(r, cfl, theta=0.95, beta=0.66666666666666666):
     r"""
     Modification of CFL Superbee limiter with theta and beta parameters
-    
+
     Additional Input:
      - *theta*
      - *beta*
@@ -377,7 +377,7 @@ def hyperbee_limiter(r, cfl):
 def superpower_limiter(r, cfl, caut=1.0):
     r"""
     SuperPower limiter
-    
+
     Additional input:
      - *caut* = Limiter parameter
     """
@@ -398,9 +398,9 @@ def superpower_limiter(r, cfl, caut=1.0):
 def cada_torrilhon_limiter(r, cfl, epsilon=1.0e-3):
     r"""
     Cada-Torrilhon modified
-    
+
     Additional Input:
-     - *epsilon* = 
+     - *epsilon* =
     """
     a = np.ones((len(r), 2)) * 0.95
     b = np.empty((len(r), 3))
@@ -446,10 +446,10 @@ def cada_torrilhon_limiter_nonlinear(r, cfl):
 def upper_bound_limiter(r, cfl, theta=1.0):
     r"""
     Upper bound limiter (1st order)
-    
+
     Additional Input:
      - *theta* =
-     """
+    """
     a = np.empty((len(r), 2))
     b = np.zeros((len(r), 2))
 

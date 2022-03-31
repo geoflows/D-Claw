@@ -9,7 +9,7 @@ def fix_long_tick_labels(xlimits="auto", ylimits="auto", kwargs={}):
     kwargs can be a dictionary of keyword arguments to be passed
     to xticks and yticks.  For example: kwargs={'fontsize' : 15}
     for larger labels.
-    
+
     Problem with this way of doing it:  Ticks are fixed if you zoom in on plot.
     """
 

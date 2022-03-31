@@ -42,24 +42,24 @@ import numpy as np
 def rp_shallow_roe_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Roe shallow water solver in 1d::
-    
+
         ubar = (sqrt(u_l) + sqrt(u_r)) / (sqrt(h_l) + sqrt(h_r))
         cbar = sqrt( 0.5 * g * (h_l + h_r))
-         
+
         W_1 = |      1      |  s_1 = ubar - cbar
               | ubar - cbar |
-         
+
         W_2 = |      1      |  s_1 = ubar + cbar
               | ubar + cbar |
-          
+
         a1 = 0.5 * ( - delta_hu + (ubar + cbar) * delta_h ) / cbar
         a2 = 0.5 * (   delta_hu - (ubar - cbar) * delta_h ) / cbar
-    
+
     *aux_global* should contain:
      - *g* - (float) Gravitational constant
-     - *efix* - (bool) Boolean as to whether a entropy fix should be used, if 
+     - *efix* - (bool) Boolean as to whether a entropy fix should be used, if
        not present, false is assumed
-            
+
     :Version: 1.0 (2009-02-05)
     """
 
@@ -110,16 +110,16 @@ def rp_shallow_roe_1d(q_l, q_r, aux_l, aux_r, aux_global):
 def rp_shallow_hll_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     HLL shallow water solver ::
-    
-         
+
+
         W_1 = Q_hat - Q_l    s_1 = min(u_l-c_l,u_l+c_l,lambda_roe_1,lambda_roe_2)
         W_2 = Q_r - Q_hat    s_2 = max(u_r-c_r,u_r+c_r,lambda_roe_1,lambda_roe_2)
-    
+
         Q_hat = ( f(q_r) - f(q_l) - s_2 * q_r + s_1 * q_l ) / (s_1 - s_2)
-    
+
     *aux_global* should contain:
      - *g* - (float) Gravitational constant
-            
+
     :Version: 1.0 (2009-02-05)
     """
 
@@ -186,9 +186,9 @@ def rp_shallow_hll_1d(q_l, q_r, aux_l, aux_r, aux_global):
 def rp_shallow_exact_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Exact shallow water Riemann solver
-    
+
     .. warning::
         This solver has not been implemented.
-    
+
     """
     raise NotImplementedError("The exact swe solver has not been implemented.")

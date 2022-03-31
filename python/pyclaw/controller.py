@@ -40,11 +40,11 @@ from .util import FrameCounter
 
 class Controller(object):
     r"""Controller for pyclaw simulation runs and plotting
-            
+
     :Initialization:
-    
+
         Input: None
-    
+
     :Version: 1.0 (2009-06-01)
     """
     #  ======================================================================
@@ -53,7 +53,7 @@ class Controller(object):
     def __init__(self):
         r"""
         Initialization routine for a Controller object.
-        
+
         See :class:`Controller` for full documentation.
         """
 
@@ -204,19 +204,19 @@ class Controller(object):
     # ========== Solver convenience methods ==================================
     def run(self):
         r"""
-        Convenience routine that will evolve solutions['n'] based on the 
+        Convenience routine that will evolve solutions['n'] based on the
         traditional clawpack output and run parameters.
-        
+
         This function uses the run parameters and solver parameters to evolve
         the solution to the end time specified in run_data, outputting at the
         appropriate times.
-        
+
         :Input:
             None
-            
+
         :Ouput:
             (dict) - Return a dictionary of the status of the solver.
-            
+
         :Version: 1.0 (2009-05-01)
         """
 
@@ -298,18 +298,18 @@ class Controller(object):
     def get_data(self, claw_path=None):
         r"""
         Create a data object from this controller's solver and solutions
-        
+
         This function will take the current solver and solutions['n'] and
         create a data object that can be read in via classic clawpack.
-        
+
         If claw_path is provided, then the data that should be written to the
         claw.data file will be written to that path.
-        
+
         :Input:
             - *claw_path* - (string) Path to write data file to
-            
+
         :Output:
-            - (:class:`~pyclaw.data.Data`) - Data object claw_data containing 
+            - (:class:`~pyclaw.data.Data`) - Data object claw_data containing
               the appropriate data for a claw.data file.
         """
 
@@ -400,9 +400,9 @@ class Controller(object):
 
     def read_data(self, path):
         r"""Read in a claw.data file and initialize accordingly
-        
+
         .. warning::
-            
+
             Not implemented!
         """
         raise NotImplementedException()
@@ -415,9 +415,9 @@ class Controller(object):
         files to outdir, writing unit 6 timestepping info to file xclawout.
         Runtime error messages are written to file xclawerr.
         If xclawout(xclawerr) is None, then output to stdout(stderr).
-    
+
         If savecode==True, archive a copy of the code into directory outdir.
-    
+
         This function returns the returncode from the process running xclawcmd,
         which will be nonzero if a runtime error occurs.
         """

@@ -209,7 +209,9 @@ def read_ascii(
         raise IOError("Frame " + str(frame) + " does not exist ***")
 
     # Construct path names
-    base_path = os.path.join(path,)
+    base_path = os.path.join(
+        path,
+    )
     # t_fname = os.path.join(base_path, '%s.t' % file_prefix) + str(frame).zfill(4)
     q_fname = os.path.join(base_path, "%s.q" % file_prefix) + str(frame).zfill(4)
 
@@ -422,7 +424,9 @@ def read_ascii_t(frame, path="./", file_prefix="fort"):
 
     """
 
-    base_path = os.path.join(path,)
+    base_path = os.path.join(
+        path,
+    )
     path = os.path.join(base_path, "%s.t" % file_prefix) + str(frame).zfill(4)
     try:
         logger.debug("Opening %s file." % path)

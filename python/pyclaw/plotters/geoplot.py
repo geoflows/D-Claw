@@ -136,10 +136,10 @@ drytol_default = 1.0e-3
 
 
 def topo(current_data):
-    """ 
-   Return topography = eta - h. 
-   Surface eta is assumed to be output as 4th column of fort.q files.
-   """
+    """
+    Return topography = eta - h.
+    Surface eta is assumed to be output as 4th column of fort.q files.
+    """
     q = current_data.q
     h = q[:, :, 0]
     eta = q[:, :, 3]
@@ -149,8 +149,8 @@ def topo(current_data):
 
 def land(current_data):
     """
-   Return a masked array containing the surface elevation only in dry cells.
-   """
+    Return a masked array containing the surface elevation only in dry cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -175,8 +175,8 @@ def water(current_data):
 
 def depth(current_data):
     """
-   Return a masked array containing the depth of fluid only in wet cells.
-   """
+    Return a masked array containing the depth of fluid only in wet cells.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -188,10 +188,10 @@ def depth(current_data):
 
 def surface(current_data):
     """
-   Return a masked array containing the surface elevation only in wet cells.
-   Surface is eta = h+topo, assumed to be output as 4th column of fort.q
-   files.
-   """
+    Return a masked array containing the surface elevation only in wet cells.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -204,12 +204,12 @@ def surface(current_data):
 
 def surface_or_depth(current_data):
     """
-   Return a masked array containing the surface elevation where the topo is 
-   below sea level or the water depth where the topo is above sea level.
-   Mask out dry cells.  Assumes sea level is at topo=0.
-   Surface is eta = h+topo, assumed to be output as 4th column of fort.q
-   files.
-   """
+    Return a masked array containing the surface elevation where the topo is
+    below sea level or the water depth where the topo is above sea level.
+    Mask out dry cells.  Assumes sea level is at topo=0.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
     from numpy import ma, where
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
@@ -315,7 +315,11 @@ def plot_topo_file(topoplotdata):
         if 0:
             topo = []
             for i in range(nrows):
-                topo.append(pylab.array(lines[6 + i],))
+                topo.append(
+                    pylab.array(
+                        lines[6 + i],
+                    )
+                )
             print("+++ topo = ", topo)
             topo = pylab.array(topo)
 

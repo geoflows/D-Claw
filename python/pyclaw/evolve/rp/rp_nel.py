@@ -33,13 +33,13 @@ import numpy as np
 def rp_nel_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     1d nonlinear elasticity riemann solver
-    
+
     *aux* is expected to contain -
      - aux[i,0] - density in cell i
      - aux[i,1] - bulk modulus in cell i
-    
+
     See :ref:`pyclaw_rp` for more details.
-    
+
     :Version: 1.0 (2010-11-06)
     """
 

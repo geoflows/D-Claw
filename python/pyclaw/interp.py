@@ -15,13 +15,13 @@ def pwcubic(xi, zl, zr, slopel, sloper, x):
         zr[i] = value of z in limit as x approaches xi[i] from the right,
         slopel[i] = value of z'(x) in limit as x approaches xi[i] from the left,
         sloper[i] = value of z'(x) in limit as x approaches xi[i] from the right.
-    To the left of xi[0] the linear function based on 
+    To the left of xi[0] the linear function based on
        zl[0] and slopel[0] is used.
-    To the right of xi[-1] the linear function based on 
+    To the right of xi[-1] the linear function based on
        zr[-1] and sloper[-1] is used.
 
-    In the interior intervals a cubic us used that interpolates 
-    the 4 values at the ends of the interval.  
+    In the interior intervals a cubic us used that interpolates
+    the 4 values at the ends of the interval.
 
     Note that the function will be linear in the i'th interval if
         sloper[i]   = (zl[i+1] - zr[i]) / (xi[i+1] - xi[i])

@@ -171,7 +171,7 @@ def plotframe(frameno, plotdata, verbose=False):
             axescmd = getattr(plotaxes, "axescmd", "subplot(1,1,1)")
             axescmd = "plotaxes._handle = pylab.%s" % axescmd
             exec(axescmd)
-            #pylab.hold(True)
+            # pylab.hold(True)
 
             # NOTE: This was rearranged December 2009 to
             # loop over grids first and then over plotitems so that
@@ -246,16 +246,23 @@ def plotframe(frameno, plotdata, verbose=False):
 
                         if plotitem._show and show_this_level:
                             if ndim == 1:
-                                output = plotitem1(framesoln,plotitem,current_data,gridno)
+                                output = plotitem1(
+                                    framesoln, plotitem, current_data, gridno
+                                )
                             elif ndim == 2:
-                                output = plotitem2(framesoln,plotitem,current_data,gridno)
+                                output = plotitem2(
+                                    framesoln, plotitem, current_data, gridno
+                                )
                             try:
                                 if output:
                                     current_data = output
                                 if verbose:
                                     print("      Plotted  plotitem ", itemname)
                             except:
-                                print("*** Error in plotframe: problem calling plotitem%s" % ndim)
+                                print(
+                                    "*** Error in plotframe: problem calling plotitem%s"
+                                    % ndim
+                                )
                                 traceback.print_exc()
                                 return None
 
@@ -552,7 +559,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # The plot commands using matplotlib:
 
-    #pylab.hold(True)
+    # pylab.hold(True)
 
     if pp_plot_type in ["1d_plot", "1d_from_2d_data"]:
         if pp_color:
@@ -728,11 +735,11 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         else:
             pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
     # turn grid background color into a colormap for use with pcolor cmd:
-    pp_dict['pp_grid_bgcolormap'] = colormaps.make_colormap(
-        {0.0: pp_dict['pp_grid_bgcolor'], 1.0: pp_dict['pp_grid_bgcolor']}
+    pp_dict["pp_grid_bgcolormap"] = colormaps.make_colormap(
+        {0.0: pp_dict["pp_grid_bgcolor"], 1.0: pp_dict["pp_grid_bgcolor"]}
     )
 
-    thisgridvar = get_gridvar(grid, pp_dict['pp_plot_var'], 2, current_data)
+    thisgridvar = get_gridvar(grid, pp_dict["pp_plot_var"], 2, current_data)
 
     xc_center = thisgridvar.xc_center  # cell centers (on mapped grid)
     yc_center = thisgridvar.yc_center
@@ -756,7 +763,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     # The plot commands using matplotlib:
 
-    #pylab.hold(True)
+    # pylab.hold(True)
 
     if ma.isMaskedArray(var):
         # If var is a masked array: plotting should work ok unless all
@@ -797,7 +804,9 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 pp_dict["pp_imshow_cmin"] = np.min(var)
             if pp_dict["pp_imshow_cmax"] in ["auto", None]:
                 pp_dict["pp_imshow_cmax"] = np.max(var)
-            color_norm = Normalize(pp_dict["pp_imshow_cmin"], pp_dict["pp_imshow_cmax"], clip=True)
+            color_norm = Normalize(
+                pp_dict["pp_imshow_cmin"], pp_dict["pp_imshow_cmax"], clip=True
+            )
 
             xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
             pobj = pylab.imshow(
@@ -813,7 +822,9 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this.
                 pobj = pylab.plot(X_edge, Y_edge, color=ppp_dict["pp_gridlines_color"])
-                pobj = pylab.plot(X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"])
+                pobj = pylab.plot(
+                    X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"]
+                )
 
         else:
             # print '*** Not doing imshow on totally masked array'
@@ -828,10 +839,14 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 print("    contour_levels or contour_nlevels must be set")
                 raise
                 return
-            if (pp_dict["pp_contour_min"] is not None) and (pp_dict["pp_contour_max"] is not None):
+            if (pp_dict["pp_contour_min"] is not None) and (
+                pp_dict["pp_contour_max"] is not None
+            ):
 
                 pp_dict["pp_contour_levels"] = pylab.linspace(
-                    pp_dict["pp_contour_min"], pp_dict["pp_contour_max"], pp_dict["pp_contour_nlevels"]
+                    pp_dict["pp_contour_min"],
+                    pp_dict["pp_contour_max"],
+                    pp_dict["pp_contour_nlevels"],
                 )
                 levels_set = True
 
@@ -851,7 +866,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 cmap=pp_dict["pp_grid_bgcolormap"],
                 edgecolors="None",
             )
-        #pylab.hold(True)
+        # pylab.hold(True)
 
         # create the contour command:
         contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
@@ -860,28 +875,28 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         else:
             contourcmd += 'pp_dict["pp_contour_nlevels"]'
 
-        if pp_dict['pp_contour_cmap']:
-            if (pp_dict['pp_kwargs'] is None) or ("cmap" not in pp_dict['pp_kwargs']):
+        if pp_dict["pp_contour_cmap"]:
+            if (pp_dict["pp_kwargs"] is None) or ("cmap" not in pp_dict["pp_kwargs"]):
                 contourcmd += ", cmap = pp_dict['pp_contour_cmap']"
-        elif pp_dict['pp_contour_colors']:
-            if (pp_dict['pp_kwargs'] is None) or ("colors" not in pp_dict['pp_kwargs']):
+        elif pp_dict["pp_contour_colors"]:
+            if (pp_dict["pp_kwargs"] is None) or ("colors" not in pp_dict["pp_kwargs"]):
                 contourcmd += ", colors = pp_dict['pp_contour_colors']"
 
         contourcmd += ", **pp_kwargs)"
 
-        if pp_dict['pp_contour_show'] and not var_all_masked:
+        if pp_dict["pp_contour_show"] and not var_all_masked:
             # may suppress plotting at coarse levels
             exec(contourcmd)
 
     elif pp_plot_type == "2d_grid":
         # plot only the grids, no data:
-        if pp_dict['pp_gridlines_show']:
+        if pp_dict["pp_gridlines_show"]:
             pobj = pylab.pcolormesh(
                 X_edge,
                 Y_edge,
                 pylab.zeros(var.shape),
-                cmap=pp_dict['pp_grid_bgcolormap'],
-                edgecolors=pp_dict['pp_gridlines_color'],
+                cmap=pp_dict["pp_grid_bgcolormap"],
+                edgecolors=pp_dict["pp_gridlines_color"],
                 shading="faceted",
             )
         else:
@@ -889,7 +904,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 X_edge,
                 Y_edge,
                 pylab.zeros(var.shape),
-                cmap=pp_dict['pp_grid_bgcolormap'],
+                cmap=pp_dict["pp_grid_bgcolormap"],
                 shading="flat",
             )
 
@@ -901,7 +916,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp_schlieren_cmap"
 
-        if pp_dict['pp_gridlines_show']:
+        if pp_dict["pp_gridlines_show"]:
             pcolor_cmd += ", edgecolors=pp_dict['pp_gridlines_color']"
         else:
             pcolor_cmd += ", edgecolors='None'"
@@ -958,7 +973,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     # plot grid patch edges if desired:
 
-    if pp_dict['pp_gridedges_show']:
+    if pp_dict["pp_gridedges_show"]:
         for i in [0, X_edge.shape[0] - 1]:
             X1 = X_edge[i, :]
             Y1 = Y_edge[i, :]
@@ -967,7 +982,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             X1 = X_edge[:, i]
             Y1 = Y_edge[:, i]
             pylab.plot(X1, Y1, pp_gridedges_color)
-    pp_aftergrid = pp_dict['pp_aftergrid']
+    pp_aftergrid = pp_dict["pp_aftergrid"]
     if pp_aftergrid:
         try:
             if isinstance(pp_aftergrid, str):
@@ -1081,15 +1096,15 @@ def get_gridvar(grid, plot_var, ndim, current_data):
 def printfig(fname="", frameno="", figno="", format="png", plotdir=".", verbose=True):
     # ------------------------------------------------------------------------
     """
-    Save the current plot to file fname or standard name from frame/fig.
-.
-    If fname is nonempty it is used as the filename, with extension
-    determined by format if it does not already have a valid extension.
+        Save the current plot to file fname or standard name from frame/fig.
+    .
+        If fname is nonempty it is used as the filename, with extension
+        determined by format if it does not already have a valid extension.
 
-    If fname=='' then save to file frame000NfigJ.ext  where N is the frame
-    number frameno passed in, J is the figure number figno passed in,
-    and the extension ext is determined by format.
-    If figno='' then the figJ part is omitted.
+        If fname=='' then save to file frame000NfigJ.ext  where N is the frame
+        number frameno passed in, J is the figure number figno passed in,
+        and the extension ext is determined by format.
+        If figno='' then the figJ part is omitted.
     """
 
     if fname == "":
@@ -1519,9 +1534,10 @@ def only_most_recent(framenos, outdir=".", verbose=True):
 
     newframes = framekeys[:numframes]
     if (numframes < len(framekeys)) & verbose:
-        print("*** Frames %s and above appear to be from an old run" % framekeys[
-            numframes
-        ])
+        print(
+            "*** Frames %s and above appear to be from an old run"
+            % framekeys[numframes]
+        )
         print("***    and will be ignored.")
         time.sleep(2)
 
@@ -1582,6 +1598,7 @@ def call_setplot(setplot, plotdata, verbose=True):
         sys.path.insert(0, setplotdir)  # search that directory first
         try:
             import importlib
+
             SetPlot = importlib.import_module(setplotmod)
             SetPlotFile = SetPlot.__file__
             if os.path.splitext(SetPlotFile)[1] == ".pyc":

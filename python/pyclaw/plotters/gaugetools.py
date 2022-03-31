@@ -45,11 +45,14 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     if verbose:
         gaugesoln = plotdata.getgauge(gaugeno)
-        print("    Plotting gauge %s  at x = %g, y = %g ... " % (
-            gaugeno,
-            gaugesoln.x,
-            gaugesoln.y,
-        ))
+        print(
+            "    Plotting gauge %s  at x = %g, y = %g ... "
+            % (
+                gaugeno,
+                gaugesoln.x,
+                gaugesoln.y,
+            )
+        )
 
     if plotdata.mode() == "iplotclaw":
         pylab.ion()
@@ -81,7 +84,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if beforegauge:
         if isinstance(beforegauge, str):
             # a string to be executed
-            exec (beforegauge)
+            exec(beforegauge)
         else:
             # assume it's a function
             try:
@@ -98,11 +101,14 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if plotdata._mode == "iplotclaw":
         gaugesoln = plotdata.getgauge(gaugeno)
         # import pdb; pdb.set_trace()
-        print("    Plotting Gauge %s  at x = %g, y = %g ... " % (
-            gaugeno,
-            gaugesoln.x,
-            gaugesoln.y,
-        ))
+        print(
+            "    Plotting Gauge %s  at x = %g, y = %g ... "
+            % (
+                gaugeno,
+                gaugesoln.x,
+                gaugesoln.y,
+            )
+        )
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -159,7 +165,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             # create the axes:
             axescmd = getattr(plotaxes, "axescmd", "subplot(1,1,1)")
             axescmd = "plotaxes._handle = pylab.%s" % axescmd
-            exec (axescmd)
+            exec(axescmd)
             pylab.hold(True)
 
             # loop over items:
@@ -212,7 +218,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         if afteraxes:
             if isinstance(afteraxes, str):
                 # a string to be executed
-                exec (afteraxes)
+                exec(afteraxes)
             else:
                 # assume it's a function
                 try:
@@ -249,7 +255,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if aftergauge:
         if isinstance(aftergauge, str):
             # a string to be executed
-            exec (aftergauge)
+            exec(aftergauge)
         else:
             # assume it's a function
             try:
@@ -346,7 +352,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
             kwargs["color"] = color
 
         plotcommand = "pobj=pylab.plot(t,var,'%s', **kwargs)" % plotstyle
-        exec (plotcommand)
+        exec(plotcommand)
 
     elif plot_type == "1d_empty":
         # no plot to create (user might make one in afteritem or
@@ -359,9 +365,11 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     return current_data
 
+
 def find(condition):
-    res, = np.nonzero(np.ravel(condition))
+    (res,) = np.nonzero(np.ravel(condition))
     return res
+
 
 def read_setgauges(datadir):
     """
@@ -493,22 +501,24 @@ def plot_gauge_locations(
                 yn = yn + yoffset
                 text(xn, yn, "  %s" % n, fontsize=fontsize)
         except:
-            print("*** plot_gauge_locations: warning: did not find x,y data for gauge ", n)
+            print(
+                "*** plot_gauge_locations: warning: did not find x,y data for gauge ", n
+            )
 
 
 # ------------------------------------------------------------------------
 def printfig(fname="", gaugeno="", figno="", format="png", plotdir=".", verbose=True):
     # ------------------------------------------------------------------------
     """
-    Save the current plot to file fname or standard name from gauge/fig.
-.
-    If fname is nonempty it is used as the filename, with extension
-    determined by format if it does not already have a valid extension.
+        Save the current plot to file fname or standard name from gauge/fig.
+    .
+        If fname is nonempty it is used as the filename, with extension
+        determined by format if it does not already have a valid extension.
 
-    If fname=='' then save to file gauge000NfigJ.ext  where N is the gauge
-    number gaugeno passed in, J is the figure number figno passed in,
-    and the extension ext is determined by format.
-    If figno='' then the figJ part is omitted.
+        If fname=='' then save to file gauge000NfigJ.ext  where N is the gauge
+        number gaugeno passed in, J is the figure number figno passed in,
+        and the extension ext is determined by format.
+        If figno='' then the figJ part is omitted.
     """
 
     if fname == "":
@@ -687,9 +697,10 @@ def printgauges(plotdata=None, verbose=True):
     numframes = len(framenos)
 
     print("Will plot %i frames numbered:" % numframes, framenos)
-    print("Will make %i figure(s) for each frame, numbered: " % len(
-        fignos_each_frame
-    ), fignos_each_frame)
+    print(
+        "Will make %i figure(s) for each frame, numbered: " % len(fignos_each_frame),
+        fignos_each_frame,
+    )
 
     # fignames = {}
     # for figname in plotdata._fignames:
