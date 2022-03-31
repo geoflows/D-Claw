@@ -10,6 +10,7 @@ import string
 import sys
 import time
 import traceback
+
 import numpy as np
 
 from pyclaw.data import Data
