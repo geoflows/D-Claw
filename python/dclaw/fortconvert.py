@@ -44,9 +44,8 @@ import copy
 import os
 import string
 
-import numpy as np
-
 import dclaw.topotools as gt
+import numpy as np
 
 
 # ================================================================================

@@ -13,7 +13,6 @@ import time
 import traceback
 
 from matplotlib.colors import Normalize
-
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
 
@@ -259,10 +258,12 @@ def plotframe(frameno, plotdata, verbose=False):
                                 if verbose:
                                     print(("      Plotted  plotitem ", itemname))
                             except:
-                                print((
-                                    "*** Error in plotframe: problem calling plotitem%s"
-                                    % ndim
-                                ))
+                                print(
+                                    (
+                                        "*** Error in plotframe: problem calling plotitem%s"
+                                        % ndim
+                                    )
+                                )
                                 traceback.print_exc()
                                 return None
 
@@ -670,7 +671,6 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     """
 
     import numpy as np
-
     from pyclaw.plotters import colormaps
 
     plotdata = plotitem._plotdata
@@ -1534,10 +1534,12 @@ def only_most_recent(framenos, outdir=".", verbose=True):
 
     newframes = framekeys[:numframes]
     if (numframes < len(framekeys)) & verbose:
-        print((
-            "*** Frames %s and above appear to be from an old run"
-            % framekeys[numframes]
-        ))
+        print(
+            (
+                "*** Frames %s and above appear to be from an old run"
+                % framekeys[numframes]
+            )
+        )
         print("***    and will be ignored.")
         time.sleep(2)
 

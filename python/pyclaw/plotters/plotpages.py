@@ -931,13 +931,15 @@ def plots2latex(plot_pages_data):
     if ppd.latex_makepdf:
         try:
             os.system("pdflatex %s" % ppd.latex_fname)
-            print((
-                "\nSuccessfully created pdf file:  %s/%s.pdf"
-                % (
-                    plotdir,
-                    ppd.latex_fname,
+            print(
+                (
+                    "\nSuccessfully created pdf file:  %s/%s.pdf"
+                    % (
+                        plotdir,
+                        ppd.latex_fname,
+                    )
                 )
-            ))
+            )
         except:
             print("*** pdflatex command failed")
 
@@ -1231,9 +1233,9 @@ def timeframes2latex(plot_pages_data):
             os.system("pdflatex %s" % ppd.latex_fname)
         except:
             print("*** pdflatex command failed")
-        print((
-            "\nSuccessfully created pdf file:  %s/%s.pdf" % (plotdir, ppd.latex_fname)
-        ))
+        print(
+            ("\nSuccessfully created pdf file:  %s/%s.pdf" % (plotdir, ppd.latex_fname))
+        )
 
     os.chdir(startdir)
     # end of timeframes2latex
@@ -2059,7 +2061,6 @@ def plotclaw_driver(plotdata, verbose=False):
     import sys
 
     import numpy as np
-
     from pyclaw.plotters import frametools, gaugetools, plotpages
     from pyclaw.plotters.data import ClawPlotData
 
@@ -2194,10 +2195,13 @@ def plotclaw_driver(plotdata, verbose=False):
     numframes = len(framenos)
 
     print(("Will plot %i frames numbered:" % numframes, framenos))
-    print((
-        "Will make %i figure(s) for each frame, numbered: " % len(fignos_each_frame),
-        fignos_each_frame,
-    ))
+    print(
+        (
+            "Will make %i figure(s) for each frame, numbered: "
+            % len(fignos_each_frame),
+            fignos_each_frame,
+        )
+    )
 
     # fignames = {}
     # for figname in plotdata._fignames:

@@ -74,15 +74,17 @@ def main():
 
     syscmds = db.get("syscmdlist", [])
     if not syscmds:
-        print((
-            textwrap.dedent(
-                """
+        print(
+            (
+                textwrap.dedent(
+                    """
         System command list not initialized, probably the first run...
         running %rehashx to refresh the command list. Run %rehashx
         again to refresh command list (after installing new software etc.)
         """
+                )
             )
-        ))
+        )
         ip.magic("rehashx")
         syscmds = db.get("syscmdlist")
     for cmd in syscmds:
@@ -111,10 +113,10 @@ def extend_shell_behavior(ip):
     )
 
     def get_locals():
-        """ Substituting a variable through Itpl deep inside the IPSHELL stack
-            requires the knowledge of all the variables in scope upto the last
-            IPSHELL frame. This routine simply merges all the local variables
-            on the IPSHELL stack without worrying about their scope rules
+        """Substituting a variable through Itpl deep inside the IPSHELL stack
+        requires the knowledge of all the variables in scope upto the last
+        IPSHELL frame. This routine simply merges all the local variables
+        on the IPSHELL stack without worrying about their scope rules
         """
         import sys
 

@@ -15,10 +15,9 @@ fixdata
 import re
 import string
 
+import dclaw.iotools as iotools
 import numpy
 from numpy import *
-
-import dclaw.iotools as iotools
 
 
 # ==============================================================================

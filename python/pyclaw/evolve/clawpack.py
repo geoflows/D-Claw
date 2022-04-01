@@ -21,7 +21,6 @@ dimensionally dependent ones such as :class:`ClawSolver1D`.
 # ============================================================================
 
 import numpy as np
-
 from pyclaw.evolve.solver import Solver
 
 from . import limiters

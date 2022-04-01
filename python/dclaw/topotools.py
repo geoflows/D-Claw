@@ -35,10 +35,9 @@ Authors: Dave George and Randy LeVeque
 import os
 import string
 
-import numpy as np
-
 import dclaw.fixdata as fixdata
 import dclaw.iotools as iotools
+import numpy as np
 
 Rearth = 6367.5e3  # average of polar and equatorial radii
 

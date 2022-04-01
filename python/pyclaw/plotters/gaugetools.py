@@ -12,7 +12,6 @@ import time
 import traceback
 
 import numpy as np
-
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
 from pyclaw.plotters.frametools import set_show
@@ -46,14 +45,16 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     if verbose:
         gaugesoln = plotdata.getgauge(gaugeno)
-        print((
-            "    Plotting gauge %s  at x = %g, y = %g ... "
-            % (
-                gaugeno,
-                gaugesoln.x,
-                gaugesoln.y,
+        print(
+            (
+                "    Plotting gauge %s  at x = %g, y = %g ... "
+                % (
+                    gaugeno,
+                    gaugesoln.x,
+                    gaugesoln.y,
+                )
             )
-        ))
+        )
 
     if plotdata.mode() == "iplotclaw":
         pylab.ion()
@@ -102,14 +103,16 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if plotdata._mode == "iplotclaw":
         gaugesoln = plotdata.getgauge(gaugeno)
         # import pdb; pdb.set_trace()
-        print((
-            "    Plotting Gauge %s  at x = %g, y = %g ... "
-            % (
-                gaugeno,
-                gaugesoln.x,
-                gaugesoln.y,
+        print(
+            (
+                "    Plotting Gauge %s  at x = %g, y = %g ... "
+                % (
+                    gaugeno,
+                    gaugesoln.x,
+                    gaugesoln.y,
+                )
             )
-        ))
+        )
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -502,9 +505,12 @@ def plot_gauge_locations(
                 yn = yn + yoffset
                 text(xn, yn, "  %s" % n, fontsize=fontsize)
         except:
-            print((
-                "*** plot_gauge_locations: warning: did not find x,y data for gauge ", n
-            ))
+            print(
+                (
+                    "*** plot_gauge_locations: warning: did not find x,y data for gauge ",
+                    n,
+                )
+            )
 
 
 # ------------------------------------------------------------------------
@@ -698,10 +704,13 @@ def printgauges(plotdata=None, verbose=True):
     numframes = len(framenos)
 
     print(("Will plot %i frames numbered:" % numframes, framenos))
-    print((
-        "Will make %i figure(s) for each frame, numbered: " % len(fignos_each_frame),
-        fignos_each_frame,
-    ))
+    print(
+        (
+            "Will make %i figure(s) for each frame, numbered: "
+            % len(fignos_each_frame),
+            fignos_each_frame,
+        )
+    )
 
     # fignames = {}
     # for figname in plotdata._fignames:

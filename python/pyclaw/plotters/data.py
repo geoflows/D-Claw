@@ -188,7 +188,9 @@ class ClawPlotData(Data):
             print(("*** Error in new_plotfigure: Figure name already used... ", name))
             raise Exception("Figure name already used")
         elif figno in self._fignos:
-            print(("*** Error in new_plotfigure: Figure number already used... ", figno))
+            print(
+                ("*** Error in new_plotfigure: Figure number already used... ", figno)
+            )
             raise Exception("Figure number already used")
 
         self._fignames.append(name)
@@ -235,7 +237,7 @@ class ClawPlotData(Data):
             except:
                 print(("*** Error in getframe: cannot move to outdir = ", outdir))
                 print(("*** thisdir = ", thisdir))
-                raise("")
+                raise ("")
                 return
 
             try:
@@ -243,21 +245,23 @@ class ClawPlotData(Data):
             except:
                 print("*** Error reading frame in ClawPlotData.getframe")
                 os.chdir(thisdir)
-                raise("")
+                raise ("")
                 return
             os.chdir(thisdir)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
             if key != frameno:
-                print((
-                    "    Reading  Frame %s at t = %g  from outdir = %s"
-                    % (
-                        frameno,
-                        framesoln.t,
-                        outdir,
+                print(
+                    (
+                        "    Reading  Frame %s at t = %g  from outdir = %s"
+                        % (
+                            frameno,
+                            framesoln.t,
+                            outdir,
+                        )
                     )
-                ))
+                )
             else:
                 print(("    Reading  Frame %s at t = %g  " % (frameno, framesoln.t)))
         else:
@@ -342,7 +346,7 @@ class ClawPlotData(Data):
             except:
                 print(("*** Error in getgauge: cannot move to outdir = ", outdir))
                 print(("*** thisdir = ", thisdir))
-                raise("")
+                raise ("")
                 return
             try:
                 gauges = self.read_gauges(outdir)
@@ -351,7 +355,7 @@ class ClawPlotData(Data):
                 print(("*** outdir = ", outdir))
                 print(("*** thisdir = ", thisdir))
                 os.chdir(thisdir)
-                raise("")
+                raise ("")
                 return
             os.chdir(thisdir)
 
@@ -359,7 +363,7 @@ class ClawPlotData(Data):
                 for (k, v) in list(gauges.items()):
                     gaugesoln_dict[(k, outdir)] = v
             except:
-                raise("*** Problem setting gaugesoln_dict in getgauge")
+                raise ("*** Problem setting gaugesoln_dict in getgauge")
 
             # print '    Read all gauge data from %s/fort.gauge' % outdir
 
@@ -368,7 +372,7 @@ class ClawPlotData(Data):
         except:
             print(("*** Cannot find key = ", key))
             print(("***   in gaugesoln_dict = ", gaugesoln_dict))
-            raise("*** Problem getting gaugesoln in getgauge")
+            raise ("*** Problem getting gaugesoln in getgauge")
 
         return gaugesoln
 
@@ -383,11 +387,10 @@ class ClawPlotData(Data):
         """
 
         import os
+        from io import StringIO
 
         import numpy as np
         from matplotlib.mlab import find
-        from io import StringIO
-
         from pyclaw.plotters import gaugetools
 
         fname = outdir + "/fort.gauge"
@@ -1091,7 +1094,7 @@ class ClawInputData(Data):
 
         else:
             print("*** Error: only ndim=1 or 2 supported so far ***")
-            raise("")
+            raise ("")
 
     def write(self):
         print("Creating data file claw.data for use with xclaw")
@@ -1208,7 +1211,7 @@ class AmrclawInputData(Data):
             self.add_attribute("uprint", False)
         else:
             print("*** Error: only ndim=1 or 2 supported so far ***")
-            raise("")
+            raise ("")
 
     def write(self):
         print("Creating data file amr2ez.data for use with xamr")
@@ -1264,7 +1267,7 @@ def data_write(file, dataobj, name=None, descr=""):
         except:
             print(("Variable missing: ", name))
             print(("  from dataobj = ", dataobj))
-            raise("")
+            raise ("")
         # Convert value to an appropriate string repr
         import numpy
 
@@ -1314,7 +1317,7 @@ def make_clawdatafile(clawdata):
         data_write(file, clawdata, "iout", "(output every iout steps)")
     else:
         print("*** Error: unrecognized outstyle")
-        raise("")
+        raise ("")
         return
 
     data_write(file, clawdata, None)
@@ -1398,7 +1401,7 @@ def make_amrclawdatafile(clawdata):
         data_write(file, clawdata, "iout", "(output every iout steps)")
     else:
         print("*** Error: unrecognized outstyle")
-        raise("")
+        raise ("")
         return
 
     data_write(file, clawdata, None)
