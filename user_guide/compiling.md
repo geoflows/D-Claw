@@ -3,9 +3,8 @@
 Katy Barnhart
 
 
-## issues with call.i
-
-  On linux two files called call.i are symlinks. If you clone on a mac or a pc, you will probably get an error that looks like:
+## Compilation fails: call.i
+  In the repo, two call.i files are intended as symlinks. They show up as text documents on Mac or Windows and if they are not fixed, you will probably get the following error message.
 
   ```bash
   Error: Non-numeric character in statement label at (1)
@@ -14,12 +13,10 @@ Katy Barnhart
   Error: Invalid character in name at (1)
   ```
 
-  To address this, rebuild the symlinks
+  If on Mac or Windows, need to remove these files and rebuild the symlinks.
 
-  From the D-Claw directory
-
-  ```bash
-  cd geoclaw/2d/lib
+  ```
+  cd D-Claw/geoclaw/2d/lib
   rm call.i
   ln -s ../../../amrclaw/2d/lib/call.i call.i
   cd ../lib_dig
@@ -27,8 +24,7 @@ Katy Barnhart
   ln -s ../../../amrclaw/2d/lib/call.i call.i
   ```
 
-
-## issues with type missmatch causing compile errors
+## Compilation fails: type mismatch error 
 
   If you have fortran compiler > v8 (I think) you will probably get the error:
 

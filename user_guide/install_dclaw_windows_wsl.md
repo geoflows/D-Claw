@@ -28,31 +28,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
   The only way I found that worked was to clone DIRECTLY to the WSL file structure. If you clone the source to the windows side you may get fortran compiler errors. If you clone to WSL without setting up the symlinks then you can't edit directly on windows (as easily).
 
-  In the repo, two call.i files are intended as symlinks. They show up as text documents on Mac or Windows and if they are not fixed, you will probably get the following error message.
-  ```
-  gfortran -c -I/mnt/c/Users/krbarnhart/source/D-Claw/amrclaw/2d/lib /mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.f -o /mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.o
-  call.i:1:1:
-
-  Error: Non-numeric character in statement label at (1)
-  call.i:1:2:
-
-  Error: Invalid character in name at (1)
-  /mnt/c/Users/krbarnhart/source/D-Claw/util/Makefile.common:71: recipe for target '/mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.o' failed
-  make[1]: *** [/mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.o] Error 1
-  make[1]: Leaving directory '/mnt/c/Users/krbarnhart/source/dclaw-apps/USGSFlume/gate_release_example'
-  ```
-
-  If on Mac or Windows, need to remove these files and rebuild the symlinks.
-
-  ```
-  cd D-Claw/geoclaw/2d/lib
-  rm call.i
-  ln -s ../../../amrclaw/2d/lib/call.i call.i
-  cd ../lib_dig
-  rm call.i
-  ln -s ../../../amrclaw/2d/lib/call.i call.i
-  ```
-
+  See page on compiling for issues there.
 
 4. On WSL do additional steps of installation.
 
