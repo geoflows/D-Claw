@@ -66,20 +66,19 @@ def convertfortdir(
 
     arguments:
     ---------
-        nplots: integer for the number of plots, list of plots or fort.nplot filename
-            a sinlge integer will be all plots up to that integer
-            for individual plots make nplots a list
         outputtype: 'scattered','topotype' , 'fortrefined' , 'fortuniform'
                     Note: only scattered option retains actual non-interpolated output, generally.
                      --scattered: highest level data as columns x,y,q
                      --topotype: like a DEM with a single component of q (useful for GIS software)
                      --fortrefined: standard clawpack output style, but a single grid at highest resolution
                      --fortuniform: standard clawpack output style, but a single grid with user defined grid parameters.
+        nplots: integer for the number of plots, list of plots or fort.nplot filename
+            a sinlge integer will be all plots up to that integer
+            for individual plots make nplots a list
         outputname: the base name of the output files...filenames will be appended with frameno
         components: for scattered and fort a list of components q, or 'all'
             For topotype it must be an integer to select the single component of q, or 'topo' to get eta-h,
                 or 'depth' to get nodata_value where h=0...for plotting purposes.
-
         outdir: specify a directory for files to go in relative to cwd
         fortdir: location of fort.q files if not ./
         parallel: bool flag whether to use parallel processing (needs joblib, default false)
@@ -147,7 +146,7 @@ def convertfortdir(
             print(
                 "for outputtype==fortuniform you must provide xlower,ylower,xupper,yupper,mx,my as kwargs"
             )
-            raise SystemExit(0)
+            raise ValueError()
 
     if isinstance(nplots, str):
         nplotfile = os.path.join(fortdir, nplots)
