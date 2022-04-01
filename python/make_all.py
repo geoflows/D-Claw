@@ -30,8 +30,8 @@ def make_all(rootdir, cleanup=True):
         rootdir = os.path.abspath(rootdir)
 
     print("Will try to 'source make_all.sh' or 'make all' in every subdirectory of ")
-    print("    ", rootdir)
-    ans = input("Ok? ")
+    print(("    ", rootdir))
+    ans = eval(input("Ok? "))
     if ans.lower() not in ["y", "yes"]:
         print("Aborting.")
         sys.exit()
@@ -73,7 +73,7 @@ def make_all(rootdir, cleanup=True):
             fout.flush()
             ferr.flush()
 
-            print("Executing commands in make_all.sh in ", rootdirpath)
+            print(("Executing commands in make_all.sh in ", rootdirpath))
 
             try:
                 os.system("make clobber")
@@ -84,7 +84,7 @@ def make_all(rootdir, cleanup=True):
                 print("   Successful completion")
                 goodlist.append(dirpath)
             else:
-                print("   *** Errors encountered: see ", fname_errors)
+                print(("   *** Errors encountered: see ", fname_errors))
                 badlist.append(dirpath)
             if cleanup:
                 os.system("make clean; rm -rf _output")
@@ -107,14 +107,14 @@ def make_all(rootdir, cleanup=True):
             except:
                 pass
 
-            print("Running 'make all' in ", rootdirpath)
+            print(("Running 'make all' in ", rootdirpath))
             job = subprocess.Popen(["make", "all"], stdout=fout, stderr=ferr)
             return_code = job.wait()
             if return_code == 0:
                 print("   Successful completion")
                 goodlist.append(dirpath)
             else:
-                print("   *** Errors encountered: see ", fname_errors)
+                print(("   *** Errors encountered: see ", fname_errors))
                 badlist.append(dirpath)
             if cleanup:
                 os.system("make clean; rm -rf _output")
@@ -124,19 +124,19 @@ def make_all(rootdir, cleanup=True):
     print(" ")
     print("Ran Clawpack and created output in directories:")
     for d in goodlist:
-        print("   ", d)
+        print(("   ", d))
     print(" ")
 
     if len(badlist) > 0:
         print("Errors encountered in the following directories:")
         for d in badlist:
-            print("   ", d)
+            print(("   ", d))
         print(" ")
 
     fout.close()
     ferr.close()
-    print("For all output see ", fname_output)
-    print("For all errors see ", fname_errors)
+    print(("For all output see ", fname_output))
+    print(("For all errors see ", fname_errors))
 
 
 def run_make_all(ferr):
@@ -147,7 +147,7 @@ def run_make_all(ferr):
         if (len(line) == 0) or (line[0] == "#"):
             pass  # ignore blank lines or comments
         else:
-            print("Executing: ", line)
+            print(("Executing: ", line))
             return_code = os.system(line)
             if return_code != 0:
                 errmsg = "return_code = %s from executing '%s'" % (return_code, line)

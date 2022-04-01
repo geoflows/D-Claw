@@ -15,15 +15,15 @@ try:
     httpd = ServerClass(server_address, HandlerClass)
 except:
     # traceback.print_exc()
-    print("*** Error starting server, port %s may be in use" % port)
+    print(("*** Error starting server, port %s may be in use" % port))
     sys.exit(1)
 
 try:
     sa = httpd.socket.getsockname()
-    print("\nServing HTTP on", sa[0], "port", sa[1], "...")
+    print(("\nServing HTTP on", sa[0], "port", sa[1], "..."))
     print("Use Ctrl-C to shut down server")
     print(" ")
-    print("Point your browser to http://localhost:%s/" % port)
+    print(("Point your browser to http://localhost:%s/" % port))
     print(" ")
     try:
         httpd.serve_forever()

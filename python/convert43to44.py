@@ -44,9 +44,9 @@ def make_rundata(ndim):
     if not os.path.isfile(fname43):
         try:
 	    shutil.move(fname, fname43)
-	    print("=== Moved %s to %s"  % (fname, fname43))
+	    print(("=== Moved %s to %s"  % (fname, fname43)))
 	except:
-	    print("*** Could not find ", fname)
+	    print(("*** Could not find ", fname))
             raise
 	    return
     clawdata_file = open(fname43,'r')
@@ -120,7 +120,7 @@ def next(lines):
         numstring = result.group('string')
         numstring = numstring.replace('d','e')  # for floating notation
     except:
-        print('*** Failed on line: ',line)
+        print(('*** Failed on line: ',line))
 	numstring = '0'
     return numstring
 

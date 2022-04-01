@@ -28,8 +28,8 @@ def make_htmls(rootdir):
         rootdir = rootdir[0]
         rootdir = os.path.abspath(rootdir)
 
-    print("Will make htmls in all of ", rootdir)
-    ans = input("Ok? ")
+    print(("Will make htmls in all of ", rootdir))
+    ans = eval(input("Ok? "))
     if ans.lower() not in ["y", "yes"]:
         print("Aborting.")
         sys.exit()
@@ -43,7 +43,7 @@ def make_htmls(rootdir):
         os.chdir(os.path.abspath(dirpath))
 
         if os.path.isfile("Makefile"):
-            print("In directory ", dirpath)
+            print(("In directory ", dirpath))
             if remove_first:
                 os.system("rm -f *.html")
             try:
@@ -58,13 +58,13 @@ def make_htmls(rootdir):
     print(" ")
     print("Created htmls in directories:")
     for d in goodlist:
-        print("   ", d)
+        print(("   ", d))
     print(" ")
 
     if len(badlist) > 0:
         print("Failed in the following directories:")
         for d in badlist:
-            print("   ", d)
+            print(("   ", d))
         print(" ")
 
 

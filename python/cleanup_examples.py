@@ -7,8 +7,8 @@ import os
 import sys
 
 clawdir = os.path.expandvars("$CLAW")
-print("Will remove all .o, _output from ", clawdir)
-ans = input("Ok? ")
+print(("Will remove all .o, _output from ", clawdir))
+ans = eval(input("Ok? "))
 if ans.lower() not in ["y", "yes"]:
     print("Aborting.")
     sys.exit()
@@ -20,7 +20,7 @@ for (dirpath, subdirs, files) in os.walk("."):
     os.chdir(os.path.abspath(dirpath))
 
     if os.path.isfile("setrun.py"):
-        print("In directory ", dirpath)
+        print(("In directory ", dirpath))
 
         for f in glob.glob("*.o"):
             os.remove(f)

@@ -46,14 +46,14 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
     if verbose:
         gaugesoln = plotdata.getgauge(gaugeno)
-        print(
+        print((
             "    Plotting gauge %s  at x = %g, y = %g ... "
             % (
                 gaugeno,
                 gaugesoln.x,
                 gaugesoln.y,
             )
-        )
+        ))
 
     if plotdata.mode() == "iplotclaw":
         pylab.ion()
@@ -102,14 +102,14 @@ def plotgauge(gaugeno, plotdata, verbose=False):
     if plotdata._mode == "iplotclaw":
         gaugesoln = plotdata.getgauge(gaugeno)
         # import pdb; pdb.set_trace()
-        print(
+        print((
             "    Plotting Gauge %s  at x = %g, y = %g ... "
             % (
                 gaugeno,
                 gaugesoln.x,
                 gaugesoln.y,
             )
-        )
+        ))
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -153,7 +153,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
             print("*** Warning in plotgauge: plotdata has empty plotaxes_dict")
-            print("*** Apparently no axes to plot in figno ", figno)
+            print(("*** Apparently no axes to plot in figno ", figno))
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
@@ -181,9 +181,9 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                         outdir = plotdata.outdir
                     gaugesoln = plotdata.getgauge(gaugeno, outdir)
                 except:
-                    print("*** Cannot find gauge number ", gaugeno)
-                    print("*** looking in directory ", outdir)
-                    print("*** cwd = ", os.getcwd())
+                    print(("*** Cannot find gauge number ", gaugeno))
+                    print(("*** looking in directory ", outdir))
+                    print(("*** cwd = ", os.getcwd()))
                     return None
 
                 # import pdb; pdb.set_trace()
@@ -197,7 +197,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                         if output:
                             current_data = output
                         if verbose:
-                            print("      Plotted  plotitem ", itemname)
+                            print(("      Plotted  plotitem ", itemname))
                     except:
                         print("*** Error in plotgauge: problem calling plotgauge1")
                         traceback.print_exc()
@@ -274,7 +274,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         pylab.draw()
 
     if verbose:
-        print("    Done with plotgauge for gauge %i" % (gaugeno))
+        print(("    Done with plotgauge for gauge %i" % (gaugeno)))
 
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != "iplotclaw") & plotdata.printfigs:
@@ -442,10 +442,10 @@ def read_setgauges(datadir):
     for n in sgno:
         nn = find(sgno == n)
         if len(nn) > 1:
-            print("*** Warning: found more than one gauge numbered ", n)
+            print(("*** Warning: found more than one gauge numbered ", n))
 
         if len(nn) == 0:
-            print("*** Error: didn't find gauge number %s in %s" % (n, fname))
+            print(("*** Error: didn't find gauge number %s in %s" % (n, fname)))
         else:
             nn = nn[0]
             setgauges.x[n] = x[nn]
@@ -502,9 +502,9 @@ def plot_gauge_locations(
                 yn = yn + yoffset
                 text(xn, yn, "  %s" % n, fontsize=fontsize)
         except:
-            print(
+            print((
                 "*** plot_gauge_locations: warning: did not find x,y data for gauge ", n
-            )
+            ))
 
 
 # ------------------------------------------------------------------------
@@ -535,7 +535,7 @@ def printfig(fname="", gaugeno="", figno="", format="png", plotdir=".", verbose=
     if plotdir != ".":
         fname = os.path.join(plotdir, fname)
     if verbose:
-        print("    Saving plot to file ", fname)
+        print(("    Saving plot to file ", fname))
     pylab.savefig(fname)
 
 
@@ -593,7 +593,7 @@ def printgauges(plotdata=None, verbose=True):
         msgfile = plotdata.msgfile  # where to write error messages
     except:
         print("*** Error in printframes: plotdata missing attribute")
-        print("  *** plotdata = ", plotdata)
+        print(("  *** plotdata = ", plotdata))
         return plotdata
 
     if fignos == "all":
@@ -639,8 +639,8 @@ def printgauges(plotdata=None, verbose=True):
     try:
         os.chdir(rundir)
     except:
-        print("*** Error: cannot move to run directory ", rundir)
-        print("rootdir = ", rootdir)
+        print(("*** Error: cannot move to run directory ", rundir))
+        print(("rootdir = ", rootdir))
         return plotdata
 
     if msgfile != "":
@@ -672,7 +672,7 @@ def printgauges(plotdata=None, verbose=True):
     try:
         os.chdir(outdir)
     except:
-        print("*** Error printframes: cannot move to outdir = ", outdir)
+        print(("*** Error printframes: cannot move to outdir = ", outdir))
         return plotdata
 
     fortfile = {}
@@ -688,7 +688,7 @@ def printgauges(plotdata=None, verbose=True):
             pngfile[frameno, figno] = "frame" + file[-4:] + "fig%s.png" % figno
 
     if len(fortfile) == 0:
-        print("*** No fort.q files found in directory ", os.getcwd())
+        print(("*** No fort.q files found in directory ", os.getcwd()))
         return plotdata
 
     # Discard frames that are not from latest run, based on
@@ -697,11 +697,11 @@ def printgauges(plotdata=None, verbose=True):
 
     numframes = len(framenos)
 
-    print("Will plot %i frames numbered:" % numframes, framenos)
-    print(
+    print(("Will plot %i frames numbered:" % numframes, framenos))
+    print((
         "Will make %i figure(s) for each frame, numbered: " % len(fignos_each_frame),
         fignos_each_frame,
-    )
+    ))
 
     # fignames = {}
     # for figname in plotdata._fignames:
@@ -738,10 +738,10 @@ def printgauges(plotdata=None, verbose=True):
         print("Now making png files for all figures...")
         for frameno in framenos:
             plotframe(frameno, plotdata, verbose)
-            print("Frame %i at time t = %s" % (frameno, frametimes[frameno]))
+            print(("Frame %i at time t = %s" % (frameno, frametimes[frameno])))
         for gaugeno in gaugenos:
             plotgauge(gaugeno, plotdata, verbose)
-            print("Gauge %i " % gaugeno)
+            print(("Gauge %i " % gaugeno))
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
@@ -756,9 +756,9 @@ def printgauges(plotdata=None, verbose=True):
                 os.system(
                     "convert -delay 20 frame*fig%s.png moviefig%s.gif" % (figno, figno)
                 )
-                print("    Created moviefig%s.gif" % figno)
+                print(("    Created moviefig%s.gif" % figno))
             except:
-                print("*** Error creating moviefig%s.gif" % figno)
+                print(("*** Error creating moviefig%s.gif" % figno))
 
     os.chdir(rootdir)
 

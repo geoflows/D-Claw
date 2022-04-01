@@ -329,12 +329,12 @@ def print_html_pointers(path_to_html_index):
     # PlotPath.replace('\\','/') # for windows
     print("\n--------------------------------------------------------")
     print("\nPoint your browser to:")
-    print("    file://%s" % path_to_html_index)
+    print(("    file://%s" % path_to_html_index))
     clawdir = os.getenv("CLAW")
     if clawdir in path_to_html_index:
         path_to_html_index = path_to_html_index.replace(clawdir, "")
         print("\nOr, if you have the Clawpack server running, point your browser to:")
-        print("    http://localhost:50005%s" % path_to_html_index)
+        print(("    http://localhost:50005%s" % path_to_html_index))
 
 
 # ======================================================================
@@ -925,19 +925,19 @@ def plots2latex(plot_pages_data):
     latexfile.write("\\end{document}\n")
     latexfile.close()
     print("\nLatex file created:  ")
-    print("  %s/%s.tex" % (plotdir, ppd.latex_fname))
+    print(("  %s/%s.tex" % (plotdir, ppd.latex_fname)))
     print("\nUse pdflatex to create pdf file")
 
     if ppd.latex_makepdf:
         try:
             os.system("pdflatex %s" % ppd.latex_fname)
-            print(
+            print((
                 "\nSuccessfully created pdf file:  %s/%s.pdf"
                 % (
                     plotdir,
                     ppd.latex_fname,
                 )
-            )
+            ))
         except:
             print("*** pdflatex command failed")
 
@@ -955,28 +955,28 @@ def cd_with_mkdir(newdir, overwrite=False, verbose=True):
         raise
     elif os.path.isdir(newdir) & overwrite:
         if verbose:
-            print("Directory '%s' " % newdir)
+            print(("Directory '%s' " % newdir))
             print("    already exists, files may be overwritten ")
     elif os.path.isdir(newdir) & (not overwrite):
         print("*** Error in cd_with_mkdir")
-        print("Directory already exists:\n  ", newdir)
-        print("Remove directory with \n '  rm -r %s' " % newdir)
+        print(("Directory already exists:\n  ", newdir))
+        print(("Remove directory with \n '  rm -r %s' " % newdir))
         print("  and try again, or set overwrite=True ")
         raise
     else:
         try:
             os.mkdir(newdir)
             if verbose:
-                print("Created directory:\n   ", newdir)
+                print(("Created directory:\n   ", newdir))
         except:
             print("*** Error in cd_with_mkdir")
-            print("Cannot make directory: \n  ", newdir)
+            print(("Cannot make directory: \n  ", newdir))
             raise
     try:
         os.chdir(newdir)
     except:
         print("*** Error in cd_with_mkdir")
-        print("Cannot change directory to \n  ", newdir)
+        print(("Cannot change directory to \n  ", newdir))
 
 
 # ======================================================================
@@ -990,12 +990,12 @@ def cd_plotdir(plot_pages_data):
         raise
     elif os.path.isdir(ppd.plotdir) & ppd.overwrite:
         if verbose:
-            print("Directory '%s' " % ppd.plotdir)
+            print(("Directory '%s' " % ppd.plotdir))
             print("    already exists, files may be overwritten ")
     elif os.path.isdir(ppd.plotdir) & (not ppd.overwrite):
-        print("Directory '%s'" % ppd.plotdir)
+        print(("Directory '%s'" % ppd.plotdir))
         print("  already exists")
-        print("Remove directory with \n '  rm -r %s' " % ppd.plotdir)
+        print(("Remove directory with \n '  rm -r %s' " % ppd.plotdir))
         print("  and try again, or set overwrite=True ")
         print("*** Error in cd_plotdir")
         raise
@@ -1003,13 +1003,13 @@ def cd_plotdir(plot_pages_data):
         try:
             os.mkdir(ppd.plotdir)
         except:
-            print("Cannot make directory ", ppd.plotdir)
+            print(("Cannot make directory ", ppd.plotdir))
             print("*** Error in cd_plotdir")
             raise
     try:
         os.chdir(ppd.plotdir)
     except:
-        print("*** Error trying to cd to ", ppd.plotdir)
+        print(("*** Error trying to cd to ", ppd.plotdir))
 
 
 # =====================================
@@ -1224,16 +1224,16 @@ def timeframes2latex(plot_pages_data):
     latexfile.close()
 
     print("\nLatex file created:  ")
-    print("  %s/%s.tex" % (plotdir, ppd.latex_fname))
+    print(("  %s/%s.tex" % (plotdir, ppd.latex_fname)))
     print("\nUse pdflatex to create pdf file")
     if ppd.latex & ppd.latex_makepdf:
         try:
             os.system("pdflatex %s" % ppd.latex_fname)
         except:
             print("*** pdflatex command failed")
-        print(
+        print((
             "\nSuccessfully created pdf file:  %s/%s.pdf" % (plotdir, ppd.latex_fname)
-        )
+        ))
 
     os.chdir(startdir)
     # end of timeframes2latex
@@ -1531,7 +1531,7 @@ def plotclaw2html(plotdata):
         html.write("<p>None\n")
     else:
         html.write("<p><ul>\n")
-        for name in plotdata.otherfigure_dict.keys():
+        for name in list(plotdata.otherfigure_dict.keys()):
             otherfigure = plotdata.otherfigure_dict[name]
             fname = otherfigure.fname
             makefig = otherfigure.makefig
@@ -1541,13 +1541,13 @@ def plotclaw2html(plotdata):
                         exec(makefig)
                     except:
                         print("*** Problem executing makefig ")
-                        print("    for otherfigure ", name)
+                        print(("    for otherfigure ", name))
                 else:
                     try:
                         makefig(plotdata)
                     except:
                         print("*** Problem executing makefig function")
-                        print("    for otherfigure ", name)
+                        print(("    for otherfigure ", name))
                         raise
 
                 # Assume that makefig saves the file if needed, so removing the
@@ -2094,7 +2094,7 @@ def plotclaw_driver(plotdata, verbose=False):
         msgfile = plotdata.msgfile  # where to write error messages
     except:
         print("*** Error in printframes: plotdata missing attribute")
-        print("  *** plotdata = ", plotdata)
+        print(("  *** plotdata = ", plotdata))
         return plotdata
 
     if fignos == "all":
@@ -2140,8 +2140,8 @@ def plotclaw_driver(plotdata, verbose=False):
     try:
         os.chdir(rundir)
     except:
-        print("*** Error: cannot move to run directory ", rundir)
-        print("rootdir = ", rootdir)
+        print(("*** Error: cannot move to run directory ", rundir))
+        print(("rootdir = ", rootdir))
         return plotdata
 
     if msgfile != "":
@@ -2170,7 +2170,7 @@ def plotclaw_driver(plotdata, verbose=False):
     try:
         os.chdir(outdir)
     except:
-        print("*** Error plotclaw_driver: cannot move to outdir = ", outdir)
+        print(("*** Error plotclaw_driver: cannot move to outdir = ", outdir))
         return plotdata
 
     fortfile = {}
@@ -2184,7 +2184,7 @@ def plotclaw_driver(plotdata, verbose=False):
             pngfile[frameno, figno] = "frame" + file[-4:] + "fig%s.png" % figno
 
     if len(fortfile) == 0:
-        print("*** No fort.q files found in directory ", os.getcwd())
+        print(("*** No fort.q files found in directory ", os.getcwd()))
         return plotdata
 
     # Discard frames that are not from latest run, based on
@@ -2193,11 +2193,11 @@ def plotclaw_driver(plotdata, verbose=False):
 
     numframes = len(framenos)
 
-    print("Will plot %i frames numbered:" % numframes, framenos)
-    print(
+    print(("Will plot %i frames numbered:" % numframes, framenos))
+    print((
         "Will make %i figure(s) for each frame, numbered: " % len(fignos_each_frame),
         fignos_each_frame,
-    )
+    ))
 
     # fignames = {}
     # for figname in plotdata._fignames:
@@ -2249,11 +2249,11 @@ def plotclaw_driver(plotdata, verbose=False):
 
         for frameno in framenos:
             frametools.plotframe(frameno, plotdata, verbose)
-            print("Frame %i at time t = %s" % (frameno, frametimes[frameno]))
+            print(("Frame %i at time t = %s" % (frameno, frametimes[frameno])))
 
         for gaugeno in gaugenos:
             gaugetools.plotgauge(gaugeno, plotdata, verbose)
-            print("Gauge %i " % gaugeno)
+            print(("Gauge %i " % gaugeno))
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
@@ -2268,9 +2268,9 @@ def plotclaw_driver(plotdata, verbose=False):
                 os.system(
                     "convert -delay 20 frame*fig%s.png moviefig%s.gif" % (figno, figno)
                 )
-                print("    Created moviefig%s.gif" % figno)
+                print(("    Created moviefig%s.gif" % figno))
             except:
-                print("*** Error creating moviefig%s.gif" % figno)
+                print(("*** Error creating moviefig%s.gif" % figno))
 
     os.chdir(rootdir)
 

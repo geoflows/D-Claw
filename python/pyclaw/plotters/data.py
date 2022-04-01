@@ -176,19 +176,19 @@ class ClawPlotData(Data):
         all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != "iplotclaw") and (name in self._fignames):
-            print("*** Warning, figure named %s has already been created" % name)
+            print(("*** Warning, figure named %s has already been created" % name))
         if (self._mode != "iplotclaw") and (figno in self._fignos):
-            print("*** Warning, figure number %s has already been created" % figno)
+            print(("*** Warning, figure number %s has already been created" % figno))
         if figno is None:
             self._next_FIG += 1
             figno = self._next_FIG
         if name is None:
             name = "FIG%s" % figno
         if name in self._fignames:
-            print("*** Error in new_plotfigure: Figure name already used... ", name)
+            print(("*** Error in new_plotfigure: Figure name already used... ", name))
             raise Exception("Figure name already used")
         elif figno in self._fignos:
-            print("*** Error in new_plotfigure: Figure number already used... ", figno)
+            print(("*** Error in new_plotfigure: Figure number already used... ", figno))
             raise Exception("Figure number already used")
 
         self._fignames.append(name)
@@ -233,9 +233,9 @@ class ClawPlotData(Data):
             try:
                 os.chdir(outdir)
             except:
-                print("*** Error in getframe: cannot move to outdir = ", outdir)
-                print("*** thisdir = ", thisdir)
-                raise
+                print(("*** Error in getframe: cannot move to outdir = ", outdir))
+                print(("*** thisdir = ", thisdir))
+                raise("")
                 return
 
             try:
@@ -243,23 +243,23 @@ class ClawPlotData(Data):
             except:
                 print("*** Error reading frame in ClawPlotData.getframe")
                 os.chdir(thisdir)
-                raise
+                raise("")
                 return
             os.chdir(thisdir)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
             if key != frameno:
-                print(
+                print((
                     "    Reading  Frame %s at t = %g  from outdir = %s"
                     % (
                         frameno,
                         framesoln.t,
                         outdir,
                     )
-                )
+                ))
             else:
-                print("    Reading  Frame %s at t = %g  " % (frameno, framesoln.t))
+                print(("    Reading  Frame %s at t = %g  " % (frameno, framesoln.t)))
         else:
             framesoln = self.framesoln_dict[key]
 
@@ -311,9 +311,9 @@ class ClawPlotData(Data):
             for frameno in framenos:
                 xxx = self.plotdata.framesoln_dict.pop(frameno, None)
                 if xxx is None:
-                    print("No frame data to clear for frame ", frameno)
+                    print(("No frame data to clear for frame ", frameno))
                 else:
-                    print("Cleared data for frame ", frameno)
+                    print(("Cleared data for frame ", frameno))
 
     def getgauge(self, gaugeno, outdir=None):
         """
@@ -340,35 +340,35 @@ class ClawPlotData(Data):
             try:
                 os.chdir(outdir)
             except:
-                print("*** Error in getgauge: cannot move to outdir = ", outdir)
-                print("*** thisdir = ", thisdir)
-                raise
+                print(("*** Error in getgauge: cannot move to outdir = ", outdir))
+                print(("*** thisdir = ", thisdir))
+                raise("")
                 return
             try:
                 gauges = self.read_gauges(outdir)
             except:
                 print("*** Error reading gauges in ClawPlotData.getgauge")
-                print("*** outdir = ", outdir)
-                print("*** thisdir = ", thisdir)
+                print(("*** outdir = ", outdir))
+                print(("*** thisdir = ", thisdir))
                 os.chdir(thisdir)
-                raise
+                raise("")
                 return
             os.chdir(thisdir)
 
             try:
-                for (k, v) in gauges.iteritems():
+                for (k, v) in list(gauges.items()):
                     gaugesoln_dict[(k, outdir)] = v
             except:
-                raise ("*** Problem setting gaugesoln_dict in getgauge")
+                raise("*** Problem setting gaugesoln_dict in getgauge")
 
             # print '    Read all gauge data from %s/fort.gauge' % outdir
 
         try:
             gaugesoln = gaugesoln_dict[key]
         except:
-            print("*** Cannot find key = ", key)
-            print("***   in gaugesoln_dict = ", gaugesoln_dict)
-            raise ("*** Problem getting gaugesoln in getgauge")
+            print(("*** Cannot find key = ", key))
+            print(("***   in gaugesoln_dict = ", gaugesoln_dict))
+            raise("*** Problem getting gaugesoln in getgauge")
 
         return gaugesoln
 
@@ -386,16 +386,16 @@ class ClawPlotData(Data):
 
         import numpy as np
         from matplotlib.mlab import find
-        from StringIO import StringIO
+        from io import StringIO
 
         from pyclaw.plotters import gaugetools
 
         fname = outdir + "/fort.gauge"
         if not os.path.isfile(fname):
-            print("*** Gauge file not found: ", fname)
+            print(("*** Gauge file not found: ", fname))
             gauges = {}
 
-        print("    Reading gauge data from ", fname)
+        print(("    Reading gauge data from ", fname))
 
         def stars2num(s):
             """
@@ -419,7 +419,7 @@ class ClawPlotData(Data):
                 gdata_file = StringIO(gdata_lines[: gdata_end + 1])
                 gdata = np.loadtxt(gdata_file, converters={0: stars2num})
             except:
-                print("*** Problem reading file ", fname)
+                print(("*** Problem reading file ", fname))
                 # print "*** Possibly an incomplete last line if computation is still in progress"
                 raise Exception("Problem reading fort.gauge")
                 gauges = {}
@@ -449,9 +449,9 @@ class ClawPlotData(Data):
                 gauges[n].t1 = setgauges.t1[n]
                 gauges[n].t2 = setgauges.t2[n]
             except:
-                print("*** Could not extract gauge locations for gaugeno = ", n)
+                print(("*** Could not extract gauge locations for gaugeno = ", n))
 
-        print("    Found gauge numbers: ", gauges.keys())
+        print(("    Found gauge numbers: ", list(gauges.keys())))
         return gauges
 
     def plotframe(self, frameno):
@@ -493,7 +493,7 @@ class ClawPlotData(Data):
         try:
             plotfigure = self.plotfigure_dict[figname]
         except:
-            print("*** Error accessing plotfigure_dict[%s]" % figname)
+            print(("*** Error accessing plotfigure_dict[%s]" % figname))
             return None
         return plotfigure
 
@@ -511,14 +511,14 @@ class ClawPlotData(Data):
                     figname = fig
                     found = True
         if not found:
-            print("*** No axes found with name = ", axesname)
+            print(("*** No axes found with name = ", axesname))
             return None
         try:
             plotfigure = self.getfigure(figname)
             plotaxes = plotfigure.plotaxes_dict[axesname]
         except:
-            print("*** Error accessing plotaxes[%s]" % axesname)
-            print("*** figname = %s" % figname)
+            print(("*** Error accessing plotaxes[%s]" % axesname))
+            print(("*** figname = %s" % figname))
             return None
         return plotaxes
 
@@ -572,15 +572,15 @@ class ClawPlotData(Data):
                     found = True
 
         if not found:
-            print("*** No item found with name = ", itemname)
+            print(("*** No item found with name = ", itemname))
             return None
         try:
             plotaxes = self.getaxes(axesname, figname)
             plotitem = plotaxes.plotitem_dict[itemname]
         except:
-            print("*** Error accessing plotitem[%s]" % itemname)
-            print("*** figname = ", figname)
-            print("*** axesname = ", axesname)
+            print(("*** Error accessing plotitem[%s]" % itemname))
+            print(("*** figname = ", figname))
+            print(("*** axesname = ", axesname))
             return None
         return plotitem
 
@@ -624,12 +624,12 @@ class ClawPlotData(Data):
         For figures not repeated each frame.
         """
         if (self._mode != "iplotclaw") and (name in self._fignames):
-            print("*** Warning, figure named %s has already been created" % name)
+            print(("*** Warning, figure named %s has already been created" % name))
 
         if name is None:
             raise Exception("Need to provide name in new_otherfigure")
         if name in self._otherfignames:
-            print("*** Error in new_otherfigure: Figure name already used... ", name)
+            print(("*** Error in new_otherfigure: Figure name already used... ", name))
             raise Exception("Figure name already used")
 
         self._otherfignames.append(name)
@@ -701,7 +701,7 @@ class ClawPlotFigure(Data):
             self._next_AXES += 1
             name = "AXES%s" % self._next_AXES
         if name in self._axesnames:
-            print("*** Warning, axes named %s has already been created" % name)
+            print(("*** Warning, axes named %s has already been created" % name))
 
         if name not in self._axesnames:
             self._axesnames.append(name)
@@ -853,7 +853,7 @@ class ClawPlotItem(Data):
         try:
             ndim = int(plot_type[0])  # first character of plot_type should be ndim
         except:
-            print("*** Error: could not determine ndim from plot_type = ", plot_type)
+            print(("*** Error: could not determine ndim from plot_type = ", plot_type))
 
         self.ndim = ndim
         self.name = name
@@ -965,7 +965,7 @@ class ClawPlotItem(Data):
                 self.add_attribute("quiver_key_kwargs", {})
 
             else:
-                print("*** Warning 2d plot type %s not recognized" % plot_type)
+                print(("*** Warning 2d plot type %s not recognized" % plot_type))
 
         elif ndim == 3:
             print("*** Warning- ClawPlotItem not yet set up for ndim = 3")
@@ -1091,7 +1091,7 @@ class ClawInputData(Data):
 
         else:
             print("*** Error: only ndim=1 or 2 supported so far ***")
-            raise ()
+            raise("")
 
     def write(self):
         print("Creating data file claw.data for use with xclaw")
@@ -1208,7 +1208,7 @@ class AmrclawInputData(Data):
             self.add_attribute("uprint", False)
         else:
             print("*** Error: only ndim=1 or 2 supported so far ***")
-            raise ()
+            raise("")
 
     def write(self):
         print("Creating data file amr2ez.data for use with xamr")
@@ -1262,9 +1262,9 @@ def data_write(file, dataobj, name=None, descr=""):
         try:
             value = getattr(dataobj, name)
         except:
-            print("Variable missing: ", name)
-            print("  from dataobj = ", dataobj)
-            raise
+            print(("Variable missing: ", name))
+            print(("  from dataobj = ", dataobj))
+            raise("")
         # Convert value to an appropriate string repr
         import numpy
 
@@ -1314,7 +1314,7 @@ def make_clawdatafile(clawdata):
         data_write(file, clawdata, "iout", "(output every iout steps)")
     else:
         print("*** Error: unrecognized outstyle")
-        raise
+        raise("")
         return
 
     data_write(file, clawdata, None)
@@ -1398,7 +1398,7 @@ def make_amrclawdatafile(clawdata):
         data_write(file, clawdata, "iout", "(output every iout steps)")
     else:
         print("*** Error: unrecognized outstyle")
-        raise
+        raise("")
         return
 
     data_write(file, clawdata, None)

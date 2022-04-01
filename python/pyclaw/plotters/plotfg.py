@@ -15,7 +15,7 @@ Specify output directory other than _output by adding the outdir to this line:
 import os
 
 from numpy import ma
-from plottools import fix_long_tick_labels
+from .plottools import fix_long_tick_labels
 from pylab import *
 
 from pyclaw.data import Data
@@ -66,26 +66,26 @@ class ClawPlotFGData(Data):
         pattern = "%s/fort.fg%s_*" % (self.outdir, str(self.fgno).zfill(2))
         files = glob.glob(pattern)
         if len(files) == 0:
-            print "*** No files found of form ", pattern
+            print("*** No files found of form ", pattern)
         framenos = []
         for file in files:
             line = open(file, "r").readline()
             t = float(line.split()[0])
-            print "%s: t = %s" % (file, t)
+            print("%s: t = %s" % (file, t))
             frameno = file[-2:]
             framenos.append(int(frameno))
         return framenos
 
     def get_frame(self, frameno):
 
-        if self.solutions.has_key(frameno):
+        if frameno in self.solutions:
             # don't read if already in dictionary:
             return self.grid, self.solutions[frameno]
 
         fname = "fort.fg%s_%s" % (str(self.fgno).zfill(2), str(frameno).zfill(4))
         fname = os.path.join(self.outdir, fname)
         if not os.path.exists(fname):
-            print "*** Did not find file ", fname, " in directory ", self.outdir
+            print("*** Did not find file ", fname, " in directory ", self.outdir)
             raise IOError("Missing fixed grid output file")
 
         self.grid = Data()
@@ -97,8 +97,8 @@ class ClawPlotFGData(Data):
 
         line = file.readline()
         t = float(line.split()[0])
-        print "Reading fixed grid output from ", fname
-        print "   Frame %s at t = %s" % (frameno, t)
+        print("Reading fixed grid output from ", fname)
+        print("   Frame %s at t = %s" % (frameno, t))
 
         line = file.readline()
         grid.mx = int(line.split()[0])
@@ -147,7 +147,7 @@ class ClawPlotFGData(Data):
     def plotfg(self, frameno):
 
         grid, solution = self.get_frame(frameno)
-        print "Plotting frame %s at time t = %s" % (frameno, solution.t)
+        print("Plotting frame %s at time t = %s" % (frameno, solution.t))
 
         # Define function to plot topo contours for use in multiple places:
         def add_contours():
@@ -203,7 +203,7 @@ class ClawPlotFGData(Data):
                 figno,
             )
             savefig(fname)
-            print "Saved figure as ", fname
+            print("Saved figure as ", fname)
 
         if solution.ncols > 5:
 
@@ -266,7 +266,7 @@ class ClawPlotFGData(Data):
                     figno,
                 )
                 savefig(fname)
-                print "Saved figure as ", fname
+                print("Saved figure as ", fname)
 
         # ---------------------------------------------------------------
 
@@ -308,7 +308,7 @@ class ClawPlotFGData(Data):
                     figno,
                 )
                 savefig(fname)
-                print "Saved figure as ", fname
+                print("Saved figure as ", fname)
 
     def fgloop(self):
         for frameno in range(1, 100):
@@ -316,15 +316,15 @@ class ClawPlotFGData(Data):
                 self.plotfg(frameno)
             except IOError:
                 break
-            ans = raw_input("Hit return for next time, q to quit, s to savefig... ")
+            ans = input("Hit return for next time, q to quit, s to savefig... ")
             if ans == "s":
                 fname = "FixedGrid%sFrame%s.png" % (
                     str(self.fgno).zfill(2),
                     str(frameno).zfill(4),
                 )
                 savefig(fname)
-                print "Saved figure as ", fname
-                ans = raw_input("Hit return for next time, q to quit, s to savefig... ")
+                print("Saved figure as ", fname)
+                ans = input("Hit return for next time, q to quit, s to savefig... ")
 
             if ans == "q":
                 break
@@ -341,7 +341,7 @@ class ClawPlotFGData(Data):
         ppd.timeframes_frametimes = {}
 
         if framenos == "all":
-            framenos = range(1, 200)
+            framenos = list(range(1, 200))
 
         for frameno in framenos:
             try:

@@ -253,7 +253,7 @@ def convertfortdir(
     else:
         # loop through prepared args.
         for args in arg_list:
-            print("Converting {}".format(args[1]))
+            print(("Converting {}".format(args[1])))
             _func(*args)
 
     # return to curdir if changed.
@@ -828,9 +828,9 @@ def array2fort(
     fortqheader["AMR_level"] = 1
 
     foutq = fortqheaderwrite(fortqheader, fort_q_outfile, closefile=False)
-    for j in xrange(my):
+    for j in range(my):
         foutq.write("\n")
-        for i in xrange(mx):
+        for i in range(mx):
             rowind = j * mx + i
             qout = Q[rowind, :]
             for q in qout:
@@ -867,9 +867,9 @@ def fort2griddata(fortqname, forttname, m=1):
 
     Q = np.zeros(np.shape(X))
 
-    for j in xrange(ncols):
+    for j in range(ncols):
         xp = X[0, j]
-        for i in xrange(nrows):
+        for i in range(nrows):
             yp = Y[i, 0]
             qv = pointfromfort((xp, yp), solutionlist)
             Q[i, j] = qv[m - 1]
@@ -909,9 +909,9 @@ def fort2griddata_vector(fortqname, forttname, meqn=7):
     Qshape = (Xshape[0], Xshape[1], mq)
     Q = np.zeros(Qshape)
 
-    for j in xrange(ncols):
+    for j in range(ncols):
         xp = X[0, j]
-        for i in xrange(nrows):
+        for i in range(nrows):
             yp = Y[i, 0]
             qv = pointfromfort((xp, yp), solutionlist)
             Q[i, j, :] = qv
