@@ -18,16 +18,20 @@ Pyclaw utility methods
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
-from __future__ import print_function
 
-import time
-import os, sys, shutil, glob
-import re
-import subprocess
+
+import glob
 import logging
+import os
+import re
+import shutil
+import subprocess
+import sys
 import tempfile
+import time
 
 import numpy as np
+
 
 # ============================================================================
 #  Geoclaw Topography Utility Functions
@@ -170,10 +174,10 @@ def read_topo_file(path, topo_type, verbose=False):
 
     if verbose:
         print("Header:")
-        print("  (nx,ny) = (%s,%s)" % (nx, ny))
-        print("  (xl,yl) = (%s,%s)" % (xll, yll))
-        print("  (dx,dy) = (%s,%s)" % (dx, dx))
-        print("  nodata  = %s" % nodata_value)
+        print(("  (nx,ny) = (%s,%s)" % (nx, ny)))
+        print(("  (xl,yl) = (%s,%s)" % (xll, yll)))
+        print(("  (dx,dy) = (%s,%s)" % (dx, dx)))
+        print(("  nodata  = %s" % nodata_value))
 
     # Create Z matrix
     dy = dx
@@ -196,7 +200,8 @@ def read_topo_file(path, topo_type, verbose=False):
             for i in range(0, nx):
                 Z[i, j] = float(line[i])
     else:
-        print("Invalid topo type %s" % topo_type, file=sys.stderr)
+        with open(sys.stderr, "a") as f:
+            f.write("Invalid topo type %s \n" % topo_type)
         return None
 
     return x, y, Z
@@ -560,8 +565,8 @@ def read_data_line(inputfile, num_entries=1, type="float"):
         l = line.split()
     val = np.empty(num_entries, type)
     if num_entries > len(l):
-        print("Error in read_data_line: num_entries = ", num_entries)
-        print("  is larger than length of l = ", l)
+        print(("Error in read_data_line: num_entries = ", num_entries))
+        print(("  is larger than length of l = ", l))
     try:
         for i in range(num_entries):
             exec("val[i] = %s(l[i])" % type)
@@ -569,8 +574,8 @@ def read_data_line(inputfile, num_entries=1, type="float"):
             return val[0]
         return val
     except (ValueError):
-        print("Invalid type for the %s value in %s" % (i, l))
-        print("  type = ", type)
+        print(("Invalid type for the %s value in %s" % (i, l)))
+        print(("  type = ", type))
         return None
     except:
         raise
@@ -589,7 +594,7 @@ def convert_fort_double_to_float(number):
 
     """
     a = number.split("d")
-    print(float(a[0]) * 10 ** float(a[1]))
+    print((float(a[0]) * 10 ** float(a[1])))
     return float(a[0]) * 10 ** float(a[1])
 
 

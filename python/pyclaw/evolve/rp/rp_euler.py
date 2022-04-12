@@ -44,14 +44,14 @@ import numpy as np
 def rp_euler_roe_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Roe Euler solver in 1d
-    
+
     *aug_global* should contain -
      - *gamma* - (float) Ratio of the heat capacities
      - *gamma1* - (float) :math:`1 - \gamma`
      - *efix* - (bool) Whether to use an entropy fix or not
-    
+
     See :ref:`pyclaw_rp` for more details.
-    
+
     :Version: 1.0 (2009-6-26)
     """
 

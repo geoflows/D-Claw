@@ -23,13 +23,13 @@ import numpy as np
 def rp_burgers_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Riemann solver for Burgers equation in 1d
-         
+
     *aux_global* should contain -
-     - *efix* - (bool) Whether a entropy fix should be used, if not present, 
+     - *efix* - (bool) Whether a entropy fix should be used, if not present,
        false is assumed
-    
+
     See :ref:`pyclaw_rp` for more details.
-    
+
     :Version: 1.0 (2009-2-4)
     """
 

@@ -12,10 +12,11 @@ Plotting Data Module
 Contains the general class definition and the subclasses of the Clawpack
 data objects specific to plotting.
 """
-import os
 import copy
-import re
 import logging
+import os
+import re
+
 from pyclaw.data import Data
 
 
@@ -170,24 +171,26 @@ class ClawPlotData(Data):
         """
         Create a new figure for Clawpack plots.
         If type='each_frame' it is a figure that will be plotted
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is a figure that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         """
         if (self._mode != "iplotclaw") and (name in self._fignames):
-            print "*** Warning, figure named %s has already been created" % name
+            print(("*** Warning, figure named %s has already been created" % name))
         if (self._mode != "iplotclaw") and (figno in self._fignos):
-            print "*** Warning, figure number %s has already been created" % figno
+            print(("*** Warning, figure number %s has already been created" % figno))
         if figno is None:
             self._next_FIG += 1
             figno = self._next_FIG
         if name is None:
             name = "FIG%s" % figno
         if name in self._fignames:
-            print "*** Error in new_plotfigure: Figure name already used... ", name
+            print(("*** Error in new_plotfigure: Figure name already used... ", name))
             raise Exception("Figure name already used")
         elif figno in self._fignos:
-            print "*** Error in new_plotfigure: Figure number already used... ", figno
+            print(
+                ("*** Error in new_plotfigure: Figure number already used... ", figno)
+            )
             raise Exception("Figure number already used")
 
         self._fignames.append(name)
@@ -210,11 +213,9 @@ class ClawPlotData(Data):
         the dictionary self.framesoln_dict has no key frameno.  If it does, the
         frame has previously been read and the dictionary value is returned.
         """
-
         from pyclaw import solution
 
         framesoln_dict = self.framesoln_dict
-
         if 0:
             if outdir:
                 key = (frameno, outdir)
@@ -227,34 +228,42 @@ class ClawPlotData(Data):
         outdir = os.path.abspath(outdir)
         key = (frameno, outdir)
 
-        if self.refresh_frames or (not framesoln_dict.has_key(key)):
+        has_key = key in framesoln_dict
+
+        if self.refresh_frames or (has_key == False):
             thisdir = os.getcwd()
             try:
                 os.chdir(outdir)
             except:
-                print "*** Error in getframe: cannot move to outdir = ", outdir
-                print "*** thisdir = ", thisdir
-                raise
+                print(("*** Error in getframe: cannot move to outdir = ", outdir))
+                print(("*** thisdir = ", thisdir))
+                raise ("")
                 return
+
             try:
                 framesoln = solution.Solution(frameno, format=self.format)
             except:
-                print "*** Error reading frame in ClawPlotData.getframe"
+                print("*** Error reading frame in ClawPlotData.getframe")
                 os.chdir(thisdir)
-                raise
+                raise ("")
                 return
             os.chdir(thisdir)
             if not self.save_frames:
                 framesoln_dict.clear()
             framesoln_dict[key] = framesoln
             if key != frameno:
-                print "    Reading  Frame %s at t = %g  from outdir = %s" % (
-                    frameno,
-                    framesoln.t,
-                    outdir,
+                print(
+                    (
+                        "    Reading  Frame %s at t = %g  from outdir = %s"
+                        % (
+                            frameno,
+                            framesoln.t,
+                            outdir,
+                        )
+                    )
                 )
             else:
-                print "    Reading  Frame %s at t = %g  " % (frameno, framesoln.t)
+                print(("    Reading  Frame %s at t = %g  " % (frameno, framesoln.t)))
         else:
             framesoln = self.framesoln_dict[key]
 
@@ -279,8 +288,8 @@ class ClawPlotData(Data):
     def clearfigures(self):
         """
         Clear all plot parameters specifying figures, axes, items.
-	Does not clear the frames of solution data already read in.
-	  For that use clearframes.
+        Does not clear the frames of solution data already read in.
+          For that use clearframes.
         """
 
         self.plotfigure_dict.clear()
@@ -301,14 +310,14 @@ class ClawPlotData(Data):
 
         if framenos == "all":
             self.framesoln_dict.clear()
-            print "Cleared all frames"
+            print("Cleared all frames")
         else:
             for frameno in framenos:
                 xxx = self.plotdata.framesoln_dict.pop(frameno, None)
                 if xxx is None:
-                    print "No frame data to clear for frame ", frameno
+                    print(("No frame data to clear for frame ", frameno))
                 else:
-                    print "Cleared data for frame ", frameno
+                    print(("Cleared data for frame ", frameno))
 
     def getgauge(self, gaugeno, outdir=None):
         """
@@ -329,28 +338,29 @@ class ClawPlotData(Data):
         outdir = os.path.abspath(outdir)
         key = (gaugeno, outdir)
 
-        if self.refresh_gauges or (not gaugesoln_dict.has_key(key)):
+        has_key = key in gaugesoln_dict
+        if self.refresh_gauges or (has_key == False):
             thisdir = os.getcwd()
             try:
                 os.chdir(outdir)
             except:
-                print "*** Error in getgauge: cannot move to outdir = ", outdir
-                print "*** thisdir = ", thisdir
-                raise
+                print(("*** Error in getgauge: cannot move to outdir = ", outdir))
+                print(("*** thisdir = ", thisdir))
+                raise ("")
                 return
             try:
                 gauges = self.read_gauges(outdir)
             except:
-                print "*** Error reading gauges in ClawPlotData.getgauge"
-                print "*** outdir = ", outdir
-                print "*** thisdir = ", thisdir
+                print("*** Error reading gauges in ClawPlotData.getgauge")
+                print(("*** outdir = ", outdir))
+                print(("*** thisdir = ", thisdir))
                 os.chdir(thisdir)
-                raise
+                raise ("")
                 return
             os.chdir(thisdir)
 
             try:
-                for (k, v) in gauges.iteritems():
+                for (k, v) in list(gauges.items()):
                     gaugesoln_dict[(k, outdir)] = v
             except:
                 raise ("*** Problem setting gaugesoln_dict in getgauge")
@@ -360,8 +370,8 @@ class ClawPlotData(Data):
         try:
             gaugesoln = gaugesoln_dict[key]
         except:
-            print "*** Cannot find key = ", key
-            print "***   in gaugesoln_dict = ", gaugesoln_dict
+            print(("*** Cannot find key = ", key))
+            print(("***   in gaugesoln_dict = ", gaugesoln_dict))
             raise ("*** Problem getting gaugesoln in getgauge")
 
         return gaugesoln
@@ -377,17 +387,18 @@ class ClawPlotData(Data):
         """
 
         import os
+        from io import StringIO
+
         import numpy as np
         from matplotlib.mlab import find
         from pyclaw.plotters import gaugetools
-        from StringIO import StringIO
 
         fname = outdir + "/fort.gauge"
         if not os.path.isfile(fname):
-            print "*** Gauge file not found: ", fname
+            print(("*** Gauge file not found: ", fname))
             gauges = {}
 
-        print "    Reading gauge data from ", fname
+        print(("    Reading gauge data from ", fname))
 
         def stars2num(s):
             """
@@ -404,14 +415,14 @@ class ClawPlotData(Data):
             gdata = np.loadtxt(fname, converters={0: stars2num})
         except:
             try:
-                print "*** Warning: incomplete last line, computation may "
-                print "*** still be in progress "
+                print("*** Warning: incomplete last line, computation may ")
+                print("*** still be in progress ")
                 gdata_lines = open(fname, "r").read()
                 gdata_end = gdata_lines.rfind("\n", -200, -1)
                 gdata_file = StringIO(gdata_lines[: gdata_end + 1])
                 gdata = np.loadtxt(gdata_file, converters={0: stars2num})
             except:
-                print "*** Problem reading file ", fname
+                print(("*** Problem reading file ", fname))
                 # print "*** Possibly an incomplete last line if computation is still in progress"
                 raise Exception("Problem reading fort.gauge")
                 gauges = {}
@@ -441,9 +452,9 @@ class ClawPlotData(Data):
                 gauges[n].t1 = setgauges.t1[n]
                 gauges[n].t2 = setgauges.t2[n]
             except:
-                print "*** Could not extract gauge locations for gaugeno = ", n
+                print(("*** Could not extract gauge locations for gaugeno = ", n))
 
-        print "    Found gauge numbers: ", gauges.keys()
+        print(("    Found gauge numbers: ", list(gauges.keys())))
         return gauges
 
     def plotframe(self, frameno):
@@ -454,8 +465,8 @@ class ClawPlotData(Data):
     def printframes(self, verbose=True):
         # from pyclaw.plotters import frametools
         # frametools.printframes(self, verbose)
-        print "*** printframes is deprecated.  Use plotpages.plotclaw_driver"
-        print "*** for added capabilities."
+        print("*** printframes is deprecated.  Use plotpages.plotclaw_driver")
+        print("*** for added capabilities.")
 
     def fignos(self):
         """
@@ -485,7 +496,7 @@ class ClawPlotData(Data):
         try:
             plotfigure = self.plotfigure_dict[figname]
         except:
-            print "*** Error accessing plotfigure_dict[%s]" % figname
+            print(("*** Error accessing plotfigure_dict[%s]" % figname))
             return None
         return plotfigure
 
@@ -497,20 +508,20 @@ class ClawPlotData(Data):
                 plotfigure = self.getfigure(fig)
                 if axesname in plotfigure._axesnames:
                     if found == True:  # already found!
-                        print "*** Ambiguous... must specify figname"
-                        print "    try getaxes(axesname, figname)"
+                        print("*** Ambiguous... must specify figname")
+                        print("    try getaxes(axesname, figname)")
                         return None
                     figname = fig
                     found = True
         if not found:
-            print "*** No axes found with name = ", axesname
+            print(("*** No axes found with name = ", axesname))
             return None
         try:
             plotfigure = self.getfigure(figname)
             plotaxes = plotfigure.plotaxes_dict[axesname]
         except:
-            print "*** Error accessing plotaxes[%s]" % axesname
-            print "*** figname = %s" % figname
+            print(("*** Error accessing plotaxes[%s]" % axesname))
+            print(("*** figname = %s" % figname))
             return None
         return plotaxes
 
@@ -527,8 +538,10 @@ class ClawPlotData(Data):
                         plotaxes = self.getaxes(axesn, fign)
                         if itemname in plotaxes._itemnames:
                             if found == True:  # already found!
-                                print "*** Ambiguous... must specify figname and/or axesname"
-                                print "    try getitem(itemname, axesname, figname)"
+                                print(
+                                    "*** Ambiguous... must specify figname and/or axesname"
+                                )
+                                print("    try getitem(itemname, axesname, figname)")
                                 return None
                             axesname = axesn
                             figname = fign
@@ -538,8 +551,10 @@ class ClawPlotData(Data):
                     plotaxes = self.getaxes(axesname, fign)
                     if itemname in plotaxes._itemnames:
                         if found == True:  # already found!
-                            print "*** Ambiguous... must specify figname and/or axesname"
-                            print "    try getitem(itemname, axesname, figname)"
+                            print(
+                                "*** Ambiguous... must specify figname and/or axesname"
+                            )
+                            print("    try getitem(itemname, axesname, figname)")
                             return None
                         figname = fign
                         found = True
@@ -553,56 +568,56 @@ class ClawPlotData(Data):
                 plotaxes = self.getaxes(axesn, figname)
                 if itemname in plotaxes._itemnames:
                     if found == True:  # already found!
-                        print "*** Ambiguous... must specify axesname"
-                        print "    try getitem(itemname, axesname, figname)"
+                        print("*** Ambiguous... must specify axesname")
+                        print("    try getitem(itemname, axesname, figname)")
                         return None
                     axesname = axesn
                     found = True
 
         if not found:
-            print "*** No item found with name = ", itemname
+            print(("*** No item found with name = ", itemname))
             return None
         try:
             plotaxes = self.getaxes(axesname, figname)
             plotitem = plotaxes.plotitem_dict[itemname]
         except:
-            print "*** Error accessing plotitem[%s]" % itemname
-            print "*** figname = ", figname
-            print "*** axesname = ", axesname
+            print(("*** Error accessing plotitem[%s]" % itemname))
+            print(("*** figname = ", figname))
+            print(("*** axesname = ", axesname))
             return None
         return plotitem
 
     def showitems(self):
         fignames = self._fignames
-        print "\n\nCurrent plot figures, axes, and items:"
-        print "---------------------------------------"
+        print("\n\nCurrent plot figures, axes, and items:")
+        print("---------------------------------------")
         for figname in fignames:
             plotfigure = self.getfigure(figname)
             s = "  figname = %s, figno = %s" % (figname, plotfigure.figno)
             if not plotfigure._show:
                 s = s + "  [Not showing]"
-            print s
+            print(s)
             axesnames = plotfigure._axesnames
             for axesname in axesnames:
                 plotaxes = self.getaxes(axesname, figname)
                 s = "     axesname = %s, axescmd = %s" % (axesname, plotaxes.axescmd)
                 if not plotaxes._show:
                     s = s + "  [Not showing]"
-                print s
+                print(s)
                 for itemname in plotaxes._itemnames:
                     plotitem = self.getitem(itemname, axesname, figname)
                     plot_type = plotitem.plot_type
                     s = "        itemname = %s,  plot_type = %s" % (itemname, plot_type)
                     if not plotitem._show:
                         s = s + "  [Not showing]"
-                    print s
-            print " "
+                    print(s)
+            print(" ")
 
     def getq(self, frameno):
         solution = self.getframe(frameno)
         grids = solution.grids
         if len(grids) > 1:
-            print "*** Warning: more than 1 grid, q on grid[0] is returned"
+            print("*** Warning: more than 1 grid, q on grid[0] is returned")
         q = grids[0].q
         return q
 
@@ -612,12 +627,12 @@ class ClawPlotData(Data):
         For figures not repeated each frame.
         """
         if (self._mode != "iplotclaw") and (name in self._fignames):
-            print "*** Warning, figure named %s has already been created" % name
+            print(("*** Warning, figure named %s has already been created" % name))
 
         if name is None:
             raise Exception("Need to provide name in new_otherfigure")
         if name in self._otherfignames:
-            print "*** Error in new_otherfigure: Figure name already used... ", name
+            print(("*** Error in new_otherfigure: Figure name already used... ", name))
             raise Exception("Figure name already used")
 
         self._otherfignames.append(name)
@@ -678,9 +693,9 @@ class ClawPlotFigure(Data):
         """
         Create a new axes that will be plotted in this figure.
         If type='each_frame' it is an axes that will be plotted
-	for each time frame.
+        for each time frame.
         If type='multi_frame' it is an axes that will be plotted based on
-	all the frames, such as x-t plots or time series. (Not yet implemented)
+        all the frames, such as x-t plots or time series. (Not yet implemented)
         If type='empty' it is created without doing any plots using the
         pyclaw tools.  Presumably the user will create a plot within an
         afteraxes command, for example.
@@ -689,7 +704,7 @@ class ClawPlotFigure(Data):
             self._next_AXES += 1
             name = "AXES%s" % self._next_AXES
         if name in self._axesnames:
-            print "*** Warning, axes named %s has already been created" % name
+            print(("*** Warning, axes named %s has already been created" % name))
 
         if name not in self._axesnames:
             self._axesnames.append(name)
@@ -841,7 +856,7 @@ class ClawPlotItem(Data):
         try:
             ndim = int(plot_type[0])  # first character of plot_type should be ndim
         except:
-            print "*** Error: could not determine ndim from plot_type = ", plot_type
+            print(("*** Error: could not determine ndim from plot_type = ", plot_type))
 
         self.ndim = ndim
         self.name = name
@@ -953,13 +968,13 @@ class ClawPlotItem(Data):
                 self.add_attribute("quiver_key_kwargs", {})
 
             else:
-                print "*** Warning 2d plot type %s not recognized" % plot_type
+                print(("*** Warning 2d plot type %s not recognized" % plot_type))
 
         elif ndim == 3:
-            print "*** Warning- ClawPlotItem not yet set up for ndim = 3"
+            print("*** Warning- ClawPlotItem not yet set up for ndim = 3")
 
         else:
-            print "*** Warning- Unrecognized plot_type in ClawPlotItem"
+            print("*** Warning- Unrecognized plot_type in ClawPlotItem")
 
         self.params = {}  # dictionary to hold optional parameters
 
@@ -1078,11 +1093,11 @@ class ClawInputData(Data):
             self.add_attribute("N_restart", 0)
 
         else:
-            print "*** Error: only ndim=1 or 2 supported so far ***"
-            raise ()
+            print("*** Error: only ndim=1 or 2 supported so far ***")
+            raise ("")
 
     def write(self):
-        print "Creating data file claw.data for use with xclaw"
+        print("Creating data file claw.data for use with xclaw")
         make_clawdatafile(self)
 
 
@@ -1195,11 +1210,11 @@ class AmrclawInputData(Data):
             self.add_attribute("tprint", False)
             self.add_attribute("uprint", False)
         else:
-            print "*** Error: only ndim=1 or 2 supported so far ***"
-            raise ()
+            print("*** Error: only ndim=1 or 2 supported so far ***")
+            raise ("")
 
     def write(self):
-        print "Creating data file amr2ez.data for use with xamr"
+        print("Creating data file amr2ez.data for use with xamr")
         make_amrclawdatafile(self)
 
 
@@ -1250,9 +1265,9 @@ def data_write(file, dataobj, name=None, descr=""):
         try:
             value = getattr(dataobj, name)
         except:
-            print "Variable missing: ", name
-            print "  from dataobj = ", dataobj
-            raise
+            print(("Variable missing: ", name))
+            print(("  from dataobj = ", dataobj))
+            raise ("")
         # Convert value to an appropriate string repr
         import numpy
 
@@ -1301,8 +1316,8 @@ def make_clawdatafile(clawdata):
     elif clawdata.outstyle == 3:
         data_write(file, clawdata, "iout", "(output every iout steps)")
     else:
-        print "*** Error: unrecognized outstyle"
-        raise
+        print("*** Error: unrecognized outstyle")
+        raise ("")
         return
 
     data_write(file, clawdata, None)
@@ -1385,8 +1400,8 @@ def make_amrclawdatafile(clawdata):
     elif clawdata.outstyle == 3:
         data_write(file, clawdata, "iout", "(output every iout steps)")
     else:
-        print "*** Error: unrecognized outstyle"
-        raise
+        print("*** Error: unrecognized outstyle")
+        raise ("")
         return
 
     data_write(file, clawdata, None)
@@ -1408,7 +1423,7 @@ def make_amrclawdatafile(clawdata):
     data_write(file, clawdata, "maux", "(number of aux variables)")
     if len(clawdata.auxtype) != clawdata.maux:
         file.close()
-        raise AttributeError, "require len(clawdata.auxtype) == clawdata.maux"
+        raise AttributeError("require len(clawdata.auxtype) == clawdata.maux")
     for i in range(clawdata.maux):
         file.write("'%s'\n" % clawdata.auxtype[i])
     data_write(file, clawdata, None)

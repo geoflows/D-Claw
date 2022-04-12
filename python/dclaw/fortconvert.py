@@ -44,9 +44,8 @@ import copy
 import os
 import string
 
-import numpy as np
-
 import dclaw.topotools as gt
+import numpy as np
 
 
 # ================================================================================
@@ -67,20 +66,19 @@ def convertfortdir(
 
     arguments:
     ---------
-        nplots: integer for the number of plots, list of plots or fort.nplot filename
-            a sinlge integer will be all plots up to that integer
-            for individual plots make nplots a list
         outputtype: 'scattered','topotype' , 'fortrefined' , 'fortuniform'
                     Note: only scattered option retains actual non-interpolated output, generally.
                      --scattered: highest level data as columns x,y,q
                      --topotype: like a DEM with a single component of q (useful for GIS software)
                      --fortrefined: standard clawpack output style, but a single grid at highest resolution
                      --fortuniform: standard clawpack output style, but a single grid with user defined grid parameters.
+        nplots: integer for the number of plots, list of plots or fort.nplot filename
+            a sinlge integer will be all plots up to that integer
+            for individual plots make nplots a list
         outputname: the base name of the output files...filenames will be appended with frameno
         components: for scattered and fort a list of components q, or 'all'
             For topotype it must be an integer to select the single component of q, or 'topo' to get eta-h,
                 or 'depth' to get nodata_value where h=0...for plotting purposes.
-
         outdir: specify a directory for files to go in relative to cwd
         fortdir: location of fort.q files if not ./
         parallel: bool flag whether to use parallel processing (needs joblib, default false)
@@ -110,10 +108,10 @@ def convertfortdir(
     outdir = os.path.abspath(outdir)
 
     write_level = kwargs.get("write_level", False)
-    east=kwargs.get("east", None)
-    west=kwargs.get("west", None)
-    south=kwargs.get("south", None)
-    north=kwargs.get("north", None)
+    east = kwargs.get("east", None)
+    west = kwargs.get("west", None)
+    south = kwargs.get("south", None)
+    north = kwargs.get("north", None)
 
     if outputtype == "topotype":
         try:
@@ -148,7 +146,7 @@ def convertfortdir(
             print(
                 "for outputtype==fortuniform you must provide xlower,ylower,xupper,yupper,mx,my as kwargs"
             )
-            raise SystemExit(0)
+            raise ValueError()
 
     if isinstance(nplots, str):
         nplotfile = os.path.join(fortdir, nplots)
@@ -204,16 +202,20 @@ def convertfortdir(
             topotype = kwargs.get("topotype", None)
             _func = fort2refined
 
-            arg_list.append([frameno,
-                outfname,
-                outfortt,
-                components,
-                topotype,
-                write_level,
-                west,
-                east,
-                south,
-                north,])
+            arg_list.append(
+                [
+                    frameno,
+                    outfname,
+                    outfortt,
+                    components,
+                    topotype,
+                    write_level,
+                    west,
+                    east,
+                    south,
+                    north,
+                ]
+            )
 
         elif outputtype == "fortuniform":
             outfortt = os.path.join(outdir, "fort.t" + framenostr)
@@ -249,7 +251,7 @@ def convertfortdir(
     else:
         # loop through prepared args.
         for args in arg_list:
-            print("Converting {}".format(args[1]))
+            print(("Converting {}".format(args[1])))
             _func(*args)
 
     # return to curdir if changed.
@@ -292,13 +294,13 @@ def fort2xyqscattered(framenumber, outfile=None, components="all"):
 
     # note that solutionlist is ordered from highest levels to lowest.
     for grid in solutionlist:
-        if (grid['AMR_level']==levels): #highest level...data assumed nonoverlapping
-            x = grid['xlow'] + grid['dx']*(0.5 + (np.arange(grid['mx'],dtype=float)))
-            y = grid['ylow'] + grid['dy']*(0.5 + (np.arange(grid['my'],dtype=float)))
-            Q = grid['data'][:,qlst]
-            (X,Y) = np.meshgrid(x,y)
-            X = np.reshape(X,(grid['mx']*grid['my'],1))
-            Y = np.reshape(Y,(grid['mx']*grid['my'],1))
+        if grid["AMR_level"] == levels:  # highest level...data assumed nonoverlapping
+            x = grid["xlow"] + grid["dx"] * (0.5 + (np.arange(grid["mx"], dtype=float)))
+            y = grid["ylow"] + grid["dy"] * (0.5 + (np.arange(grid["my"], dtype=float)))
+            Q = grid["data"][:, qlst]
+            (X, Y) = np.meshgrid(x, y)
+            X = np.reshape(X, (grid["mx"] * grid["my"], 1))
+            Y = np.reshape(Y, (grid["mx"] * grid["my"], 1))
 
             try:
                 XYQ = np.vstack((XYQ, np.hstack((X, Y, Q))))
@@ -461,13 +463,16 @@ def fort2uniform(
                 # reorder into my, mx, meqn by shift axis so meq is at front,
                 # finally flip along axis 1 so that up is up.
 
-                Q_out = np.flip(np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)), axis=1)
+                Q_out = np.flip(
+                    np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)),
+                    axis=1,
+                )
                 if write_level:
                     source_level = np.flipud(source_level)
                     Q_out = np.concatenate(
-                    (np.atleast_3d(Q_out),
-                    source_level.reshape((1, my, mx))),
-                    axis=0)
+                        (np.atleast_3d(Q_out), source_level.reshape((1, my, mx))),
+                        axis=0,
+                    )
 
                 gt.griddata2gtif(
                     X,
@@ -605,6 +610,7 @@ def fort2refined(
         write_level,
     )
 
+
 # ==============================================================================
 def fort2topotype(
     framenumber, outfile, fortdir, xll, yll, cellsize, ncols, nrows, m=1, topotype=2
@@ -721,8 +727,19 @@ def fort2topotype(
         gt.griddata2topofile(X, Y, Q, outfile, topotype, nodata_value_out=nodata_value)
 
 
-#==============================================================================
-def griddata2fort(X,Y,Q,qoutputfile,toutputfile,time=0.0,naux=0,ndim=2,grid_number=1,AMR_level=1):
+# ==============================================================================
+def griddata2fort(
+    X,
+    Y,
+    Q,
+    qoutputfile,
+    toutputfile,
+    time=0.0,
+    naux=0,
+    ndim=2,
+    grid_number=1,
+    AMR_level=1,
+):
     """
     !!!!WIP -- NOT TESTED!!!
     griddata2fort creates a clawpack fort file from grid datasets
@@ -730,59 +747,90 @@ def griddata2fort(X,Y,Q,qoutputfile,toutputfile,time=0.0,naux=0,ndim=2,grid_numb
     """
 
     Qshape = np.shape(Q)
-    if len(Qshape)==2:
-        my=len(Q[:,0])
-        mx=len(Q[0,:])
+    if len(Qshape) == 2:
+        my = len(Q[:, 0])
+        mx = len(Q[0, :])
         meqn = 1
-        Qfort = np.reshape(Q,(mx*my,1))
-    elif len(Qshape)==3:
-        my=len(Q[:,0,0])
-        mx=len(Q[0,:,0])
+        Qfort = np.reshape(Q, (mx * my, 1))
+    elif len(Qshape) == 3:
+        my = len(Q[:, 0, 0])
+        mx = len(Q[0, :, 0])
         meqn = Qshape[2]
-        Qfort = np.reshape(Q,(mx*my,1))
-    xlow=X[0,0]
-    ylow=Y[-1,0]
-    dx = X[0,1]-X[0,0]
-    dy = Y[0,0]-Y[1,0]
+        Qfort = np.reshape(Q, (mx * my, 1))
+    xlow = X[0, 0]
+    ylow = Y[-1, 0]
+    dx = X[0, 1] - X[0, 0]
+    dy = Y[0, 0] - Y[1, 0]
 
-    array2fort(Qfort,outfortqfile,outforttfile,xlow,ylow,mx,my,dx,dy,time,naux,ndim,grid_number,AMR_level)
+    array2fort(
+        Qfort,
+        outfortqfile,
+        outforttfile,
+        xlow,
+        ylow,
+        mx,
+        my,
+        dx,
+        dy,
+        time,
+        naux,
+        ndim,
+        grid_number,
+        AMR_level,
+    )
 
     return
 
-#==============================================================================
-def array2fort(Q,fort_q_outfile,fort_t_outfile,xlow,ylow,mx,my,dx,dy,time=0.0,naux=0,ndim=2,grid_number=1,AMR_level=1):
+
+# ==============================================================================
+def array2fort(
+    Q,
+    fort_q_outfile,
+    fort_t_outfile,
+    xlow,
+    ylow,
+    mx,
+    my,
+    dx,
+    dy,
+    time=0.0,
+    naux=0,
+    ndim=2,
+    grid_number=1,
+    AMR_level=1,
+):
     """
     array2fortfile creates a clawpack fort file (single grid) for a single array, Q.
     Assumed that shape(Q) = (mx*my,meqn); ie: array Q is not reshaped.
     """
 
-    meqn=np.shape(Q)[1]
+    meqn = np.shape(Q)[1] + 1
 
     # creat header for toutputfile
-    forttheader = forttheader={}
-    forttheader['time']=time
-    forttheader['meqn']=meqn
-    forttheader['ngrids']=1
-    forttheader['naux']=naux
-    forttheader['ndim']=ndim
-    forttheaderwrite (forttheader,fort_t_outfile,closefile=True)
+    forttheader = forttheader = {}
+    forttheader["time"] = time
+    forttheader["meqn"] = meqn
+    forttheader["ngrids"] = 1
+    forttheader["naux"] = naux
+    forttheader["ndim"] = ndim
+    forttheaderwrite(forttheader, fort_t_outfile, closefile=True)
 
-    fortqheader={}
-    fortqheader['xlow']=xlow
-    fortqheader['ylow']=ylow
-    fortqheader['dx']=dx
-    fortqheader['dy']=dy
-    fortqheader['mx']=mx
-    fortqheader['my']=my
-    fortqheader['grid_number']=1
-    fortqheader['AMR_level']=1
+    fortqheader = {}
+    fortqheader["xlow"] = xlow
+    fortqheader["ylow"] = ylow
+    fortqheader["dx"] = dx
+    fortqheader["dy"] = dy
+    fortqheader["mx"] = mx
+    fortqheader["my"] = my
+    fortqheader["grid_number"] = 1
+    fortqheader["AMR_level"] = 1
 
-    foutq = fortqheaderwrite(fortqheader,fort_q_outfile,closefile=False)
-    for j in xrange(my):
+    foutq = fortqheaderwrite(fortqheader, fort_q_outfile, closefile=False)
+    for j in range(my):
         foutq.write("\n")
-        for i in xrange(mx):
-            rowind = j*mx + i
-            qout = Q[rowind,:]
+        for i in range(mx):
+            rowind = j * mx + i
+            qout = Q[rowind, :]
             for q in qout:
                 foutq.write("%s " % float(q))
             foutq.write("\n")
@@ -791,86 +839,87 @@ def array2fort(Q,fort_q_outfile,fort_t_outfile,xlow,ylow,mx,my,dx,dy,time=0.0,na
     return
 
 
-
-#==============================================================================
-def fort2griddata(fortqname,forttname,m=1):
+# ==============================================================================
+def fort2griddata(fortqname, forttname, m=1):
     """
     convert data in a fort file ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
     m is the component of q, ie. the column in the fort.qXXXX file
     """
 
-    solutionlist=fort2list(fortqname,forttname)
-    fortqheader=fortqheaderread(fortqname)
-    xll = fortqheader['xlow']
-    yll = fortqheader['ylow']
-    dx = fortqheader['dx']
-    dy = fortqheader['dy']
-    ncols = fortqheader['mx']
-    nrows = fortqheader['my']
+    solutionlist = fort2list(fortqname, forttname)
+    fortqheader = fortqheaderread(fortqname)
+    xll = fortqheader["xlow"]
+    yll = fortqheader["ylow"]
+    dx = fortqheader["dx"]
+    dy = fortqheader["dy"]
+    ncols = fortqheader["mx"]
+    nrows = fortqheader["my"]
 
-    xv = np.array(xll + dx*np.arange(ncols))
-    yv = np.array(yll + dy*np.arange(nrows))
+    xv = np.array(xll + dx * np.arange(ncols))
+    yv = np.array(yll + dy * np.arange(nrows))
 
-    (X,Y) = np.meshgrid(xv,yv)
+    (X, Y) = np.meshgrid(xv, yv)
 
     Y = np.flipud(Y)
 
     Q = np.zeros(np.shape(X))
 
-    for j in xrange(ncols):
-        xp = X[0,j]
-        for i in xrange(nrows):
-            yp = Y[i,0]
-            qv = pointfromfort((xp,yp),solutionlist)
-            Q[i,j] = qv[m-1]
+    for j in range(ncols):
+        xp = X[0, j]
+        for i in range(nrows):
+            yp = Y[i, 0]
+            qv = pointfromfort((xp, yp), solutionlist)
+            Q[i, j] = qv[m - 1]
 
-    return X,Y,Q
+    return X, Y, Q
 
-#==============================================================================
 
-#==============================================================================
-def fort2griddata_vector(fortqname,forttname,meqn=7):
+# ==============================================================================
+
+# ==============================================================================
+def fort2griddata_vector(fortqname, forttname, meqn=7):
     """
     convert data in a fort file ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
     m is the component of q, ie. the column in the fort.qXXXX file
     """
 
-    solutionlist=fort2list(fortqname,forttname)
-    fortqheader=fortqheaderread(fortqname)
-    xll = fortqheader['xlow']
-    yll = fortqheader['ylow']
-    dx = fortqheader['dx']
-    dy = fortqheader['dy']
-    ncols = fortqheader['mx']
-    nrows = fortqheader['my']
+    solutionlist = fort2list(fortqname, forttname)
+    fortqheader = fortqheaderread(fortqname)
+    xll = fortqheader["xlow"]
+    yll = fortqheader["ylow"]
+    dx = fortqheader["dx"]
+    dy = fortqheader["dy"]
+    ncols = fortqheader["mx"]
+    nrows = fortqheader["my"]
 
-    xv = np.array(xll + dx*np.arange(ncols))
-    yv = np.array(yll + dy*np.arange(nrows))
+    xv = np.array(xll + dx * np.arange(ncols))
+    yv = np.array(yll + dy * np.arange(nrows))
 
-    (X,Y) = np.meshgrid(xv,yv)
+    (X, Y) = np.meshgrid(xv, yv)
 
     Y = np.flipud(Y)
 
     Xshape = np.shape(X)
-    #meqn = 7
-    mq = meqn+1
-    Qshape = (Xshape[0],Xshape[1],mq)
+    # meqn = 7
+    mq = meqn + 1
+    Qshape = (Xshape[0], Xshape[1], mq)
     Q = np.zeros(Qshape)
 
-    for j in xrange(ncols):
-        xp = X[0,j]
-        for i in xrange(nrows):
-            yp = Y[i,0]
-            qv = pointfromfort((xp,yp),solutionlist)
-            Q[i,j,:] = qv
-            #import pdb;pdb.set_trace()
+    for j in range(ncols):
+        xp = X[0, j]
+        for i in range(nrows):
+            yp = Y[i, 0]
+            qv = pointfromfort((xp, yp), solutionlist)
+            Q[i, j, :] = qv
+            # import pdb;pdb.set_trace()
 
-    return X,Y,Q
+    return X, Y, Q
 
-#==============================================================================
-def fort2griddata_framenumbers(framenumber,fortdir,m=1):
+
+# ==============================================================================
+def fort2griddata_framenumbers(framenumber, fortdir, m=1):
     """
     convert data in a fort file of framenumber = XXXX, ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -882,9 +931,9 @@ def fort2griddata_framenumbers(framenumber,fortdir,m=1):
     except:
         import geoclaw.topotools as gt
 
-    if isinstance(framenumber,str):
+    if isinstance(framenumber, str):
         numstring = framenumber
-    elif isinstance(framenumber,int):
+    elif isinstance(framenumber, int):
         numstring = str(10000 + framenumber)
 
     framenostr = numstring[1:]
@@ -1160,9 +1209,9 @@ def fort2list(fortqname, forttname):
 # ===============================================================================
 def pointfromfort(point, solutionlist):
     """
-        for a point (x,y) return the solution vector q determined from the
-        best grid available for that point.
-        future plans: array from fort takes numpy grid arrays X,Y
+    for a point (x,y) return the solution vector q determined from the
+    best grid available for that point.
+    future plans: array from fort takes numpy grid arrays X,Y
     """
 
     xp = point[0]
@@ -1310,10 +1359,10 @@ def pointfromfort(point, solutionlist):
 # ===============================================================================
 def intersection(rectangle1, rectangle2):
     """
-     return True of False if rectangle1 and rectangle2 intersect
-     Note: rectangles may be single points as well, with xupper=xlower etc.
-     arguments:
-        rectangleX: list [xlower,ylower,xupper,yupper]
+    return True of False if rectangle1 and rectangle2 intersect
+    Note: rectangles may be single points as well, with xupper=xlower etc.
+    arguments:
+       rectangleX: list [xlower,ylower,xupper,yupper]
 
 
     """

@@ -23,6 +23,7 @@ import os
 
 import numpy as np
 
+
 def tif2tt3(inpath, outpath, band=1, strformat=r"%7.5e", nanerror=True):
     """
     Convert a tif file to a tt3 format file.
@@ -42,7 +43,14 @@ def tif2tt3(inpath, outpath, band=1, strformat=r"%7.5e", nanerror=True):
     except:
         raise ImportError("rasterio dependency not met.")
     with rasterio.open(inpath) as src:
-        rasterio2tt3(src.read(band), src.transform, src.meta["nodata"], outpath, strformat=strformat, nanerror=nanerror)
+        rasterio2tt3(
+            src.read(band),
+            src.transform,
+            src.meta["nodata"],
+            outpath,
+            strformat=strformat,
+            nanerror=nanerror,
+        )
 
 
 def rasterio2tt3(array, transform, nodata, outpath, strformat=r"%7.5e", nanerror=True):
@@ -67,7 +75,9 @@ def rasterio2tt3(array, transform, nodata, outpath, strformat=r"%7.5e", nanerror
         raise ImportError("rasterio dependency not met.")
     # write out in tt3 format.
     if np.any(np.isnan(array)) and nanerror:
-        raise ValueError("array cannot have nan, to supress this message set nanerror=False")
+        raise ValueError(
+            "array cannot have nan, to supress this message set nanerror=False"
+        )
     nrows = array.shape[0]
     ncols = array.shape[1]
     west, south, _, _ = rasterio.transform.array_bounds(nrows, ncols, transform)
@@ -80,7 +90,9 @@ def rasterio2tt3(array, transform, nodata, outpath, strformat=r"%7.5e", nanerror
         f.write("%6i nrows\n" % nrows)
         f.write("%22.15e xllcenter\n" % xllcenter)
         f.write("%22.15e yllcenter\n" % yllcenter)
-        f.write("%22.15e cellsize\n" % dx,)
+        f.write(
+            "%22.15e cellsize\n" % dx,
+        )
         f.write("%22.15e nodata_value\n" % nodata)
         outstr = strformat + "   "
         for i in range(nrows):

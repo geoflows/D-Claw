@@ -21,6 +21,7 @@ To install the netCDF 4 library, please see:
     Kyle T. Mandli (2009-02-17) Initial version
     Josh Jacobs (2011-04-22) NetCDF 3 Support
 """
+import logging
 # ============================================================================
 #      Copyright (C) 2009 Kyle T. Mandli <mandli@amath.washington.edu>
 #      Copyright (C) 2011 J. Jacobs
@@ -29,8 +30,8 @@ To install the netCDF 4 library, please see:
 #  license
 #                     http://www.opensource.org/licenses/
 # ============================================================================
-import os, sys
-import logging
+import os
+import sys
 
 import pyclaw.solution
 
@@ -78,20 +79,20 @@ def write_netcdf(
 ):
     r"""
     Write out a NetCDF data file representation of solution
-    
+
     :Input:
-     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw object to be 
+     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw object to be
        output
      - *frame* - (int) Frame number
      - *path* - (string) Root path
      - *file_prefix* - (string) Prefix for the file name. ``default = 'claw'``
-     - *write_aux* - (bool) Boolean controlling whether the associated 
-       auxiliary array should be written out. ``default = False``     
-     - *options* - (dict) Optional argument dictionary, see 
+     - *write_aux* - (bool) Boolean controlling whether the associated
+       auxiliary array should be written out. ``default = False``
+     - *options* - (dict) Optional argument dictionary, see
        `NetCDF Option Table`_
-    
+
     .. _`NetCDF Option Table`:
-    
+
     +-------------------------+----------------------------------------------+
     | Key                     | Value                                        |
     +=========================+==============================================+
@@ -152,7 +153,7 @@ def write_netcdf(
     |                         | ``default = None``, or no quantization.      |
     +-------------------------+----------------------------------------------+
     | endian                  | Can be used to control whether the data is   |
-    |                         | stored in little or big endian format on     | 
+    |                         | stored in little or big endian format on     |
     |                         | disk. Possible values are little, big or     |
     |                         | native (default). The library will           |
     |                         | automatically handle endian conversions when |
@@ -170,12 +171,12 @@ def write_netcdf(
     |                         | set to False, then the variable is not       |
     |                         | pre-filled.                                  |
     +-------------------------+----------------------------------------------+
-    
-    .. note:: 
+
+    .. note::
         The zlib, complevel, shuffle, fletcher32, contiguous, chunksizes and
-        endian keywords are silently ignored for netCDF 3 files that do not 
+        endian keywords are silently ignored for netCDF 3 files that do not
         use HDF5.
-        
+
     """
 
     # Option parsing
@@ -360,15 +361,15 @@ def read_netcdf(
 ):
     r"""
     Read in a NetCDF data files into solution
-    
+
     :Input:
-     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw object to be 
+     - *solution* - (:class:`~pyclaw.solution.Solution`) Pyclaw object to be
        output
      - *frame* - (int) Frame number
      - *path* - (string) Root path
      - *file_prefix* - (string) Prefix for the file name.  ``default = 'claw'``
-     - *write_aux* - (bool) Boolean controlling whether the associated 
-       auxiliary array should be written out.  ``default = False``     
+     - *write_aux* - (bool) Boolean controlling whether the associated
+       auxiliary array should be written out.  ``default = False``
      - *options* - (dict) Optional argument dictionary, unused for reading.
     """
 
@@ -384,8 +385,8 @@ def read_netcdf(
     filename = os.path.join(path, "%s.q%s.nc" % (file_prefix, str(frame).zfill(4)))
     # jj-2010.02.04-added support for netcdf classic format
     if use_netcdf3:
-        from Scientific.IO import NetCDF
         import numpy
+        from Scientific.IO import NetCDF
 
         # Open file
         print(filename)
@@ -544,8 +545,8 @@ def read_netcdf_t(frame, path="./", file_prefix="fort"):
     filename = os.path.join(path, "%s.q%s.nc" % (file_prefix, str(frame).zfill(4)))
     #    print filename
     if use_netcdf3:
-        from Scientific.IO import NetCDF
         import numpy
+        from Scientific.IO import NetCDF
 
         # Open file
         f = NetCDF.NetCDFFile(filename, "r")

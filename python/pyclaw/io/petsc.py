@@ -17,16 +17,18 @@ These routines preserve petclaw/pyclaw syntax for i/o while taking advantage of 
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os, sys
 import logging
+import os
+import sys
 
 import pyclaw.solution
 
 logger = logging.getLogger("io")
 
-from petsc4py import PETSc
-from mpi4py import MPI
 import pickle
+
+from mpi4py import MPI
+from petsc4py import PETSc
 
 
 def write_petsc(
@@ -37,7 +39,7 @@ def write_petsc(
         solution.  Common data is written from process 0 in pickle
         files.  Shared data is written from all processes into PETSc
         data files.
-    
+
     :Input:
      - *solution* - (:class:`~pyclaw.solution.Solution`) pyclaw
        object to be output
@@ -45,13 +47,13 @@ def write_petsc(
      - *path* - (string) Root path
      - *file_prefix* - (string) Prefix for the file name. ``default =
         'claw'``
-     - *write_aux* - (bool) Boolean controlling whether the associated 
-       auxiliary array should be written out. ``default = False``     
-     - *options* - (dict) Optional argument dictionary, see 
+     - *write_aux* - (bool) Boolean controlling whether the associated
+       auxiliary array should be written out. ``default = False``
+     - *options* - (dict) Optional argument dictionary, see
        `PETScIO Option Table`_
-    
+
     .. _`PETScIO Option Table`:
-    
+
     format   : one of 'ascii' or 'binary'
     clobber  : if True (Default), files will be overwritten
     """
@@ -148,23 +150,23 @@ def read_petsc(
 ):
     r"""
     Read in pickles and PETSc data files representing the solution
-    
+
     :Input:
-     - *solution* - (:class:`~pyclaw.solution.Solution`) Solution object to 
+     - *solution* - (:class:`~pyclaw.solution.Solution`) Solution object to
        read the data into.
      - *frame* - (int) Frame number to be read in
      - *path* - (string) Path to the current directory of the file
-     - *file_prefix* - (string) Prefix of the files to be read in.  
+     - *file_prefix* - (string) Prefix of the files to be read in.
        ``default = 'fort'``
-     - *read_aux* (bool) Whether or not an auxillary file will try to be read 
+     - *read_aux* (bool) Whether or not an auxillary file will try to be read
        in.  ``default = False``
-     - *options* - (dict) Optional argument dictionary, see 
+     - *options* - (dict) Optional argument dictionary, see
        `PETScIO Option Table`_
-    
+
     .. _`PETScIO Option Table`:
-    
+
     format   : one of 'ascii' or 'binary'
-     
+
     """
 
     # Option parsing

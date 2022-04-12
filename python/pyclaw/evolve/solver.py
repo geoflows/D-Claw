@@ -14,13 +14,12 @@ Module specifying the interface to every solver in pyclaw.
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import sys
-import time
 import copy
 import logging
+import sys
+import time
 
 import numpy as np
-
 # Clawpack modules
 from pyclaw.data import Data
 
@@ -29,52 +28,52 @@ class Solver(object):
     r"""
     Pyclaw solver superclass
 
-    All solvers should inherit from this object as it defines the interface 
+    All solvers should inherit from this object as it defines the interface
     that the Pyclaw expects for solvers.  This mainly means the evolve_to_time
     exists and the solver can be initialized and called correctly.
 
     .. attribute:: dt
-        
+
         Current time step, ``default = 0.1``
-        
+
     .. attribute:: cfl
-        
+
         Current Courant/Freidrichs/Levy number, ``default = 1.0``
-    
+
     .. attribute:: status
-        
+
         Dictionary of status values for the solver with the following keys:
          - ``cflmax`` = Maximum CFL condition reached
          - ``dtmin`` = Minimum time step taken
          - ``dtmax`` = Maximum time step taken
          - ``numsteps`` = Current number of time steps that have been taken
-    
+
     .. attribute:: dt_variable
-    
+
         Whether to allow the time step to vary, ``default = True``
-        
+
     .. attribute:: max_steps
-    
-        The maximum number of time steps allowd to reach the end time 
+
+        The maximum number of time steps allowd to reach the end time
         requested, ``default = 1000``
-    
+
     .. attribute:: times
-        
-        A list of run times taken by the solver, each request to evolve a 
+
+        A list of run times taken by the solver, each request to evolve a
         solution to a new time a new timing is appended to this list.
-    
+
     .. attribute:: logger
-    
+
         Default logger for all solvers
-        
+
     :Initialization:
-    
+
     Input:
      - *data* - (:class:`Data`) Data object to initialize the solver with
-    
+
     Output:
      - (:class:`Solver`) - Initialized Solver object
-    
+
     :Version: 1.0 (2008-08-19)
     """
 
@@ -105,7 +104,7 @@ class Solver(object):
     def __init__(self, data=None):
         r"""
         Initialize a Solver object
-        
+
         See :class:`Solver` for full documentation
         """
         # Setup solve logger
@@ -148,17 +147,17 @@ class Solver(object):
     def is_valid(self):
         r"""
         Checks that all required attributes are set
-        
-        Checks to make sure that all the required attributes for the solver 
-        have been set correctly.  All required attributes that need to be set 
+
+        Checks to make sure that all the required attributes for the solver
+        have been set correctly.  All required attributes that need to be set
         are contained in the attributes list of the class.
-        
-        Will post debug level logging message of which required attributes 
+
+        Will post debug level logging message of which required attributes
         have not been set.
-        
+
         :Output:
          - *valid* - (bool) True if the solver is valid, False otherwise
-        
+
         """
         valid = True
         for key in self._required_attrs:
@@ -170,12 +169,12 @@ class Solver(object):
     def setup(self):
         r"""
         Stub for solver setup routines.
-        
-        This function is called before a set of time steps are taken in order 
-        to reach tend.  A subclass should override it only if it needs to 
-        perform some setup based on attributes that would be set after the 
+
+        This function is called before a set of time steps are taken in order
+        to reach tend.  A subclass should override it only if it needs to
+        perform some setup based on attributes that would be set after the
         initialization routine.
-        
+
         This function is just a stub here.
         """
         pass
@@ -186,21 +185,21 @@ class Solver(object):
     def evolve_to_time(self, *args):
         r"""
         Evolve solutions['n'] to tend
-        
+
         This method contains the machinery to evolve the solution object in
-        ``solutions['n']`` to the requested end time tend if given, or one 
-        step if not.  The solutions dictionary is provided as a generic 
+        ``solutions['n']`` to the requested end time tend if given, or one
+        step if not.  The solutions dictionary is provided as a generic
         interface to multistep methods that may require more than one solution
-        at multiple times to evolve where it is understood that the solution 
+        at multiple times to evolve where it is understood that the solution
         at ``solutions['n']`` is the solution at the current time step that is
         to be evolved.
-        
+
         :Input:
-         - *solutions* - (:class:`Solution`) Dictionary of Solutions to be 
+         - *solutions* - (:class:`Solution`) Dictionary of Solutions to be
            evolved
-         - *tend* - (float) The end time to evolve to, if not provided then 
+         - *tend* - (float) The end time to evolve to, if not provided then
            the method will take a single time step.
-            
+
         :Output:
          - (dict) - Returns the status dictionary of the solver
         """
@@ -316,7 +315,7 @@ class Solver(object):
     def step(self):
         r"""
         Take one step
-        
+
         This method is only a stub and should be overridden by all solvers who
         would like to use the default time stepping in evolve_to_time.
         """

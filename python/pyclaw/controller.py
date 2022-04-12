@@ -22,29 +22,29 @@ running of compiled fortran binaries.
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import logging
-import sys
-import os
 import copy
+import logging
+import os
 import shutil
+import sys
 import time
+from functools import reduce
 
 import numpy as np
 
 from .data import Data
-from .solution import Solution
 from .evolve.solver import Solver
+from .solution import Solution
 from .util import FrameCounter
-from functools import reduce
 
 
 class Controller(object):
     r"""Controller for pyclaw simulation runs and plotting
-            
+
     :Initialization:
-    
+
         Input: None
-    
+
     :Version: 1.0 (2009-06-01)
     """
     #  ======================================================================
@@ -53,7 +53,7 @@ class Controller(object):
     def __init__(self):
         r"""
         Initialization routine for a Controller object.
-        
+
         See :class:`Controller` for full documentation.
         """
 
@@ -204,19 +204,19 @@ class Controller(object):
     # ========== Solver convenience methods ==================================
     def run(self):
         r"""
-        Convenience routine that will evolve solutions['n'] based on the 
+        Convenience routine that will evolve solutions['n'] based on the
         traditional clawpack output and run parameters.
-        
+
         This function uses the run parameters and solver parameters to evolve
         the solution to the end time specified in run_data, outputting at the
         appropriate times.
-        
+
         :Input:
             None
-            
+
         :Ouput:
             (dict) - Return a dictionary of the status of the solver.
-            
+
         :Version: 1.0 (2009-05-01)
         """
 
@@ -237,7 +237,8 @@ class Controller(object):
 
         # Check to make sure the initial solutions are valid
         if not reduce(
-            lambda x, y: x * y, [sol.is_valid() for sol in self.solutions.values()]
+            lambda x, y: x * y,
+            [sol.is_valid() for sol in list(self.solutions.values())],
         ):
             raise Exception("Initial solutions are not valid.")
 
@@ -297,18 +298,18 @@ class Controller(object):
     def get_data(self, claw_path=None):
         r"""
         Create a data object from this controller's solver and solutions
-        
+
         This function will take the current solver and solutions['n'] and
         create a data object that can be read in via classic clawpack.
-        
+
         If claw_path is provided, then the data that should be written to the
         claw.data file will be written to that path.
-        
+
         :Input:
             - *claw_path* - (string) Path to write data file to
-            
+
         :Output:
-            - (:class:`~pyclaw.data.Data`) - Data object claw_data containing 
+            - (:class:`~pyclaw.data.Data`) - Data object claw_data containing
               the appropriate data for a claw.data file.
         """
 
@@ -399,9 +400,9 @@ class Controller(object):
 
     def read_data(self, path):
         r"""Read in a claw.data file and initialize accordingly
-        
+
         .. warning::
-            
+
             Not implemented!
         """
         raise NotImplementedException()
@@ -414,13 +415,15 @@ class Controller(object):
         files to outdir, writing unit 6 timestepping info to file xclawout.
         Runtime error messages are written to file xclawerr.
         If xclawout(xclawerr) is None, then output to stdout(stderr).
-    
+
         If savecode==True, archive a copy of the code into directory outdir.
-    
+
         This function returns the returncode from the process running xclawcmd,
         which will be nonzero if a runtime error occurs.
         """
-        import os, shutil, glob
+        import glob
+        import os
+        import shutil
 
         try:
             import subprocess
@@ -469,7 +472,9 @@ class Controller(object):
                 pass
                 # os.system('make')
             except:
-                print("== controller: Warning: no make file in directory xdir = ", xdir)
+                print(
+                    ("== controller: Warning: no make file in directory xdir = ", xdir)
+                )
 
         if os.path.isfile(outdir):
             print("== controller: Error: outdir specified is a file")
@@ -494,18 +499,24 @@ class Controller(object):
             )
             if verbose:
                 print(
-                    "== controller: Directory already exists: ",
-                    os.path.split(outdir)[1],
+                    (
+                        "== controller: Directory already exists: ",
+                        os.path.split(outdir)[1],
+                    )
                 )
                 if restart:
                     print(
-                        "== controller: Copying directory to:      ",
-                        os.path.split(outdir_backup)[1],
+                        (
+                            "== controller: Copying directory to:      ",
+                            os.path.split(outdir_backup)[1],
+                        )
                     )
                 else:
                     print(
-                        "== controller: Moving directory to:      ",
-                        os.path.split(outdir_backup)[1],
+                        (
+                            "== controller: Moving directory to:      ",
+                            os.path.split(outdir_backup)[1],
+                        )
                     )
                 time.sleep(1)
 
@@ -520,14 +531,17 @@ class Controller(object):
             try:
                 os.mkdir(outdir)
             except:
-                print("Cannot make directory ", outdir)
+                print(("Cannot make directory ", outdir))
                 return
 
         try:
             os.chdir(outdir)
         except:
             print(
-                "== controller: *** Error in runxclaw: cannot move to outdir = ", outdir
+                (
+                    "== controller: *** Error in runxclaw: cannot move to outdir = ",
+                    outdir,
+                )
             )
             raise
             return
@@ -536,12 +550,14 @@ class Controller(object):
         if overwrite and (not restart):
             # remove any old versions:
             if verbose:
-                print("== controller: Removing all old fort files in ", outdir)
+                print(("== controller: Removing all old fort files in ", outdir))
             for file in fortfiles:
                 os.remove(file)
         elif restart:
             if verbose:
-                print("== controller: Restart: leaving original fort files in ", outdir)
+                print(
+                    ("== controller: Restart: leaving original fort files in ", outdir)
+                )
         else:
             if len(fortfiles) > 1:
                 print("== controller: *** Remove fort.* and try again,")
@@ -557,7 +573,7 @@ class Controller(object):
 
         datafiles = glob.glob("*.data")
         if datafiles == ():
-            print("== controller: Warning: no data files found in directory ", rundir)
+            print(("== controller: Warning: no data files found in directory ", rundir))
         else:
             if rundir != outdir:
                 for file in datafiles:
@@ -588,8 +604,10 @@ class Controller(object):
                 print("\n== controller: Finished executing\n")
             else:
                 print(
-                    "\n == controller: *** Runtime error: return code = %s\n "
-                    % returncode
+                    (
+                        "\n == controller: *** Runtime error: return code = %s\n "
+                        % returncode
+                    )
                 )
         except:
             raise Exception("Could not execute command %s" % xclawcmd)

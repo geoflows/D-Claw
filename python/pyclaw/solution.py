@@ -14,15 +14,15 @@ Module containing all Pyclaw solution objects
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os
 import copy
 import logging
+import os
+from functools import reduce
 
 import numpy as np
 
-from .data import Data
 from . import io
-from functools import reduce
+from .data import Data
 
 # ============================================================================
 #  Default function definitions
@@ -114,7 +114,7 @@ class Dimension(object):
     _mthbc_lower = 1
 
     def mthbc_upper():
-        doc = r"""(int) - Upper boundary condition fill method. 
+        doc = r"""(int) - Upper boundary condition fill method.
                   ``default = 1``"""
 
         def fget(self):
@@ -202,7 +202,7 @@ class Dimension(object):
         else:
             raise Exception("Invalid initializer for Dimension.")
 
-        for (k, v) in kargs.items():
+        for (k, v) in list(kargs.items()):
             setattr(self, k, v)
 
         # Function attribute assignments
@@ -648,7 +648,7 @@ class Grid(object):
             or replace any values already in it.
         """
         data = Data(data_files=data_path)
-        for (k, v) in data.items():
+        for (k, v) in list(data.items()):
             self.aux_global[k] = v
 
     # ========== Dimension Manipulation ======================================
@@ -1379,13 +1379,14 @@ class Solution(object):
                     "options": {},
                 }
 
-                for (k, v) in defaults.items():
+                # overwrite defaults where relevant.
+                for (k, v) in list(defaults.items()):
                     if k in kargs:
-                        exec("%s = kargs['%s']" % (k, k))
-                    else:
-                        exec("%s = v" % k)
-                # print format
-                self.read(frame, path, format, file_prefix, read_aux, options)
+                        defaults[k] = v
+                        # exec("%s = kargs['%s']" % (k, k))
+                    # else:
+                    # exec("%s = v" % k)
+                self.read(frame, **defaults)
             elif isinstance(arg[0], Data):
                 data = arg[0]
                 # Create dimensions

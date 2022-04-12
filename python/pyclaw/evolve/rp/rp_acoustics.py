@@ -39,13 +39,13 @@ import numpy as np
 def rp_acoustics_1d(q_l, q_r, aux_l, aux_r, aux_global):
     r"""
     Basic 1d acoustics riemann solver
-    
+
     *aux_global* is expected to contain -
      - *zz* - (float) Impedence
      - *cc* - (float) Speed of sound
-    
+
     See :ref:`pyclaw_rp` for more details.
-    
+
     :Version: 1.0 (2009-02-03)
     """
 

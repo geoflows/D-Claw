@@ -19,25 +19,27 @@ description on what you could do here.
 # Most of your config files and extensions will probably start with this import
 
 import IPython.ipapi
+
 ip = IPython.ipapi.get()
 
 # You probably want to uncomment this if you did %upgrade -nolegacy
-# import ipy_defaults    
+# import ipy_defaults
+
 
 def main():
     # Handy tab-completers for %cd, %run, import etc.
     # Try commenting this out if you have completion problems/slowness
     # import ipy_stock_completers
-    
+
     # uncomment if you want to get ipython -p sh behaviour
     # without having to use command line switches
-    
+
     # import ipy_profile_sh
 
-    
     o = ip.options
     # An example on how to set options
-    #o.autocall = 1
+    # o.autocall = 1
     o.system_verbose = 0
+
 
 main()

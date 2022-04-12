@@ -21,8 +21,8 @@ import sys
 clawdir = os.path.abspath('.')   
 CLAW = clawdir
 
-print " "
-print "------------------------------------------------------------"
+print(" ")
+print("------------------------------------------------------------")
 
 try:
     # check if the Fortran Compiler is already set:
@@ -31,9 +31,9 @@ except:
     FC = 'gfortran'
 
 if FC in ['f77','g77']:
-    print '*** FC = ',FC,' will not work with this version.'  
-    print '    gfortran or other flavor of f90/95 required'
-    print '*** resetting FC to gfortran\n'
+    print('*** FC = ',FC,' will not work with this version.')  
+    print('    gfortran or other flavor of f90/95 required')
+    print('*** resetting FC to gfortran\n')
     FC = 'gfortran'
 
 clawpythondir = os.path.join(clawdir,'python')
@@ -41,9 +41,9 @@ PYTHONPATH = ":".join((clawpythondir,"${PYTHONPATH}"))
 
 try:
     IPYTHONDIR = os.environ['IPYTHONDIR']
-    print 'IPYTHONDIR already set: you may want to move %s ' \
-            % os.path.join(ipythondir,'ipythonrc-claw')
-    print '   to this directory: ',IPYTHONDIR
+    print('IPYTHONDIR already set: you may want to move %s ' \
+            % os.path.join(ipythondir,'ipythonrc-claw'))
+    print('   to this directory: ',IPYTHONDIR)
 except:
     IPYTHONDIR = os.path.join(clawpythondir,'ipythondir')
 
@@ -75,8 +75,8 @@ else:
     raise Exception("Unsupported system type %s" % sys.platform.lower())
 dylib_path = os.path.join(clawdir,'lib')
 
-print "Full path to claw directory should be:"
-print "      $CLAW = ",clawdir
+print("Full path to claw directory should be:")
+print("      $CLAW = ",clawdir)
     
 
 setenvcsh = open("setenv.csh","w")
@@ -109,11 +109,11 @@ setenvbash.write("alias ipyclaw='ipython -profile claw' \n")
 setenvbash.write("alias clawserver='xterm -e python $CLAW/python/startserver.py &' \n")
 setenvbash.close()
 
-print "------------------------------------------------------------"
-print "The files setenv.csh and setenv.bash contain the appropriate"
-print "commands to set environment variables for csh or bash shells"
-print "  and also some aliases you may find convenient             "
-print "------------------------------------------------------------"
-print " "
+print("------------------------------------------------------------")
+print("The files setenv.csh and setenv.bash contain the appropriate")
+print("commands to set environment variables for csh or bash shells")
+print("  and also some aliases you may find convenient             ")
+print("------------------------------------------------------------")
+print(" ")
 
 

@@ -12,8 +12,9 @@ iotools
 
 """
 
-import string
 import re
+import string
+
 import numpy
 
 
@@ -23,7 +24,7 @@ def convertd2e(numberstring=" "):
     def convertd2e (numberstring):
 
         takes a string and replaces all d's or D's with e's.
-        usefule for reading data files with doubles output by 
+        usefule for reading data files with doubles output by
         Fortran, which uses d, or D instead of e, for the exponent.
     """
     Dd = re.compile("[Dd]")
@@ -37,15 +38,15 @@ def datafile2array(
     datafile=" ", sep=None, dtype="float", skiplines=0, skipfirstcols=0, skiplastcols=0
 ):
     """
-        open and read data from a ascii text file into a
-        numpy array. The number of rows and columns in the data file will match
-        the size of the array.
+    open and read data from a ascii text file into a
+    numpy array. The number of rows and columns in the data file will match
+    the size of the array.
 
-        sep is the character seperation between fields in the data file
-        dtype is the how the file data is to be interpretted.
-        skiplines = n skips the first n line(s). 
-        skipfirstcols = n skips the first n column(s)
-        skiplastcols = n skips the last n column(s).
+    sep is the character seperation between fields in the data file
+    dtype is the how the file data is to be interpretted.
+    skiplines = n skips the first n line(s).
+    skipfirstcols = n skips the first n column(s)
+    skiplastcols = n skips the last n column(s).
     """
     fid = open(datafile)
     data = fid.readlines()
@@ -81,10 +82,10 @@ def array2datafile(dataarray, datafile=" ", sep=""):
     """
     def array2datafile (array,datafile=" "):
 
-        output a tuple, list or numpy array into a ascii text file. 
+        output a tuple, list or numpy array into a ascii text file.
         The number of rows and columns in the data file will match
         the size of the array.
-   
+
     """
     fid = open(datafile, "w")
     shp = numpy.shape(dataarray)

@@ -32,7 +32,7 @@ def plot_multiframes(plotdata, verbose=False):
     current_data.plotdata = plotdata
 
     if plotdata._mode == "iplotclaw":
-        print("    Plotting Frame %s at t = %s" % (frameno, t))
+        print(("    Plotting Frame %s at t = %s" % (frameno, t)))
         requested_fignos = plotdata.iplotclaw_fignos
     else:
         requested_fignos = plotdata.print_fignos
@@ -65,7 +65,7 @@ def plot_multiframes(plotdata, verbose=False):
 
         if (len(plotaxes_dict) == 0) or (len(plotfigure._axesnames) == 0):
             print("*** Warning in plotframe: plotdata has empty plotaxes_dict")
-            print("*** Apparently no axes to plot in figno ", figno)
+            print(("*** Apparently no axes to plot in figno ", figno))
 
         # loop over axes looking for type multiframe
         # ------------------------------------------
@@ -110,7 +110,7 @@ def plot_multiframes(plotdata, verbose=False):
 
                 plotitem = plotaxes.plotitem_dict[itemname]
                 if plotitem._show == False:
-                    print("Skipping item ", itemname)
+                    print(("Skipping item ", itemname))
                     continue
                 if plotitem.plot_type not in ["1d_vs_t", "1d_xt"]:
                     continue
@@ -119,7 +119,7 @@ def plot_multiframes(plotdata, verbose=False):
                 framenos = only_most_recent(plotitem.framenos)
                 if len(framenos) == 0:
                     print("*** No frames found in plot_multiframes for ")
-                    print("*** plotitem named ", itemname)
+                    print(("*** plotitem named ", itemname))
                     continue
                 elif plotitem.plot_type == "1d_xt":
                     plot_var = plotitem.plot_var
@@ -181,7 +181,7 @@ def plot_multiframes(plotdata, verbose=False):
         pylab.draw()
 
     if verbose:
-        print("    Done with plotframe for frame %i at time %g" % (frameno, t))
+        print(("    Done with plotframe for frame %i at time %g" % (frameno, t)))
 
     # print the figure(s) to file(s) if requested:
     if (plotdata.mode() != "iplotclaw") & plotdata.printfigs:

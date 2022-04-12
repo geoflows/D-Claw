@@ -14,13 +14,13 @@ Routines for reading and writing an ascii output file
 #                     http://www.opensource.org/licenses/
 # ============================================================================
 
-import os, sys
 import logging
+import os
+import sys
 
 import numpy as np
-
-from pyclaw.util import read_data_line
 import pyclaw.solution
+from pyclaw.util import read_data_line
 
 logger = logging.getLogger("io")
 
@@ -208,7 +208,9 @@ def read_ascii(
         raise IOError("Frame " + str(frame) + " does not exist ***")
 
     # Construct path names
-    base_path = os.path.join(path,)
+    base_path = os.path.join(
+        path,
+    )
     # t_fname = os.path.join(base_path, '%s.t' % file_prefix) + str(frame).zfill(4)
     q_fname = os.path.join(base_path, "%s.q" % file_prefix) + str(frame).zfill(4)
 
@@ -421,7 +423,9 @@ def read_ascii_t(frame, path="./", file_prefix="fort"):
 
     """
 
-    base_path = os.path.join(path,)
+    base_path = os.path.join(
+        path,
+    )
     path = os.path.join(base_path, "%s.t" % file_prefix) + str(frame).zfill(4)
     try:
         logger.debug("Opening %s file." % path)
