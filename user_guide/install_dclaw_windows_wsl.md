@@ -28,19 +28,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
   The only way I found that worked was to clone DIRECTLY to the WSL file structure. If you clone the source to the windows side you may get fortran compiler errors. If you clone to WSL without setting up the symlinks then you can't edit directly on windows (as easily).
 
-  One thought I had was that this might be a fortran compiler fighting with windows line endings issue (CRLF vs LF). So I tried cloning to the Windows file structure with git configured to use either default local line endings (CRLF) OR source line endings (presumably LF), and under these circumstances got the same compiler error at step (X) from below:
-  ```
-  gfortran -c -I/mnt/c/Users/krbarnhart/source/D-Claw/amrclaw/2d/lib /mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.f -o /mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.o
-  call.i:1:1:
-
-  Error: Non-numeric character in statement label at (1)
-  call.i:1:2:
-
-  Error: Invalid character in name at (1)
-  /mnt/c/Users/krbarnhart/source/D-Claw/util/Makefile.common:71: recipe for target '/mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.o' failed
-  make[1]: *** [/mnt/c/Users/krbarnhart/source/D-Claw/geoclaw/2d/lib_dig/setaux_geo.o] Error 1
-  make[1]: Leaving directory '/mnt/c/Users/krbarnhart/source/dclaw-apps/USGSFlume/gate_release_example'
-  ```
+  See page on compiling for issues there.
 
 4. On WSL do additional steps of installation.
 
