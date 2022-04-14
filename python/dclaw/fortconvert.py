@@ -89,9 +89,8 @@ def convertfortdir(
                     the name fort_qXXXX.tif
         **kwargs: for topotype:  xll,yll,cellsize,ncols,nrows,topotype = 1,2,3,'gdal', 'gtif' (for standard gdal/esri header)
                 for fortuniform: xlower,ylower,mx,my
+                if using topotype="gtif" can provide epsg=XXXX (EPSG code for CRS)
                 if kwargs are omitted the grid parameters are taken from the fort file with finest level spacing
-
-
 
     """
 
@@ -112,6 +111,13 @@ def convertfortdir(
     west = kwargs.get("west", None)
     south = kwargs.get("south", None)
     north = kwargs.get("north", None)
+
+    if east is not None and west is not None:
+        assert east>west
+    if north is not None and south is not None:
+        assert north>south
+
+    epsg = kwargs.get("epsg", None)
 
     if outputtype == "topotype":
         try:
@@ -214,6 +220,7 @@ def convertfortdir(
                     east,
                     south,
                     north,
+                    epsg,
                 ]
             )
 
@@ -236,6 +243,7 @@ def convertfortdir(
                     components,
                     topotype,
                     write_level,
+                    epsg,
                 ]
             )
 
@@ -243,11 +251,9 @@ def convertfortdir(
     if parallel:
         try:
             from joblib import Parallel, delayed
-
-            Parallel(n_jobs=num_cores)(delayed(_func)(*args) for args in arg_list)
         except ImportError:
             raise ImportError("joblib needed for parallel functionality")
-
+        Parallel(n_jobs=num_cores)(delayed(_func)(*args) for args in arg_list)
     else:
         # loop through prepared args.
         for args in arg_list:
@@ -369,6 +375,7 @@ def fort2uniform(
     components="all",
     topotype=None,
     write_level=False,
+    epsg=None
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -384,6 +391,16 @@ def fort2uniform(
             if above =None routine returns a numpy array
         xlower,xupper,ylower,yupper,mx,my: output grid parameters
         components: list of q components eg. [1,3,5] or 'all' for all components
+        xlow
+        xhi
+        ylow
+        yhi
+        mx
+        my
+        components = "all"
+        topotype
+        write_level
+        epsg
     """
 
     numstring = str(10000 + framenumber)
@@ -479,6 +496,7 @@ def fort2uniform(
                     Y,
                     Q_out,
                     outfile,
+                    epsg=epsg,
                 )
 
             else:
@@ -537,6 +555,7 @@ def fort2refined(
     east=None,
     south=None,
     north=None,
+    epsg=None,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -556,6 +575,11 @@ def fort2refined(
         components: list of q components eg. [1,3,5] or 'all' for all components
         topotype:
         write_level: bool, to write the level from which values are taken.
+        west=None,
+        east=None,
+        south=None,
+        north=None,
+        epsg=None,
     """
     numstring = str(10000 + framenumber)
     framenostr = numstring[1:]
@@ -608,6 +632,7 @@ def fort2refined(
         components,
         topotype,
         write_level,
+        epsg,
     )
 
 
