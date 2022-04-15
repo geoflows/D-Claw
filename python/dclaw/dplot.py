@@ -314,6 +314,14 @@ def liquefaction_ratio(current_data):
 
     return ratio
 
+def eta(current_data):
+    """
+    Return eta
+    """
+    q = current_data.q
+    eta = q[:, :, i_eta]
+    return eta
+
 
 def topo(current_data):
     """

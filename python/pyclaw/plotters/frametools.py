@@ -821,46 +821,48 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         var_all_masked = False
 
     if pp_dict["pp_plot_type"] == "2d_hillshade":
-        ls = LightSource(azdeg=315, altdeg=45)
-#        hs = ls.hillshade(z, vert_exag=ve, dx=dx, dy=dy)
+        if not var_all_masked:
+            ls = LightSource(azdeg=315, altdeg=45)
+    #        hs = ls.hillshade(z, vert_exag=ve, dx=dx, dy=dy)
 
-        # calculate hillshade after source code by hand to prevent
-        # clipping.
-        # https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#LightSource
-        z = pylab.flipud(var.T)
-        dx = current_data.dx
-        dy =  current_data.dy
-        ve = 1 # hard code in no vertical exaggeration.
-        # similarly light source orientation is hard coded.
-        e_dy, e_dx = np.gradient(ve * z, -dy, dx)
-        normal = np.empty(z.shape + (3,)).view(type(z))
-        normal[..., 0] = -e_dx
-        normal[..., 1] = -e_dy
-        normal[..., 2] = 1
-        normal /= _vector_magnitude(normal)
-        intensity = normal.dot(ls.direction)
-        # Apply contrast stretch
+            # calculate hillshade after source code by hand to prevent
+            # clipping.
+            # https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#LightSource
+            z = pylab.flipud(var.T)
+            dx = current_data.dx
+            dy =  current_data.dy
+            #print(dx)
+            ve = 1 # hard code in no vertical exaggeration.
+            # similarly light source orientation is hard coded.
+            e_dy, e_dx = np.gradient(ve * z, -dy, dx)
+            normal = np.empty(z.shape + (3,)).view(type(z))
+            normal[..., 0] = -e_dx
+            normal[..., 1] = -e_dy
+            normal[..., 2] = 1
+            normal /= _vector_magnitude(normal)
+            intensity = normal.dot(ls.direction)
+            # Apply contrast stretch
 
-        # fraction = 1.0
-        # imin, imax = intensity.min(), intensity.max()
-        # intensity *= fraction
+            # fraction = 1.0
+            # imin, imax = intensity.min(), intensity.max()
+            # intensity *= fraction
 
-        # # Rescale to 0-1, keeping range before contrast stretch
-        # # If constant slope, keep relative scaling (i.e. flat should be 0.5,
-        # # fully occluded 0, etc.)
-        # if (imax - imin) > 1e-6:
-        #     # Strictly speaking, this is incorrect. Negative values should be
-        #     # clipped to 0 because they're fully occluded. However, rescaling
-        #     # in this manner is consistent with the previous implementation and
-        #     # visually appears better than a "hard" clip.
-        #     intensity -= imin
-        #     intensity /= (imax - imin)
-        intensity = np.clip(intensity, 0, 1)
-        hs = intensity
+            # # Rescale to 0-1, keeping range before contrast stretch
+            # # If constant slope, keep relative scaling (i.e. flat should be 0.5,
+            # # fully occluded 0, etc.)
+            # if (imax - imin) > 1e-6:
+            #     # Strictly speaking, this is incorrect. Negative values should be
+            #     # clipped to 0 because they're fully occluded. However, rescaling
+            #     # in this manner is consistent with the previous implementation and
+            #     # visually appears better than a "hard" clip.
+            #     intensity -= imin
+            #     intensity /= (imax - imin)
+            intensity = np.clip(intensity, 0, 1)
+            hs = intensity
 
-        xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
-
-        pobj = pylab.imshow(hs, cmap='gray', vmin=0, vmax=1, extent=xylimits)
+            xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
+            #print(xylimits)
+            pobj = pylab.imshow(hs, cmap='gray', vmin=0, vmax=1, extent=xylimits)
 
     elif pp_dict["pp_plot_type"] == "2d_pcolor":
 
@@ -1415,17 +1417,6 @@ def printframes(plotdata=None, verbose=True):
             except:
                 print(("*** Error creating moviefig%s.gif" % figno))
 
-    if plotdata.ffmpeg_movie:
-        print("Making mp4 with ffmpeg.  This may take some time....")
-        for figno in fignos:
-            try:
-                cmd = "ffmpeg -y -r 6 -f image2 -i frame%4dfig%s.png -vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p moviefig%s.mp4" % (figno, figno)
-
-                os.system(cmd)
-
-                print(("    Created moviefig%s.mp4" % figno))
-            except:
-                print(("*** Error creating moviefig%s.mp4 (check that ffmpeg is installed)" % figno))
 
     os.chdir(rootdir)
 
