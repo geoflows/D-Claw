@@ -19,10 +19,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=2.7",
-    entry_points={
-        "console_scripts": [
-            "gridded_maxval=dclaw.maxval:main",
-            ]
-            },
+    entry_points={"console_scripts": ["gridded_maxval=dclaw.maxval:main",]},
     install_requires=open("requirements.txt", "r").read().splitlines(),
 )

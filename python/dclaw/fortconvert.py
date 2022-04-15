@@ -113,9 +113,9 @@ def convertfortdir(
     north = kwargs.get("north", None)
 
     if east is not None and west is not None:
-        assert east>west
+        assert east > west
     if north is not None and south is not None:
-        assert north>south
+        assert north > south
 
     epsg = kwargs.get("epsg", None)
 
@@ -375,7 +375,7 @@ def fort2uniform(
     components="all",
     topotype=None,
     write_level=False,
-    epsg=None
+    epsg=None,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -492,11 +492,7 @@ def fort2uniform(
                     )
 
                 gt.griddata2gtif(
-                    X,
-                    Y,
-                    Q_out,
-                    outfile,
-                    epsg=epsg,
+                    X, Y, Q_out, outfile, epsg=epsg,
                 )
 
             else:

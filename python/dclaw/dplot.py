@@ -2,11 +2,11 @@
 Useful things for plotting GeoClaw results.
 """
 
+import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
-import numpy as np
 
 i_eta = 7
 
@@ -275,6 +275,7 @@ def solid_frac(current_data):
 
     return m
 
+
 def solid_frac_gt03(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
@@ -282,8 +283,9 @@ def solid_frac_gt03(current_data):
     hm = q[:, :, 3]
     with np.errstate(divide="ignore", invalid="ignore"):
         m = ma.masked_where(h < drytol, hm / h)
-        m = ma.masked_where(m<0.3, m)
+        m = ma.masked_where(m < 0.3, m)
     return m
+
 
 def density(current_data):
     m = solid_frac(current_data)
@@ -314,6 +316,7 @@ def liquefaction_ratio(current_data):
 
     return ratio
 
+
 def eta(current_data):
     """
     Return eta
@@ -332,6 +335,7 @@ def topo(current_data):
     eta = q[:, :, i_eta]
     topo = eta - h
     return topo
+
 
 def land(current_data):
     """
@@ -389,6 +393,7 @@ def surface(current_data):
     water = ma.masked_where(h <= drytol, eta)
     return water
 
+
 def surface_solid_frac_lt03(current_data):
     """
     Return a masked array containing the surface elevation only in wet cells.
@@ -407,7 +412,7 @@ def surface_solid_frac_lt03(current_data):
         m = hm / h
 
     water = ma.masked_where(h <= drytol, eta)
-    water = ma.masked_where(m>0.3, water)
+    water = ma.masked_where(m > 0.3, water)
 
     return water
 
@@ -655,11 +660,7 @@ def plot_topo_file(topoplotdata):
         if 0:
             topo = []
             for i in range(nrows):
-                topo.append(
-                    pylab.array(
-                        lines[6 + i],
-                    )
-                )
+                topo.append(pylab.array(lines[6 + i],))
             print(("+++ topo = ", topo))
             topo = pylab.array(topo)
 

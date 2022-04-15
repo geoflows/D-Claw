@@ -6,22 +6,22 @@ import fiona
 import numpy as np
 import rasterio
 import rasterio.transform
+from dclaw.fortconvert import convertfortdir
+from dclaw.get_data import get_dig_data, get_region_data
 from rasterio import features
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
-
-from dclaw.fortconvert import convertfortdir
-from dclaw.get_data import get_dig_data, get_region_data
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="gridded_maxval",
-        description=
-        ("Calculate maximum value over a amrclaw region or in the box bounded "
-         "by north, west, east, and south. All timesteps are used. First fort "
-         "format output is converted to .tif. Then a maximum is calculated. "
-         "Cptionally, a shapefile of the extent is generated."),
+        description=(
+            "Calculate maximum value over a amrclaw region or in the box bounded "
+            "by north, west, east, and south. All timesteps are used. First fort "
+            "format output is converted to .tif. Then a maximum is calculated. "
+            "Cptionally, a shapefile of the extent is generated."
+        ),
         usage="%(prog)s [options]",
     )
 
@@ -65,7 +65,12 @@ def main():
     )
 
     parser.add_argument(
-        "-nc", "--num_cores", nargs="?", help="Number of cores for fortconvert", default=8, type=int
+        "-nc",
+        "--num_cores",
+        nargs="?",
+        help="Number of cores for fortconvert",
+        default=8,
+        type=int,
     )
 
     parser.add_argument(
@@ -76,17 +81,61 @@ def main():
         default=None,
     )
 
-    parser.add_argument("-w", "--west", nargs="?", help="West extent of bounding box.", default=None, type=int)
-    parser.add_argument("-e", "--east", nargs="?", help="East extent of bounding box.", default=None, type=int)
-    parser.add_argument("-n", "--north", nargs="?", help="North extent of bounding box.", default=None, type=int)
-    parser.add_argument("-s", "--south", nargs="?", help="South extent of bounding box.", default=None, type=int)
     parser.add_argument(
-        "-r", "--region", nargs="?", help="Amrclaw region number to use for extent. Will overwrite east/south/north/west, if provided.", default=None, type=int
+        "-w",
+        "--west",
+        nargs="?",
+        help="West extent of bounding box.",
+        default=None,
+        type=int,
+    )
+    parser.add_argument(
+        "-e",
+        "--east",
+        nargs="?",
+        help="East extent of bounding box.",
+        default=None,
+        type=int,
+    )
+    parser.add_argument(
+        "-n",
+        "--north",
+        nargs="?",
+        help="North extent of bounding box.",
+        default=None,
+        type=int,
+    )
+    parser.add_argument(
+        "-s",
+        "--south",
+        nargs="?",
+        help="South extent of bounding box.",
+        default=None,
+        type=int,
+    )
+    parser.add_argument(
+        "-r",
+        "--region",
+        nargs="?",
+        help="Amrclaw region number to use for extent. Will overwrite east/south/north/west, if provided.",
+        default=None,
+        type=int,
     )
 
-    parser.add_argument("-wf", "--write_froude",help="Write a froude number maximum in the tif.", default=False, action="store_false")
+    parser.add_argument(
+        "-wf",
+        "--write_froude",
+        help="Write a froude number maximum in the tif.",
+        default=False,
+        action="store_false",
+    )
 
-    parser.add_argument("-shp", "--extent_shp", help="Write a shapefile with the extent of values greater than a specified threashold.", action="store_false")
+    parser.add_argument(
+        "-shp",
+        "--extent_shp",
+        help="Write a shapefile with the extent of values greater than a specified threashold.",
+        action="store_false",
+    )
     parser.add_argument(
         "-sval",
         "--extent_shp_val",
@@ -97,10 +146,20 @@ def main():
         type=str,
     )
     parser.add_argument(
-        "-sth", "--extent_shp_val_thresh", nargs="?", default=0.0, type=float, help="Threshold. Default value of 0, along with 'height' yeilds inundated area",
+        "-sth",
+        "--extent_shp_val_thresh",
+        nargs="?",
+        default=0.0,
+        type=float,
+        help="Threshold. Default value of 0, along with 'height' yeilds inundated area",
     )
     parser.add_argument(
-        "-sof", "--extent_shp_val_out_file", nargs="?", default="extent.shp", type=str, help="Name of output shapefile."
+        "-sof",
+        "--extent_shp_val_out_file",
+        nargs="?",
+        default="extent.shp",
+        type=str,
+        help="Name of output shapefile.",
     )
 
     args = parser.parse_args()
@@ -127,14 +186,15 @@ def main():
     files = glob.glob(os.path.join(args.wdir, *[args.odir, "fort.q*"]))
     ntifs = glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"]))
     nfiles = []
-    #print(args.check_done)
+    # print(args.check_done)
     if (len(files) == len(ntifs)) and args.check_done:
         print("Gridded already done")
     else:
         for file in files:
             numstr = os.path.basename(file)[6:]
             tifname = os.path.join(
-                ".", *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
+                ".",
+                *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
             )
             if not (os.path.exists(tifname)) or not args.check_done:
                 nfiles.append(int(numstr))
@@ -194,7 +254,9 @@ def dclaw2maxval_withlev(
 ):
 
     out_file = out_file or os.path.join(wdir, "maxval.tif")
-    extent_shp_val_out_file = extent_shp_val_out_file or os.path.join(wdir, "extent.shp")
+    extent_shp_val_out_file = extent_shp_val_out_file or os.path.join(
+        wdir, "extent.shp"
+    )
 
     # loop through fortq files and add:
 

@@ -642,15 +642,17 @@ def griddata2topofile(
     # end griddata2topofile ======================================================================
 
 
-def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=9999.0, epsg=None):
+def griddata2gtif(
+    X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=9999.0, epsg=None
+):
     """
     griddata2gtif takes gridded data and produces a geotif
 
     """
     try:
         import rasterio
-        import rasterio.transform
         import rasterio.crs
+        import rasterio.transform
     except ImportError:
         raise ImportError("rasterio needed for griddata2gtif")
 
@@ -689,7 +691,6 @@ def griddata2gtif(X, Y, Q, outputfile, nodata_value_in=9999.0, nodata_value_out=
     out_profile["nodata"] = nodata_value_out
     if epsg is not None:
         out_profile["crs"] = rasterio.crs.CRS.from_epsg(epsg)
-
 
     if abs(cellsizeX - cellsizeY) < -1.0e-9:
         print("geotools.topotools.griddata2topofile:")

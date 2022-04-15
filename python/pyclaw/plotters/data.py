@@ -113,7 +113,7 @@ class ClawPlotData(Data):
         self.html_eagle = False  # use EagleClaw titles on html pages?
 
         self.gif_movie = False  # make animated gif movie of frames
-        self.ffmpeg_movie = False # make animated mp4 movie with ffmpeg
+        self.ffmpeg_movie = False  # make animated mp4 movie with ffmpeg
         #    self.clear_figs = True          # give clf() command in each figure
         # before plotting each frame
 
@@ -255,11 +255,7 @@ class ClawPlotData(Data):
                 print(
                     (
                         "    Reading  Frame %s at t = %g  from outdir = %s"
-                        % (
-                            frameno,
-                            framesoln.t,
-                            outdir,
-                        )
+                        % (frameno, framesoln.t, outdir,)
                     )
                 )
             else:
@@ -781,13 +777,19 @@ class ClawPlotAxes(Data):
         self.extent = None
         self.show_gauges = False
         self.label_gauges = False
-        self.gauge_marker_kwargs = {"marker":"D", "ms":3, "mfc":"white", "mec":"black", "mew":0.2}
-        self.gauge_marker_text_kwargs= {"ha":"center", "va":"center", "fontsize":3}
+        self.gauge_marker_kwargs = {
+            "marker": "D",
+            "ms": 3,
+            "mfc": "white",
+            "mec": "black",
+            "mew": 0.2,
+        }
+        self.gauge_marker_text_kwargs = {"ha": "center", "va": "center", "fontsize": 3}
 
-        self.show_region= False
-        self.region_list=[]
-        self.region_color="c"
-        self.region_linewidth=0.2
+        self.show_region = False
+        self.region_list = []
+        self.region_color = "c"
+        self.region_linewidth = 0.2
 
         self.scaled = False  # true so x- and y-axis scaled same
         self.plotitem_dict = {}
@@ -929,7 +931,6 @@ class ClawPlotItem(Data):
             self.add_attribute("gridedges_show", 0)
             self.add_attribute("gridedges_color", "k")
             self.add_attribute("gridedges_linewidth", 0.1)
-
 
             self.add_attribute("kwargs", {})
 

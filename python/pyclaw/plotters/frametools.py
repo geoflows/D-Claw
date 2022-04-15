@@ -11,13 +11,13 @@ import string
 import sys
 import time
 import traceback
-import numpy as np
-from matplotlib.colors import LightSource
 
-from matplotlib.colors import Normalize
+import numpy as np
+from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
+from matplotlib.colors import LightSource, Normalize
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-from dclaw.get_data import get_amr2ez_data, get_region_data, get_gauge_data
+
 plotter = "matplotlib"
 if plotter == "matplotlib":
     if "matplotlib" not in sys.modules:
@@ -39,6 +39,7 @@ try:
 except:
     print("*** Error: problem importing masked array module ma")
 
+
 def _vector_magnitude(arr):
     # things that don't work here:
     #  * np.linalg.norm
@@ -51,6 +52,7 @@ def _vector_magnitude(arr):
     for i in range(arr.shape[-1]):
         sum_sq += np.square(arr[..., i, np.newaxis])
     return np.sqrt(sum_sq)
+
 
 # ==========================================
 def plotframe(frameno, plotdata, verbose=False):
@@ -328,10 +330,15 @@ def plotframe(frameno, plotdata, verbose=False):
             if plotaxes.show_region:
                 for regionno in plotaxes.region_list:
                     x1 = region_data[regionno]["x1"]
-                    y1= region_data[regionno]["y1"]
-                    x2= region_data[regionno]["x2"]
-                    y2= region_data[regionno]["y2"]
-                    pylab.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], plotaxes.region_color, lw=plotaxes.region_linewidth)
+                    y1 = region_data[regionno]["y1"]
+                    x2 = region_data[regionno]["x2"]
+                    y2 = region_data[regionno]["y2"]
+                    pylab.plot(
+                        [x1, x1, x2, x2, x1],
+                        [y1, y2, y2, y1, y1],
+                        plotaxes.region_color,
+                        lw=plotaxes.region_linewidth,
+                    )
 
             # set axes limits:
             if plotaxes.extent is not None:
@@ -368,7 +375,6 @@ def plotframe(frameno, plotdata, verbose=False):
                     except:
                         pass  # let axis be set automatically
 
-
             # call an afteraxes function if present:
             afteraxes = getattr(plotaxes, "afteraxes", None)
             if afteraxes:
@@ -386,7 +392,6 @@ def plotframe(frameno, plotdata, verbose=False):
                     except:
                         print("*** Error in afteraxes ***")
                         raise
-
 
             # end of loop over plotaxes
 
@@ -509,7 +514,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         current_data.x = xc_center
         current_data.var = var
 
-    elif pp_dict["pp_plot_type"]== "1d_fill_between":
+    elif pp_dict["pp_plot_type"] == "1d_fill_between":
         try:
             pylab.fill_between
         except:
@@ -526,7 +531,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         current_data.var = var
         current_data.var2 = var2
 
-    elif pp_dict["pp_plot_type"]== "1d_fill_between_from_2d_data":
+    elif pp_dict["pp_plot_type"] == "1d_fill_between_from_2d_data":
 
         if not pp_map_2d_to_1d:
             print("*** Error, plot_type = 1d_from_2d_data requires ")
@@ -563,7 +568,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             raise
             return
 
-    elif pp_dict["pp_plot_type"]== "1d_from_2d_data":
+    elif pp_dict["pp_plot_type"] == "1d_from_2d_data":
         if not pp_map_2d_to_1d:
             print("*** Error, plot_type = 1d_from_2d_data requires ")
             print("*** map_2d_to_1d function as plotitem attribute")
@@ -592,12 +597,12 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             raise
             return
 
-    elif pp_dict["pp_plot_type"]== "1d_gauge_trace":
+    elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
         gaugesoln = plotdata.getgauge(pp_gaugeno)
         xc_center = None
         xc_edge = None
 
-    elif pp_dict["pp_plot_type"]== "1d_empty":
+    elif pp_dict["pp_plot_type"] == "1d_empty":
         pp_plot_var = 0  # shouldn't be used but needed below *FIX*
         thisgridvar = get_gridvar(grid, pp_plot_var, 1, current_data)
         xc_center = thisgridvar.xc_center  # cell centers
@@ -633,7 +638,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_plot_show:
             exec(plotcommand)
 
-    elif pp_dict["pp_plot_type"]== "1d_semilogy":
+    elif pp_dict["pp_plot_type"] == "1d_semilogy":
         if pp_color:
             pp_kwargs["color"] = pp_color
 
@@ -643,7 +648,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_plot_show:
             exec(plotcommand)
 
-    elif pp_dict["pp_plot_type"]in ["1d_fill_between", "1d_fill_between_from_2d_data"]:
+    elif pp_dict["pp_plot_type"] in ["1d_fill_between", "1d_fill_between_from_2d_data"]:
         if pp_color:
             pp_kwargs["color"] = pp_color
         if pp_fill_where:
@@ -659,7 +664,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_plot_show:
             exec(plotcommand)
 
-    elif pp_dict["pp_plot_type"]== "1d_gauge_trace":
+    elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
 
         gauget = gaugesoln.t
         gaugeq = gaugesoln.q[:, 3]
@@ -678,7 +683,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             print("Warning: t out of range")
         pylab.plot([t], [qt], "ro")
 
-    elif pp_dict["pp_plot_type"]== "1d_empty":
+    elif pp_dict["pp_plot_type"] == "1d_empty":
         # no plot to create (user might make one in afteritem or
         # afteraxes)
         pass
@@ -842,16 +847,16 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     if pp_dict["pp_plot_type"] == "2d_hillshade":
         if not var_all_masked:
             ls = LightSource(azdeg=315, altdeg=45)
-    #        hs = ls.hillshade(z, vert_exag=ve, dx=dx, dy=dy)
+            #        hs = ls.hillshade(z, vert_exag=ve, dx=dx, dy=dy)
 
             # calculate hillshade after source code by hand to prevent
             # clipping.
             # https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#LightSource
             z = pylab.flipud(var.T)
             dx = current_data.dx
-            dy =  current_data.dy
-            #print(dx)
-            ve = 1 # hard code in no vertical exaggeration.
+            dy = current_data.dy
+            # print(dx)
+            ve = 1  # hard code in no vertical exaggeration.
             # similarly light source orientation is hard coded.
             e_dy, e_dx = np.gradient(ve * z, -dy, dx)
             normal = np.empty(z.shape + (3,)).view(type(z))
@@ -880,8 +885,8 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             hs = intensity
 
             xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
-            #print(xylimits)
-            pobj = pylab.imshow(hs, cmap='gray', vmin=0, vmax=1, extent=xylimits)
+            # print(xylimits)
+            pobj = pylab.imshow(hs, cmap="gray", vmin=0, vmax=1, extent=xylimits)
 
     elif pp_dict["pp_plot_type"] == "2d_pcolor":
 
@@ -927,7 +932,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 cmap=pp_dict["pp_imshow_cmap"],
                 interpolation="nearest",
                 norm=color_norm,
-                alpha=pp_dict["pp_imshow_alpha"]
+                alpha=pp_dict["pp_imshow_alpha"],
             )
 
             if pp_dict["pp_gridlines_show"]:
@@ -1021,7 +1026,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 shading="flat",
             )
 
-    elif pp_dict["pp_plot_type"]== "2d_schlieren":
+    elif pp_dict["pp_plot_type"] == "2d_schlieren":
         # plot 2-norm of gradient of variable var:
         (vx, vy) = pylab.gradient(var)
         vs = pylab.sqrt(vx ** 2 + vy ** 2)
@@ -1044,7 +1049,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             ):
                 pylab.clim(pp_schlieren_cmin, pp_schlieren_cmax)
 
-    elif pp_dict["pp_plot_type"]== "2d_quiver":
+    elif pp_dict["pp_plot_type"] == "2d_quiver":
         if pp_quiver_coarsening > 0:
             var_x = get_gridvar(grid, pp_quiver_var_x, 2, current_data).var
             var_y = get_gridvar(grid, pp_quiver_var_y, 2, current_data).var
@@ -1073,7 +1078,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                     **pp_quiver_key_kwargs
                 )
 
-    elif pp_dict["pp_plot_type"]== "2d_empty":
+    elif pp_dict["pp_plot_type"] == "2d_empty":
         # no plot to create (user might make one in afteritem or
         # afteraxes)
         pass
@@ -1090,13 +1095,21 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         for i in [0, X_edge.shape[0] - 1]:
             X1 = X_edge[i, :]
             Y1 = Y_edge[i, :]
-            pylab.plot(X1, Y1, pp_dict["pp_gridedges_color"], lw=pp_dict["pp_gridedges_linewidth"])
+            pylab.plot(
+                X1,
+                Y1,
+                pp_dict["pp_gridedges_color"],
+                lw=pp_dict["pp_gridedges_linewidth"],
+            )
         for i in [0, X_edge.shape[1] - 1]:
             X1 = X_edge[:, i]
             Y1 = Y_edge[:, i]
-            pylab.plot(X1, Y1, pp_dict["pp_gridedges_color"], lw=pp_dict["pp_gridedges_linewidth"])
-
-
+            pylab.plot(
+                X1,
+                Y1,
+                pp_dict["pp_gridedges_color"],
+                lw=pp_dict["pp_gridedges_linewidth"],
+            )
 
     pp_aftergrid = pp_dict["pp_aftergrid"]
     if pp_aftergrid:
@@ -1438,7 +1451,6 @@ def printframes(plotdata=None, verbose=True):
                 print(("    Created moviefig%s.gif" % figno))
             except:
                 print(("*** Error creating moviefig%s.gif" % figno))
-
 
     os.chdir(rootdir)
 
