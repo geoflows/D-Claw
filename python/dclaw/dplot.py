@@ -6,6 +6,7 @@ from matplotlib.colors import Normalize
 from numpy import ma as ma
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
+import numpy as np
 
 i_eta = 7
 
@@ -269,10 +270,20 @@ def solid_frac(current_data):
     q = current_data.q
     h = q[:, :, 0]
     hm = q[:, :, 3]
-    m = ma.masked_where(h < drytol, hm / h)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = ma.masked_where(h < drytol, hm / h)
 
     return m
 
+def solid_frac_gt03(current_data):
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = q[:, :, 0]
+    hm = q[:, :, 3]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = ma.masked_where(h < drytol, hm / h)
+        m = ma.masked_where(m<0.3, m)
+    return m
 
 def density(current_data):
     m = solid_frac(current_data)
@@ -313,7 +324,6 @@ def topo(current_data):
     eta = q[:, :, i_eta]
     topo = eta - h
     return topo
-
 
 def land(current_data):
     """
@@ -371,6 +381,28 @@ def surface(current_data):
     water = ma.masked_where(h <= drytol, eta)
     return water
 
+def surface_solid_frac_lt03(current_data):
+    """
+    Return a masked array containing the surface elevation only in wet cells.
+    Surface is eta = h+topo, assumed to be output as 4th column of fort.q
+    files.
+    """
+    from numpy import ma
+
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = q[:, :, 0]
+    eta = q[:, :, i_eta]
+    hm = q[:, :, 3]
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = hm / h
+
+    water = ma.masked_where(h <= drytol, eta)
+    water = ma.masked_where(m>0.3, water)
+
+    return water
+
 
 def surface_or_depth(current_data):
     """
@@ -404,7 +436,8 @@ def velocity_u(current_data):
     q = current_data.q
     h = q[:, :, 0]
     hu = q[:, :, 1]
-    u = ma.masked_where(h <= drytol, hu / h)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        u = ma.masked_where(h <= drytol, hu / h)
     return u
 
 
@@ -419,7 +452,8 @@ def velocity_v(current_data):
     q = current_data.q
     h = q[:, :, 0]
     hv = q[:, :, 2]
-    v = ma.masked_where(h <= drytol, hv / h)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        v = ma.masked_where(h <= drytol, hv / h)
     return v
 
 
@@ -434,23 +468,27 @@ def particle_size(current_data):
     q = current_data.q
     h = q[:, :, 0]
     hv = q[:, :, 5]
-    v = ma.masked_where(h <= drytol, hv / h)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        v = ma.masked_where(h <= drytol, hv / h)
     return v
 
 
 def velocity(current_data):
     """
     Return a masked array containing velocity v in wet cells.
+
+    velocity defined as sqrt(u**2 + v**2)
     """
     from numpy import ma
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
+    hu = q[:, :, 1]
     hv = q[:, :, 2]
-    u = ma.masked_where(h <= drytol, hv / h)
-    hv = q[:, :, 2]
-    v = ma.masked_where(h <= drytol, hv / h)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        u = ma.masked_where(h <= drytol, hu / h)
+        v = ma.masked_where(h <= drytol, hv / h)
     return (u, v)
 
 

@@ -747,6 +747,7 @@ class ClawPlotAxes(Data):
             "axescmd",
             "xlimits",
             "ylimits",
+            "extent",
             "plotitem_dict",
             "user",
             "afteraxes",
@@ -773,6 +774,7 @@ class ClawPlotAxes(Data):
         self.afteraxes = None
         self.xlimits = None
         self.ylimits = None
+        self.extent = None
         self.scaled = False  # true so x- and y-axis scaled same
         self.plotitem_dict = {}
         self.type = "each_frame"
@@ -923,6 +925,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("pcolor_cmin", None)
                 self.add_attribute("pcolor_cmax", None)
                 self.add_attribute("add_colorbar", True)
+                self.add_attribute("colorbar_kwargs", {})
+                self.add_attribute("colorbar_label")
 
             elif plot_type == "2d_imshow":
                 # from pylab import cm
@@ -932,6 +936,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("imshow_cmap", colormaps.yellow_red_blue)
                 self.add_attribute("imshow_cmin", None)
                 self.add_attribute("imshow_cmax", None)
+                self.add_attribute("imshow_alpha", 1)
+                self.add_attribute("imshow_norm", None)
                 self.add_attribute("add_colorbar", True)
 
             elif plot_type == "2d_contour":
@@ -966,7 +972,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("quiver_key_units", "")
                 self.add_attribute("quiver_key_scale", None)
                 self.add_attribute("quiver_key_kwargs", {})
-
+            elif plot_type == "2d_hillshade":
+                pass
             else:
                 print(("*** Warning 2d plot type %s not recognized" % plot_type))
 
