@@ -69,7 +69,7 @@ def get_region_data(project_path, output="_output", file="setregions.data"):
             row = fid.readline().split()
             if row != []:
                 linesread = linesread + 1
-                regionno = len(region_dict) + 1  # not officially numbered. # go in
+                regionno = len(region_dict) + 1  # not officially numbered. # go in order, from 1 onwards. 
                 # order of .data file.
                 region_dict[regionno] = {}
                 region_dict[regionno]["minlevel"] = float(row[0])

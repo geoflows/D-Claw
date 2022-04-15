@@ -784,6 +784,11 @@ class ClawPlotAxes(Data):
         self.gauge_marker_kwargs = {"marker":"D", "ms":3, "mfc":"white", "mec":"black", "mew":0.2}
         self.gauge_marker_text_kwargs= {"ha":"center", "va":"center", "fontsize":3}
 
+        self.show_region= False
+        self.region_list=[]
+        self.region_color="c"
+        self.region_linewidth=0.2
+
         self.scaled = False  # true so x- and y-axis scaled same
         self.plotitem_dict = {}
         self.type = "each_frame"
@@ -924,6 +929,8 @@ class ClawPlotItem(Data):
             self.add_attribute("gridedges_show", 0)
             self.add_attribute("gridedges_color", "k")
             self.add_attribute("gridedges_linewidth", 0.1)
+
+
             self.add_attribute("kwargs", {})
 
             if plot_type == "2d_pcolor":

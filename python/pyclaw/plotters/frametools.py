@@ -325,6 +325,14 @@ def plotframe(frameno, plotdata, verbose=False):
                     if plotaxes.label_gauges:
                         pylab.text(x, y, gaugeno, **plotaxes.gauge_marker_text_kwargs)
 
+            if plotaxes.show_region:
+                for regionno in plotaxes.region_list:
+                    x1 = region_data[regionno]["x1"]
+                    y1= region_data[regionno]["y1"]
+                    x2= region_data[regionno]["x2"]
+                    y2= region_data[regionno]["y2"]
+                    pylab.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], plotaxes.region_color, lw=plotaxes.region_linewidth)
+
             # set axes limits:
             if plotaxes.extent is not None:
                 if plotaxes.extent == "full":
@@ -766,6 +774,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
              plot_var  aftergrid  kwargs
              gridlines_show  gridlines_color  grid_bgcolor
              gridedges_show  gridedges_color gridedges_linewidth
+             region_show region_color region_linewidth
              add_colorbar colorbar_kwargs colorbar_label
              pcolor_cmap  pcolor_cmin  pcolor_cmax
              imshow_cmap  imshow_cmin  imshow_cmax imshow_alpha imshow_norm
@@ -1086,6 +1095,9 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             X1 = X_edge[:, i]
             Y1 = Y_edge[:, i]
             pylab.plot(X1, Y1, pp_dict["pp_gridedges_color"], lw=pp_dict["pp_gridedges_linewidth"])
+
+
+
     pp_aftergrid = pp_dict["pp_aftergrid"]
     if pp_aftergrid:
         try:
