@@ -17,7 +17,7 @@ from matplotlib.colors import LightSource
 from matplotlib.colors import Normalize
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-from dclaw.get_data import get_amr2ez_data, get_region_data
+from dclaw.get_data import get_amr2ez_data, get_region_data, get_gauge_data
 plotter = "matplotlib"
 if plotter == "matplotlib":
     if "matplotlib" not in sys.modules:
@@ -204,6 +204,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 wdir = os.path.split(outdir)[0]
                 region_data = get_region_data(wdir)
                 amr2ez_data = get_amr2ez_data(wdir)
+                gauge_data = get_gauge_data(wdir)
 
                 try:
                     framesoln = plotdata.getframe(frameno, outdir)
@@ -315,6 +316,14 @@ def plotframe(frameno, plotdata, verbose=False):
 
             if plotaxes.scaled:
                 pylab.axis("scaled")
+
+            if plotaxes.show_gauges:
+                for gaugeno, ginfo in gauge_data.items():
+                    x = ginfo["x"]
+                    y = ginfo["y"]
+                    pylab.plot(x, y, **plotaxes.gauge_marker_kwargs)
+                    if plotaxes.label_gauges:
+                        pylab.text(x, y, gaugeno, **plotaxes.gauge_marker_text_kwargs)
 
             # set axes limits:
             if plotaxes.extent is not None:
@@ -756,7 +765,8 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     plot_params = """
              plot_var  aftergrid  kwargs
              gridlines_show  gridlines_color  grid_bgcolor
-             gridedges_show  gridedges_color  add_colorbar colorbar_kwargs colorbar_label
+             gridedges_show  gridedges_color gridedges_linewidth
+             add_colorbar colorbar_kwargs colorbar_label
              pcolor_cmap  pcolor_cmin  pcolor_cmax
              imshow_cmap  imshow_cmin  imshow_cmax imshow_alpha imshow_norm
              contour_levels  contour_nlevels  contour_min  contour_max
@@ -1071,11 +1081,11 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         for i in [0, X_edge.shape[0] - 1]:
             X1 = X_edge[i, :]
             Y1 = Y_edge[i, :]
-            pylab.plot(X1, Y1, pp_gridedges_color)
+            pylab.plot(X1, Y1, pp_dict["pp_gridedges_color"], lw=pp_dict["pp_gridedges_linewidth"])
         for i in [0, X_edge.shape[1] - 1]:
             X1 = X_edge[:, i]
             Y1 = Y_edge[:, i]
-            pylab.plot(X1, Y1, pp_gridedges_color)
+            pylab.plot(X1, Y1, pp_dict["pp_gridedges_color"], lw=pp_dict["pp_gridedges_linewidth"])
     pp_aftergrid = pp_dict["pp_aftergrid"]
     if pp_aftergrid:
         try:
