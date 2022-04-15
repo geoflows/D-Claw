@@ -141,7 +141,7 @@ def topo(current_data):
     """
     q = current_data.q
     h = q[:, :, 0]
-    eta = q[:, :, -1]
+    eta = q[:, :, 3]
     topo = eta - h
     return topo
 
@@ -155,7 +155,7 @@ def land(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
-    eta = q[:, :, -1]
+    eta = q[:, :, 3]
     land = ma.masked_where(h > drytol, eta)
     return land
 
@@ -167,7 +167,7 @@ def water(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
-    eta = q[:, :, -1]
+    eta = q[:, :, 3]
     water = ma.masked_where(h <= drytol, eta)
     return water
 
@@ -196,7 +196,7 @@ def surface(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
-    eta = q[:, :, -1]
+    eta = q[:, :, 3]
     water = ma.masked_where(h <= drytol, eta)
     return water
 
@@ -214,7 +214,7 @@ def surface_or_depth(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
-    eta = q[:, :, -1]
+    eta = q[:, :, 3]
     topo = eta - h
     surface = ma.masked_where(h <= drytol, eta)
     depth = ma.masked_where(h <= drytol, h)
