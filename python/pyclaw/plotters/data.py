@@ -113,7 +113,7 @@ class ClawPlotData(Data):
         self.html_eagle = False  # use EagleClaw titles on html pages?
 
         self.gif_movie = False  # make animated gif movie of frames
-
+        self.ffmpeg_movie = False # make animated mp4 movie with ffmpeg
         #    self.clear_figs = True          # give clf() command in each figure
         # before plotting each frame
 
