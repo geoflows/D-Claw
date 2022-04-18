@@ -59,9 +59,9 @@ def main():
     parser.add_argument(
         "-cd",
         "--check_done",
-        action="store_false",
-        default=False,
-        help="Check if file processing has already occured and only reprocess new files.",
+        action="store_true",
+        default=True,
+        help="Check if file processing has already occured and only reprocess new or updated files.",
     )
 
     parser.add_argument(
@@ -177,7 +177,6 @@ def main():
         east = args.east
         south = args.south
         north = args.north
-    print(east, north, south, west)
     # make output dir
     if not os.path.exists(os.path.join(args.wdir, args.gdir)):
         os.mkdir(os.path.join(args.wdir, args.gdir))
@@ -185,39 +184,51 @@ def main():
     # check which files to convert. Could do a temporal filter here..
     files = glob.glob(os.path.join(args.wdir, *[args.odir, "fort.q*"]))
     ntifs = glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"]))
+
     nfiles = []
+
     # print(args.check_done)
-    if (len(files) == len(ntifs)) and args.check_done:
-        print("Gridded already done")
+    for file in files:
+        numstr = os.path.basename(file)[6:]
+        tifname = os.path.join(
+            ".",
+            *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
+        )
+        if os.path.exists(tifname) and args.check_done:
+            mtime_fort = os.path.getmtime(file)
+            mtime_tif = os.path.getmtime(tifname)
+            if mtime_tif > mtime_fort:
+                process = False
+            else:
+                process = True
+        else:
+            process = True
+        if process:
+            nfiles.append(int(numstr))
+    nfiles = np.sort(nfiles)
+
+    if len(nfiles) == 0:
+        print("check_done = True and no new files to process. No files reprocessed.")
     else:
-        for file in files:
-            numstr = os.path.basename(file)[6:]
-            tifname = os.path.join(
-                ".",
-                *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
-            )
-            if not (os.path.exists(tifname)) or not args.check_done:
-                nfiles.append(int(numstr))
+        print("Processing {} files: {}".format(len(nfiles), nfiles))
 
-        nfiles = np.sort(nfiles)
-
-    convertfortdir(
-        "fortrefined",
-        nplots=nfiles,
-        outputname="fort_q",
-        components="all",
-        outdir=os.path.join(args.wdir, args.gdir),
-        fortdir=os.path.join(args.wdir, args.odir),
-        parallel=True,
-        num_cores=args.num_cores,
-        topotype="gtif",
-        write_level=True,
-        epsg=args.epsg,
-        west=west,
-        east=east,
-        south=south,
-        north=north,
-    )
+        convertfortdir(
+            "fortrefined",
+            nplots=nfiles,
+            outputname="fort_q",
+            components="all",
+            outdir=os.path.join(args.wdir, args.gdir),
+            fortdir=os.path.join(args.wdir, args.odir),
+            parallel=True,
+            num_cores=args.num_cores,
+            topotype="gtif",
+            write_level=True,
+            epsg=args.epsg,
+            west=west,
+            east=east,
+            south=south,
+            north=north,
+        )
 
     dig_data = get_dig_data(args.wdir, args.odir)
     rho_f = dig_data["rho_f"]
