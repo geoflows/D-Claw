@@ -939,8 +939,8 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 # This draws grid for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this.
-                pobj = plt.plot(X_edge, Y_edge, color=ppp_dict["pp_gridlines_color"])
-                pobj = plt.plot(
+                plt.plot(X_edge, Y_edge, color=pp_dict["pp_gridlines_color"])
+                plt.plot(
                     X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"]
                 )
 
@@ -969,7 +969,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 levels_set = True
 
         if pp_dict["pp_gridlines_show"]:
-            pobj = plt.pcolormesh(
+            plt.pcolormesh(
                 X_edge,
                 Y_edge,
                 plt.zeros(var.shape),
@@ -977,7 +977,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 edgecolors=pp_dict["pp_gridlines_color"],
             )
         elif pp_dict["pp_grid_bgcolor"] != "w":
-            pobj = plt.pcolormesh(
+            plt.pcolormesh(
                 X_edge,
                 Y_edge,
                 plt.zeros(var.shape),
@@ -1009,7 +1009,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     elif pp_dict["pp_plot_type"] == "2d_grid":
         # plot only the grids, no data:
         if pp_dict["pp_gridlines_show"]:
-            pobj = plt.pcolormesh(
+            plt.pcolormesh(
                 X_edge,
                 Y_edge,
                 plt.zeros(var.shape),
