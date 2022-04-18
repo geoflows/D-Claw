@@ -184,7 +184,8 @@ def plotframe(frameno, plotdata, verbose=False):
 
             # create the axes:
             axescmd = getattr(plotaxes, "axescmd", "subplot(1,1,1)")
-            axescmd = "plotaxes._handle = plt.%s" % axescmd
+            axescmd = "plotaxes._gca_handle = plt.%s" % axescmd
+
             exec(axescmd)
             # plt.hold(True)
 
@@ -302,7 +303,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj  # most recent plot object
-                        cb = plt.colorbar(pobj, ax=plt.gca(), **plotitem.colorbar_kwargs)
+                        cb = plt.colorbar(pobj, ax=plotitem._gca_handle, **plotitem.colorbar_kwargs)
                         if plotitem.colorbar_label is not None:
                             cb.set_label(plotitem.colorbar_label)
                 except:
