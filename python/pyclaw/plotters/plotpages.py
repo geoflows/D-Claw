@@ -2277,8 +2277,8 @@ def plotclaw_driver(plotdata, verbose=False):
         print("Making mp4 with ffmpeg.  This may take some time....")
         for figno in fignos:
             try:
-                cmd = "ffmpeg -y -r 6 -f image2 -i frame%4dfig{}.png -vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p moviefig{}.mp4".format(
-                    figno, figno
+                cmd = "ffmpeg -y -r 6 -f image2 -i frame%4dfig{}.png -vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p {}moviefig{}.mp4".format(
+                    figno, plotdata.ffmpeg_name, figno
                 )
                 print(cmd)
                 os.system(cmd)
