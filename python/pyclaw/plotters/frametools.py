@@ -302,11 +302,13 @@ def plotframe(frameno, plotdata, verbose=False):
                     print("*** or  ClawPlotItem.aftergrid instead")
 
                 if plotitem.add_colorbar:
-                    pobj = plotitem._current_pobj  # most recent plot object
-                    cb = plt.colorbar(pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs)
-                    if plotitem.colorbar_label is not None:
-                        cb.set_label(plotitem.colorbar_label)
-
+                    if hasattr(plotitem, "_current_pobj"):
+                        pobj = plotitem._current_pobj  # most recent plot object
+                        cb = plt.colorbar(pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs)
+                        if plotitem.colorbar_label is not None:
+                            cb.set_label(plotitem.colorbar_label)
+                    else:
+                        print("Could not make colorbar. No active pobj.")
 
             if plotaxes.title_with_t:
                 if (t == 0.0) | ((t >= 0.001) & (t < 1000.0)):
