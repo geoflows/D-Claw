@@ -303,7 +303,7 @@ def plotframe(frameno, plotdata, verbose=False):
 
                 if plotitem.add_colorbar:
                     pobj = plotitem._current_pobj  # most recent plot object
-                    cb = plt.colorbar(pobj, ax=plotitem._gca_handle, **plotitem.colorbar_kwargs)
+                    cb = plt.colorbar(pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs)
                     if plotitem.colorbar_label is not None:
                         cb.set_label(plotitem.colorbar_label)
 
