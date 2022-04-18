@@ -29,9 +29,9 @@ if plotter == "matplotlib":
             print("*** Error: problem importing matplotlib")
 
 try:
-    import pylab
+    import matplotlib.pyplot as plt
 except:
-    print("*** Error: problem importing pylab")
+    print("*** Error: problem importing plt")
 
 
 try:
@@ -70,7 +70,7 @@ def plotframe(frameno, plotdata, verbose=False):
         print(("    Plotting frame %s ... " % frameno))
 
     if plotdata.mode() == "iplotclaw":
-        pylab.ion()
+        plt.ion()
 
     try:
         plotfigure_dict = plotdata.plotfigure_dict
@@ -157,11 +157,11 @@ def plotframe(frameno, plotdata, verbose=False):
             plotfigure.kwargs["facecolor"] = "#ffeebb"
 
         # create figure and set handle:
-        plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
+        plotfigure._handle = plt.figure(num=figno, **plotfigure.kwargs)
 
-        pylab.ioff()
+        plt.ioff()
         if plotfigure.clf_each_frame:
-            pylab.clf()
+            plt.clf()
 
         try:
             plotaxes_dict = plotfigure.plotaxes_dict
@@ -184,9 +184,9 @@ def plotframe(frameno, plotdata, verbose=False):
 
             # create the axes:
             axescmd = getattr(plotaxes, "axescmd", "subplot(1,1,1)")
-            axescmd = "plotaxes._handle = pylab.%s" % axescmd
+            axescmd = "plotaxes._handle = plt.%s" % axescmd
             exec(axescmd)
-            # pylab.hold(True)
+            # plt.hold(True)
 
             # NOTE: This was rearranged December 2009 to
             # loop over grids first and then over plotitems so that
@@ -302,7 +302,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 try:
                     if plotitem.add_colorbar:
                         pobj = plotitem._current_pobj  # most recent plot object
-                        cb = pylab.colorbar(pobj, **plotitem.colorbar_kwargs)
+                        cb = plt.colorbar(pobj, ax=plt.gca(), **plotitem.colorbar_kwargs)
                         if plotitem.colorbar_label is not None:
                             cb.set_label(plotitem.colorbar_label)
                 except:
@@ -310,22 +310,22 @@ def plotframe(frameno, plotdata, verbose=False):
 
             if plotaxes.title_with_t:
                 if (t == 0.0) | ((t >= 0.001) & (t < 1000.0)):
-                    pylab.title("%s at time t = %14.8f" % (plotaxes.title, t))
+                    plt.title("%s at time t = %14.8f" % (plotaxes.title, t))
                 else:
-                    pylab.title("%s at time t = %14.8e" % (plotaxes.title, t))
+                    plt.title("%s at time t = %14.8e" % (plotaxes.title, t))
             else:
-                pylab.title(plotaxes.title)
+                plt.title(plotaxes.title)
 
             if plotaxes.scaled:
-                pylab.axis("scaled")
+                plt.axis("scaled")
 
             if plotaxes.show_gauges:
                 for gaugeno, ginfo in gauge_data.items():
                     x = ginfo["x"]
                     y = ginfo["y"]
-                    pylab.plot(x, y, **plotaxes.gauge_marker_kwargs)
+                    plt.plot(x, y, **plotaxes.gauge_marker_kwargs)
                     if plotaxes.label_gauges:
-                        pylab.text(x, y, gaugeno, **plotaxes.gauge_marker_text_kwargs)
+                        plt.text(x, y, gaugeno, **plotaxes.gauge_marker_text_kwargs)
 
             if plotaxes.show_region:
                 for regionno in plotaxes.region_list:
@@ -333,7 +333,7 @@ def plotframe(frameno, plotdata, verbose=False):
                     y1 = region_data[regionno]["y1"]
                     x2 = region_data[regionno]["x2"]
                     y2 = region_data[regionno]["y2"]
-                    pylab.plot(
+                    plt.plot(
                         [x1, x1, x2, x2, x1],
                         [y1, y2, y2, y1, y1],
                         plotaxes.region_color,
@@ -361,17 +361,17 @@ def plotframe(frameno, plotdata, verbose=False):
                     print("*** Error setting plotaxes extent ***")
                     raise
 
-                pylab.xlim(west, east)
-                pylab.ylim(south, north)
+                plt.xlim(west, east)
+                plt.ylim(south, north)
             else:
                 if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
                     try:
-                        pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
+                        plt.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
                     except:
                         pass  # let axis be set automatically
                 if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
                     try:
-                        pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                        plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
                     except:
                         pass  # let axis be set automatically
 
@@ -414,10 +414,10 @@ def plotframe(frameno, plotdata, verbose=False):
                 raise
 
     if plotdata.mode() == "iplotclaw":
-        pylab.ion()
+        plt.ion()
     for figno in plotted_fignos:
-        pylab.figure(figno)
-        pylab.draw()
+        plt.figure(figno)
+        plt.draw()
 
     if verbose:
         print(("    Done with plotframe for frame %i at time %g" % (frameno, t)))
@@ -516,9 +516,9 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     elif pp_dict["pp_plot_type"] == "1d_fill_between":
         try:
-            pylab.fill_between
+            plt.fill_between
         except:
-            print("*** This version of pylab is missing fill_between")
+            print("*** This version of plt is missing fill_between")
             print("*** Reverting to 1d_plot")
             pp_dict["pp_plot_type"] = "1d_plot"
         thisgridvar = get_gridvar(grid, pp_plot_var, 1, current_data)
@@ -539,9 +539,9 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             raise
             return
         try:
-            pylab.fill_between
+            plt.fill_between
         except:
-            print("*** This version of pylab is missing fill_between")
+            print("*** This version of plt is missing fill_between")
             print("*** Reverting to 1d_plot")
             pp_dict["pp_plot_type"] = "1d_plot"
 
@@ -628,13 +628,13 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # The plot commands using matplotlib:
 
-    # pylab.hold(True)
+    # plt.hold(True)
 
     if pp_dict["pp_plot_type"] in ["1d_plot", "1d_from_2d_data"]:
         if pp_color:
             pp_kwargs["color"] = pp_color
 
-        plotcommand = "pobj=pylab.plot(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
+        plotcommand = "pobj=plt.plot(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
         if pp_plot_show:
             exec(plotcommand)
 
@@ -643,7 +643,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_kwargs["color"] = pp_color
 
         plotcommand = (
-            "pobj=pylab.semilogy(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
+            "pobj=plt.semilogy(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
         )
         if pp_plot_show:
             exec(plotcommand)
@@ -655,12 +655,12 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_fill_where = pp_fill_where.replace("plot_var", "var")
             pp_fill_where = pp_fill_where.replace("plot_var2", "var2")
             plotcommand = (
-                "pobj=pylab.fill_between(X_center,var,var2,%s,**pp_kwargs)"
+                "pobj=plt.fill_between(X_center,var,var2,%s,**pp_kwargs)"
                 % pp_fill_where
             )
 
         else:
-            plotcommand = "pobj=pylab.fill_between(X_center,var,var2,**pp_kwargs)"
+            plotcommand = "pobj=plt.fill_between(X_center,var,var2,**pp_kwargs)"
         if pp_plot_show:
             exec(plotcommand)
 
@@ -668,20 +668,20 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
         gauget = gaugesoln.t
         gaugeq = gaugesoln.q[:, 3]
-        plotcommand = "pobj=pylab.plot(gauget, gaugeq)"
+        plotcommand = "pobj=plt.plot(gauget, gaugeq)"
         if pp_plot_show:
             exec(plotcommand)
 
         # interpolate to the current time t:
         try:
-            i1 = pylab.find(gauget < t)[-1]
+            i1 = plt.find(gauget < t)[-1]
             i1 = min(i1, len(gauget) - 2)
             slope = (gaugeq[i1 + 1] - gaugeq[i1]) / (gauget[i1 + 1] - gauget[i1])
             qt = gaugeq[i1] + slope * (t - gauget[i1])
         except:
             qt = gaugeq[0]
             print("Warning: t out of range")
-        pylab.plot([t], [qt], "ro")
+        plt.plot([t], [qt], "ro")
 
     elif pp_dict["pp_plot_type"] == "1d_empty":
         # no plot to create (user might make one in afteritem or
@@ -833,7 +833,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
     # The plot commands using matplotlib:
 
-    # pylab.hold(True)
+    # plt.hold(True)
 
     if ma.isMaskedArray(var):
         # If var is a masked array: plotting should work ok unless all
@@ -852,7 +852,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             # calculate hillshade after source code by hand to prevent
             # clipping.
             # https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#LightSource
-            z = pylab.flipud(var.T)
+            z = np.flipud(var.T)
             dx = current_data.dx
             dy = current_data.dy
             # print(dx)
@@ -886,11 +886,11 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
 
             xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
             # print(xylimits)
-            pobj = pylab.imshow(hs, cmap="gray", vmin=0, vmax=1, extent=xylimits)
+            pobj = plt.imshow(hs, cmap="gray", vmin=0, vmax=1, extent=xylimits)
 
     elif pp_dict["pp_plot_type"] == "2d_pcolor":
 
-        pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, var, \
+        pcolor_cmd = "pobj = plt.pcolormesh(X_edge, Y_edge, var, \
                         cmap=pp_dict['pp_pcolor_cmap']"
 
         if pp_dict["pp_gridlines_show"]:
@@ -906,7 +906,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             if (pp_dict["pp_pcolor_cmin"] not in ["auto", None]) and (
                 pp_dict["pp_pcolor_cmax"] not in ["auto", None]
             ):
-                pylab.clim(pp_dict["pp_pcolor_cmin"], pp_dict["pp_pcolor_cmax"])
+                plt.clim(pp_dict["pp_pcolor_cmin"], pp_dict["pp_pcolor_cmax"])
         else:
             # print '*** Not doing pcolor on totally masked array'
             pass
@@ -926,8 +926,8 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 color_norm = pp_dict["pp_imshow_norm"]
 
             xylimits = (X_edge[0, 0], X_edge[-1, -1], Y_edge[0, 0], Y_edge[-1, -1])
-            pobj = pylab.imshow(
-                pylab.flipud(var.T),
+            pobj = plt.imshow(
+                np.flipud(var.T),
                 extent=xylimits,
                 cmap=pp_dict["pp_imshow_cmap"],
                 interpolation="nearest",
@@ -939,8 +939,8 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 # This draws grid for labels shown.  Levels not shown will
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this.
-                pobj = pylab.plot(X_edge, Y_edge, color=ppp_dict["pp_gridlines_color"])
-                pobj = pylab.plot(
+                pobj = plt.plot(X_edge, Y_edge, color=ppp_dict["pp_gridlines_color"])
+                pobj = plt.plot(
                     X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"]
                 )
 
@@ -961,7 +961,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 pp_dict["pp_contour_max"] is not None
             ):
 
-                pp_dict["pp_contour_levels"] = pylab.linspace(
+                pp_dict["pp_contour_levels"] = plt.linspace(
                     pp_dict["pp_contour_min"],
                     pp_dict["pp_contour_max"],
                     pp_dict["pp_contour_nlevels"],
@@ -969,25 +969,25 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 levels_set = True
 
         if pp_dict["pp_gridlines_show"]:
-            pobj = pylab.pcolormesh(
+            pobj = plt.pcolormesh(
                 X_edge,
                 Y_edge,
-                pylab.zeros(var.shape),
+                plt.zeros(var.shape),
                 cmap=pp_dict["pp_grid_bgcolormap"],
                 edgecolors=pp_dict["pp_gridlines_color"],
             )
         elif pp_dict["pp_grid_bgcolor"] != "w":
-            pobj = pylab.pcolormesh(
+            pobj = plt.pcolormesh(
                 X_edge,
                 Y_edge,
-                pylab.zeros(var.shape),
+                plt.zeros(var.shape),
                 cmap=pp_dict["pp_grid_bgcolormap"],
                 edgecolors="None",
             )
-        # pylab.hold(True)
+        # plt.hold(True)
 
         # create the contour command:
-        contourcmd = "pobj = pylab.contour(X_center, Y_center, var, "
+        contourcmd = "pobj = plt.contour(X_center, Y_center, var, "
         if levels_set:
             contourcmd += 'pp_dict["pp_contour_levels"]'
         else:
@@ -1009,29 +1009,29 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     elif pp_dict["pp_plot_type"] == "2d_grid":
         # plot only the grids, no data:
         if pp_dict["pp_gridlines_show"]:
-            pobj = pylab.pcolormesh(
+            pobj = plt.pcolormesh(
                 X_edge,
                 Y_edge,
-                pylab.zeros(var.shape),
+                plt.zeros(var.shape),
                 cmap=pp_dict["pp_grid_bgcolormap"],
                 edgecolors=pp_dict["pp_gridlines_color"],
                 shading="faceted",
             )
         else:
-            pobj = pylab.pcolormesh(
+            pobj = plt.pcolormesh(
                 X_edge,
                 Y_edge,
-                pylab.zeros(var.shape),
+                plt.zeros(var.shape),
                 cmap=pp_dict["pp_grid_bgcolormap"],
                 shading="flat",
             )
 
     elif pp_dict["pp_plot_type"] == "2d_schlieren":
         # plot 2-norm of gradient of variable var:
-        (vx, vy) = pylab.gradient(var)
-        vs = pylab.sqrt(vx ** 2 + vy ** 2)
+        (vx, vy) = plt.gradient(var)
+        vs = plt.sqrt(vx ** 2 + vy ** 2)
 
-        pcolor_cmd = "pobj = pylab.pcolormesh(X_edge, Y_edge, vs, \
+        pcolor_cmd = "pobj = plt.pcolormesh(X_edge, Y_edge, vs, \
                         cmap=pp_schlieren_cmap"
 
         if pp_dict["pp_gridlines_show"]:
@@ -1047,13 +1047,13 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             if (pp_schlieren_cmin not in ["auto", None]) and (
                 pp_schlieren_cmax not in ["auto", None]
             ):
-                pylab.clim(pp_schlieren_cmin, pp_schlieren_cmax)
+                plt.clim(pp_schlieren_cmin, pp_schlieren_cmax)
 
     elif pp_dict["pp_plot_type"] == "2d_quiver":
         if pp_quiver_coarsening > 0:
             var_x = get_gridvar(grid, pp_quiver_var_x, 2, current_data).var
             var_y = get_gridvar(grid, pp_quiver_var_y, 2, current_data).var
-            Q = pylab.quiver(
+            Q = plt.quiver(
                 X_center[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 Y_center[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_x[::pp_quiver_coarsening, ::pp_quiver_coarsening],
@@ -1069,7 +1069,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 else:
                     key_scale = pp_quiver_key_scale
                 label = r"%s %s" % (str(np.ceil(key_scale)), pp_quiver_key_units)
-                pylab.quiverkey(
+                plt.quiverkey(
                     Q,
                     pp_quiver_key_label_x,
                     pp_quiver_key_label_y,
@@ -1095,7 +1095,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         for i in [0, X_edge.shape[0] - 1]:
             X1 = X_edge[i, :]
             Y1 = Y_edge[i, :]
-            pylab.plot(
+            plt.plot(
                 X1,
                 Y1,
                 pp_dict["pp_gridedges_color"],
@@ -1104,7 +1104,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         for i in [0, X_edge.shape[1] - 1]:
             X1 = X_edge[:, i]
             Y1 = Y_edge[:, i]
-            pylab.plot(
+            plt.plot(
                 X1,
                 Y1,
                 pp_dict["pp_gridedges_color"],
@@ -1245,12 +1245,12 @@ def printfig(fname="", frameno="", figno="", format="png", plotdir=".", verbose=
         fname = splitfname[0] + ".%s" % format
     if figno == "":
         figno = 1
-    pylab.figure(figno)
+    plt.figure(figno)
     if plotdir != ".":
         fname = os.path.join(plotdir, fname)
     if verbose:
         print(("    Saving plot to file ", fname))
-    pylab.savefig(fname)
+    plt.savefig(fname)
 
 
 # ======================================================================
@@ -1557,7 +1557,7 @@ def var_minmax(plotdata, framenos, vars):
 
     """
 
-    from pylab import inf
+    from plt import inf
 
     framenos = only_most_recent(framenos, plotdata.outdir)
     if len(framenos) == 0:
@@ -1783,9 +1783,9 @@ def call_setplot(setplot, plotdata, verbose=True):
 # ------------------------------------------------------------------
 def clawpack_header():
     # ------------------------------------------------------------------
-    pylab.axes([0.3, 0.8, 0.98, 1.0])
-    pylab.text(0.1, 0.13, "Clawpack Plots", fontsize=30, color="brown")
-    pylab.axis("off")
+    plt.axes([0.3, 0.8, 0.98, 1.0])
+    plt.text(0.1, 0.13, "Clawpack Plots", fontsize=30, color="brown")
+    plt.axis("off")
 
 
 # ------------------------------------------------------------------
