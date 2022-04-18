@@ -300,14 +300,13 @@ def plotframe(frameno, plotdata, verbose=False):
                     print("*** ClawPlotItem.afteritem is deprecated")
                     print("*** use ClawPlotAxes.afteraxes ")
                     print("*** or  ClawPlotItem.aftergrid instead")
-                try:
-                    if plotitem.add_colorbar:
-                        pobj = plotitem._current_pobj  # most recent plot object
-                        cb = plt.colorbar(pobj, ax=plotitem._gca_handle, **plotitem.colorbar_kwargs)
-                        if plotitem.colorbar_label is not None:
-                            cb.set_label(plotitem.colorbar_label)
-                except:
-                    pass
+
+                if plotitem.add_colorbar:
+                    pobj = plotitem._current_pobj  # most recent plot object
+                    cb = plt.colorbar(pobj, ax=plotitem._gca_handle, **plotitem.colorbar_kwargs)
+                    if plotitem.colorbar_label is not None:
+                        cb.set_label(plotitem.colorbar_label)
+
 
             if plotaxes.title_with_t:
                 if (t == 0.0) | ((t >= 0.001) & (t < 1000.0)):
