@@ -264,25 +264,27 @@ class Data(object):
             if not os.path.exists(filename):
                 raise Exception("No such data file: %s" % filename)
 
-            # self.logger.info("Reading from %s" % filename)
+            print("Reading from %s" % filename)
+            with open(filename, "r") as f:
+                lines = f.readlines()
 
-            for lineno, line in enumerate(file(filename)):
-                if "=:" not in line:
-                    continue
+                for lineno, line in enumerate(lines):
+                    if "=:" not in line:
+                        continue
 
-                value, tail = line.split("=:")
-                varname = tail.split()[0]
+                    value, tail = line.split("=:")
+                    varname = tail.split()[0]
 
-                oldval = getattr(self, varname, None)
-                newval = _parse_value(value)
-                if oldval is not None:
-                    vals = "(old=%r,new=%r)" % (oldval, newval)
-                    # self.logger.debug("Overwriting %s %s" % (varname, vals))
+                    oldval = getattr(self, varname, None)
+                    newval = _parse_value(value)
+                    if oldval is not None:
+                        vals = "(old=%r,new=%r)" % (oldval, newval)
+                        # self.logger.debug("Overwriting %s %s" % (varname, vals))
 
-                # if newval is None:
-                # self.logger.warning("Empty value for %s" % varname)
+                    # if newval is None:
+                    # self.logger.warning("Empty value for %s" % varname)
 
-                self.add_attribute(varname, newval, filename)
+                    self.add_attribute(varname, newval, filename)
 
     # ========== Write out the data from this object =========================
     def write(self, data_files=None, supplementary_file=None):

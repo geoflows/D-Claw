@@ -14,7 +14,7 @@ import traceback
 import numpy as np
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-from pyclaw.plotters.frametools import set_show
+from frametools import set_show
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
@@ -465,6 +465,9 @@ def plot_gauge_locations(
     format_string="ko",
     add_labels=True,
     markersize=5,
+    mfc=None,
+    mec=None,
+    mew=None,
     fontsize=15,
     xoffset=0,
     yoffset=0,
@@ -494,12 +497,21 @@ def plot_gauge_locations(
     if gaugenos == "all":
         gaugenos = setgauges.gaugenos
 
+    gauge_marker_kwargs = {}
+    if mew is not None:
+        gauge_marker_kwargs["mew"] = mew
+    if mfc is not None:
+        gauge_marker_kwargs["mfc"] = mfc
+    if mec is not None:
+        gauge_marker_kwargs["mec"] = mec
+
     for n in gaugenos:
         try:
             xn = setgauges.x[n]
             yn = setgauges.y[n]
             # print "Gauge %s:  x = %g, y = %g" % (n,xn,yn)
-            plot([xn], [yn], format_string, markersize=markersize)
+
+            plot([xn], [yn], format_string, markersize=markersize, **gauge_marker_kwargs)
             if add_labels:
                 xn = xn + xoffset
                 yn = yn + yoffset

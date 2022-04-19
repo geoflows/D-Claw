@@ -26,7 +26,7 @@ import matplotlib
 
 
 matplotlib.use("Agg")
-import pylab
+import matplotlib.pyplot as plt
 
 if sys.platform in ["win32", "cygwin"]:
     pypath = "C:/cygwin" + os.environ["CLAW"] + "/python"

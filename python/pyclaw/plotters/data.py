@@ -113,7 +113,8 @@ class ClawPlotData(Data):
         self.html_eagle = False  # use EagleClaw titles on html pages?
 
         self.gif_movie = False  # make animated gif movie of frames
-
+        self.ffmpeg_movie = False  # make animated mp4 movie with ffmpeg
+        self.ffmpeg_name = ""
         #    self.clear_figs = True          # give clf() command in each figure
         # before plotting each frame
 
@@ -255,11 +256,7 @@ class ClawPlotData(Data):
                 print(
                     (
                         "    Reading  Frame %s at t = %g  from outdir = %s"
-                        % (
-                            frameno,
-                            framesoln.t,
-                            outdir,
-                        )
+                        % (frameno, framesoln.t, outdir,)
                     )
                 )
             else:
@@ -747,6 +744,9 @@ class ClawPlotAxes(Data):
             "axescmd",
             "xlimits",
             "ylimits",
+            "extent",
+            "show_gages",
+            "gauge_kwargs",
             "plotitem_dict",
             "user",
             "afteraxes",
@@ -773,6 +773,15 @@ class ClawPlotAxes(Data):
         self.afteraxes = None
         self.xlimits = None
         self.ylimits = None
+        self.extent = None
+        self.show_gauges = False
+        self.gauge_kwargs = {}
+
+        self.show_region = False
+        self.region_list = []
+        self.region_color = "c"
+        self.region_linewidth = 0.2
+
         self.scaled = False  # true so x- and y-axis scaled same
         self.plotitem_dict = {}
         self.type = "each_frame"
@@ -912,6 +921,8 @@ class ClawPlotItem(Data):
             self.add_attribute("grid_bgcolor", "w")
             self.add_attribute("gridedges_show", 0)
             self.add_attribute("gridedges_color", "k")
+            self.add_attribute("gridedges_linewidth", 0.1)
+
             self.add_attribute("kwargs", {})
 
             if plot_type == "2d_pcolor":
@@ -923,6 +934,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("pcolor_cmin", None)
                 self.add_attribute("pcolor_cmax", None)
                 self.add_attribute("add_colorbar", True)
+                self.add_attribute("colorbar_kwargs", {})
+                self.add_attribute("colorbar_label")
 
             elif plot_type == "2d_imshow":
                 # from pylab import cm
@@ -932,7 +945,11 @@ class ClawPlotItem(Data):
                 self.add_attribute("imshow_cmap", colormaps.yellow_red_blue)
                 self.add_attribute("imshow_cmin", None)
                 self.add_attribute("imshow_cmax", None)
+                self.add_attribute("imshow_alpha", 1)
+                self.add_attribute("imshow_norm", None)
                 self.add_attribute("add_colorbar", True)
+                self.add_attribute("colorbar_kwargs", {})
+                self.add_attribute("colorbar_label")
 
             elif plot_type == "2d_contour":
                 self.add_attribute("contour_nlevels", 20)
@@ -943,6 +960,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("contour_color", "k")
                 self.add_attribute("contour_cmap", None)
                 self.add_attribute("add_colorbar", False)
+                self.add_attribute("colorbar_kwargs", {})
+                self.add_attribute("colorbar_label")
 
             elif plot_type == "2d_schlieren":
                 from pyclaw.plotters import colormaps
@@ -951,6 +970,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("schlieren_cmin", None)
                 self.add_attribute("schlieren_cmax", None)
                 self.add_attribute("add_colorbar", False)
+                self.add_attribute("colorbar_kwargs", {})
+                self.add_attribute("colorbar_label")
 
             elif plot_type == "2d_grid":
                 self.add_attribute("max_density", None)
@@ -966,7 +987,8 @@ class ClawPlotItem(Data):
                 self.add_attribute("quiver_key_units", "")
                 self.add_attribute("quiver_key_scale", None)
                 self.add_attribute("quiver_key_kwargs", {})
-
+            elif plot_type == "2d_hillshade":
+                pass
             else:
                 print(("*** Warning 2d plot type %s not recognized" % plot_type))
 

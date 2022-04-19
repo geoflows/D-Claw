@@ -230,7 +230,7 @@ In addition, topography can be specified at multiple scales. From the docs:
 
 > More than one topo file can be specified (see Topography data file parameters) that might cover overlapping regions at different resolutions. The union of all the topo files should cover the full computational domain specified (and may extend outside it). Internally in GeoClaw a single piecewise-bilinear function is constructed from the union of the topo files, using the best information available in regions of overlap. This function is then integrated over computational grid cells to obtain the single topo value in each grid cell needed when solving depth averaged equations such as the shallow water equations with these finite volume methods. Note that this has the feature that if a grid cell is refined at some stage in the computation, the topo used in the fine cells have an average value that is equal to the coarse cell value. This is crucial in maintaining the ocean-at-rest steady state, for example.
 
-Note. There may be some line ending requirements for .tt3 files. I'm not 100% sure, but I've had some issues fortran reading in topo files with files made on windows that are "fixed" when I read a .tt3 file into a python array and then back out to .tt3 using the topotools. 
+Note. There may be some line ending requirements for .tt3 files. I'm not 100% sure, but I've had some issues fortran reading in topo files with files made on windows that are "fixed" when I read a .tt3 file into a python array and then back out to .tt3 using the topotools.
 
 #### 2.5.2. Displacement
 This is unlikely to be used by D-Claw and is meant more for tsunami initiation.
@@ -395,6 +395,10 @@ where
     - 2 = norm(grad(flowgradevariable))
 
 If the `flowgradevalue` is exceeded then D-Claw will refine up to at least the level indicated by `flowgrademinlevel` unless refinement is limited by AMR refinement limits defined by AMR regions.
+
+If no flowgrades are specified, then D-Claw will use "tsunami-style" refinement based on the values specified in `geodata.depthdeep` and `geodata.maxleveldeep`. These define an area adjacent to the shoreline (up to waterlevel of `geodata.depthdeep`) where refinement can occur as specified by the regions. In deeper water, the level is limited to `geodata.maxleveldeep`.
+
+Flowgrades and tsunami-style refinement are implemented in a disjoint way. That is, you can use either flowgrades OR tsunami-style refinement, but not both. If flowgrades are specified, they will take precedence and tsunami-style refinement parameters will be ignored. 
 
 ### 2.10 Source terms and  the source .f90 file
 
