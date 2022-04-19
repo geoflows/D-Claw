@@ -636,7 +636,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_color:
             pp_kwargs["color"] = pp_color
 
-        plotcommand = "pobj=plt.plot(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
+        plotcommand = "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
         if pp_plot_show:
             exec(plotcommand)
 
@@ -645,7 +645,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_kwargs["color"] = pp_color
 
         plotcommand = (
-            "pobj=plt.semilogy(X_center,var,'%s', **pp_kwargs)" % pp_plotstyle
+            "pobj=plt.semilogy(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
         )
         if pp_plot_show:
             exec(plotcommand)
@@ -657,12 +657,12 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_fill_where = pp_fill_where.replace("plot_var", "var")
             pp_fill_where = pp_fill_where.replace("plot_var2", "var2")
             plotcommand = (
-                "pobj=plt.fill_between(X_center,var,var2,%s,**pp_kwargs)"
+                "pobj=plt.fill_between(X_center,var,var2,%s,**pp_dict['pp_kwargs'])"
                 % pp_fill_where
             )
 
         else:
-            plotcommand = "pobj=plt.fill_between(X_center,var,var2,**pp_kwargs)"
+            plotcommand = "pobj=plt.fill_between(X_center,var,var2,**pp_dict['pp_kwargs'])"
         if pp_plot_show:
             exec(plotcommand)
 
@@ -895,7 +895,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         pcolor_cmd = "pobj = plt.pcolormesh(X_edge, Y_edge, var, \
                         cmap=pp_dict['pp_pcolor_cmap']"
 
-        if pp_dict["pp_gridlines_show"]:
+        if pp_dict["_current_pobj"]:
             pcolor_cmd += ", edgecolors=pp_dict['pp_gridlines_color']"
         else:
             pcolor_cmd += ", shading='flat'"
@@ -1002,7 +1002,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
             if (pp_dict["pp_kwargs"] is None) or ("colors" not in pp_dict["pp_kwargs"]):
                 contourcmd += ", colors = pp_dict['pp_contour_colors']"
 
-        contourcmd += ", **pp_kwargs)"
+        contourcmd += ", **pp_dict['pp_kwargs'])"
 
         if pp_dict["pp_contour_show"] and not var_all_masked:
             # may suppress plotting at coarse levels
@@ -1041,7 +1041,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         else:
             pcolor_cmd += ", edgecolors='None'"
 
-        pcolor_cmd += ", **pp_kwargs)"
+        pcolor_cmd += ", **pp_dict['pp_kwargs'])"
 
         if not var_all_masked:
             exec(pcolor_cmd)
@@ -1060,7 +1060,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 Y_center[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_x[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_y[::pp_quiver_coarsening, ::pp_quiver_coarsening],
-                **pp_kwargs
+                **pp_dict['pp_kwargs']
             )
             # units=pp_quiver_units,scale=pp_quiver_scale)
 
