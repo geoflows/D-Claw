@@ -746,9 +746,7 @@ class ClawPlotAxes(Data):
             "ylimits",
             "extent",
             "show_gages",
-            "label_gauges",
-            "gauge_marker_kwargs",
-            "gauge_label_kwargs",
+            "gauge_kwargs",
             "plotitem_dict",
             "user",
             "afteraxes",
@@ -777,15 +775,7 @@ class ClawPlotAxes(Data):
         self.ylimits = None
         self.extent = None
         self.show_gauges = False
-        self.label_gauges = False
-        self.gauge_marker_kwargs = {
-            "marker": "D",
-            "ms": 3,
-            "mfc": "white",
-            "mec": "black",
-            "mew": 0.2,
-        }
-        self.gauge_marker_text_kwargs = {"ha": "center", "va": "center", "fontsize": 3}
+        self.gauge_kwargs = {}
 
         self.show_region = False
         self.region_list = []

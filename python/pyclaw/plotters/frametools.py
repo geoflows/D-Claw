@@ -15,8 +15,9 @@ import traceback
 import numpy as np
 from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
 from matplotlib.colors import LightSource, Normalize
-from pyclaw.data import Data
-from pyclaw.plotters import plotpages
+from data import Data
+import plotpages
+import gaugetools
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
@@ -322,12 +323,9 @@ def plotframe(frameno, plotdata, verbose=False):
                 plt.axis("scaled")
 
             if plotaxes.show_gauges:
-                for gaugeno, ginfo in gauge_data.items():
-                    x = ginfo["x"]
-                    y = ginfo["y"]
-                    plt.plot(x, y, **plotaxes.gauge_marker_kwargs)
-                    if plotaxes.label_gauges:
-                        plt.text(x, y, gaugeno, **plotaxes.gauge_marker_text_kwargs)
+                gaugetools.plot_gauge_locations(
+                    plotdata,
+                    **plotaxes.gauge_kwargs)
 
             if plotaxes.show_region:
                 for regionno in plotaxes.region_list:
