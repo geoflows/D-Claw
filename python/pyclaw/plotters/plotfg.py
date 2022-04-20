@@ -19,7 +19,7 @@ from pyclaw.data import Data
 from pyclaw.plotters import colormaps, geoplot, plotpages
 from pylab import *
 
-from .plottools import fix_long_tick_labels
+from pyclaw.plotters.plottools import fix_long_tick_labels
 
 
 class ClawPlotFGData(Data):

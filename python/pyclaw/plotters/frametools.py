@@ -15,9 +15,9 @@ import traceback
 import numpy as np
 from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
 from matplotlib.colors import LightSource, Normalize
-from data import Data
-import plotpages
-import gaugetools
+from pyclaw.plotters.data import Data
+import pyclaw.plotters.plotpages
+import pyclaw.plotters.gaugetools
 
 plotter = "matplotlib"
 if plotter == "matplotlib":

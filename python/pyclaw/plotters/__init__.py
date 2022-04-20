@@ -12,4 +12,17 @@ import logging
 
 # from ascii import read_ascii,write_ascii
 # __all__ = ['read_ascii','write_ascii']
-__all__ = ["frametools", "data", "Iplotclaw", "colormaps", "plotpages", "plotclaw"]
+__all__ = [
+    "frametools",
+    "data",
+    "Iplotclaw",
+    "colormaps",
+    "plotpages",
+    "plotclaw",
+    "gaugetools",
+    "geoplot",
+    "multiframetools",
+    "plotclaw",
+    "plotfg",
+    "plotpages",
+    "plotttools"]

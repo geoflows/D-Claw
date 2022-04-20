@@ -14,7 +14,7 @@ import traceback
 import numpy as np
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-from frametools import set_show
+import pyclaw.plotters.frametools
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
@@ -118,7 +118,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         requested_fignos = plotdata.print_fignos
     plotted_fignos = []
 
-    plotdata = set_show(plotdata)  # set _show attributes for which figures
+    plotdata = frametools.set_show(plotdata)  # set _show attributes for which figures
     # and axes should be shown.
 
     # loop over figures to appear for this gauge:
@@ -620,7 +620,7 @@ def printgauges(plotdata=None, verbose=True):
         #    fignos.append(plotfigure.figno)
 
     # filter out the fignos that will be empty, i.e.  plotfigure._show=False.
-    plotdata = set_show(plotdata)
+    plotdata = frametools.set_show(plotdata)
     fignos_to_show = []
     for figname in plotdata._fignames:
         figno = plotdata.plotfigure_dict[figname].figno
