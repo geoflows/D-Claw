@@ -12,9 +12,9 @@ import time
 import traceback
 
 import numpy as np
+import pyclaw.plotters.frametools
 from pyclaw.data import Data
 from pyclaw.plotters import plotpages
-import pyclaw.plotters.frametools
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
