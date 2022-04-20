@@ -1,5 +1,5 @@
 # This is not yet ready for use!
-import pyclaw.plotters.frametools
+from pyclaw.plotters import frametools
 
 
 # ==========================================
