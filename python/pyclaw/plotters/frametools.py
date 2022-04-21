@@ -893,7 +893,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         pcolor_cmd = "pobj = plt.pcolormesh(X_edge, Y_edge, var, \
                         cmap=pp_dict['pp_pcolor_cmap']"
 
-        if pp_dict["_current_pobj"]:
+        if hasattr(plotitem, "_current_pobj"):
             pcolor_cmd += ", edgecolors=pp_dict['pp_gridlines_color']"
         else:
             pcolor_cmd += ", shading='flat'"
