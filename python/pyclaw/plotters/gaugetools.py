@@ -476,7 +476,7 @@ def plot_gauge_locations(
     produced by running the code.
     """
 
-    from plt import clf, figure, plot, text, title
+    from matplotlib.pyplot import clf, figure, plot, text, title
 
     datadir = plotdata.outdir  # this should contain setgauges.data
 
