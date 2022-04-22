@@ -12,15 +12,16 @@ import time
 import traceback
 
 import numpy as np
-from pyclaw.plotters import frametools
+
 from pyclaw.data import Data
-from pyclaw.plotters import plotpages
+from pyclaw.plotters import frametools, plotpages
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
     if "matplotlib" not in sys.modules:
         try:
             import matplotlib
+
             matplotlib.use("Agg")  # Use an image backend
         except:
             print("*** Error: problem importing matplotlib")
@@ -342,7 +343,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     # The plot commands using matplotlib:
 
-    #plt.hold(True)
+    # plt.hold(True)
 
     plt.title("%s at Gauge %i" % (plotitem._plotaxes.title, gaugesoln.gaugeno))
 
@@ -506,7 +507,9 @@ def plot_gauge_locations(
             yn = setgauges.y[n]
             # print "Gauge %s:  x = %g, y = %g" % (n,xn,yn)
 
-            plot([xn], [yn], format_string, markersize=markersize, **gauge_marker_kwargs)
+            plot(
+                [xn], [yn], format_string, markersize=markersize, **gauge_marker_kwargs
+            )
             if add_labels:
                 xn = xn + xoffset
                 yn = yn + yoffset

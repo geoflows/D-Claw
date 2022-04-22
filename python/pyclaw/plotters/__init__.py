@@ -25,4 +25,5 @@ __all__ = [
     "plotclaw",
     "plotfg",
     "plotpages",
-    "plotttools"]
+    "plotttools",
+]

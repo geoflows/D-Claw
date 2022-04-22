@@ -934,7 +934,10 @@ def plots2latex(plot_pages_data):
             print(
                 (
                     "\nSuccessfully created pdf file:  %s/%s.pdf"
-                    % (plotdir, ppd.latex_fname,)
+                    % (
+                        plotdir,
+                        ppd.latex_fname,
+                    )
                 )
             )
         except:
@@ -2058,6 +2061,7 @@ def plotclaw_driver(plotdata, verbose=False):
     import sys
 
     import numpy as np
+
     from pyclaw.plotters import frametools, gaugetools, plotpages
     from pyclaw.plotters.data import ClawPlotData
 
@@ -2256,14 +2260,25 @@ def plotclaw_driver(plotdata, verbose=False):
                 raise ImportError("joblib needed for parallel functionality")
 
             for frameno in framenos:
-                print(("Parallel: Frame %i at time t = %s" % (frameno, frametimes[frameno])))
+                print(
+                    (
+                        "Parallel: Frame %i at time t = %s"
+                        % (frameno, frametimes[frameno])
+                    )
+                )
 
-            Parallel(n_jobs=plotdata.num_cores)(delayed(frametools.plotframe)(frameno, plotdata, verbose) for frameno in framenos)
+            Parallel(n_jobs=plotdata.num_cores)(
+                delayed(frametools.plotframe)(frameno, plotdata, verbose)
+                for frameno in framenos
+            )
 
             for gaugeno in gaugenos:
                 print(("Parallel: Gauge %i " % gaugeno))
 
-            Parallel(n_jobs=plotdata.num_cores)(delayed(gaugetools.plotgauge)(gaugeno, plotdata, verbose) for gaugeno in gaugenos)
+            Parallel(n_jobs=plotdata.num_cores)(
+                delayed(gaugetools.plotgauge)(gaugeno, plotdata, verbose)
+                for gaugeno in gaugenos
+            )
 
         else:
             for frameno in framenos:

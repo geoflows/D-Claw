@@ -19,6 +19,7 @@ import os
 import sys
 
 import numpy as np
+
 import pyclaw.solution
 from pyclaw.util import read_data_line
 

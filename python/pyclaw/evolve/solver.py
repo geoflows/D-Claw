@@ -20,6 +20,7 @@ import sys
 import time
 
 import numpy as np
+
 # Clawpack modules
 from pyclaw.data import Data
 

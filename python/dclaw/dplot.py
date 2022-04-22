@@ -5,6 +5,7 @@ Useful things for plotting GeoClaw results.
 import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
+
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -601,6 +602,7 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
+
     from pyclaw.data import Data
 
     fname = topoplotdata.fname
@@ -660,7 +662,11 @@ def plot_topo_file(topoplotdata):
         if 0:
             topo = []
             for i in range(nrows):
-                topo.append(pylab.array(lines[6 + i],))
+                topo.append(
+                    pylab.array(
+                        lines[6 + i],
+                    )
+                )
             print(("+++ topo = ", topo))
             topo = pylab.array(topo)
 

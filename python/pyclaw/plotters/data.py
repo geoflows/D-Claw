@@ -116,8 +116,8 @@ class ClawPlotData(Data):
         self.ffmpeg_movie = False  # make animated mp4 movie with ffmpeg
         self.ffmpeg_name = ""
 
-        self.parallel = False # make gauge and frames in parallel
-        self.num_cores = 8 # num cores for parallelization.
+        self.parallel = False  # make gauge and frames in parallel
+        self.num_cores = 8  # num cores for parallelization.
         #    self.clear_figs = True          # give clf() command in each figure
         # before plotting each frame
 
@@ -259,7 +259,11 @@ class ClawPlotData(Data):
                 print(
                     (
                         "    Reading  Frame %s at t = %g  from outdir = %s"
-                        % (frameno, framesoln.t, outdir,)
+                        % (
+                            frameno,
+                            framesoln.t,
+                            outdir,
+                        )
                     )
                 )
             else:
@@ -390,6 +394,7 @@ class ClawPlotData(Data):
         from io import StringIO
 
         import numpy as np
+
         from pyclaw.plotters import gaugetools
 
         fname = os.path.join(outdir, "fort.gauge")

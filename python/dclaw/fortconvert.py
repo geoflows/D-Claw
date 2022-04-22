@@ -44,8 +44,9 @@ import copy
 import os
 import string
 
-import dclaw.topotools as gt
 import numpy as np
+
+import dclaw.topotools as gt
 
 
 # ================================================================================
@@ -492,7 +493,11 @@ def fort2uniform(
                     )
 
                 gt.griddata2gtif(
-                    X, Y, Q_out, outfile, epsg=epsg,
+                    X,
+                    Y,
+                    Q_out,
+                    outfile,
+                    epsg=epsg,
                 )
 
             else:

@@ -6,11 +6,12 @@ import fiona
 import numpy as np
 import rasterio
 import rasterio.transform
-from dclaw.fortconvert import convertfortdir
-from dclaw.get_data import get_dig_data, get_region_data
 from rasterio import features
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
+
+from dclaw.fortconvert import convertfortdir
+from dclaw.get_data import get_dig_data, get_region_data
 
 
 def main():
@@ -191,8 +192,7 @@ def main():
     for file in files:
         numstr = os.path.basename(file)[6:]
         tifname = os.path.join(
-            ".",
-            *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
+            ".", *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
         )
         if os.path.exists(tifname) and args.check_done:
             mtime_fort = os.path.getmtime(file)

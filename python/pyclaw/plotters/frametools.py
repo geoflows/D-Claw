@@ -13,10 +13,11 @@ import time
 import traceback
 
 import numpy as np
+from matplotlib.colors import LightSource, Normalize
+
 import pyclaw.plotters.gaugetools as gaugetools
 import pyclaw.plotters.plotpages as plotpages
 from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
-from matplotlib.colors import LightSource, Normalize
 from pyclaw.plotters.data import Data
 
 plotter = "matplotlib"
@@ -305,7 +306,9 @@ def plotframe(frameno, plotdata, verbose=False):
                 if plotitem.add_colorbar:
                     if hasattr(plotitem, "_current_pobj"):
                         pobj = plotitem._current_pobj  # most recent plot object
-                        cb = plt.colorbar(pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs)
+                        cb = plt.colorbar(
+                            pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs
+                        )
                         if plotitem.colorbar_label is not None:
                             cb.set_label(plotitem.colorbar_label)
                     else:
@@ -323,9 +326,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 plt.axis("scaled")
 
             if plotaxes.show_gauges:
-                gaugetools.plot_gauge_locations(
-                    plotdata,
-                    **plotaxes.gauge_kwargs)
+                gaugetools.plot_gauge_locations(plotdata, **plotaxes.gauge_kwargs)
 
             if plotaxes.show_region:
                 for regionno in plotaxes.region_list:
@@ -634,7 +635,9 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_color:
             pp_kwargs["color"] = pp_color
 
-        plotcommand = "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+        plotcommand = (
+            "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+        )
         if pp_plot_show:
             exec(plotcommand)
 
@@ -643,7 +646,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_kwargs["color"] = pp_color
 
         plotcommand = (
-            "pobj=plt.semilogy(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+            "pobj=plt.semilogy(X_center,var,'%s', **pp_dict['pp_kwargs'])"
+            % pp_plotstyle
         )
         if pp_plot_show:
             exec(plotcommand)
@@ -660,14 +664,16 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             )
 
         else:
-            plotcommand = "pobj=plt.fill_between(X_center,var,var2,**pp_dict['pp_kwargs'])"
+            plotcommand = (
+                "pobj=plt.fill_between(X_center,var,var2,**pp_dict['pp_kwargs'])"
+            )
         if pp_plot_show:
             exec(plotcommand)
 
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
 
         gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[:, -1] # plot eta by default here.
+        gaugeq = gaugesoln.q[:, -1]  # plot eta by default here.
         plotcommand = "pobj=plt.plot(gauget, gaugeq)"
         if pp_plot_show:
             exec(plotcommand)
@@ -739,6 +745,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     """
 
     import numpy as np
+
     from pyclaw.plotters import colormaps
 
     plotdata = plotitem._plotdata
@@ -940,9 +947,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this.
                 plt.plot(X_edge, Y_edge, color=pp_dict["pp_gridlines_color"])
-                plt.plot(
-                    X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"]
-                )
+                plt.plot(X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"])
 
         else:
             # print '*** Not doing imshow on totally masked array'
@@ -1058,7 +1063,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 Y_center[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_x[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_y[::pp_quiver_coarsening, ::pp_quiver_coarsening],
-                **pp_dict['pp_kwargs']
+                **pp_dict["pp_kwargs"]
             )
             # units=pp_quiver_units,scale=pp_quiver_scale)
 
