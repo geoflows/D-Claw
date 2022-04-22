@@ -2248,13 +2248,31 @@ def plotclaw_driver(plotdata, verbose=False):
     else:
         print("Now making png files for all figures...")
 
-        for frameno in framenos:
-            frametools.plotframe(frameno, plotdata, verbose)
-            print(("Frame %i at time t = %s" % (frameno, frametimes[frameno])))
+        # this is the part to parallelize:
+        if plotdata.parallel:
+            try:
+                from joblib import Parallel, delayed
+            except ImportError:
+                raise ImportError("joblib needed for parallel functionality")
 
-        for gaugeno in gaugenos:
-            gaugetools.plotgauge(gaugeno, plotdata, verbose)
-            print(("Gauge %i " % gaugeno))
+            for frameno in framenos:
+                print(("Parallel: Frame %i at time t = %s" % (frameno, frametimes[frameno])))
+
+            Parallel(n_jobs=plotdata.num_cores)(delayed(frametools.plotframe)(frameno, plotdata, verbose) for frameno in framenos)
+
+            for gaugeno in gaugenos:
+                print(("Parallel: Gauge %i " % gaugeno))
+
+            Parallel(n_jobs=plotdata.num_cores)(delayed(gaugetools.plotgauge)(gaugeno, plotdata, verbose) for gaugeno in gaugenos)
+
+        else:
+            for frameno in framenos:
+                frametools.plotframe(frameno, plotdata, verbose)
+                print(("Frame %i at time t = %s" % (frameno, frametimes[frameno])))
+
+            for gaugeno in gaugenos:
+                gaugetools.plotgauge(gaugeno, plotdata, verbose)
+                print(("Gauge %i " % gaugeno))
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
