@@ -13,8 +13,8 @@ import time
 import traceback
 
 import numpy as np
-import pyclaw.plotters.gaugetools
-import pyclaw.plotters.plotpages
+import pyclaw.plotters.gaugetools as gaugetools
+import pyclaw.plotters.plotpages as plotpages
 from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
 from matplotlib.colors import LightSource, Normalize
 from pyclaw.plotters.data import Data
@@ -667,7 +667,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
 
         gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[:, -1] # plot eta by default here. 
+        gaugeq = gaugesoln.q[:, -1] # plot eta by default here.
         plotcommand = "pobj=plt.plot(gauget, gaugeq)"
         if pp_plot_show:
             exec(plotcommand)
