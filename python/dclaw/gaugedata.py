@@ -21,7 +21,6 @@ gaugedata
 import os
 import string
 
-import matplotlib.mlab as mlab
 import matplotlib.pyplot as pyplot
 import numpy as np
 from pylab import *  # I regret this import...need to clean-up at some point
@@ -67,12 +66,12 @@ def fortgaugeread(datafile="fort.gauge", setgaugefile="setgauges.data"):
     allgaugedata = []
 
     for n in range(mgauges):
-        onegaugedata = data[mlab.find(data[:, 0] == int(gaugelocs[n][0]))]
+        onegaugedata = data[[np.flatnonzero((data[:, 0] == int(gaugelocs[n][0]))]
         dict = {}
         dict["gauge"] = int(gaugelocs[n][0])
         dict["x"] = float(gaugelocs[n][1])
         dict["y"] = float(gaugelocs[n][2])
-        onegaugedata = data[mlab.find(data[:, 0] == dict["gauge"])]
+        onegaugedata = data[np.flatnonzero((data[:, 0] == dict["gauge"])
         dict["level"] = onegaugedata[:, 1]
         dict["t"] = onegaugedata[:, 2]
         dict["mq"] = len(onegaugedata[0]) - 3
@@ -319,7 +318,7 @@ def samplesinglegauge(ingauge, ntimes, t0=-inf, tend=+inf, output=True, outname=
             for key in keylist:
                 sampledat[key].append(gaugedata[key][-1])
         else:
-            itm = mlab.find(gaugedata["t"] < tn)[-1]
+            itm = np.flatnonzero((gaugedata["t"] < tn)[-1]
             itp = itm + 1
             tm = gaugedata["t"][itm]
             tp = gaugedata["t"][itp]

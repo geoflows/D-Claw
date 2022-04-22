@@ -667,7 +667,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
 
         gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[:, 3]
+        gaugeq = gaugesoln.q[:, -1] # plot eta by default here. 
         plotcommand = "pobj=plt.plot(gauget, gaugeq)"
         if pp_plot_show:
             exec(plotcommand)

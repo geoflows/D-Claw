@@ -387,10 +387,9 @@ class ClawPlotData(Data):
         from io import StringIO
 
         import numpy as np
-        from matplotlib.mlab import find
         from pyclaw.plotters import gaugetools
 
-        fname = outdir + "/fort.gauge"
+        fname = os.path.join(outdir, "fort.gauge")
         if not os.path.isfile(fname):
             print(("*** Gauge file not found: ", fname))
             gauges = {}
@@ -430,14 +429,13 @@ class ClawPlotData(Data):
         q = gdata[:, 3:]  # all remaining columns are stored in q
 
         setgauges = gaugetools.read_setgauges(datadir=outdir)
-
         gauges = {}
         gaugenos = set(gaugeno)  # reduces to unique elements
         for n in gaugenos:
             n = int(n)
             gauges[n] = GaugeSolution()
             gauges[n].gaugeno = n
-            nn = find(gaugeno == n)
+            nn = np.flatnonzero(gaugeno == n)
             gauges[n].level = level[nn]
             gauges[n].t = t[nn]
             gauges[n].q = q[nn, :]
