@@ -434,7 +434,6 @@ def plotframe(frameno, plotdata, verbose=False):
                 plotdir=plotdata.plotdir,
                 verbose=verbose,
             )
-
     return current_data
 
     # end of plotframe
@@ -1250,12 +1249,15 @@ def printfig(fname="", frameno="", figno="", format="png", plotdir=".", verbose=
         fname = splitfname[0] + ".%s" % format
     if figno == "":
         figno = 1
-    plt.figure(figno)
+    f = plt.figure(figno)
     if plotdir != ".":
         fname = os.path.join(plotdir, fname)
     if verbose:
         print(("    Saving plot to file ", fname))
     plt.savefig(fname)
+    f.clear()
+    plt.close(f)
+
 
 
 # ======================================================================
