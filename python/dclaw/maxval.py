@@ -202,7 +202,7 @@ def main():
                 try:
                     with rasterio.open(tifname, "r"):
                         pass # test this more?
-                else:
+                except:
                     process = True
                     # if can't be opened, re-write.
             else:
