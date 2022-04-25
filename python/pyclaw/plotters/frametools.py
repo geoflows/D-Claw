@@ -315,10 +315,21 @@ def plotframe(frameno, plotdata, verbose=False):
                         print("Could not make colorbar. No active pobj.")
 
             if plotaxes.title_with_t:
-                if (t == 0.0) | ((t >= 0.001) & (t < 1000.0)):
-                    plt.title("%s at time t = %14.8f" % (plotaxes.title, t))
+
+                if plotaxes.title_t_units == "minutes":
+                    tshow = t/60.
+                    unit = "min"
+                elif plotaxes.title_t_units == "hours":
+                    tshow = t/3600.
+                    unit = "hr"
                 else:
-                    plt.title("%s at time t = %14.8e" % (plotaxes.title, t))
+                    tshow = t
+                    unit = "sec"
+
+                if (tshow == 0.0) | ((tshow >= 0.001) & (tshow < 1000.0)):
+                    plt.title("%s at time t = %14.8f %s" % (plotaxes.title, tshow, unit))
+                else:
+                    plt.title("%s at time t = %14.8e  %s" % (plotaxes.title, tshow, unit))
             else:
                 plt.title(plotaxes.title)
 

@@ -772,6 +772,7 @@ class ClawPlotAxes(Data):
         self.name = name
         self.title = name
         self.title_with_t = True  # creates title of form 'title at time t = ...'
+        self.title_t_units = None
         self.axescmd = "subplot(1,1,1)"
         self.user = Data()  # for user to pass things into
         # afteraxes, for example
