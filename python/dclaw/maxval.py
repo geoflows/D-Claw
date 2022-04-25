@@ -201,10 +201,10 @@ def main():
                 process = False
                 try:
                     with rasterio.open(tifname, "r"):
-                        pass
+                        pass # test this more?
                 else:
                     process = True
-                    # if can't be opened, re-write. 
+                    # if can't be opened, re-write.
             else:
                 process = True
         else:
