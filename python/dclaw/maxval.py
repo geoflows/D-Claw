@@ -199,6 +199,12 @@ def main():
             mtime_tif = os.path.getmtime(tifname)
             if mtime_tif > mtime_fort:
                 process = False
+                try:
+                    with rasterio.open(tifname, "r"):
+                        pass
+                else:
+                    process = True
+                    # if can't be opened, re-write. 
             else:
                 process = True
         else:
