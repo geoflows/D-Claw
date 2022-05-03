@@ -10,8 +10,8 @@ from rasterio import features
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
-from dclaw.fortconvert import convertfortdir
-from dclaw.get_data import get_dig_data, get_region_data
+from dclaw.fortconvert import convertfortdir, fort2list
+from dclaw.get_data import get_dig_data, get_region_data, get_amr2ez_data
 
 
 def main():
@@ -166,6 +166,12 @@ def main():
     args = parser.parse_args()
 
     # do some checking with the region.
+    amrdata = get_amr2ez_data(args.wdir, args.odir)
+    # full extent.
+    xhi = amrdata["xupper"]
+    yhi = amrdata["yupper"]
+    xlow = amrdata["xlower"]
+    ylow = amrdata["ylower"]
 
     if args.region is not None:
         region_data = get_region_data(args.wdir, args.odir)
@@ -178,13 +184,57 @@ def main():
         east = args.east
         south = args.south
         north = args.north
+        if west is None:
+            west = xlow
+        if east is None:
+            east  = xhi
+        if south is None:
+            south = ylow
+        if north is None:
+            north = yhi
+
+    # get smallest cell size
+    coarse_dx = (xhi - xlow) / amrdata["mx"]
+    coarse_dy = (yhi - ylow) / amrdata["my"]
+    fine_dx = coarse_dx
+    fine_dy = coarse_dy
+    for factor in amrdata["inratx"]:
+        fine_dx /= factor
+    for factor in amrdata["inraty"]:
+        fine_dy /= factor
+
+    mx = int((xhi - xlow) / fine_dx)
+    my = int((yhi - ylow) / fine_dy)
+    #print(my, mx)
+    #print(xlow, xhi)
+    #print(ylow, yhi)
+    # snap values to the grid.
+    if east is not None or west is not None:
+        xs = np.linspace(xlow, xhi, mx)
+        if east is not None:
+            xhi = np.max(xs[xs < east])
+        if west is not None:
+            xlow = np.min(xs[xs > west])
+        mx = int((xhi - xlow) / fine_dx)
+    if north is not None or south is not None:
+        ys = np.linspace(ylow, yhi, my)
+        if north is not None:
+            yhi = np.max(ys[ys < north])
+        if south is not None:
+            ylow = np.min(ys[ys > south])
+        my = int((yhi - ylow) / fine_dy)
+
+    #print(my, mx)
+    #print(xlow, xhi)
+    #print(ylow, yhi)
     # make output dir
     if not os.path.exists(os.path.join(args.wdir, args.gdir)):
         os.mkdir(os.path.join(args.wdir, args.gdir))
 
     # check which files to convert. Could do a temporal filter here..
-    files = glob.glob(os.path.join(args.wdir, *[args.odir, "fort.q*"]))
-    ntifs = glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"]))
+    # get all files.
+    files = np.sort(glob.glob(os.path.join(args.wdir, *[args.odir, "fort.q*"])))
+    ntifs = np.sort(glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"])))
 
     nfiles = []
 
@@ -230,10 +280,12 @@ def main():
             topotype="gtif",
             write_level=True,
             epsg=args.epsg,
-            west=west,
-            east=east,
-            south=south,
-            north=north,
+            xlow=xlow,
+            xhi=xhi,
+            ylow=ylow,
+            yhi=yhi,
+            mx=mx,
+            my=my,
         )
 
     dig_data = get_dig_data(args.wdir, args.odir)
