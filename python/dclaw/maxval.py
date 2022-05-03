@@ -187,7 +187,7 @@ def main():
         if west is None:
             west = xlow
         if east is None:
-            east  = xhi
+            east = xhi
         if south is None:
             south = ylow
         if north is None:
@@ -205,9 +205,9 @@ def main():
 
     mx = int((xhi - xlow) / fine_dx)
     my = int((yhi - ylow) / fine_dy)
-    #print(my, mx)
-    #print(xlow, xhi)
-    #print(ylow, yhi)
+    # print(my, mx)
+    # print(xlow, xhi)
+    # print(ylow, yhi)
     # snap values to the grid.
     if east is not None or west is not None:
         xs = np.linspace(xlow, xhi, mx)
@@ -224,9 +224,9 @@ def main():
             ylow = np.min(ys[ys > south])
         my = int((yhi - ylow) / fine_dy)
 
-    #print(my, mx)
-    #print(xlow, xhi)
-    #print(ylow, yhi)
+    # print(my, mx)
+    # print(xlow, xhi)
+    # print(ylow, yhi)
     # make output dir
     if not os.path.exists(os.path.join(args.wdir, args.gdir)):
         os.mkdir(os.path.join(args.wdir, args.gdir))
@@ -251,7 +251,7 @@ def main():
                 process = False
                 try:
                     with rasterio.open(tifname, "r"):
-                        pass # test this more?
+                        pass  # test this more?
                 except:
                     process = True
                     # if can't be opened, re-write.
@@ -269,7 +269,7 @@ def main():
         print("Processing {} files: {}".format(len(nfiles), nfiles))
 
         convertfortdir(
-            "fortrefined",
+            "fortuniform",
             nplots=nfiles,
             outputname="fort_q",
             components="all",
@@ -280,10 +280,10 @@ def main():
             topotype="gtif",
             write_level=True,
             epsg=args.epsg,
-            xlow=xlow,
-            xhi=xhi,
-            ylow=ylow,
-            yhi=yhi,
+            xlower=xlow,
+            xupper=xhi,
+            ylower=ylow,
+            yupper=yhi,
             mx=mx,
             my=my,
         )
@@ -527,8 +527,11 @@ def dclaw2maxval_withlev(
         for i, (s, v) in enumerate(
             features.shapes(extent.astype(np.int16), mask=extent, transform=transform)
         ):
-            geoms.append(shape(s))
+            shp = shape(s).buffer(0)
+            if shp.is_valid == True:
+                geoms.append(shp)
         out_shp = unary_union(geoms).buffer(0)
+
         assert out_shp.is_valid == True
         with fiona.open(
             extent_shp_val_out_file,
