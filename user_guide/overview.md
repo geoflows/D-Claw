@@ -138,6 +138,8 @@ Only way in which AMR "cares" about topo resolution is that if multiple topograp
 
 Note, the min and max AMR levels defined when topo and qinit files are initialized define AMR "regions" of the permissible refinement levels. See discussion of "regions" below.
 
+If more than one topography file is provided at the same resolution for an overlapping part of the domain, the file that is provided last to the list will be used. 
+
 ### 1.8 Overspecification
 
 Text from Dave: Redundancy/overspecification: there is no error catching for this, which might be useful in the future. However, it would require location overlap checks, because often a variable might be set by different methods for different parts of the domain. (e.g., it might be useful to set water depth for a lake using eta and landslide material using h, etc.). Ideally, qinitfiles should override the default values...however, pressure will need some attention to make sure that's the case...currently, it should be the case for h,hu,hv,m. There are no error checks for incompatible qinitfiles...that could be useful and not too painful to do with qinitfile overlap checks. Currently, in regions where there are no qinitfiles, the defaults are used (aside from pressure, which is about to undergo changes to handle the very issues you raise).
@@ -398,7 +400,7 @@ If the `flowgradevalue` is exceeded then D-Claw will refine up to at least the l
 
 If no flowgrades are specified, then D-Claw will use "tsunami-style" refinement based on the values specified in `geodata.depthdeep` and `geodata.maxleveldeep`. These define an area adjacent to the shoreline (up to waterlevel of `geodata.depthdeep`) where refinement can occur as specified by the regions. In deeper water, the level is limited to `geodata.maxleveldeep`.
 
-Flowgrades and tsunami-style refinement are implemented in a disjoint way. That is, you can use either flowgrades OR tsunami-style refinement, but not both. If flowgrades are specified, they will take precedence and tsunami-style refinement parameters will be ignored. 
+Flowgrades and tsunami-style refinement are implemented in a disjoint way. That is, you can use either flowgrades OR tsunami-style refinement, but not both. If flowgrades are specified, they will take precedence and tsunami-style refinement parameters will be ignored.
 
 ### 2.10 Source terms and  the source .f90 file
 
