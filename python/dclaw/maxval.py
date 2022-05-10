@@ -233,14 +233,15 @@ def main():
 
     # check which files to convert. Could do a temporal filter here..
     # get all files.
-    files = np.sort(glob.glob(os.path.join(args.wdir, *[args.odir, "fort.q*"])))
+    tfiles = np.sort(glob.glob(os.path.join(args.wdir, *[args.odir, "fort.t*"])))
     ntifs = np.sort(glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"])))
 
     nfiles = []
 
     # print(args.check_done)
-    for file in files:
-        numstr = os.path.basename(file)[6:]
+    for tfile in tfiles:
+        file = tfile.replace("fort.t", "fort.q")
+        numstr = os.path.basename(tfile)[6:]
         tifname = os.path.join(
             ".", *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
         )
