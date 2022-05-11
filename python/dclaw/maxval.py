@@ -340,7 +340,10 @@ def dclaw2maxval_withlev(
     amrdata = get_amr2ez_data(wdir, odir)
     mxnest = amrdata['mxnest'] # max number of levels.
     maxlevel = np.abs(mxnest)
-    overwrite_level = overwrite_level or (maxlevel + 1)
+    print("****** maxlevel is ", maxlevel)
+
+    overwrite_level = overwrite_level or maxlevel
+    print("****** overwrite_level is ", overwrite_level)
 
     out_file = out_file or os.path.join(wdir, "maxval.tif")
     extent_shp_val_out_file = extent_shp_val_out_file or os.path.join(
@@ -423,8 +426,6 @@ def dclaw2maxval_withlev(
                 density = (1.0 - m) * rho_f + (m * rho_s)
                 mom = (h * dx * dx) * density * vel
 
-                maxlevel = level.max()
-
                 # keep track of max level anywhere.
                 lev_max[level > lev_max] = level[level > lev_max]
 
@@ -473,7 +474,7 @@ def dclaw2maxval_withlev(
                 # set a max.
                 # set arrival time to the first timestep that has eta>0.01 and highest level.
                 overwrite_arrival = (
-                    (eta > 0.01) & (arrival_time < 0) & (level == maxlevel)
+                    (eta > 0.01) & (arrival_time < 0) & (level >= overwrite_level)
                 )
 
                 arrival_time[overwrite_arrival] = time
@@ -512,6 +513,7 @@ def dclaw2maxval_withlev(
     vel_max_time[never_inundated] = np.nan
     arrival_time[never_inundated] = np.nan
     froude_max[never_inundated] = np.nan
+
     # where less than zero, wave never reached.
     eta_max_time[eta_max_time < 0] = np.nan
     vel_max_time[vel_max_time < 0] = np.nan
@@ -528,6 +530,7 @@ def dclaw2maxval_withlev(
     out_profile["dtype"] = "float32"
     out_profile["count"] = 10
     out_profile["transform"] = transform
+    out_profile["nodata"] = np.nan
 
     if write_froude:
         out_profile["count"] = 11
