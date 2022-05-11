@@ -481,13 +481,13 @@ def dclaw2maxval_withlev(
                 mom_overwrite_lev[update_mom] = level[update_mom]
                 froude_overwrite_lev[update_froude] = level[update_froude]
 
-                eta_overwrite_lev[eta_max_lev>overwrite_level] = overwrite_level
-                h_overwrite_lev[h_max_lev>overwrite_level] = overwrite_level
-                h_min_overwrite_lev[h_min_lev>overwrite_level] = overwrite_level
-                m_overwrite_lev[m_max_lev>overwrite_level] = overwrite_level
-                vel_overwrite_lev[vel_max_lev>overwrite_level] = overwrite_level
-                mom_overwrite_lev[mom_max_lev>overwrite_level] = overwrite_level
-                froude_overwrite_lev[froude_max_lev>overwrite_level] = overwrite_level
+                eta_overwrite_lev[eta_overwrite_lev>overwrite_level] = overwrite_level
+                h_overwrite_lev[h_overwrite_lev>overwrite_level] = overwrite_level
+                h_min_overwrite_lev[h_min_overwrite_lev>overwrite_level] = overwrite_level
+                m_overwrite_lev[m_overwrite_lev>overwrite_level] = overwrite_level
+                vel_overwrite_lev[vel_overwrite_lev>overwrite_level] = overwrite_level
+                mom_overwrite_lev[mom_overwrite_lev>overwrite_level] = overwrite_level
+                froude_overwrite_lev[froude_overwrite_lev>overwrite_level] = overwrite_level
 
                 # update arrival time, also set other times to this, to indicate the wave has arrived there and thus its valid to
                 # set a max.
