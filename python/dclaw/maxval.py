@@ -501,13 +501,13 @@ def dclaw2maxval_withlev(
                 vel_max_time[overwrite_arrival] = time
 
                 # update max values.
-                h_max[overwrite_h_max] = h[overwrite_h_max]
-                h_min[overwrite_h_min] = h[overwrite_h_min]
-                m_max[overwrite_m] = m[overwrite_m]
-                vel_max[overwrite_vel] = vel[overwrite_vel]
-                mom_max[overwrite_mom] = mom[overwrite_mom]
-                eta_max[overwrite_eta] = eta[overwrite_eta]
-                froude_max[overwrite_froude] = froude[overwrite_froude]
+                h_max[update_h_max] = h[update_h_max]
+                h_min[update_h_min] = h[update_h_min]
+                m_max[update_m] = m[update_m]
+                vel_max[update_vel] = vel[update_vel]
+                mom_max[update_mom] = mom[update_mom]
+                eta_max[update_eta] = eta[update_eta]
+                froude_max[update_froude] = froude[update_froude]
 
                 # we want the first peak.
                 not_super_late = ((time - eta_max_time) < 1 * 60) & (arrival_time >= 0)
