@@ -384,6 +384,14 @@ def dclaw2maxval_withlev(
     eta_max_lev = np.zeros(dims, dtype=int)
     froude_max_lev = np.zeros(dims, dtype=int)
 
+    h_overwrite_lev = np.zeros(dims, dtype=int)
+    h_overwrite_lev = np.zeros(dims, dtype=int)
+    m_overwrite_lev = np.zeros(dims, dtype=int)
+    vel_overwrite_lev = np.zeros(dims, dtype=int)
+    mom_overwrite_lev = np.zeros(dims, dtype=int)
+    eta_overwrite_lev = np.zeros(dims, dtype=int)
+    froude_overwrite_lev = np.zeros(dims, dtype=int)
+
     arrival_time = -1 * np.ones(dims, dtype="float32")
     eta_max_time = -1 * np.ones(dims, dtype="float32")
     vel_max_time = -1 * np.ones(dims, dtype="float32")
@@ -430,26 +438,26 @@ def dclaw2maxval_withlev(
                 lev_max[level > lev_max] = level[level > lev_max]
 
                 # determine whether to overwrite.
-                overwrite_eta = ((level >= eta_max_lev) & (eta > eta_max)) | (
+                overwrite_eta = ((level >= eta_overwrite_lev) & (eta > eta_max)) | (
                     level >= eta_max_lev
                 )
-                overwrite_h_max = ((level >= h_max_lev) & (h > h_max)) | (
+                overwrite_h_max = ((level >= h_overwrite_lev) & (h > h_max)) | (
                     level >= h_max_lev
                 )
-                overwrite_h_min = ((level >= h_min_lev) & (h < h_min)) | (
+                overwrite_h_min = ((level >= h_min_overwrite_lev) & (h < h_min)) | (
                     level >= h_min_lev
                 )
 
-                overwrite_m = ((level >= m_max_lev) & (m > m_max)) | (level >= m_max_lev)
-                overwrite_vel = ((level >= vel_max_lev) & (vel > vel_max)) | (
+                overwrite_m = ((level >= m_overwrite_lev) & (m > m_max)) | (level >= m_max_lev)
+                overwrite_vel = ((level >= vel_overwrite_lev) & (vel > vel_max)) | (
                     level >= vel_max_lev
                 )
-                overwrite_mom = ((level >= mom_max_lev) & (mom > mom_max)) | (
+                overwrite_mom = ((level >= mom_overwrite_lev) & (mom > mom_max)) | (
                     level >= mom_max_lev
                 )
 
                 overwrite_froude = (
-                    (level >= froude_max_lev) & (froude > froude_max)
+                    (level >= froude_overwrite_lev) & (froude > froude_max)
                 ) | (level >= froude_max_lev)
 
                 # update max level seen.
@@ -461,14 +469,22 @@ def dclaw2maxval_withlev(
                 mom_max_lev[overwrite_mom] = level[overwrite_mom]
                 froude_max_lev[overwrite_froude] = level[overwrite_froude]
 
+                eta_overwrite_lev[overwrite_eta] = level[overwrite_eta]
+                h_overwrite_lev[overwrite_h_max] = level[overwrite_h_max]
+                h_min_overwrite_lev[overwrite_h_min] = level[overwrite_h_min]
+                m_overwrite_lev[overwrite_m] = level[overwrite_m]
+                vel_overwrite_lev[overwrite_vel] = level[overwrite_vel]
+                mom_overwrite_lev[overwrite_mom] = level[overwrite_mom]
+                froude_overwrite_lev[overwrite_froude] = level[overwrite_froude]
+
                 # ensure max level does not exceed overwrite_level
-                eta_max_lev[eta_max_lev>overwrite_level] = overwrite_level
-                h_max_lev[h_max_lev>overwrite_level] = overwrite_level
-                h_min_lev[h_min_lev>overwrite_level] = overwrite_level
-                m_max_lev[m_max_lev>overwrite_level] = overwrite_level
-                vel_max_lev[vel_max_lev>overwrite_level] = overwrite_level
-                mom_max_lev[mom_max_lev>overwrite_level] = overwrite_level
-                froude_max_lev[froude_max_lev>overwrite_level] = overwrite_level
+                eta_overwrite_lev[eta_max_lev>overwrite_level] = overwrite_level
+                h_overwrite_lev[h_max_lev>overwrite_level] = overwrite_level
+                h_min_overwrite_lev[h_min_lev>overwrite_level] = overwrite_level
+                m_overwrite_lev[m_max_lev>overwrite_level] = overwrite_level
+                vel_overwrite_lev[vel_max_lev>overwrite_level] = overwrite_level
+                mom_overwrite_lev[mom_max_lev>overwrite_level] = overwrite_level
+                froude_overwrite_lev[froude_max_lev>overwrite_level] = overwrite_level
 
                 # update arrival time, also set other times to this, to indicate the wave has arrived there and thus its valid to
                 # set a max.
