@@ -124,6 +124,14 @@ def main():
     )
 
     parser.add_argument(
+        "-ov",
+        "--overwrite_level",
+        help="Maxval can be overwritten so long as the level is greater than this specified level.",
+        default=None,
+        type=int,
+        )
+
+    parser.add_argument(
         "-wf",
         "--write_froude",
         help="Write a froude number maximum in the tif.",
@@ -167,6 +175,7 @@ def main():
 
     # do some checking with the region.
     amrdata = get_amr2ez_data(args.wdir, args.odir)
+
     # full extent.
     xhi = amrdata["xupper"]
     yhi = amrdata["yupper"]
@@ -295,8 +304,10 @@ def main():
 
     dclaw2maxval_withlev(
         wdir=args.wdir,
+        odir=args.odir,
         gdir=args.gdir,
         out_file="maxval.tif",
+        overwrite_level = args.overwrite_level,
         write_froude=args.write_froude,
         epsg=args.epsg,
         rho_f=rho_f,
@@ -310,18 +321,25 @@ def main():
 
 def dclaw2maxval_withlev(
     wdir=".",
+    odir="_output",
     gdir="_gridded_output",
     nplots=None,
     out_file=None,
     rho_f=1000,
     rho_s=2700,
     epsg=None,
+    overwrite_level=None,
     write_froude=False,
     extent_shp=True,
     extent_shp_val="height",
     extent_shp_val_thresh=0.0,
     extent_shp_val_out_file=None,
 ):
+    # do some checking with the region.
+    amrdata = get_amr2ez_data(wdir, args.odir)
+    mxnest = amrdata['mxnest'] # max number of levels.
+    maxlevel = np.abs(mxnest)
+    overwrite_level = overwrite_level or (maxlevel + 1)
 
     out_file = out_file or os.path.join(wdir, "maxval.tif")
     extent_shp_val_out_file = extent_shp_val_out_file or os.path.join(
@@ -411,26 +429,27 @@ def dclaw2maxval_withlev(
 
                 # determine whether to overwrite.
                 overwrite_eta = ((level >= eta_max_lev) & (eta > eta_max)) | (
-                    level > eta_max_lev
+                    level => eta_max_lev
                 )
                 overwrite_h_max = ((level >= h_max_lev) & (h > h_max)) | (
-                    level > h_max_lev
+                    level => h_max_lev
                 )
                 overwrite_h_min = ((level >= h_min_lev) & (h < h_min)) | (
-                    level > h_min_lev
+                    level => h_min_lev
                 )
 
-                overwrite_m = ((level >= m_max_lev) & (m > m_max)) | (level > m_max_lev)
+                overwrite_m = ((level >= m_max_lev) & (m > m_max)) | (level => m_max_lev)
                 overwrite_vel = ((level >= vel_max_lev) & (vel > vel_max)) | (
-                    level > vel_max_lev
+                    level => vel_max_lev
                 )
                 overwrite_mom = ((level >= mom_max_lev) & (mom > mom_max)) | (
-                    level > mom_max_lev
+                    level => mom_max_lev
                 )
 
                 overwrite_froude = (
                     (level >= froude_max_lev) & (froude > froude_max)
-                ) | (level > froude_max_lev)
+                ) | (level => froude_max_lev)
+
                 # update max level seen.
                 eta_max_lev[overwrite_eta] = level[overwrite_eta]
                 h_max_lev[overwrite_h_max] = level[overwrite_h_max]
@@ -439,6 +458,15 @@ def dclaw2maxval_withlev(
                 vel_max_lev[overwrite_vel] = level[overwrite_vel]
                 mom_max_lev[overwrite_mom] = level[overwrite_mom]
                 froude_max_lev[overwrite_froude] = level[overwrite_froude]
+
+                # ensure max level does not exceed overwrite_level
+                eta_max_lev[eta_max_lev>overwrite_level] = overwrite_level
+                h_max_lev[h_max_lev>overwrite_level] = overwrite_level
+                h_min_lev[h_min_lev>overwrite_level] = overwrite_level
+                m_max_lev[m_max_lev>overwrite_level] = overwrite_level
+                vel_max_lev[vel_max_lev>overwrite_level] = overwrite_level
+                mom_max_lev[mom_max_lev>overwrite_level] = overwrite_level
+                froude_max_lev[froude_max_lev>overwrite_level] = overwrite_level
 
                 # update arrival time, also set other times to this, to indicate the wave has arrived there and thus its valid to
                 # set a max.
