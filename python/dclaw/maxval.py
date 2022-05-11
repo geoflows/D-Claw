@@ -519,21 +519,23 @@ def dclaw2maxval_withlev(
                 eta_max_time[overwrite_eta_time] = time
                 vel_max_time[overwrite_vel_time] = time
 
+    nodata = -9999
     never_inundated = h_max < 0.00001
-    h_max[never_inundated] = np.nan
-    h_min[h_min == 0] = np.nan
-    m_max[never_inundated] = np.nan
-    vel_max[never_inundated] = np.nan
-    mom_max[never_inundated] = np.nan
-    eta_max_time[never_inundated] = np.nan
-    vel_max_time[never_inundated] = np.nan
-    arrival_time[never_inundated] = np.nan
-    froude_max[never_inundated] = np.nan
+    h_max[never_inundated] = nodata
+    h_min[h_min == 0] = nodata
+    m_max[never_inundated] = nodata
+    eta_max[never_inundated] = nodata
+    vel_max[never_inundated] = nodata
+    mom_max[never_inundated] = nodata
+    eta_max_time[never_inundated] = nodata
+    vel_max_time[never_inundated] = nodata
+    arrival_time[never_inundated] = nodata
+    froude_max[never_inundated] = nodata
 
     # where less than zero, wave never reached.
-    eta_max_time[eta_max_time < 0] = np.nan
-    vel_max_time[vel_max_time < 0] = np.nan
-    arrival_time[arrival_time < 0] = np.nan
+    eta_max_time[eta_max_time < 0] = nodata
+    vel_max_time[vel_max_time < 0] = nodata
+    arrival_time[arrival_time < 0] = nodata
 
     # then read in grided output into t, h, m, vel, mom, etc.
     # clip to required extent.
@@ -546,7 +548,7 @@ def dclaw2maxval_withlev(
     out_profile["dtype"] = "float32"
     out_profile["count"] = 10
     out_profile["transform"] = transform
-    out_profile["nodata"] = np.nan
+    out_profile["nodata"] = nodata
 
     if write_froude:
         out_profile["count"] = 11
