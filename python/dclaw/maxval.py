@@ -377,7 +377,7 @@ def dclaw2maxval_withlev(
     froude_max = np.zeros(dims, dtype="float32")
 
     h_exceedance_lev = 2*np.ones(dims, dtype=int)
-    h_exceedance_lev = 2*np.ones(dims, dtype=int)
+    h_min_exceedance_lev = 2*np.ones(dims, dtype=int)
     m_exceedance_lev = 2*np.ones(dims, dtype=int)
     vel_exceedance_lev = 2*np.ones(dims, dtype=int)
     mom_exceedance_lev = 2*np.ones(dims, dtype=int)
@@ -466,7 +466,7 @@ def dclaw2maxval_withlev(
                 # update max level seen.
                 eta_exceedance_lev[update_eta] = level[update_eta] + 1
                 h_exceedance_lev[update_h_max] = level[update_h_max]+ 1
-                h_exceedance_lev[update_h_min] = level[update_h_min]+ 1
+                h_min_exceedance_lev[update_h_min] = level[update_h_min]+ 1
                 m_exceedance_lev[update_m] = level[update_m]+ 1
                 vel_exceedance_lev[update_vel] = level[update_vel]+ 1
                 mom_exceedance_lev[oupdate_mom] = level[update_mom]+ 1
