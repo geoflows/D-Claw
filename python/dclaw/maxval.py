@@ -243,7 +243,7 @@ def main():
     # check which files to convert. Could do a temporal filter here..
     # get all files.
     tfiles = np.sort(glob.glob(os.path.join(args.wdir, *[args.odir, "fort.t*"])))
-    tfiles = [file for file in tfiles if "tck" not in file] # remove checkpoint file. 
+    tfiles = [file for file in tfiles if "tck" not in file] # remove checkpoint file.
     ntifs = np.sort(glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"])))
 
     nfiles = []
@@ -337,7 +337,7 @@ def dclaw2maxval_withlev(
     extent_shp_val_out_file=None,
 ):
     # do some checking with the region.
-    amrdata = get_amr2ez_data(wdir, args.odir)
+    amrdata = get_amr2ez_data(wdir, odir)
     mxnest = amrdata['mxnest'] # max number of levels.
     maxlevel = np.abs(mxnest)
     overwrite_level = overwrite_level or (maxlevel + 1)
