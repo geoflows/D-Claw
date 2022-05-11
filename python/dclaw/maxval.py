@@ -429,26 +429,26 @@ def dclaw2maxval_withlev(
 
                 # determine whether to overwrite.
                 overwrite_eta = ((level >= eta_max_lev) & (eta > eta_max)) | (
-                    level => eta_max_lev
+                    level >= eta_max_lev
                 )
                 overwrite_h_max = ((level >= h_max_lev) & (h > h_max)) | (
-                    level => h_max_lev
+                    level >= h_max_lev
                 )
                 overwrite_h_min = ((level >= h_min_lev) & (h < h_min)) | (
-                    level => h_min_lev
+                    level >= h_min_lev
                 )
 
-                overwrite_m = ((level >= m_max_lev) & (m > m_max)) | (level => m_max_lev)
+                overwrite_m = ((level >= m_max_lev) & (m > m_max)) | (level >= m_max_lev)
                 overwrite_vel = ((level >= vel_max_lev) & (vel > vel_max)) | (
-                    level => vel_max_lev
+                    level >= vel_max_lev
                 )
                 overwrite_mom = ((level >= mom_max_lev) & (mom > mom_max)) | (
-                    level => mom_max_lev
+                    level >= mom_max_lev
                 )
 
                 overwrite_froude = (
                     (level >= froude_max_lev) & (froude > froude_max)
-                ) | (level => froude_max_lev)
+                ) | (level >= froude_max_lev)
 
                 # update max level seen.
                 eta_max_lev[overwrite_eta] = level[overwrite_eta]
