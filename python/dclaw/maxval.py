@@ -385,7 +385,7 @@ def dclaw2maxval_withlev(
     froude_max_lev = np.zeros(dims, dtype=int)
 
     h_overwrite_lev = np.zeros(dims, dtype=int)
-    h_overwrite_lev = np.zeros(dims, dtype=int)
+    h_min_overwrite_lev = np.zeros(dims, dtype=int)
     m_overwrite_lev = np.zeros(dims, dtype=int)
     vel_overwrite_lev = np.zeros(dims, dtype=int)
     mom_overwrite_lev = np.zeros(dims, dtype=int)
