@@ -243,6 +243,7 @@ def main():
     # check which files to convert. Could do a temporal filter here..
     # get all files.
     tfiles = np.sort(glob.glob(os.path.join(args.wdir, *[args.odir, "fort.t*"])))
+    tfiles = [file for file in tfiles if "tck" not in file] # remove checkpoint file. 
     ntifs = np.sort(glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"])))
 
     nfiles = []
