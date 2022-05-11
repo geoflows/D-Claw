@@ -469,7 +469,7 @@ def dclaw2maxval_withlev(
                 h_min_exceedance_lev[update_h_min] = level[update_h_min]+ 1
                 m_exceedance_lev[update_m] = level[update_m]+ 1
                 vel_exceedance_lev[update_vel] = level[update_vel]+ 1
-                mom_exceedance_lev[oupdate_mom] = level[update_mom]+ 1
+                mom_exceedance_lev[update_mom] = level[update_mom]+ 1
                 froude_exceedance_lev[update_froude] = level[update_froude]+ 1
 
                 # ensure overwrite_levellevel does not exceed overwrite_level
