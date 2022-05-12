@@ -386,7 +386,7 @@ def dclaw2maxval_withlev(
     fr_max = np.zeros(dims, dtype="float32")
 
     # initialize arrays for owr_levels (e.g., what level needs to be seen to owr.)
-    geq_ovr = np.zero(dims, dtype=bool) # has overwrite previously been exceeded.
+    geq_ovr = np.zeros(dims, dtype=bool) # has overwrite previously been exceeded.
     h_owr_lev = np.zeros(dims, dtype=int)
     h_min_owr_lev = np.zeros(dims, dtype=int)
     m_owr_lev = np.zeros(dims, dtype=int)
