@@ -445,13 +445,13 @@ def dclaw2maxval_withlev(
                 mom = (h * dx * dx) * density * vel
 
                 # keep track of where level increased and max level.
-                geq_ovr = lev_max >= owr_level
                 level_increased = level > lev_max
-                lev_max[level > lev_max] = level[level > lev_max]
+                lev_max[level_increased] = level[level_increased]
 
                 # determine if it is the first time greater than the overwrite
                 # level.
-                first_time_owr = level_increased & geq_ovr & (first_geq_owr == False)
+                geq_ovr = lev_max >= owr_level
+                first_time_owr = geq_ovr & (first_geq_owr == False)
                 first_geq_owr[first_time_owr] = True
 
                 # determine where h is located at this timestep.
@@ -471,7 +471,6 @@ def dclaw2maxval_withlev(
 
                 # set values of h, hmin, m, eta, vel, froude to nodata or
                 # zero where refined to dry occured.
-
                 h_max[refined_to_dry] = 0
                 h_min[refined_to_dry] = 0
                 m_max[refined_to_dry] = 0
