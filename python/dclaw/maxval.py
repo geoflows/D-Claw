@@ -125,7 +125,7 @@ def main():
 
     parser.add_argument(
         "-ov",
-        "--owr_level",
+        "--overwrite_level",
         help="Maxval can be overwritten so long as the level is greater than this specified level.",
         default=None,
         type=int,
@@ -308,7 +308,7 @@ def main():
         odir=args.odir,
         gdir=args.gdir,
         out_file="maxval.tif",
-        owr_level=args.owr_level,
+        overwrite_level=args.overwrite_level,
         write_froude=args.write_froude,
         epsg=args.epsg,
         rho_f=rho_f,
@@ -329,13 +329,14 @@ def dclaw2maxval_withlev(
     rho_f=1000,
     rho_s=2700,
     epsg=None,
-    owr_level=None,
+    overwrite_level=None,
     write_froude=False,
     extent_shp=True,
     extent_shp_val="height",
     extent_shp_val_thresh=0.0,
     extent_shp_val_out_file=None,
 ):
+    owr_level = overwrite_level
     # get drytol:
     tsudata = get_tsunami_data(wdir, odir)
     drytolerance = tsudata["drytolerance"]
@@ -445,7 +446,7 @@ def dclaw2maxval_withlev(
 
                 # keep track of where level increased and max level.
 
-                prev_lt_ovr = lev_max < overwrite
+                prev_lt_ovr = lev_max < owr_level
                 level_increased = level > lev_max
                 lev_max[level > lev_max] = level[level > lev_max]
 
