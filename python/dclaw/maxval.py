@@ -11,7 +11,7 @@ from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
 from dclaw.fortconvert import convertfortdir, fort2list
-from dclaw.get_data import get_dig_data, get_region_data, get_amr2ez_data
+from dclaw.get_data import get_dig_data, get_region_data, get_amr2ez_data, get_tsunami_data
 
 
 def main():
@@ -118,14 +118,14 @@ def main():
         "-r",
         "--region",
         nargs="?",
-        help="Amrclaw region number to use for extent. Will overwrite east/south/north/west, if provided.",
+        help="Amrclaw region number to use for extent. Will owr east/south/north/west, if provided.",
         default=None,
         type=int,
     )
 
     parser.add_argument(
         "-ov",
-        "--overwrite_level",
+        "--owr_level",
         help="Maxval can be overwritten so long as the level is greater than this specified level.",
         default=None,
         type=int,
@@ -308,7 +308,7 @@ def main():
         odir=args.odir,
         gdir=args.gdir,
         out_file="maxval.tif",
-        overwrite_level=args.overwrite_level,
+        owr_level=args.owr_level,
         write_froude=args.write_froude,
         epsg=args.epsg,
         rho_f=rho_f,
@@ -329,21 +329,25 @@ def dclaw2maxval_withlev(
     rho_f=1000,
     rho_s=2700,
     epsg=None,
-    overwrite_level=None,
+    owr_level=None,
     write_froude=False,
     extent_shp=True,
     extent_shp_val="height",
     extent_shp_val_thresh=0.0,
     extent_shp_val_out_file=None,
 ):
+    # get drytol:
+    tsudata = get_tsunami_data(wdir, odir)
+    drytolerance = tsudata["drytolerance"]
+
     # do some checking with the region.
     amrdata = get_amr2ez_data(wdir, odir)
     mxnest = amrdata["mxnest"]  # max number of levels.
     maxlevel = np.abs(mxnest)
     print("****** maxlevel is ", maxlevel)
 
-    overwrite_level = overwrite_level or maxlevel
-    print("****** overwrite_level is ", overwrite_level)
+    owr_level = owr_level or maxlevel
+    print("****** owr_level is ", owr_level)
 
     out_file = out_file or os.path.join(wdir, "maxval.tif")
     extent_shp_val_out_file = extent_shp_val_out_file or os.path.join(
@@ -365,7 +369,11 @@ def dclaw2maxval_withlev(
     with rasterio.open(files[0], "r") as src:
         dims = (src.meta["height"], src.meta["width"])
 
+    # constants.
     hmin_fill = 99999.0
+    nodata = -9999
+
+    # initialize arrays for output values.
     h_max = np.zeros(dims, dtype="float32")
     h_min = np.ones(dims, dtype="float32")
     h_min[:] = hmin_fill
@@ -373,28 +381,28 @@ def dclaw2maxval_withlev(
     vel_max = np.zeros(dims, dtype="float32")
     mom_max = np.zeros(dims, dtype="float32")
     eta_max = np.zeros(dims, dtype="float32")
+    eta_max[:] nodata
     lev_max = np.zeros(dims, dtype="float32")
-    froude_max = np.zeros(dims, dtype="float32")
+    fr_max = np.zeros(dims, dtype="float32")
 
-    h_exceedance_lev = 2 * np.ones(dims, dtype=int)
-    h_min_exceedance_lev = 2 * np.ones(dims, dtype=int)
-    m_exceedance_lev = 2 * np.ones(dims, dtype=int)
-    vel_exceedance_lev = 2 * np.ones(dims, dtype=int)
-    mom_exceedance_lev = 2 * np.ones(dims, dtype=int)
-    eta_exceedance_lev = 2 * np.ones(dims, dtype=int)
-    froude_exceedance_lev = 2 * np.ones(dims, dtype=int)
-
-    h_overwrite_lev = np.zeros(dims, dtype=int)
-    h_min_overwrite_lev = np.zeros(dims, dtype=int)
-    m_overwrite_lev = np.zeros(dims, dtype=int)
-    vel_overwrite_lev = np.zeros(dims, dtype=int)
-    mom_overwrite_lev = np.zeros(dims, dtype=int)
-    eta_overwrite_lev = np.zeros(dims, dtype=int)
-    froude_overwrite_lev = np.zeros(dims, dtype=int)
+    # initialize arrays for owr_levels (e.g., what level needs to be seen to owr.)
+    h_owr_lev = np.zeros(dims, dtype=int)
+    h_min_owr_lev = np.zeros(dims, dtype=int)
+    m_owr_lev = np.zeros(dims, dtype=int)
+    vel_owr_lev = np.zeros(dims, dtype=int)
+    mom_owr_lev = np.zeros(dims, dtype=int)
+    eta_owr_lev = np.zeros(dims, dtype=int)
+    fr_owr_lev = np.zeros(dims, dtype=int)
+    arrival_lev = np.zeros(dims, dtype=int)
 
     arrival_time = -1 * np.ones(dims, dtype="float32")
     eta_max_time = -1 * np.ones(dims, dtype="float32")
     vel_max_time = -1 * np.ones(dims, dtype="float32")
+
+    # is thickness present?
+    # if never present, its equal to 0
+    # if present, its equal to the largest level seen.
+    h_level_masked = np.zeros(dims, dtype=int)
 
     for file in files:
         fortt = file[:-4].replace("fort_q", "fort.t")
@@ -429,7 +437,7 @@ def dclaw2maxval_withlev(
                     vel = ((hu / h) ** 2 + (hv / h) ** 2) ** 0.5
                     vel[np.isnan(vel)] = 0
 
-                    froude = vel / np.sqrt(9.81 * h)
+                    fr = vel / np.sqrt(9.81 * h)
 
                 density = (1.0 - m) * rho_f + (m * rho_s)
                 mom = (h * dx * dx) * density * vel
@@ -437,99 +445,61 @@ def dclaw2maxval_withlev(
                 # keep track of max level anywhere.
                 lev_max[level > lev_max] = level[level > lev_max]
 
-                # determine whether to update. conditions are:
-                # 1. level greater than or equal to the overwrite level and value greater than existing value
-                # 2. first time seeing a higher level (equal to exceedance level).
+                # determine where h is located at this timestep.
+                h_present = h>drytolerance
 
-                update_eta = ((level >= eta_overwrite_lev) & (eta > eta_max)) | (
-                    level == eta_exceedance_lev
-                )
+                # determine where h is present and the level was refined to
+                # a higher level.
+                h_present_and_level_higher = h_present & (level > h_level_masked)
 
-                update_h_max = ((level >= h_overwrite_lev) & (h > h_max)) | (
-                    level == h_exceedance_lev
-                )
+                # determine where refinement resulted in a cell becoming dry
+                # because we use level>h_level_masked this should only occur
+                # the first time the cell refines to the next highest level.
+                refined_to_dry = (h_present == False) & (level > h_level_masked)
 
-                update_h_min = ((level >= h_min_overwrite_lev) & (h < h_min)) | (
-                    level == h_min_exceedance_lev
-                )
+                # update h_level_masked
+                h_level_masked[h_present_and_level_higher] = level[h_present_and_level_higher]
 
-                update_m = ((level >= m_overwrite_lev) & (m > m_max)) | (
-                    level == m_exceedance_lev
-                )
+                # set values of h, hmin, m, eta, vel, froude to nodata or
+                # zero where refined to dry occured.
 
-                update_vel = ((level >= vel_overwrite_lev) & (vel > vel_max)) | (
-                    level == vel_exceedance_lev
-                )
+                h_max[refined_to_dry] = 0
+                h_min[refined_to_dry] = 0
+                m_max[refined_to_dry] = 0
+                vel_max[refined_to_dry] = 0
+                mom_max[refined_to_dry] = 0
+                eta_max[refined_to_dry] = nodata
+                fr_max[refined_to_dry] = 0
 
-                update_mom = ((level >= mom_overwrite_lev) & (mom > mom_max)) | (
-                    level == mom_exceedance_lev
-                )
+                # determine whether to update. condition is:
+                #    level greater than or equal to the overwrite level and
+                #    value greater than existing value
 
-                update_froude = (
-                    (level >= froude_overwrite_lev) & (froude > froude_max)
-                ) | (level == froude_exceedance_lev)
+                update_eta = ((level >= eta_owr_lev) & (eta > eta_max))
+                update_h_max = ((level >= h_owr_lev) & (h > h_max))
+                update_h_min = ((level >= h_min_owr_lev) & (h < h_min))
+                update_m = ((level >= m_owr_lev) & (m > m_max))
+                update_vel = ((level >= vel_owr_lev) & (vel > vel_max))
+                update_mom = ((level >= mom_owr_lev) & (mom > mom_max))
+                update_fr = ((level >= fr_owr_lev) & (fr > fr_max))
 
-                # update max level seen use level seen +1 (e.g, must be equal to greater in order to qualify)
-                eta_exceedance_lev[level == eta_exceedance_lev] = (
-                    level[level == eta_exceedance_lev] + 1
-                )
-
-                h_exceedance_lev[level == h_exceedance_lev] = (
-                    level[level == h_exceedance_lev] + 1
-                )
-
-                h_min_exceedance_lev[level == h_min_exceedance_lev] = (
-                    level[level == h_min_exceedance_lev] + 1
-                )
-
-                m_exceedance_lev[level == m_exceedance_lev] = (
-                    level[level == m_exceedance_lev] + 1
-                )
-
-                vel_exceedance_lev[level == vel_exceedance_lev] = (
-                    level[level == vel_exceedance_lev] + 1
-                )
-
-                mom_exceedance_lev[level == mom_exceedance_lev] = (
-                    level[level == mom_exceedance_lev] + 1
-                )
-                
-                froude_exceedance_lev[level == froude_exceedance_lev] = (
-                    level[level == froude_exceedance_lev] + 1
-                )
-
-                # ensure overwrite_levellevel does not exceed overwrite_level
+                # ensure owr_level arrays do not exceed owr_level
                 # first update to level seen,
-                eta_overwrite_lev[update_eta] = level[update_eta]
-                h_overwrite_lev[update_h_max] = level[update_h_max]
-                h_min_overwrite_lev[update_h_min] = level[update_h_min]
-                m_overwrite_lev[update_m] = level[update_m]
-                vel_overwrite_lev[update_vel] = level[update_vel]
-                mom_overwrite_lev[update_mom] = level[update_mom]
-                froude_overwrite_lev[update_froude] = level[update_froude]
-                # second, ensure it doesn't exceed the overwrite level.
-                eta_overwrite_lev[eta_overwrite_lev > overwrite_level] = overwrite_level
-                h_overwrite_lev[h_overwrite_lev > overwrite_level] = overwrite_level
-                h_min_overwrite_lev[
-                    h_min_overwrite_lev > overwrite_level
-                ] = overwrite_level
-                m_overwrite_lev[m_overwrite_lev > overwrite_level] = overwrite_level
-                vel_overwrite_lev[vel_overwrite_lev > overwrite_level] = overwrite_level
-                mom_overwrite_lev[mom_overwrite_lev > overwrite_level] = overwrite_level
-                froude_overwrite_lev[
-                    froude_overwrite_lev > overwrite_level
-                ] = overwrite_level
-
-                # update arrival time, also set other times to this, to indicate the wave has arrived there and thus its valid to
-                # set a max.
-                # set arrival time to the first timestep that has eta>0.01 and highest level.
-                overwrite_arrival = (
-                    (eta > 0.01) & (arrival_time < 0) & (level >= overwrite_level)
-                )
-
-                arrival_time[overwrite_arrival] = time
-                eta_max_time[overwrite_arrival] = time
-                vel_max_time[overwrite_arrival] = time
+                eta_owr_lev[update_eta] = level[update_eta]
+                h_owr_lev[update_h_max] = level[update_h_max]
+                h_min_owr_lev[update_h_min] = level[update_h_min]
+                m_owr_lev[update_m] = level[update_m]
+                vel_owr_lev[update_vel] = level[update_vel]
+                mom_owr_lev[update_mom] = level[update_mom]
+                fr_owr_lev[update_fr] = level[update_fr]
+                # second, ensure it doesn't exceed the owr level.
+                eta_owr_lev[eta_owr_lev > owr_level] = owr_level
+                h_owr_lev[h_owr_lev > owr_level] = owr_level
+                h_min_owr_lev[h_min_owr_lev > owr_level] = owr_level
+                m_owr_lev[m_owr_lev > owr_level] = owr_level
+                vel_owr_lev[vel_owr_lev > owr_level] = owr_level
+                mom_owr_lev[mom_owr_lev > owr_level] = owr_level
+                fr_owr_lev[fr_owr_lev > owr_level] = owr_level
 
                 # update max values.
                 h_max[update_h_max] = h[update_h_max]
@@ -538,23 +508,33 @@ def dclaw2maxval_withlev(
                 vel_max[update_vel] = vel[update_vel]
                 mom_max[update_mom] = mom[update_mom]
                 eta_max[update_eta] = eta[update_eta]
-                froude_max[update_froude] = froude[update_froude]
+                fr_max[update_fr] = fr[update_fr]
 
-                # we want the first peak.
-                not_super_late = ((time - eta_max_time) < 1 * 60) & (arrival_time >= 0)
+                # update arrival time,
+                # set arrival time to the first timestep that has eta>0.01 and highest level seen.
+                # here
+                owr_arrival = ((eta > 0.01) & (arrival_time < 0) & (level > arrival_lev))
+                arrival_lev[ovw_arrival] = level[ovw_arrival]
+                arrival_time[owr_arrival] = time
 
+                # set other times to arrival time, to indicate the wave has
+                # arrived there and thus its valid to set a max.
+                eta_max_time[owr_arrival] = time
+                vel_max_time[owr_arrival] = time
+
+                # we want the first peak
+                not_super_late = ((time - eta_max_time) < (1 * 60)) & (arrival_time >= 0)
                 # use 10 minutes
                 # presuming time has been set.
                 # presuming the arrival time has passed.
-
+                # and presuming that this timestep eta gets updated.
                 update_eta_time = update_eta & not_super_late
                 update_vel_time = update_vel & not_super_late
 
                 eta_max_time[update_eta_time] = time
                 vel_max_time[update_vel_time] = time
 
-    nodata = -9999
-    never_inundated = h_max < 0.00001
+    never_inundated = h_max < drytolerance
     h_max[never_inundated] = nodata
     h_min[h_min == 0] = nodata
     m_max[never_inundated] = nodata
@@ -564,7 +544,7 @@ def dclaw2maxval_withlev(
     eta_max_time[never_inundated] = nodata
     vel_max_time[never_inundated] = nodata
     arrival_time[never_inundated] = nodata
-    froude_max[never_inundated] = nodata
+    fr_max[never_inundated] = nodata
 
     # where less than zero, wave never reached.
     eta_max_time[eta_max_time < 0] = nodata
@@ -598,7 +578,7 @@ def dclaw2maxval_withlev(
         dst.write(arrival_time, 9)
         dst.write(h_min, 10)
         if write_froude:
-            dst.write(froude_max, 11)
+            dst.write(fr, 11)
 
     if extent_shp:
         if extent_shp_val == "height":
