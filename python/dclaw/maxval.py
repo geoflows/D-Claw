@@ -447,6 +447,25 @@ def dclaw2maxval_withlev(
                 density = (1.0 - m) * rho_f + (m * rho_s)
                 mom = (h * dx * dx) * density * vel
 
+                # May 12, 2022, maxval algorithm updated in light of issues
+                # identified using tsunami-style refinement. That is, late in
+                # a simulation, after the wave has passed, a cell might get
+                # refined to the highest (shoreline) level, but only because it
+                # was needed to make an efficient bounding box around the
+                # flagged cells. This meant that there were cells in just-deeper
+                # that shoreline water which would get set to maximum eta values
+                # of zero only because the refinement level went from second
+                # highest to highest.
+                # this issue was addressed in the following way.
+                #   creation of an overwrite_level input, to permit a user to
+                #   indicate that any level greater than or equal to this level
+                #   should be considered equivalent in the eyes of the maxval
+                #   algorithm. That is, it is only when the refinement level
+                #   trips over the boundary between less than overwrite_level
+                #   and geq overwrite level THE FIRST TIME that increasing the
+                #   triggers resetting the maximum value to the the current
+                #   value.  
+
                 # keep track of where level increased and max level.
                 level_increased = level > lev_max
                 lev_max[level_increased] = level[level_increased]
