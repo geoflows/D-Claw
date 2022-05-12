@@ -381,7 +381,7 @@ def dclaw2maxval_withlev(
     vel_max = np.zeros(dims, dtype="float32")
     mom_max = np.zeros(dims, dtype="float32")
     eta_max = np.zeros(dims, dtype="float32")
-    eta_max[:] nodata
+    eta_max[:] = nodata
     lev_max = np.zeros(dims, dtype="float32")
     fr_max = np.zeros(dims, dtype="float32")
 
