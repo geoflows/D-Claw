@@ -514,7 +514,7 @@ def dclaw2maxval_withlev(
                 # set arrival time to the first timestep that has eta>0.01 and highest level seen.
                 # here
                 owr_arrival = ((eta > 0.01) & (arrival_time < 0) & (level > arrival_lev))
-                arrival_lev[ovw_arrival] = level[ovw_arrival]
+                arrival_lev[owr_arrival] = level[owr_arrival]
                 arrival_time[owr_arrival] = time
 
                 # set other times to arrival time, to indicate the wave has
