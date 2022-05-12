@@ -11,7 +11,8 @@ from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
 from dclaw.fortconvert import convertfortdir, fort2list
-from dclaw.get_data import get_dig_data, get_region_data, get_amr2ez_data, get_tsunami_data
+from dclaw.get_data import (get_amr2ez_data, get_dig_data, get_region_data,
+                            get_tsunami_data)
 
 
 def main():
@@ -387,7 +388,9 @@ def dclaw2maxval_withlev(
     fr_max = np.zeros(dims, dtype="float32")
 
     # initialize arrays for owr_levels (e.g., what level needs to be seen to owr.)
-    first_geq_owr = np.zeros(dims, dtype=bool) # has overwrite previously been exceeded.
+    first_geq_owr = np.zeros(
+        dims, dtype=bool
+    )  # has overwrite previously been exceeded.
     h_owr_lev = np.zeros(dims, dtype=int)
     h_min_owr_lev = np.zeros(dims, dtype=int)
     m_owr_lev = np.zeros(dims, dtype=int)
@@ -455,7 +458,7 @@ def dclaw2maxval_withlev(
                 first_geq_owr[first_time_owr] = True
 
                 # determine where h is located at this timestep.
-                h_present = h>drytolerance
+                h_present = h > drytolerance
 
                 # determine where h is present and the level was refined to
                 # a higher level.
@@ -467,7 +470,9 @@ def dclaw2maxval_withlev(
                 refined_to_dry = (h_present == False) & (level > h_level_masked)
 
                 # update h_level_masked
-                h_level_masked[h_present_and_level_higher] = level[h_present_and_level_higher]
+                h_level_masked[h_present_and_level_higher] = level[
+                    h_present_and_level_higher
+                ]
 
                 # set values of h, hmin, m, eta, vel, froude to nodata or
                 # zero where refined to dry occured.
@@ -495,13 +500,13 @@ def dclaw2maxval_withlev(
                 # OR
                 #    first time greater than the overwrite level.
                 #
-                update_eta = ((level >= eta_owr_lev) & (eta > eta_max))
-                update_h_max = ((level >= h_owr_lev) & (h > h_max))
-                update_h_min = ((level >= h_min_owr_lev) & (h < h_min))
-                update_m = ((level >= m_owr_lev) & (m > m_max))
-                update_vel = ((level >= vel_owr_lev) & (vel > vel_max))
-                update_mom = ((level >= mom_owr_lev) & (mom > mom_max))
-                update_fr = ((level >= fr_owr_lev) & (fr > fr_max))
+                update_eta = (level >= eta_owr_lev) & (eta > eta_max)
+                update_h_max = (level >= h_owr_lev) & (h > h_max)
+                update_h_min = (level >= h_min_owr_lev) & (h < h_min)
+                update_m = (level >= m_owr_lev) & (m > m_max)
+                update_vel = (level >= vel_owr_lev) & (vel > vel_max)
+                update_mom = (level >= mom_owr_lev) & (mom > mom_max)
+                update_fr = (level >= fr_owr_lev) & (fr > fr_max)
 
                 # ensure owr_level arrays do not exceed owr_level
                 # first update to level seen,
@@ -533,7 +538,7 @@ def dclaw2maxval_withlev(
                 # update arrival time,
                 # set arrival time to the first timestep that has eta>0.01 and highest level seen.
                 # here
-                owr_arrival = ((eta > 0.01) & (arrival_time < 0) & (level > arrival_lev))
+                owr_arrival = (eta > 0.01) & (arrival_time < 0) & (level > arrival_lev)
                 arrival_lev[owr_arrival] = level[owr_arrival]
                 arrival_time[owr_arrival] = time
 
@@ -543,7 +548,9 @@ def dclaw2maxval_withlev(
                 vel_max_time[owr_arrival] = time
 
                 # we want the first peak
-                not_super_late = ((time - eta_max_time) < (1 * 60)) & (arrival_time >= 0)
+                not_super_late = ((time - eta_max_time) < (1 * 60)) & (
+                    arrival_time >= 0
+                )
                 # use 10 minutes
                 # presuming time has been set.
                 # presuming the arrival time has passed.

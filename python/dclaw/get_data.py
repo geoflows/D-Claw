@@ -9,17 +9,21 @@ KRB April 2022
 
 """
 
+
 def get_tsunami_data(project_path, output="_output", file="settsunami.data"):
     data = Data(os.path.join(project_path, output, file))
     return {key: data.__dict__[key] for key in data.attributes}
+
 
 def get_dig_data(project_path, output="_output", file="setdig.data"):
     data = Data(os.path.join(project_path, output, file))
     return {key: data.__dict__[key] for key in data.attributes}
 
+
 def get_amr2ez_data(project_path, output="_output", file="amr2ez.data"):
     data = Data(os.path.join(project_path, output, file))
     return {key: data.__dict__[key] for key in data.attributes}
+
 
 def get_gauge_data(project_path, output="_output", file="setgauges.data"):
     setgaugefile = os.path.join(project_path, output, file)
