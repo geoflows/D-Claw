@@ -387,7 +387,7 @@ def dclaw2maxval_withlev(
     fr_max = np.zeros(dims, dtype="float32")
 
     # initialize arrays for owr_levels (e.g., what level needs to be seen to owr.)
-    geq_ovr = np.zeros(dims, dtype=bool) # has overwrite previously been exceeded.
+    first_geq_owr = np.zeros(dims, dtype=bool) # has overwrite previously been exceeded.
     h_owr_lev = np.zeros(dims, dtype=int)
     h_min_owr_lev = np.zeros(dims, dtype=int)
     m_owr_lev = np.zeros(dims, dtype=int)
@@ -445,15 +445,14 @@ def dclaw2maxval_withlev(
                 mom = (h * dx * dx) * density * vel
 
                 # keep track of where level increased and max level.
-
-                prev_lt_ovr = lev_max < owr_level
+                geq_ovr = lev_max >= owr_level
                 level_increased = level > lev_max
                 lev_max[level > lev_max] = level[level > lev_max]
 
                 # determine if it is the first time greater than the overwrite
                 # level.
-                first_time_owr = level_increased & prev_lt_ovr & (geq_ovr == False)
-                geq_ovr[first_time_owr] = True
+                first_time_owr = level_increased & gt_ovr & (first_geq_owr == False)
+                first_geq_owr[first_time_owr] = True
 
                 # determine where h is located at this timestep.
                 h_present = h>drytolerance
