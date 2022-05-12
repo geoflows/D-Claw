@@ -451,7 +451,7 @@ def dclaw2maxval_withlev(
 
                 # determine if it is the first time greater than the overwrite
                 # level.
-                first_time_owr = level_increased & gt_ovr & (first_geq_owr == False)
+                first_time_owr = level_increased & geq_ovr & (first_geq_owr == False)
                 first_geq_owr[first_time_owr] = True
 
                 # determine where h is located at this timestep.
