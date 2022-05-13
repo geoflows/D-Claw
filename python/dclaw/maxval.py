@@ -464,7 +464,7 @@ def dclaw2maxval_withlev(
                 #   trips over the boundary between less than overwrite_level
                 #   and geq overwrite level THE FIRST TIME that increasing the
                 #   triggers resetting the maximum value to the the current
-                #   value.  
+                #   value.
 
                 # keep track of where level increased and max level.
                 level_increased = level > lev_max
@@ -478,6 +478,9 @@ def dclaw2maxval_withlev(
 
                 # determine where h is located at this timestep.
                 h_present = h > drytolerance
+
+                # use definition of a wave defined in tsunami refinement.
+                wave = (np.abs(eta - sealevel)>wavetolerance) & h_present
 
                 # determine where h is present and the level was refined to
                 # a higher level.
@@ -519,13 +522,13 @@ def dclaw2maxval_withlev(
                 # OR
                 #    first time greater than the overwrite level.
                 #
-                update_eta = (level >= eta_owr_lev) & (eta > eta_max)
-                update_h_max = (level >= h_owr_lev) & (h > h_max)
-                update_h_min = (level >= h_min_owr_lev) & (h < h_min)
-                update_m = (level >= m_owr_lev) & (m > m_max)
-                update_vel = (level >= vel_owr_lev) & (vel > vel_max)
-                update_mom = (level >= mom_owr_lev) & (mom > mom_max)
-                update_fr = (level >= fr_owr_lev) & (fr > fr_max)
+                update_eta = (level >= eta_owr_lev) & (eta > eta_max) & wave
+                update_h_max = (level >= h_owr_lev) & (h > h_max)& wave
+                update_h_min = (level >= h_min_owr_lev) & (h < h_min)& wave
+                update_m = (level >= m_owr_lev) & (m > m_max)& wave
+                update_vel = (level >= vel_owr_lev) & (vel > vel_max)& wave
+                update_mom = (level >= mom_owr_lev) & (mom > mom_max)& wave
+                update_fr = (level >= fr_owr_lev) & (fr > fr_max)& wave
 
                 # ensure owr_level arrays do not exceed owr_level
                 # first update to level seen,
