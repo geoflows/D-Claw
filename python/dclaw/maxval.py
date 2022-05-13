@@ -341,7 +341,8 @@ def dclaw2maxval_withlev(
     # get drytol:
     tsudata = get_tsunami_data(wdir, odir)
     drytolerance = tsudata["drytolerance"]
-
+    wavetolerance=tsudata["wavetolerance"]
+    sealevel=tsudata["sealevel"]
     # do some checking with the region.
     amrdata = get_amr2ez_data(wdir, odir)
     mxnest = amrdata["mxnest"]  # max number of levels.
