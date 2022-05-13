@@ -140,7 +140,6 @@ def plotframe(frameno, plotdata, verbose=False):
 
     # loop over figures to appear for this frame:
     # -------------------------------------------
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         if (not plotfigure._show) or (plotfigure.type != "each_frame"):
@@ -178,7 +177,6 @@ def plotframe(frameno, plotdata, verbose=False):
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
-
         for axesname in plotfigure._axesnames:
             plotaxes = plotaxes_dict[axesname]
             if not plotaxes._show:
@@ -445,7 +443,6 @@ def plotframe(frameno, plotdata, verbose=False):
                 plotdir=plotdata.plotdir,
                 verbose=verbose,
             )
-    return current_data
 
     # end of plotframe
 

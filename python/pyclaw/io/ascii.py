@@ -220,73 +220,61 @@ def read_ascii(
 
     # Read in values from fort.q file:
     try:
-        f = open(q_fname, "r")
+        with open(q_fname, "r") as f:
 
-        # Loop through every grid setting the appropriate information
-        # for ng in range(len(solution.grids)):
-        for m in range(ngrids):
+            # Loop through every grid setting the appropriate information
+            # for ng in range(len(solution.grids)):
+            for m in range(ngrids):
 
-            # Read in base header for this grid
-            gridno = read_data_line(f, type="int")
-            level = read_data_line(f, type="int")
-            n = np.zeros((ndim))
-            lower = np.zeros((ndim))
-            d = np.zeros((ndim))
-            for i in range(ndim):
-                n[i] = read_data_line(f, type="int")
-            for i in range(ndim):
-                lower[i] = read_data_line(f)
-            for i in range(ndim):
-                d[i] = read_data_line(f)
+                # Read in base header for this grid
+                gridno = read_data_line(f, type="int")
+                level = read_data_line(f, type="int")
+                n = np.zeros((ndim))
+                lower = np.zeros((ndim))
+                d = np.zeros((ndim))
+                for i in range(ndim):
+                    n[i] = read_data_line(f, type="int")
+                for i in range(ndim):
+                    lower[i] = read_data_line(f)
+                for i in range(ndim):
+                    d[i] = read_data_line(f)
 
-            blank = f.readline()
+                blank = f.readline()
 
-            # Construct the grid
-            # Since we do not have names here, we will construct the grid with
-            # the assumed dimensions x,y,z
-            names = ["x", "y", "z"]
-            dimensions = []
-            for i in range(ndim):
-                dimensions.append(
-                    pyclaw.solution.Dimension(
-                        names[i], lower[i], lower[i] + n[i] * d[i], n[i]
+                # Construct the grid
+                # Since we do not have names here, we will construct the grid with
+                # the assumed dimensions x,y,z
+                names = ["x", "y", "z"]
+                dimensions = []
+                for i in range(ndim):
+                    dimensions.append(
+                        pyclaw.solution.Dimension(
+                            names[i], lower[i], lower[i] + n[i] * d[i], n[i]
+                        )
                     )
-                )
-            grid = pyclaw.solution.Grid(dimensions)
-            grid.t = t
-            grid.meqn = meqn
+                grid = pyclaw.solution.Grid(dimensions)
+                grid.t = t
+                grid.meqn = meqn
 
-            # RJL 1/8/10:  Changed empty_aux to zeros_aux below so aux won't
-            # be filled with random values if aux arrays not read in.  Would
-            # like to delete this and initialize grid.aux only if it will be
-            # read in below, but for some reason that doesn't work.
+                # RJL 1/8/10:  Changed empty_aux to zeros_aux below so aux won't
+                # be filled with random values if aux arrays not read in.  Would
+                # like to delete this and initialize grid.aux only if it will be
+                # read in below, but for some reason that doesn't work.
 
-            if maux > 0:
-                grid.zeros_aux(maux)
+                if maux > 0:
+                    grid.zeros_aux(maux)
 
-            # Fill in q values
-            grid.empty_q()
-            if grid.ndim == 1:
-                for i in range(grid.dimensions[0].n):
-                    l = []
-                    while len(l) < grid.meqn:
-                        line = f.readline()
-                        l = l + line.split()
-                    for m in range(grid.meqn):
-                        grid.q[i, m] = float(l[m])
-            elif grid.ndim == 2:
-                for j in range(grid.dimensions[1].n):
+                # Fill in q values
+                grid.empty_q()
+                if grid.ndim == 1:
                     for i in range(grid.dimensions[0].n):
                         l = []
                         while len(l) < grid.meqn:
                             line = f.readline()
                             l = l + line.split()
                         for m in range(grid.meqn):
-                            grid.q[i, j, m] = float(l[m])
-                    blank = f.readline()
-            elif grid.ndim == 3:
-                raise NotImplementedError("3d still does not work!")
-                for k in range(grid.dimensions[2].n):
+                            grid.q[i, m] = float(l[m])
+                elif grid.ndim == 2:
                     for j in range(grid.dimensions[1].n):
                         for i in range(grid.dimensions[0].n):
                             l = []
@@ -294,20 +282,32 @@ def read_ascii(
                                 line = f.readline()
                                 l = l + line.split()
                             for m in range(grid.meqn):
-                                grid.q[i, j, k, m] = float(l[m])
+                                grid.q[i, j, m] = float(l[m])
                         blank = f.readline()
-                    blank = f.readline()
-            else:
-                msg = "Read only supported up to 3d."
-                logger.critical(msg)
-                raise Exception(msg)
+                elif grid.ndim == 3:
+                    raise NotImplementedError("3d still does not work!")
+                    for k in range(grid.dimensions[2].n):
+                        for j in range(grid.dimensions[1].n):
+                            for i in range(grid.dimensions[0].n):
+                                l = []
+                                while len(l) < grid.meqn:
+                                    line = f.readline()
+                                    l = l + line.split()
+                                for m in range(grid.meqn):
+                                    grid.q[i, j, k, m] = float(l[m])
+                            blank = f.readline()
+                        blank = f.readline()
+                else:
+                    msg = "Read only supported up to 3d."
+                    logger.critical(msg)
+                    raise Exception(msg)
 
-            # Add AMR attributes:
-            grid.gridno = gridno
-            grid.level = level
+                # Add AMR attributes:
+                grid.gridno = gridno
+                grid.level = level
 
-            # Add new grid to solution
-            solution.grids.append(grid)
+                # Add new grid to solution
+                solution.grids.append(grid)
 
     except (IOError):
         raise
@@ -330,61 +330,50 @@ def read_ascii(
 
         # Found a valid path, try to open and read it
         try:
-            f = open(fname, "r")
+            with open(fname, "r") as f:
 
-            # Read in aux file
-            for n in range(len(solution.grids)):
-                # Fetch correct grid
-                gridno = read_data_line(f, type="int")
-                grid = solution.grids[gridno - 1]
-                # These should match this grid already, raise exception otherwise
-                if not (grid.level == read_data_line(f, type="int")):
-                    raise IOError(
-                        "Grid level in aux file header did not match grid no %s."
-                        % grid.gridno
-                    )
-                for dim in grid.dimensions:
-                    if not (dim.n == read_data_line(f, type="int")):
+                # Read in aux file
+                for n in range(len(solution.grids)):
+                    # Fetch correct grid
+                    gridno = read_data_line(f, type="int")
+                    grid = solution.grids[gridno - 1]
+                    # These should match this grid already, raise exception otherwise
+                    if not (grid.level == read_data_line(f, type="int")):
                         raise IOError(
-                            "Dimension %s's n in aux file header did not match grid no %s."
-                            % (dim.name, grid.gridno)
+                            "Grid level in aux file header did not match grid no %s."
+                            % grid.gridno
                         )
-                for dim in grid.dimensions:
-                    if not (abs(dim.lower - read_data_line(f, type="float")) < 1.0e-4):
-                        raise IOError(
-                            "Dimension %s's lower in aux file header did not match grid no %s."
-                            % (dim.name, grid.gridno)
-                        )
-                for dim in grid.dimensions:
-                    if not (abs(dim.d - read_data_line(f, type="float")) < 1.0e-4):
-                        raise IOError(
-                            "Dimension %s's d in aux file header did not match grid no %s."
-                            % (dim.name, grid.gridno)
-                        )
+                    for dim in grid.dimensions:
+                        if not (dim.n == read_data_line(f, type="int")):
+                            raise IOError(
+                                "Dimension %s's n in aux file header did not match grid no %s."
+                                % (dim.name, grid.gridno)
+                            )
+                    for dim in grid.dimensions:
+                        if not (abs(dim.lower - read_data_line(f, type="float")) < 1.0e-4):
+                            raise IOError(
+                                "Dimension %s's lower in aux file header did not match grid no %s."
+                                % (dim.name, grid.gridno)
+                            )
+                    for dim in grid.dimensions:
+                        if not (abs(dim.d - read_data_line(f, type="float")) < 1.0e-4):
+                            raise IOError(
+                                "Dimension %s's d in aux file header did not match grid no %s."
+                                % (dim.name, grid.gridno)
+                            )
 
-                f.readline()
+                    f.readline()
 
-                # Read in auxillary array
-                if grid.ndim == 1:
-                    for i in range(grid.dimensions[0].n):
-                        l = []
-                        while len(l) < grid.maux:
-                            line = f.readline()
-                            l = l + line.split()
-                        for m in range(grid.maux):
-                            grid.aux[i, m] = float(l[m])
-                elif grid.ndim == 2:
-                    for j in range(grid.dimensions[1].n):
+                    # Read in auxillary array
+                    if grid.ndim == 1:
                         for i in range(grid.dimensions[0].n):
                             l = []
                             while len(l) < grid.maux:
                                 line = f.readline()
                                 l = l + line.split()
                             for m in range(grid.maux):
-                                grid.aux[i, j, m] = float(l[m])
-                        blank = f.readline()
-                elif grid.ndim == 3:
-                    for k in range(grid.dimensions[2].n):
+                                grid.aux[i, m] = float(l[m])
+                    elif grid.ndim == 2:
                         for j in range(grid.dimensions[1].n):
                             for i in range(grid.dimensions[0].n):
                                 l = []
@@ -392,12 +381,23 @@ def read_ascii(
                                     line = f.readline()
                                     l = l + line.split()
                                 for m in range(grid.maux):
-                                    grid.aux[i, j, k, m] = float(l[m])
+                                    grid.aux[i, j, m] = float(l[m])
                             blank = f.readline()
-                        blank = f.readline()
-                else:
-                    logger.critical("Read aux only up to 3d is supported.")
-                    raise Exception("Read aux only up to 3d is supported.")
+                    elif grid.ndim == 3:
+                        for k in range(grid.dimensions[2].n):
+                            for j in range(grid.dimensions[1].n):
+                                for i in range(grid.dimensions[0].n):
+                                    l = []
+                                    while len(l) < grid.maux:
+                                        line = f.readline()
+                                        l = l + line.split()
+                                    for m in range(grid.maux):
+                                        grid.aux[i, j, k, m] = float(l[m])
+                                blank = f.readline()
+                            blank = f.readline()
+                    else:
+                        logger.critical("Read aux only up to 3d is supported.")
+                        raise Exception("Read aux only up to 3d is supported.")
         except (IOError):
             raise
         except:
@@ -430,15 +430,14 @@ def read_ascii_t(frame, path="./", file_prefix="fort"):
     path = os.path.join(base_path, "%s.t" % file_prefix) + str(frame).zfill(4)
     try:
         logger.debug("Opening %s file." % path)
-        f = open(path, "r")
+        with open(path, "r") as f:
 
-        t = read_data_line(f)
-        meqn = read_data_line(f, type="int")
-        ngrids = read_data_line(f, type="int")
-        maux = read_data_line(f, type="int")
-        ndim = read_data_line(f, type="int")
+            t = read_data_line(f)
+            meqn = read_data_line(f, type="int")
+            ngrids = read_data_line(f, type="int")
+            maux = read_data_line(f, type="int")
+            ndim = read_data_line(f, type="int")
 
-        f.close()
     except (IOError):
         raise
     except:
