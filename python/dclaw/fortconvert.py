@@ -113,6 +113,8 @@ def convertfortdir(
     south = kwargs.get("south", None)
     north = kwargs.get("north", None)
 
+    bilinear = kwargs.get("bilinear", True)
+
     if east is not None and west is not None:
         assert east > west
     if north is not None and south is not None:
@@ -201,6 +203,7 @@ def convertfortdir(
                     nrows,
                     components,
                     topotype,
+                    bilinear
                 ]
             )
 
@@ -222,6 +225,7 @@ def convertfortdir(
                     south,
                     north,
                     epsg,
+                    bilinear,
                 ]
             )
 
@@ -245,6 +249,7 @@ def convertfortdir(
                     topotype,
                     write_level,
                     epsg,
+                    bilinear,
                 ]
             )
 
@@ -377,6 +382,7 @@ def fort2uniform(
     topotype=None,
     write_level=False,
     epsg=None,
+    bilinear=True,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -456,7 +462,7 @@ def fort2uniform(
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv, lev = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
                 qout = qv[qlst]
                 Q[j * mx + i] = qout
 
@@ -536,7 +542,7 @@ def fort2uniform(
             y = ylow + (j + 0.5) * dy
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv, lev = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
                 qout = qv[qlst]
                 for q in qout:
                     foutq.write("%s " % float(q))
@@ -557,6 +563,7 @@ def fort2refined(
     south=None,
     north=None,
     epsg=None,
+    bilinear=True,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -639,7 +646,7 @@ def fort2refined(
 
 # ==============================================================================
 def fort2topotype(
-    framenumber, outfile, fortdir, xll, yll, cellsize, ncols, nrows, m=1, topotype=2
+    framenumber, outfile, fortdir, xll, yll, cellsize, ncols, nrows, m=1, topotype=2, bilinear=True,
 ):
     """
     convert data in a fort file of framenumber = XXXX, ie fort.qXXXX
@@ -695,7 +702,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 Q[i, j] = qv[meqn - 1] - qv[0]
 
     elif m == "depth":
@@ -703,7 +710,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 depth = qv[0]
                 if depth <= 1.0e-3:
                     depth = nodata_value
@@ -714,7 +721,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 eta = qv[meqn - 1]
                 if qv[0] <= 1.0e-3:
                     eta = nodata_value
@@ -727,7 +734,7 @@ def fort2topotype(
             for j in range(ncols):
                 xp = X[0, j]
                 k = i * ncols + j
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 Q[k] = qv
 
     else:
@@ -735,7 +742,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 Q[i, j] = qv[m - 1]
 
     if m == "all":
@@ -866,7 +873,7 @@ def array2fort(
 
 
 # ==============================================================================
-def fort2griddata(fortqname, forttname, m=1):
+def fort2griddata(fortqname, forttname, m=1, bilinear=True):
     """
     convert data in a fort file ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -895,7 +902,7 @@ def fort2griddata(fortqname, forttname, m=1):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv = pointfromfort((xp, yp), solutionlist)
+            qv = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
             Q[i, j] = qv[m - 1]
 
     return X, Y, Q
@@ -904,7 +911,7 @@ def fort2griddata(fortqname, forttname, m=1):
 # ==============================================================================
 
 # ==============================================================================
-def fort2griddata_vector(fortqname, forttname, meqn=7):
+def fort2griddata_vector(fortqname, forttname, meqn=7, bilinear=True):
     """
     convert data in a fort file ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -937,7 +944,7 @@ def fort2griddata_vector(fortqname, forttname, meqn=7):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv = pointfromfort((xp, yp), solutionlist)
+            qv = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
             Q[i, j, :] = qv
             # import pdb;pdb.set_trace()
 
@@ -945,7 +952,7 @@ def fort2griddata_vector(fortqname, forttname, meqn=7):
 
 
 # ==============================================================================
-def fort2griddata_framenumbers(framenumber, fortdir, m=1):
+def fort2griddata_framenumbers(framenumber, fortdir, m=1, bilinear=True):
     """
     convert data in a fort file of framenumber = XXXX, ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -981,7 +988,7 @@ def fort2griddata_framenumbers(framenumber, fortdir, m=1):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv, lev = pointfromfort((xp, yp), solutionlist)
+            qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
             Q[i, j] = qv[m - 1]
 
     return X, Y, Q
@@ -1233,7 +1240,7 @@ def fort2list(fortqname, forttname):
 
 
 # ===============================================================================
-def pointfromfort(point, solutionlist):
+def pointfromfort(point, solutionlist, bilinear=True):
     """
     for a point (x,y) return the solution vector q determined from the
     best grid available for that point.
@@ -1353,10 +1360,12 @@ def pointfromfort(point, solutionlist):
     j2 = min(j2, my)
 
     # x and y values of the four surrounding points in the grid
-    xl = xlow + (i1 - 1) * dx
-    xr = xl + dx
-    yl = ylow + (j1 - 1) * dy
-    yu = yl + dy
+    # KRB note: I think these are the lower left corners of the cell.
+    # all need increasing by 1/2 dx or dy.
+    xl = xlow + (i1 - 1) * dx + (dx/2)
+    xr = xl + dx + (dx/2)
+    yl = ylow + (j1 - 1) * dy+ (dy/2)
+    yu = yl + dy+ (dy/2)
 
     # indices into the data array
     ijll = (j1 - 1) * mx + i1
@@ -1371,13 +1380,34 @@ def pointfromfort(point, solutionlist):
     qur = data[ijur - 1, :]
 
     # bilinear interpolation to (xp,yp)
-    q = (
-        qll * (xr - xp) * (yu - yp)
-        + qlr * (xp - xl) * (yu - yp)
-        + qul * (xr - xp) * (yp - yl)
-        + qur * (xp - xl) * (yp - yl)
-    )
-    q = q / (dx * dy)
+    if bilinear:
+        q = (
+            qll * (xr - xp) * (yu - yp)
+            + qlr * (xp - xl) * (yu - yp)
+            + qul * (xr - xp) * (yp - yl)
+            + qur * (xp - xl) * (yp - yl)
+        )
+        q = q / (dx * dy)
+    else:
+        # don't interpolate, instead, take the native grid resolution
+        # value. Choose whichever of ll, lr, ul, lr is closest based on
+        # the relative areas is bigger. https://en.wikipedia.org/wiki/Bilinear_interpolation
+
+        all = (xr - xp) * (yu - yp)
+        alr = (xp - xl) * (yu - yp)
+        aul = (xr - xp) * (yp - yl)
+        aur = (xp - xl) * (yp - yl)
+
+        maxa = max((all, alr, aur, aul))
+
+        if all == maxa:
+            q = qll
+        elif alr == maxa:
+            q = qlr
+        elif aul == maxa:
+            q = qul
+        else:
+            q = qur
 
     return q, level
 

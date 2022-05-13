@@ -82,7 +82,12 @@ def main():
         help="EPSG code to use for output .tif and .shp files",
         default=None,
     )
-
+    parser.add_argument(
+        "-b", "--bilinear",
+        help="use bilinear interpolation (default =False) in fortconvert",
+        default = False,
+        action="store_false",
+        )
     parser.add_argument(
         "-w",
         "--west",
@@ -292,6 +297,7 @@ def main():
             topotype="gtif",
             write_level=True,
             epsg=args.epsg,
+            bilinear=args.bilinear,
             xlower=xlow,
             xupper=xhi,
             ylower=ylow,
@@ -506,12 +512,18 @@ def dclaw2maxval_withlev(
                 eta_max[refined_to_sea_level] = sealevel
                 h_max[refined_to_sea_level] = h[refined_to_sea_level]
                 h_min[refined_to_sea_level] = h[refined_to_sea_level]
+                arrival_time[refined_to_sea_level] = time_fill
+                eta_max_time[refined_to_sea_level] = time_fill
+                vel_max_time[refined_to_sea_level] = time_fill
 
                 # use definition of a wave defined in tsunami refinement.
                 # reset wave based on
                 wave_now = (np.abs(eta - sealevel) > wavetolerance) & h_present
-                wave_all[refined_to_dry] = False
                 wave_all[wave_now] = True
+
+                # reset where refined to dry or sea level.
+                wave_all[refined_to_sea_level] = False
+                wave_all[refined_to_dry] = False
 
                 # determine if it is the first time greater than the overwrite
                 # level (and h_present)
