@@ -575,7 +575,7 @@ def dclaw2maxval_withlev(
                 # presuming time has been set.
                 # presuming the arrival time has passed.
                 # and presuming that this timestep eta gets updated.
-                update_h_time = update_h & not_super_late
+                update_h_time = update_h_max & not_super_late
                 update_vel_time = update_vel & not_super_late
 
                 h_max_time[update_h_time] = time
