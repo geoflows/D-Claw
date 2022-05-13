@@ -375,9 +375,10 @@ def dclaw2maxval_withlev(
     # constants.
     hmin_fill = 99999.0
     nodata = -9999
+    time_fill = -1.
 
     # initialize arrays for output values.
-    eta_max = np.zeros(dims, dtype="float32")
+    eta_max = nodata * np.ones(dims, dtype="float32")
     h_max = np.zeros(dims, dtype="float32")
     h_min = np.ones(dims, dtype="float32")
     h_min[:] = hmin_fill
@@ -402,9 +403,9 @@ def dclaw2maxval_withlev(
     fr_owr_lev = np.zeros(dims, dtype=int)
     arrival_lev = np.zeros(dims, dtype=int)
 
-    arrival_time = -1 * np.ones(dims, dtype="float32")
-    eta_max_time = -1 * np.ones(dims, dtype="float32")
-    vel_max_time = -1 * np.ones(dims, dtype="float32")
+    arrival_time = time_fill * np.ones(dims, dtype="float32")
+    eta_max_time = time_fill * np.ones(dims, dtype="float32")
+    vel_max_time = time_fill * np.ones(dims, dtype="float32")
 
     # is thickness present?
     # if never present, its equal to 0
@@ -486,25 +487,28 @@ def dclaw2maxval_withlev(
 
                 # set values of h, hmin, m, eta, vel, froude to nodata or
                 # zero where refined to dry occured.
-                eta_max[refined_to_dry] = 0
+                eta_max[refined_to_dry] = nodata
                 h_max[refined_to_dry] = 0
-                h_min[refined_to_dry] = 0
+                h_min[refined_to_dry] = hmin_fill
                 m_max[refined_to_dry] = 0
                 vel_max[refined_to_dry] = 0
                 mom_max[refined_to_dry] = 0
                 fr_max[refined_to_dry] = 0
+                arrival_time[refined_to_dry] = time_fill
+                eta_max_time[refined_to_dry] = time_fill
+                vel_max_time[refined_to_dry] = time_fill
 
                 # if refinement is to sea-level, eta, hmax, and hmin should be
-                # reset. this implies incoming refinement.                 
+                # reset. this implies incoming refinement.
+                # set values of h, hmin to sea level (or current value)
                 refined_to_sea_level = (eta == sealevel) & (level > h_level_masked)
-                # set values of h, hmin, m, eta, vel, froude to nodata or
-                # zero where refined to dry occured.
-                eta_max[refined_to_sea_level] = 0
-                h_max[refined_to_sea_level] = 0
-                h_min[refined_to_sea_level] = hmin_fill
 
+                eta_max[refined_to_sea_level] = sea_level
+                h_max[refined_to_sea_level] = h[refined_to_sea_level]
+                h_min[refined_to_sea_level] = h[refined_to_sea_level]
 
                 # use definition of a wave defined in tsunami refinement.
+                # reset wave based on
                 wave_now = (np.abs(eta - sealevel) > wavetolerance) & h_present
                 wave_all[refined_to_dry] = False
                 wave_all[wave_now] = True
@@ -519,8 +523,6 @@ def dclaw2maxval_withlev(
                 h_level_masked[h_present_and_level_higher] = level[
                     h_present_and_level_higher
                 ]
-
-
 
                 # set values of h, hmin, m, eta, vel, froude to value the first time
                 # overwrite.
@@ -538,13 +540,13 @@ def dclaw2maxval_withlev(
                 # OR
                 #    first time greater than the overwrite level.
                 #
-                update_eta_max = (level >= eta_owr_lev) & (eta > eta_max)& wave_now
-                update_h_max = (level >= h_owr_lev) & (h > h_max)& wave_now
-                update_h_min = (level >= h_min_owr_lev) & (h < h_min)& wave_now
+                update_eta_max = (level >= eta_owr_lev) & (eta > eta_max) & wave_now
+                update_h_max = (level >= h_owr_lev) & (h > h_max) & wave_now
+                update_h_min = (level >= h_min_owr_lev) & (h < h_min) & wave_now
                 update_m = (level >= m_owr_lev) & (m > m_max)& wave_now
-                update_vel = (level >= vel_owr_lev) & (vel > vel_max)& wave_now
-                update_mom = (level >= mom_owr_lev) & (mom > mom_max)& wave_now
-                update_fr = (level >= fr_owr_lev) & (fr > fr_max)& wave_now
+                update_vel = (level >= vel_owr_lev) & (vel > vel_max) & wave_now
+                update_mom = (level >= mom_owr_lev) & (mom > mom_max) & wave_now
+                update_fr = (level >= fr_owr_lev) & (fr > fr_max) & wave_now
 
                 # ensure owr_level arrays do not exceed owr_level
                 # first update to level seen,
@@ -577,7 +579,7 @@ def dclaw2maxval_withlev(
                 # update arrival time,
                 # set arrival time to the first timestep that has eta>0.01 and highest level seen.
                 # here
-                owr_arrival = (eta > 0.01) & (arrival_time < 0) & (level > arrival_lev)
+                owr_arrival = (np.abs(eta - sea_level) > wavetolerance) & (arrival_time < 0) & (level > arrival_lev) & h_present
                 arrival_lev[owr_arrival] = level[owr_arrival]
                 arrival_time[owr_arrival] = time
 
