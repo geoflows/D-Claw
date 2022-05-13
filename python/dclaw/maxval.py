@@ -383,8 +383,6 @@ def dclaw2maxval_withlev(
     m_max = np.zeros(dims, dtype="float32")
     vel_max = np.zeros(dims, dtype="float32")
     mom_max = np.zeros(dims, dtype="float32")
-    eta_max = np.zeros(dims, dtype="float32")
-    eta_max[:] = nodata
     lev_max = np.zeros(dims, dtype="float32")
     fr_max = np.zeros(dims, dtype="float32")
 
@@ -399,12 +397,11 @@ def dclaw2maxval_withlev(
     m_owr_lev = np.zeros(dims, dtype=int)
     vel_owr_lev = np.zeros(dims, dtype=int)
     mom_owr_lev = np.zeros(dims, dtype=int)
-    eta_owr_lev = np.zeros(dims, dtype=int)
     fr_owr_lev = np.zeros(dims, dtype=int)
     arrival_lev = np.zeros(dims, dtype=int)
 
     arrival_time = -1 * np.ones(dims, dtype="float32")
-    eta_max_time = -1 * np.ones(dims, dtype="float32")
+    h_max_time = -1 * np.ones(dims, dtype="float32")
     vel_max_time = -1 * np.ones(dims, dtype="float32")
 
     # is thickness present?
@@ -500,6 +497,8 @@ def dclaw2maxval_withlev(
                     h_present_and_level_higher
                 ]
 
+                wave_all[refined_to_dry] = False
+
                 # set values of h, hmin, m, eta, vel, froude to nodata or
                 # zero where refined to dry occured.
                 h_max[refined_to_dry] = 0
@@ -507,7 +506,6 @@ def dclaw2maxval_withlev(
                 m_max[refined_to_dry] = 0
                 vel_max[refined_to_dry] = 0
                 mom_max[refined_to_dry] = 0
-                eta_max[refined_to_dry] = nodata
                 fr_max[refined_to_dry] = 0
 
                 # set values of h, hmin, m, eta, vel, froude to value the first time
@@ -517,7 +515,6 @@ def dclaw2maxval_withlev(
                 m_max[first_time_owr] = m[first_time_owr]
                 vel_max[first_time_owr] = vel[first_time_owr]
                 mom_max[first_time_owr] = mom[first_time_owr]
-                eta_max[first_time_owr] = eta[first_time_owr]
                 fr_max[first_time_owr] = fr[first_time_owr]
 
                 # determine whether to update. condition is:
@@ -526,25 +523,23 @@ def dclaw2maxval_withlev(
                 # OR
                 #    first time greater than the overwrite level.
                 #
-                update_eta = (level >= eta_owr_lev) & (eta > eta_max)
-                update_h_max = (level >= h_owr_lev) & (h > h_max)
-                update_h_min = (level >= h_min_owr_lev) & (h < h_min)
-                update_m = (level >= m_owr_lev) & (m > m_max)
-                update_vel = (level >= vel_owr_lev) & (vel > vel_max)
-                update_mom = (level >= mom_owr_lev) & (mom > mom_max)
-                update_fr = (level >= fr_owr_lev) & (fr > fr_max)
+                update_h_max = (level >= h_owr_lev) & (h > h_max)& wave_now
+                update_h_min = (level >= h_min_owr_lev) & (h < h_min)& wave_now
+                update_m = (level >= m_owr_lev) & (m > m_max)& wave_now
+                update_vel = (level >= vel_owr_lev) & (vel > vel_max)& wave_now
+                update_mom = (level >= mom_owr_lev) & (mom > mom_max)& wave_now
+                update_fr = (level >= fr_owr_lev) & (fr > fr_max)& wave_now
 
                 # ensure owr_level arrays do not exceed owr_level
                 # first update to level seen,
-                eta_owr_lev[update_eta] = level[update_eta]
                 h_owr_lev[update_h_max] = level[update_h_max]
                 h_min_owr_lev[update_h_min] = level[update_h_min]
                 m_owr_lev[update_m] = level[update_m]
                 vel_owr_lev[update_vel] = level[update_vel]
                 mom_owr_lev[update_mom] = level[update_mom]
                 fr_owr_lev[update_fr] = level[update_fr]
+
                 # second, ensure it doesn't exceed the owr level.
-                eta_owr_lev[eta_owr_lev > owr_level] = owr_level
                 h_owr_lev[h_owr_lev > owr_level] = owr_level
                 h_min_owr_lev[h_min_owr_lev > owr_level] = owr_level
                 m_owr_lev[m_owr_lev > owr_level] = owr_level
@@ -558,7 +553,6 @@ def dclaw2maxval_withlev(
                 m_max[update_m] = m[update_m]
                 vel_max[update_vel] = vel[update_vel]
                 mom_max[update_mom] = mom[update_mom]
-                eta_max[update_eta] = eta[update_eta]
                 fr_max[update_fr] = fr[update_fr]
 
                 # update arrival time,
@@ -570,22 +564,26 @@ def dclaw2maxval_withlev(
 
                 # set other times to arrival time, to indicate the wave has
                 # arrived there and thus its valid to set a max.
-                eta_max_time[owr_arrival] = time
+                h_max_time[owr_arrival] = time
                 vel_max_time[owr_arrival] = time
 
                 # we want the first peak
-                not_super_late = ((time - eta_max_time) < (1 * 60)) & (
+                not_super_late = ((time - h_max_time) < (1 * 60)) & (
                     arrival_time >= 0
                 )
                 # use 10 minutes
                 # presuming time has been set.
                 # presuming the arrival time has passed.
                 # and presuming that this timestep eta gets updated.
-                update_eta_time = update_eta & not_super_late
+                update_h_time = update_eta & not_super_late
                 update_vel_time = update_vel & not_super_late
 
-                eta_max_time[update_eta_time] = time
+                h_max_time[update_h_time] = time
                 vel_max_time[update_vel_time] = time
+
+    b = eta-h
+
+    eta_max = b+h_max
 
     never_inundated = h_max < drytolerance
     never_wave = wave_all == False
@@ -598,13 +596,13 @@ def dclaw2maxval_withlev(
     eta_max[zero_out] = nodata
     vel_max[zero_out] = nodata
     mom_max[zero_out] = nodata
-    eta_max_time[zero_out] = nodata
+    h_max_time[zero_out] = nodata
     vel_max_time[zero_out] = nodata
     arrival_time[zero_out] = nodata
     fr_max[zero_out] = nodata
 
     # where less than zero, wave never reached.
-    eta_max_time[eta_max_time < 0] = nodata
+    h_max_time[h_max_time < 0] = nodata
     vel_max_time[vel_max_time < 0] = nodata
     arrival_time[arrival_time < 0] = nodata
 
@@ -628,7 +626,7 @@ def dclaw2maxval_withlev(
         dst.write(vel_max, 2)
         dst.write(mom_max, 3)
         dst.write(m_max, 4)
-        dst.write(eta_max_time, 5)
+        dst.write(h_max_time, 5)
         dst.write(vel_max_time, 6)
         dst.write(eta_max, 7)
         dst.write(lev_max, 8)
