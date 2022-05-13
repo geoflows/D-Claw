@@ -503,7 +503,7 @@ def dclaw2maxval_withlev(
                 # set values of h, hmin to sea level (or current value)
                 refined_to_sea_level = (eta == sealevel) & (level > h_level_masked)
 
-                eta_max[refined_to_sea_level] = sea_level
+                eta_max[refined_to_sea_level] = sealevel
                 h_max[refined_to_sea_level] = h[refined_to_sea_level]
                 h_min[refined_to_sea_level] = h[refined_to_sea_level]
 
