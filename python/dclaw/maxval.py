@@ -484,6 +484,26 @@ def dclaw2maxval_withlev(
                 # the first time the cell refines to the next highest level.
                 refined_to_dry = (h_present == False) & (level > h_level_masked)
 
+                # set values of h, hmin, m, eta, vel, froude to nodata or
+                # zero where refined to dry occured.
+                eta_max[refined_to_dry] = 0
+                h_max[refined_to_dry] = 0
+                h_min[refined_to_dry] = 0
+                m_max[refined_to_dry] = 0
+                vel_max[refined_to_dry] = 0
+                mom_max[refined_to_dry] = 0
+                fr_max[refined_to_dry] = 0
+
+                # if refinement is to sea-level, eta, hmax, and hmin should be
+                # reset. this implies incoming refinement.                 
+                refined_to_sea_level = (eta == sealevel) & (level > h_level_masked)
+                # set values of h, hmin, m, eta, vel, froude to nodata or
+                # zero where refined to dry occured.
+                eta_max[refined_to_sea_level] = 0
+                h_max[refined_to_sea_level] = 0
+                h_min[refined_to_sea_level] = hmin_fill
+
+
                 # use definition of a wave defined in tsunami refinement.
                 wave_now = (np.abs(eta - sealevel) > wavetolerance) & h_present
                 wave_all[refined_to_dry] = False
@@ -500,15 +520,7 @@ def dclaw2maxval_withlev(
                     h_present_and_level_higher
                 ]
 
-                # set values of h, hmin, m, eta, vel, froude to nodata or
-                # zero where refined to dry occured.
-                eta_max[refined_to_dry] = 0
-                h_max[refined_to_dry] = 0
-                h_min[refined_to_dry] = 0
-                m_max[refined_to_dry] = 0
-                vel_max[refined_to_dry] = 0
-                mom_max[refined_to_dry] = 0
-                fr_max[refined_to_dry] = 0
+
 
                 # set values of h, hmin, m, eta, vel, froude to value the first time
                 # overwrite.
