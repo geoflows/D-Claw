@@ -579,7 +579,7 @@ def dclaw2maxval_withlev(
                 # update arrival time,
                 # set arrival time to the first timestep that has eta>0.01 and highest level seen.
                 # here
-                owr_arrival = (np.abs(eta - sea_level) > wavetolerance) & (arrival_time < 0) & (level > arrival_lev) & h_present
+                owr_arrival = (np.abs(eta - sealevel) > wavetolerance) & (arrival_time < 0) & (level > arrival_lev) & h_present
                 arrival_lev[owr_arrival] = level[owr_arrival]
                 arrival_time[owr_arrival] = time
 
