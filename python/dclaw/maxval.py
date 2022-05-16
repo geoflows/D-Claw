@@ -220,28 +220,33 @@ def main():
 
     mx = int((xhi - xlow) / fine_dx)
     my = int((yhi - ylow) / fine_dy)
-    # print(my, mx)
-    # print(xlow, xhi)
-    # print(ylow, yhi)
-    # snap values to the grid.
+#    print(my, mx)
+#    print(xlow, xhi)
+#    print(ylow, yhi)
+#    print(fine_dx, fine_dy, coarse_dx, coarse_dy)
+
+    # snap values to the grid (HERE THE GRID IS THE CELL BOUNDING BOXES, NOT
+    # THE CELL CENTERS).
     if east is not None or west is not None:
-        xs = np.linspace(xlow, xhi, mx)
+        xs = np.linspace(xlow, xhi+fine_dx, mx+2)
         if east is not None:
-            xhi = np.max(xs[xs < east])
+            xhi = np.max(xs[xs <= east])
         if west is not None:
-            xlow = np.min(xs[xs > west])
+            xlow = np.min(xs[xs >= west])
         mx = int((xhi - xlow) / fine_dx)
     if north is not None or south is not None:
-        ys = np.linspace(ylow, yhi, my)
+        ys = np.linspace(ylow, yhi+fine_dy, my+2)
         if north is not None:
-            yhi = np.max(ys[ys < north])
+            yhi = np.max(ys[ys <= north])
         if south is not None:
-            ylow = np.min(ys[ys > south])
+            ylow = np.min(ys[ys >= south])
         my = int((yhi - ylow) / fine_dy)
 
-    # print(my, mx)
-    # print(xlow, xhi)
-    # print(ylow, yhi)
+#    print(my, mx)
+#    print(fine_dx, fine_dy)
+#    print(xlow, xhi)
+#    print(ylow, yhi)
+
     # make output dir
     if not os.path.exists(os.path.join(args.wdir, args.gdir)):
         os.mkdir(os.path.join(args.wdir, args.gdir))

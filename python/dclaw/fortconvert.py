@@ -425,6 +425,7 @@ def fort2uniform(
     dx = float((xhi - xlow) / mx)
     dy = float((yhi - ylow) / my)
 
+    # print(dx, dy, mx, my, xlow, xhi, ylow, yhi )
     fortheader = {}
     fortheader["grid_number"] = 1
     fortheader["AMR_level"] = 1
@@ -459,7 +460,7 @@ def fort2uniform(
             source_level = np.empty((my, mx))
 
         for j in range(my):
-            y = ylow + (j + 0.5) * dy
+            y = ylow + (j + 0.5) * dy # here x and y are cell centers.
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
                 qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
@@ -1361,7 +1362,10 @@ def pointfromfort(point, solutionlist, bilinear=True):
 
     # x and y values of the four surrounding points in the grid
     # KRB note: I think these are the lower left corners of the cell.
-    # all need increasing by 1/2 dx or dy.
+    # all need increasing by 1/2 dx or dy. # does this mean that all the
+    # topo writers (non-gtif) would then need adjusting... Since they all
+    # assume that x and y are the lower left corners of the grid cell in
+    # question.
     xl = xlow + (i1 - 1) * dx + (dx/2)
     xr = xl + dx + (dx/2)
     yl = ylow + (j1 - 1) * dy+ (dy/2)
