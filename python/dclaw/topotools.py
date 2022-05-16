@@ -433,7 +433,7 @@ def esriheaderwrite(topoheader, outputfile, closefile=True):
 
     fout.write("%s %s\n" % ("NCOLS", topoheader["ncols"]))
     fout.write("%s %s\n" % ("NROWS", topoheader["nrows"]))
-    fout.write("%s %s\n" % ("XLLCORNER", float(topoheader["xll"])))
+    fout.write("%s %s\n" % ("XLLCORNER", float(topoheader["xll"]))) # KRB NOTE: I think this should be xllcenter
     fout.write("%s %s\n" % ("YLLCORNER", float(topoheader["yll"])))
     fout.write("%s %s\n" % ("CELLSIZE", float(topoheader["cellsize"])))
     fout.write("%s %s\n" % ("NODATA_VALUE", topoheader["nodata_value"]))
@@ -683,7 +683,8 @@ def griddata2gtif(
         yupper + cellsizeX / 2,
         ncols,
         nrows,
-    )
+    ) # rasterio transform is based on lower left corner of lower left grid
+    # cell, X and Y used here are cell centers.
 
     out_profile["height"], out_profile["width"] = X.shape
     out_profile["dtype"] = "float32"
