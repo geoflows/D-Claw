@@ -319,7 +319,7 @@ def main():
         wdir=args.wdir,
         odir=args.odir,
         gdir=args.gdir,
-        out_file="maxval.tif",
+        out_file=args.outfile,
         overwrite_level=args.overwrite_level,
         write_froude=args.write_froude,
         epsg=args.epsg,
