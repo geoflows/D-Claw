@@ -898,8 +898,8 @@ def fort2griddata(fortqname, forttname, m=1, bilinear=True):
     ncols = fortqheader["mx"]
     nrows = fortqheader["my"]
 
-    xv = np.array(xll + dx * np.arange(ncols))
-    yv = np.array(yll + dy * np.arange(nrows))
+    xv = np.array(xll + dx * np.arange(ncols)) # FLAG DAVE
+    yv = np.array(yll + dy * np.arange(nrows)) # 0.5 DX, DY adjustement?
 
     (X, Y) = np.meshgrid(xv, yv)
 
@@ -936,8 +936,8 @@ def fort2griddata_vector(fortqname, forttname, meqn=7, bilinear=True):
     ncols = fortqheader["mx"]
     nrows = fortqheader["my"]
 
-    xv = np.array(xll + dx * np.arange(ncols))
-    yv = np.array(yll + dy * np.arange(nrows))
+    xv = np.array(xll + dx * np.arange(ncols)) # FLAG DAVE
+    yv = np.array(yll + dy * np.arange(nrows)) # 0.5 DX, DY adjustement?
 
     (X, Y) = np.meshgrid(xv, yv)
 
@@ -984,8 +984,8 @@ def fort2griddata_framenumbers(framenumber, fortdir, m=1, bilinear=True):
 
     solutionlist = fort2list(fortqname, forttname)
 
-    xv = np.array(xll + cellsize * np.arange(ncols))
-    yv = np.array(yll + cellsize * np.arange(nrows))
+    xv = np.array(xll + cellsize * np.arange(ncols)) # FLAG DAVE
+    yv = np.array(yll + cellsize * np.arange(nrows)) # 0.5 DX, DY adjustement?
 
     (X, Y) = np.meshgrid(xv, yv)
 
