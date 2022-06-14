@@ -312,7 +312,7 @@ def fort2xyqscattered(framenumber, outfile=None, components="all"):
     # note that solutionlist is ordered from highest levels to lowest.
     for grid in solutionlist:
         if grid["AMR_level"] == levels:  # highest level...data assumed nonoverlapping
-            x = grid["xlow"] + grid["dx"] * (0.5 + (np.arange(grid["mx"], dtype=float)))
+            x = grid["xlow"] + grid["dx"] * (0.5 + (np.arange(grid["mx"], dtype=float))) # converted from lower left to cell center
             y = grid["ylow"] + grid["dy"] * (0.5 + (np.arange(grid["my"], dtype=float)))
             Q = grid["data"][:, qlst]
             (X, Y) = np.meshgrid(x, y)
@@ -799,7 +799,7 @@ def griddata2fort(
         mx = len(Q[0, :, 0])
         meqn = Qshape[2]
         Qfort = np.reshape(Q, (mx * my, 1))
-    xlow = X[0, 0]
+    xlow = X[0, 0] # FLAG DAVE: This probably needs adjusting for cell center vs lower left.
     ylow = Y[-1, 0]
     dx = X[0, 1] - X[0, 0]
     dy = Y[0, 0] - Y[1, 0]
