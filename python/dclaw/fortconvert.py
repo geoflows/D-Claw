@@ -35,6 +35,8 @@ file: fortconvert
 
     Note:
         this was done expeditiously and might be inefficient or bug infested
+        (KRB 2022.06.14): x,y locations considered here represent CELL CENTERS
+        rather than lower left corner of cells.
 
     David George dgeorge@uw.edu 2014.05.20
 
@@ -92,6 +94,7 @@ def convertfortdir(
                 for fortuniform: xlower,ylower,mx,my
                 if using topotype="gtif" can provide epsg=XXXX (EPSG code for CRS)
                 if kwargs are omitted the grid parameters are taken from the fort file with finest level spacing
+
 
     """
 
@@ -277,6 +280,8 @@ def fort2xyqscattered(framenumber, outfile=None, components="all"):
     q can be 1-meqn columns according to the list 'components'
     data is taken from the finest of grid intersections
 
+    data are returned with x,y coordinates reflecting the cell center.
+
     arguments
     ----------
         framenumber : of fort.qXXXX
@@ -390,6 +395,8 @@ def fort2uniform(
     Format is still standard clawpack fort.qXXXX /fort.tXXXX and can be plotted with clawpack utilities
     Should call with outdir being a new directory to keep original fort.q/fort.t files. Names are the same
 
+    x,y of results are provided as cell centers.
+
     arguments
     ----------
         framenumber : of fort.qXXXX
@@ -460,7 +467,7 @@ def fort2uniform(
             source_level = np.empty((my, mx))
 
         for j in range(my):
-            y = ylow + (j + 0.5) * dy # here x and y are cell centers.
+            y = ylow + (j + 0.5) * dy # here x and y are cell centers based on 0.5 dx and dy adjustement.
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
                 qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
@@ -540,7 +547,7 @@ def fort2uniform(
 
         for j in range(my):
             foutq.write("\n")
-            y = ylow + (j + 0.5) * dy
+            y = ylow + (j + 0.5) * dy # here also we are extracting at cell centers.
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
                 qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
@@ -628,6 +635,7 @@ def fort2refined(
             ylow = np.min(ys[ys > south])
         my = int((yhi - ylow) / dy)
 
+    # fort2uniform will extract at cell centers based on the bounding rectangle defined.
     return fort2uniform(
         framenumber,
         outfortq,
@@ -682,7 +690,7 @@ def fort2topotype(
         ncols = int(np.floor((xhi - xll) / cellsize))
         nrows = int(np.floor((yhi - yll) / cellsize))
 
-        xll = xll + 0.5 * cellsize
+        xll = xll + 0.5 * cellsize # Here we adjust to get cell centers.
         yll = yll + 0.5 * cellsize
         xhi = xhi - 0.5 * cellsize
         yhi = yhi - 0.5 * cellsize

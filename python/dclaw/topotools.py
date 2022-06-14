@@ -581,6 +581,9 @@ def griddata2topofile(
     """
     griddata2topofile takes gridded data and produces a topofile with a header
 
+    X, Y are expected to reflect the grid cell centers. The lower left corner
+    will be inferred and written to the header.
+
     Q is expected to be in the shape [meqn, nrow, ncol] and will be written
     to meqn bands.
 
@@ -588,19 +591,24 @@ def griddata2topofile(
 
     nrows = len(Z[:, 0])
     ncols = len(Z[0, :])
-    xll = X[0, 0]
-    yll = Y[-1, 0]
+    xllcc = X[0, 0] # lower left cell center
+    yllcc = Y[-1, 0]
     nodata_value = nodata_value_out
-    xupper = X[0, -1]
-    yupper = Y[0, 0]
+    xuppercc = X[0, -1] # upper right cell center
+    yuppercc = Y[0, 0]
 
     if yupper < yll:
         print("geotools.topotools.griddata2topofile:")
         print("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
         print("The matrix Y, should advance from north to south rowwise")
 
-    cellsizeX = (xupper - xll) / (ncols - 1)
-    cellsizeY = (yupper - yll) / (nrows - 1)
+    cellsizeX = (xuppercc - xllcc) / (ncols - 1) # this diff is correct if cell centers are used.
+    cellsizeY = (yuppercc - yllcc) / (nrows - 1) # because the distance between the cell centers is
+    # the total number of rows/columns minus one.
+
+    # calculate the lower left corner location.
+    xll = xllcc - 0.5 * cellsizeX
+    yll = yllcc - 0.5 * cellsizeY
 
     topoheader = {}
     topoheader["nrows"] = nrows
@@ -660,27 +668,27 @@ def griddata2gtif(
     nrows = len(X[:, 0])
     ncols = len(X[0, :])
     meqn = Q.shape[0]
-    xll = X[0, 0]
-    yll = Y[-1, 0]
+    xllcc = X[0, 0]
+    yllcc = Y[-1, 0]
     nodata_value = nodata_value_out
-    xupper = X[0, -1]
-    yupper = Y[0, 0]
+    xuppercc = X[0, -1]
+    yuppercc = Y[0, 0]
 
     if yupper < yll:
         print("geotools.topotools.griddata2topofile:")
         print("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
         print("The matrix Y, should advance from north to south rowwise")
 
-    cellsizeX = (xupper - xll) / (ncols - 1)
-    cellsizeY = (yupper - yll) / (nrows - 1)
+    cellsizeX = (xuppercc - xllcc) / (ncols - 1)
+    cellsizeY = (yuppercc - yllcc) / (nrows - 1)
 
     # define rasterio profile
     out_profile = {}
     out_profile["transform"] = rasterio.transform.from_bounds(
-        xll - cellsizeX / 2,
-        yll - cellsizeX / 2,
-        xupper + cellsizeX / 2,
-        yupper + cellsizeX / 2,
+        xllcc - cellsizeX / 2,
+        yllcc - cellsizeX / 2,
+        xuppercc + cellsizeX / 2,
+        yuppercc + cellsizeX / 2,
         ncols,
         nrows,
     ) # rasterio transform is based on lower left corner of lower left grid
