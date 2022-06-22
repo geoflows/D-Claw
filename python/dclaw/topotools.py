@@ -597,7 +597,7 @@ def griddata2topofile(
     xuppercc = X[0, -1] # upper right cell center
     yuppercc = Y[0, 0]
 
-    if yupper < yll:
+    if yuppercc < yllcc:
         print("geotools.topotools.griddata2topofile:")
         print("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
         print("The matrix Y, should advance from north to south rowwise")
@@ -674,7 +674,7 @@ def griddata2gtif(
     xuppercc = X[0, -1]
     yuppercc = Y[0, 0]
 
-    if yupper < yll:
+    if yuppercc < yllcc:
         print("geotools.topotools.griddata2topofile:")
         print("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
         print("The matrix Y, should advance from north to south rowwise")
