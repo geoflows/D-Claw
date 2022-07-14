@@ -297,6 +297,13 @@ def density(current_data):
     return rho
 
 
+def basalP(current_data):
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    basalP = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
+    return basalP
+
+
 def lithostaticP(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
