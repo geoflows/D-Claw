@@ -138,7 +138,7 @@ Only way in which AMR "cares" about topo resolution is that if multiple topograp
 
 Note, the min and max AMR levels defined when topo and qinit files are initialized define AMR "regions" of the permissible refinement levels. See discussion of "regions" below.
 
-If more than one topography file is provided at the same resolution for an overlapping part of the domain, the file that is provided last to the list will be used. 
+If more than one topography file is provided at the same resolution for an overlapping part of the domain, the file that is provided last to the list will be used.
 
 ### 1.8 Overspecification
 
@@ -168,7 +168,7 @@ m0 is typically a scalar.
 
 ### 2.3 D-Claw specific scalars
 
-Many of these are defined in George and Iverson (2014). Where relevant there is a place for this definition to be noted (TODO).
+Many of these are defined in Iverson and George (2014) and George and Iverson (2014). Where relevant there is a place for this definition to be noted (TODO).
 Note that some of these can be set as spatially variable using values of `q` or `aux`. This is accomplished setting auxinit or qinit (see below). Here q_1 means the first element of the q array (python index zero, iqinit=1)
 
 | Parameter Name     | How to specify if spatially variable? | Default Value | Description (units)| Where to find in G&I(2014) |
@@ -178,7 +178,7 @@ Note that some of these can be set as spatially variable using values of `q` or 
 | phi_bed          | aux_4   | 40.           | basal friction angle (degrees) |    |
 | theta_input      | aux_5   | 0.            | slope angle (degrees) |    |
 | delta            |         | 0.01          | characteristic grain diameter (m) |    |
-| kappita          |         | 0.0001        | characteristic grain diameter parameter in kperm (m) |    |
+| kappita          |         | 0.0001        | permeability at m=0.6 (units) | k0 in G&I eq 2.7   |
 | mu               |         | 0.001         | viscosity of pore-fluid (Pa-s) |    |
 | alpha_c          |         | 1.0           | debris compressibility constant (#) | This is the a constant in the equation for alpha  |
 | m_crit           |         | 0.62          | critical state value of m (#) |    |
