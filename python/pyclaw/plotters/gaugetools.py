@@ -12,9 +12,9 @@ import time
 import traceback
 
 import numpy as np
+
 from pyclaw.data import Data
-from pyclaw.plotters import plotpages
-from frametools import set_show
+from pyclaw.plotters import frametools, plotpages
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
@@ -27,9 +27,9 @@ if plotter == "matplotlib":
             print("*** Error: problem importing matplotlib")
 
 try:
-    import pylab
+    import matplotlib.pyplot as plt
 except:
-    print("*** Error: problem importing pylab")
+    print("*** Error: problem importing matplotlib.pyplot")
 
 
 # ==========================================
@@ -57,7 +57,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         )
 
     if plotdata.mode() == "iplotclaw":
-        pylab.ion()
+        plt.ion()
 
     try:
         plotfigure_dict = plotdata.plotfigure_dict
@@ -118,7 +118,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
         requested_fignos = plotdata.print_fignos
     plotted_fignos = []
 
-    plotdata = set_show(plotdata)  # set _show attributes for which figures
+    plotdata = frametools.set_show(plotdata)  # set _show attributes for which figures
     # and axes should be shown.
 
     # loop over figures to appear for this gauge:
@@ -141,11 +141,10 @@ def plotgauge(gaugeno, plotdata, verbose=False):
             plotfigure.kwargs["facecolor"] = "#ffeebb"
 
         # create figure and set handle:
-        plotfigure._handle = pylab.figure(num=figno, **plotfigure.kwargs)
+        plotfigure._handle = plt.figure(num=figno, **plotfigure.kwargs)
 
-        pylab.ioff()
         if plotfigure.clf_each_gauge:
-            pylab.clf()
+            plt.clf()
 
         try:
             plotaxes_dict = plotfigure.plotaxes_dict
@@ -168,9 +167,8 @@ def plotgauge(gaugeno, plotdata, verbose=False):
 
             # create the axes:
             axescmd = getattr(plotaxes, "axescmd", "subplot(1,1,1)")
-            axescmd = "plotaxes._handle = pylab.%s" % axescmd
+            axescmd = "plotaxes._handle = plt.%s" % axescmd
             exec(axescmd)
-            pylab.hold(True)
 
             # loop over items:
             # ----------------
@@ -215,7 +213,7 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                 print("*** use ClawPlotAxes.afteraxes ")
                 print("*** or  ClawPlotItem.aftergrid instead")
 
-        pylab.title("%s at gauge %s" % (plotaxes.title, gaugeno))
+        plt.title("%s at gauge %s" % (plotaxes.title, gaugeno))
 
         # call an afteraxes function if present:
         afteraxes = getattr(plotaxes, "afteraxes", None)
@@ -236,17 +234,17 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                     raise
 
         if plotaxes.scaled:
-            pylab.axis("scaled")
+            plt.axis("scaled")
 
         # set axes limits:
         if (plotaxes.xlimits is not None) & (type(plotaxes.xlimits) is not str):
             try:
-                pylab.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
+                plt.xlim(plotaxes.xlimits[0], plotaxes.xlimits[1])
             except:
                 pass  # let axis be set automatically
         if (plotaxes.ylimits is not None) & (type(plotaxes.ylimits) is not str):
             try:
-                pylab.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
+                plt.ylim(plotaxes.ylimits[0], plotaxes.ylimits[1])
             except:
                 pass  # let axis be set automatically
 
@@ -271,10 +269,10 @@ def plotgauge(gaugeno, plotdata, verbose=False):
                 raise
 
     if plotdata.mode() == "iplotclaw":
-        pylab.ion()
+        plt.ion()
     for figno in plotted_fignos:
-        pylab.figure(figno)
-        pylab.draw()
+        plt.figure(figno)
+        plt.draw()
 
     if verbose:
         print(("    Done with plotgauge for gauge %i" % (gaugeno)))
@@ -332,7 +330,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
     plotstyle = plotitem.plotstyle
 
     t = gaugesoln.t
-    if type(plot_var) is int:
+    if isinstance(plot_var, int):
         # import pdb pdb.set_trace()
         var = gaugesoln.q[:, plot_var]
     else:
@@ -345,17 +343,17 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
     # The plot commands using matplotlib:
 
-    pylab.hold(True)
+    # plt.hold(True)
 
-    pylab.title("%s at Gauge %i" % (plotitem._plotaxes.title, gaugesoln.gaugeno))
+    plt.title("%s at Gauge %i" % (plotitem._plotaxes.title, gaugesoln.gaugeno))
 
-    pylab.xlabel("time")
+    plt.xlabel("time")
 
     if (plot_type in ["1d_plot"]) and (plotstyle != ""):
         if color:
             kwargs["color"] = color
 
-        plotcommand = "pobj=pylab.plot(t,var,'%s', **kwargs)" % plotstyle
+        plotcommand = "pobj=plt.plot(t , var, '%s', **kwargs)" % plotstyle
         exec(plotcommand)
 
     elif plot_type == "1d_empty":
@@ -371,8 +369,7 @@ def plotgauge1(gaugesoln, plotitem, current_data):
 
 
 def find(condition):
-    (res,) = np.nonzero(np.ravel(condition))
-    return res
+    return np.flatnonzero(condition)
 
 
 def read_setgauges(datadir):
@@ -386,7 +383,6 @@ def read_setgauges(datadir):
     setgauges = Data()
 
     # default values if no gauges found:
-    setgauges.numgauges = 0
     setgauges.gaugenos = []
     setgauges.x = {}
     setgauges.y = {}
@@ -481,7 +477,7 @@ def plot_gauge_locations(
     produced by running the code.
     """
 
-    from pylab import clf, figure, plot, text, title
+    from matplotlib.pyplot import clf, figure, plot, text, title
 
     datadir = plotdata.outdir  # this should contain setgauges.data
 
@@ -511,7 +507,9 @@ def plot_gauge_locations(
             yn = setgauges.y[n]
             # print "Gauge %s:  x = %g, y = %g" % (n,xn,yn)
 
-            plot([xn], [yn], format_string, markersize=markersize, **gauge_marker_kwargs)
+            plot(
+                [xn], [yn], format_string, markersize=markersize, **gauge_marker_kwargs
+            )
             if add_labels:
                 xn = xn + xoffset
                 yn = yn + yoffset
@@ -549,12 +547,12 @@ def printfig(fname="", gaugeno="", figno="", format="png", plotdir=".", verbose=
         fname = splitfname[0] + ".%s" % format
     if figno == "":
         figno = 1
-    pylab.figure(figno)
+    plt.figure(figno)
     if plotdir != ".":
         fname = os.path.join(plotdir, fname)
     if verbose:
         print(("    Saving plot to file ", fname))
-    pylab.savefig(fname)
+    plt.savefig(fname)
 
 
 # ======================================================================
@@ -620,7 +618,7 @@ def printgauges(plotdata=None, verbose=True):
         #    fignos.append(plotfigure.figno)
 
     # filter out the fignos that will be empty, i.e.  plotfigure._show=False.
-    plotdata = set_show(plotdata)
+    plotdata = frametools.set_show(plotdata)
     fignos_to_show = []
     for figname in plotdata._fignames:
         figno = plotdata.plotfigure_dict[figname].figno

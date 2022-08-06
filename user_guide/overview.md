@@ -138,6 +138,8 @@ Only way in which AMR "cares" about topo resolution is that if multiple topograp
 
 Note, the min and max AMR levels defined when topo and qinit files are initialized define AMR "regions" of the permissible refinement levels. See discussion of "regions" below.
 
+If more than one topography file is provided at the same resolution for an overlapping part of the domain, the file that is provided last to the list will be used.
+
 ### 1.8 Overspecification
 
 Text from Dave: Redundancy/overspecification: there is no error catching for this, which might be useful in the future. However, it would require location overlap checks, because often a variable might be set by different methods for different parts of the domain. (e.g., it might be useful to set water depth for a lake using eta and landslide material using h, etc.). Ideally, qinitfiles should override the default values...however, pressure will need some attention to make sure that's the case...currently, it should be the case for h,hu,hv,m. There are no error checks for incompatible qinitfiles...that could be useful and not too painful to do with qinitfile overlap checks. Currently, in regions where there are no qinitfiles, the defaults are used (aside from pressure, which is about to undergo changes to handle the very issues you raise).
@@ -166,7 +168,7 @@ m0 is typically a scalar.
 
 ### 2.3 D-Claw specific scalars
 
-Many of these are defined in George and Iverson (2014). Where relevant there is a place for this definition to be noted (TODO).
+Many of these are defined in Iverson and George (2014) and George and Iverson (2014). Where relevant there is a place for this definition to be noted (TODO).
 Note that some of these can be set as spatially variable using values of `q` or `aux`. This is accomplished setting auxinit or qinit (see below). Here q_1 means the first element of the q array (python index zero, iqinit=1)
 
 | Parameter Name     | How to specify if spatially variable? | Default Value | Description (units)| Where to find in G&I(2014) |
@@ -176,7 +178,7 @@ Note that some of these can be set as spatially variable using values of `q` or 
 | phi_bed          | aux_4   | 40.           | basal friction angle (degrees) |    |
 | theta_input      | aux_5   | 0.            | slope angle (degrees) |    |
 | delta            |         | 0.01          | characteristic grain diameter (m) |    |
-| kappita          |         | 0.0001        | characteristic grain diameter parameter in kperm (m) |    |
+| kappita          |         | 0.0001        | permeability at m=0.6 (units) | k0 in G&I eq 2.7   |
 | mu               |         | 0.001         | viscosity of pore-fluid (Pa-s) |    |
 | alpha_c          |         | 1.0           | debris compressibility constant (#) | This is the a constant in the equation for alpha  |
 | m_crit           |         | 0.62          | critical state value of m (#) |    |
@@ -398,7 +400,7 @@ If the `flowgradevalue` is exceeded then D-Claw will refine up to at least the l
 
 If no flowgrades are specified, then D-Claw will use "tsunami-style" refinement based on the values specified in `geodata.depthdeep` and `geodata.maxleveldeep`. These define an area adjacent to the shoreline (up to waterlevel of `geodata.depthdeep`) where refinement can occur as specified by the regions. In deeper water, the level is limited to `geodata.maxleveldeep`.
 
-Flowgrades and tsunami-style refinement are implemented in a disjoint way. That is, you can use either flowgrades OR tsunami-style refinement, but not both. If flowgrades are specified, they will take precedence and tsunami-style refinement parameters will be ignored. 
+Flowgrades and tsunami-style refinement are implemented in a disjoint way. That is, you can use either flowgrades OR tsunami-style refinement, but not both. If flowgrades are specified, they will take precedence and tsunami-style refinement parameters will be ignored.
 
 ### 2.10 Source terms and  the source .f90 file
 

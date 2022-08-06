@@ -13,11 +13,12 @@ import time
 import traceback
 
 import numpy as np
-from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
 from matplotlib.colors import LightSource, Normalize
-from data import Data
-import plotpages
-import gaugetools
+
+import pyclaw.plotters.gaugetools as gaugetools
+import pyclaw.plotters.plotpages as plotpages
+from dclaw.get_data import get_amr2ez_data, get_gauge_data, get_region_data
+from pyclaw.plotters.data import Data
 
 plotter = "matplotlib"
 if plotter == "matplotlib":
@@ -139,7 +140,6 @@ def plotframe(frameno, plotdata, verbose=False):
 
     # loop over figures to appear for this frame:
     # -------------------------------------------
-
     for figname in plotdata._fignames:
         plotfigure = plotdata.plotfigure_dict[figname]
         if (not plotfigure._show) or (plotfigure.type != "each_frame"):
@@ -177,7 +177,6 @@ def plotframe(frameno, plotdata, verbose=False):
 
         # loop over axes to appear on this figure:
         # ----------------------------------------
-
         for axesname in plotfigure._axesnames:
             plotaxes = plotaxes_dict[axesname]
             if not plotaxes._show:
@@ -305,17 +304,30 @@ def plotframe(frameno, plotdata, verbose=False):
                 if plotitem.add_colorbar:
                     if hasattr(plotitem, "_current_pobj"):
                         pobj = plotitem._current_pobj  # most recent plot object
-                        cb = plt.colorbar(pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs)
+                        cb = plt.colorbar(
+                            pobj, ax=plotaxes._gca_handle, **plotitem.colorbar_kwargs
+                        )
                         if plotitem.colorbar_label is not None:
                             cb.set_label(plotitem.colorbar_label)
                     else:
                         print("Could not make colorbar. No active pobj.")
 
             if plotaxes.title_with_t:
-                if (t == 0.0) | ((t >= 0.001) & (t < 1000.0)):
-                    plt.title("%s at time t = %14.8f" % (plotaxes.title, t))
+
+                if plotaxes.title_t_units == "minutes":
+                    tshow = t/60.
+                    unit = "min"
+                elif plotaxes.title_t_units == "hours":
+                    tshow = t/3600.
+                    unit = "hr"
                 else:
-                    plt.title("%s at time t = %14.8e" % (plotaxes.title, t))
+                    tshow = t
+                    unit = "sec"
+
+                if (tshow == 0.0) | ((tshow >= 0.001) & (tshow < 1000.0)):
+                    plt.title("%s at time t = %14.8f %s" % (plotaxes.title, tshow, unit))
+                else:
+                    plt.title("%s at time t = %14.8e  %s" % (plotaxes.title, tshow, unit))
             else:
                 plt.title(plotaxes.title)
 
@@ -323,9 +335,7 @@ def plotframe(frameno, plotdata, verbose=False):
                 plt.axis("scaled")
 
             if plotaxes.show_gauges:
-                gaugetools.plot_gauge_locations(
-                    plotdata,
-                    **plotaxes.gauge_kwargs)
+                gaugetools.plot_gauge_locations(plotdata, **plotaxes.gauge_kwargs)
 
             if plotaxes.show_region:
                 for regionno in plotaxes.region_list:
@@ -433,8 +443,6 @@ def plotframe(frameno, plotdata, verbose=False):
                 plotdir=plotdata.plotdir,
                 verbose=verbose,
             )
-
-    return current_data
 
     # end of plotframe
 
@@ -634,7 +642,9 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         if pp_color:
             pp_kwargs["color"] = pp_color
 
-        plotcommand = "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+        plotcommand = (
+            "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+        )
         if pp_plot_show:
             exec(plotcommand)
 
@@ -643,7 +653,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_kwargs["color"] = pp_color
 
         plotcommand = (
-            "pobj=plt.semilogy(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+            "pobj=plt.semilogy(X_center,var,'%s', **pp_dict['pp_kwargs'])"
+            % pp_plotstyle
         )
         if pp_plot_show:
             exec(plotcommand)
@@ -660,14 +671,16 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             )
 
         else:
-            plotcommand = "pobj=plt.fill_between(X_center,var,var2,**pp_dict['pp_kwargs'])"
+            plotcommand = (
+                "pobj=plt.fill_between(X_center,var,var2,**pp_dict['pp_kwargs'])"
+            )
         if pp_plot_show:
             exec(plotcommand)
 
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
 
         gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[:, 3]
+        gaugeq = gaugesoln.q[:, -1]  # plot eta by default here.
         plotcommand = "pobj=plt.plot(gauget, gaugeq)"
         if pp_plot_show:
             exec(plotcommand)
@@ -739,6 +752,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
     """
 
     import numpy as np
+
     from pyclaw.plotters import colormaps
 
     plotdata = plotitem._plotdata
@@ -893,7 +907,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
         pcolor_cmd = "pobj = plt.pcolormesh(X_edge, Y_edge, var, \
                         cmap=pp_dict['pp_pcolor_cmap']"
 
-        if pp_dict["_current_pobj"]:
+        if pp_dict["pp_gridlines_show"]:
             pcolor_cmd += ", edgecolors=pp_dict['pp_gridlines_color']"
         else:
             pcolor_cmd += ", shading='flat'"
@@ -940,9 +954,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 # not have lower levels blanked out however.  There doesn't
                 # seem to be an easy way to do this.
                 plt.plot(X_edge, Y_edge, color=pp_dict["pp_gridlines_color"])
-                plt.plot(
-                    X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"]
-                )
+                plt.plot(X_edge.T, Y_edge.T, color=pp_dict["pp_gridlines_color"])
 
         else:
             # print '*** Not doing imshow on totally masked array'
@@ -1058,7 +1070,7 @@ def plotitem2(framesoln, plotitem, current_data, gridno):
                 Y_center[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_x[::pp_quiver_coarsening, ::pp_quiver_coarsening],
                 var_y[::pp_quiver_coarsening, ::pp_quiver_coarsening],
-                **pp_dict['pp_kwargs']
+                **pp_dict["pp_kwargs"]
             )
             # units=pp_quiver_units,scale=pp_quiver_scale)
 
@@ -1245,12 +1257,15 @@ def printfig(fname="", frameno="", figno="", format="png", plotdir=".", verbose=
         fname = splitfname[0] + ".%s" % format
     if figno == "":
         figno = 1
-    plt.figure(figno)
+    f = plt.figure(figno)
     if plotdir != ".":
         fname = os.path.join(plotdir, fname)
     if verbose:
         print(("    Saving plot to file ", fname))
     plt.savefig(fname)
+    f.clear()
+    plt.close(f)
+
 
 
 # ======================================================================

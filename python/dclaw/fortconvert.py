@@ -35,6 +35,8 @@ file: fortconvert
 
     Note:
         this was done expeditiously and might be inefficient or bug infested
+        (KRB 2022.06.14): x,y locations considered here represent CELL CENTERS
+        rather than lower left corner of cells.
 
     David George dgeorge@uw.edu 2014.05.20
 
@@ -44,8 +46,9 @@ import copy
 import os
 import string
 
-import dclaw.topotools as gt
 import numpy as np
+
+import dclaw.topotools as gt
 
 
 # ================================================================================
@@ -92,6 +95,7 @@ def convertfortdir(
                 if using topotype="gtif" can provide epsg=XXXX (EPSG code for CRS)
                 if kwargs are omitted the grid parameters are taken from the fort file with finest level spacing
 
+
     """
 
     if not fortdir:
@@ -111,6 +115,8 @@ def convertfortdir(
     west = kwargs.get("west", None)
     south = kwargs.get("south", None)
     north = kwargs.get("north", None)
+
+    bilinear = kwargs.get("bilinear", True)
 
     if east is not None and west is not None:
         assert east > west
@@ -200,6 +206,7 @@ def convertfortdir(
                     nrows,
                     components,
                     topotype,
+                    bilinear
                 ]
             )
 
@@ -221,6 +228,7 @@ def convertfortdir(
                     south,
                     north,
                     epsg,
+                    bilinear,
                 ]
             )
 
@@ -244,6 +252,7 @@ def convertfortdir(
                     topotype,
                     write_level,
                     epsg,
+                    bilinear,
                 ]
             )
 
@@ -270,6 +279,8 @@ def fort2xyqscattered(framenumber, outfile=None, components="all"):
     convert a fort.qXXXX amr file into a scattered data with columns x,y,q...
     q can be 1-meqn columns according to the list 'components'
     data is taken from the finest of grid intersections
+
+    data are returned with x,y coordinates reflecting the cell center.
 
     arguments
     ----------
@@ -301,7 +312,7 @@ def fort2xyqscattered(framenumber, outfile=None, components="all"):
     # note that solutionlist is ordered from highest levels to lowest.
     for grid in solutionlist:
         if grid["AMR_level"] == levels:  # highest level...data assumed nonoverlapping
-            x = grid["xlow"] + grid["dx"] * (0.5 + (np.arange(grid["mx"], dtype=float)))
+            x = grid["xlow"] + grid["dx"] * (0.5 + (np.arange(grid["mx"], dtype=float))) # converted from lower left to cell center
             y = grid["ylow"] + grid["dy"] * (0.5 + (np.arange(grid["my"], dtype=float)))
             Q = grid["data"][:, qlst]
             (X, Y) = np.meshgrid(x, y)
@@ -376,12 +387,15 @@ def fort2uniform(
     topotype=None,
     write_level=False,
     epsg=None,
+    bilinear=True,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
     Resolution is user defined.
     Format is still standard clawpack fort.qXXXX /fort.tXXXX and can be plotted with clawpack utilities
     Should call with outdir being a new directory to keep original fort.q/fort.t files. Names are the same
+
+    x,y of results are provided as cell centers.
 
     arguments
     ----------
@@ -418,6 +432,7 @@ def fort2uniform(
     dx = float((xhi - xlow) / mx)
     dy = float((yhi - ylow) / my)
 
+    # print(dx, dy, mx, my, xlow, xhi, ylow, yhi )
     fortheader = {}
     fortheader["grid_number"] = 1
     fortheader["AMR_level"] = 1
@@ -452,10 +467,10 @@ def fort2uniform(
             source_level = np.empty((my, mx))
 
         for j in range(my):
-            y = ylow + (j + 0.5) * dy
+            y = ylow + (j + 0.5) * dy # here x and y are cell centers based on 0.5 dx and dy adjustement.
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv, lev = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
                 qout = qv[qlst]
                 Q[j * mx + i] = qout
 
@@ -492,7 +507,11 @@ def fort2uniform(
                     )
 
                 gt.griddata2gtif(
-                    X, Y, Q_out, outfile, epsg=epsg,
+                    X,
+                    Y,
+                    Q_out,
+                    outfile,
+                    epsg=epsg,
                 )
 
             else:
@@ -528,10 +547,10 @@ def fort2uniform(
 
         for j in range(my):
             foutq.write("\n")
-            y = ylow + (j + 0.5) * dy
+            y = ylow + (j + 0.5) * dy # here also we are extracting at cell centers.
             for i in range(mx):
                 x = xlow + (i + 0.5) * dx
-                qv, lev = pointfromfort((x, y), solutionlist)
+                qv, lev = pointfromfort((x, y), solutionlist, bilinear=bilinear)
                 qout = qv[qlst]
                 for q in qout:
                     foutq.write("%s " % float(q))
@@ -552,6 +571,7 @@ def fort2refined(
     south=None,
     north=None,
     epsg=None,
+    bilinear=True,
 ):
     """
     convert fort.qXXXX with AMR data into fort.qXXXX with data on a uniform single grid.
@@ -615,6 +635,7 @@ def fort2refined(
             ylow = np.min(ys[ys > south])
         my = int((yhi - ylow) / dy)
 
+    # fort2uniform will extract at cell centers based on the bounding rectangle defined.
     return fort2uniform(
         framenumber,
         outfortq,
@@ -634,7 +655,7 @@ def fort2refined(
 
 # ==============================================================================
 def fort2topotype(
-    framenumber, outfile, fortdir, xll, yll, cellsize, ncols, nrows, m=1, topotype=2
+    framenumber, outfile, fortdir, xll, yll, cellsize, ncols, nrows, m=1, topotype=2, bilinear=True,
 ):
     """
     convert data in a fort file of framenumber = XXXX, ie fort.qXXXX
@@ -669,7 +690,7 @@ def fort2topotype(
         ncols = int(np.floor((xhi - xll) / cellsize))
         nrows = int(np.floor((yhi - yll) / cellsize))
 
-        xll = xll + 0.5 * cellsize
+        xll = xll + 0.5 * cellsize # Here we adjust to get cell centers.
         yll = yll + 0.5 * cellsize
         xhi = xhi - 0.5 * cellsize
         yhi = yhi - 0.5 * cellsize
@@ -690,7 +711,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 Q[i, j] = qv[meqn - 1] - qv[0]
 
     elif m == "depth":
@@ -698,7 +719,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 depth = qv[0]
                 if depth <= 1.0e-3:
                     depth = nodata_value
@@ -709,7 +730,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 eta = qv[meqn - 1]
                 if qv[0] <= 1.0e-3:
                     eta = nodata_value
@@ -722,7 +743,7 @@ def fort2topotype(
             for j in range(ncols):
                 xp = X[0, j]
                 k = i * ncols + j
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 Q[k] = qv
 
     else:
@@ -730,7 +751,7 @@ def fort2topotype(
             xp = X[0, j]
             for i in range(nrows):
                 yp = Y[i, 0]
-                qv, lev = pointfromfort((xp, yp), solutionlist)
+                qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
                 Q[i, j] = qv[m - 1]
 
     if m == "all":
@@ -778,7 +799,7 @@ def griddata2fort(
         mx = len(Q[0, :, 0])
         meqn = Qshape[2]
         Qfort = np.reshape(Q, (mx * my, 1))
-    xlow = X[0, 0]
+    xlow = X[0, 0] # FLAG DAVE: This probably needs adjusting for cell center vs lower left.
     ylow = Y[-1, 0]
     dx = X[0, 1] - X[0, 0]
     dy = Y[0, 0] - Y[1, 0]
@@ -861,7 +882,7 @@ def array2fort(
 
 
 # ==============================================================================
-def fort2griddata(fortqname, forttname, m=1):
+def fort2griddata(fortqname, forttname, m=1, bilinear=True):
     """
     convert data in a fort file ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -877,8 +898,8 @@ def fort2griddata(fortqname, forttname, m=1):
     ncols = fortqheader["mx"]
     nrows = fortqheader["my"]
 
-    xv = np.array(xll + dx * np.arange(ncols))
-    yv = np.array(yll + dy * np.arange(nrows))
+    xv = np.array(xll + dx * np.arange(ncols)) # FLAG DAVE
+    yv = np.array(yll + dy * np.arange(nrows)) # 0.5 DX, DY adjustement?
 
     (X, Y) = np.meshgrid(xv, yv)
 
@@ -890,7 +911,7 @@ def fort2griddata(fortqname, forttname, m=1):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv = pointfromfort((xp, yp), solutionlist)
+            qv = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
             Q[i, j] = qv[m - 1]
 
     return X, Y, Q
@@ -899,7 +920,7 @@ def fort2griddata(fortqname, forttname, m=1):
 # ==============================================================================
 
 # ==============================================================================
-def fort2griddata_vector(fortqname, forttname, meqn=7):
+def fort2griddata_vector(fortqname, forttname, meqn=7, bilinear=True):
     """
     convert data in a fort file ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -915,8 +936,8 @@ def fort2griddata_vector(fortqname, forttname, meqn=7):
     ncols = fortqheader["mx"]
     nrows = fortqheader["my"]
 
-    xv = np.array(xll + dx * np.arange(ncols))
-    yv = np.array(yll + dy * np.arange(nrows))
+    xv = np.array(xll + dx * np.arange(ncols)) # FLAG DAVE
+    yv = np.array(yll + dy * np.arange(nrows)) # 0.5 DX, DY adjustement?
 
     (X, Y) = np.meshgrid(xv, yv)
 
@@ -932,7 +953,7 @@ def fort2griddata_vector(fortqname, forttname, meqn=7):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv = pointfromfort((xp, yp), solutionlist)
+            qv = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
             Q[i, j, :] = qv
             # import pdb;pdb.set_trace()
 
@@ -940,7 +961,7 @@ def fort2griddata_vector(fortqname, forttname, meqn=7):
 
 
 # ==============================================================================
-def fort2griddata_framenumbers(framenumber, fortdir, m=1):
+def fort2griddata_framenumbers(framenumber, fortdir, m=1, bilinear=True):
     """
     convert data in a fort file of framenumber = XXXX, ie fort.qXXXX
     to numpy arrays X,Y,Q (single gridded data)
@@ -963,8 +984,8 @@ def fort2griddata_framenumbers(framenumber, fortdir, m=1):
 
     solutionlist = fort2list(fortqname, forttname)
 
-    xv = np.array(xll + cellsize * np.arange(ncols))
-    yv = np.array(yll + cellsize * np.arange(nrows))
+    xv = np.array(xll + cellsize * np.arange(ncols)) # FLAG DAVE
+    yv = np.array(yll + cellsize * np.arange(nrows)) # 0.5 DX, DY adjustement?
 
     (X, Y) = np.meshgrid(xv, yv)
 
@@ -976,7 +997,7 @@ def fort2griddata_framenumbers(framenumber, fortdir, m=1):
         xp = X[0, j]
         for i in range(nrows):
             yp = Y[i, 0]
-            qv, lev = pointfromfort((xp, yp), solutionlist)
+            qv, lev = pointfromfort((xp, yp), solutionlist, bilinear=bilinear)
             Q[i, j] = qv[m - 1]
 
     return X, Y, Q
@@ -1228,7 +1249,7 @@ def fort2list(fortqname, forttname):
 
 
 # ===============================================================================
-def pointfromfort(point, solutionlist):
+def pointfromfort(point, solutionlist, bilinear=True):
     """
     for a point (x,y) return the solution vector q determined from the
     best grid available for that point.
@@ -1348,10 +1369,15 @@ def pointfromfort(point, solutionlist):
     j2 = min(j2, my)
 
     # x and y values of the four surrounding points in the grid
-    xl = xlow + (i1 - 1) * dx
-    xr = xl + dx
-    yl = ylow + (j1 - 1) * dy
-    yu = yl + dy
+    # KRB note: I think these are the lower left corners of the cell.
+    # all need increasing by 1/2 dx or dy. # does this mean that all the
+    # topo writers (non-gtif) would then need adjusting... Since they all
+    # assume that x and y are the lower left corners of the grid cell in
+    # question.
+    xl = xlow + (i1 - 1) * dx + (dx/2)
+    xr = xl + dx + (dx/2)
+    yl = ylow + (j1 - 1) * dy+ (dy/2)
+    yu = yl + dy+ (dy/2)
 
     # indices into the data array
     ijll = (j1 - 1) * mx + i1
@@ -1366,13 +1392,34 @@ def pointfromfort(point, solutionlist):
     qur = data[ijur - 1, :]
 
     # bilinear interpolation to (xp,yp)
-    q = (
-        qll * (xr - xp) * (yu - yp)
-        + qlr * (xp - xl) * (yu - yp)
-        + qul * (xr - xp) * (yp - yl)
-        + qur * (xp - xl) * (yp - yl)
-    )
-    q = q / (dx * dy)
+    if bilinear:
+        q = (
+            qll * (xr - xp) * (yu - yp)
+            + qlr * (xp - xl) * (yu - yp)
+            + qul * (xr - xp) * (yp - yl)
+            + qur * (xp - xl) * (yp - yl)
+        )
+        q = q / (dx * dy)
+    else:
+        # don't interpolate, instead, take the native grid resolution
+        # value. Choose whichever of ll, lr, ul, lr is closest based on
+        # the relative areas is bigger. https://en.wikipedia.org/wiki/Bilinear_interpolation
+
+        all = (xr - xp) * (yu - yp)
+        alr = (xp - xl) * (yu - yp)
+        aul = (xr - xp) * (yp - yl)
+        aur = (xp - xl) * (yp - yl)
+
+        maxa = max((all, alr, aur, aul))
+
+        if all == maxa:
+            q = qll
+        elif alr == maxa:
+            q = qlr
+        elif aul == maxa:
+            q = qul
+        else:
+            q = qur
 
     return q, level
 

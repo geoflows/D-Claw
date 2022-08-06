@@ -115,6 +115,9 @@ class ClawPlotData(Data):
         self.gif_movie = False  # make animated gif movie of frames
         self.ffmpeg_movie = False  # make animated mp4 movie with ffmpeg
         self.ffmpeg_name = ""
+
+        self.parallel = False  # make gauge and frames in parallel
+        self.num_cores = 8  # num cores for parallelization.
         #    self.clear_figs = True          # give clf() command in each figure
         # before plotting each frame
 
@@ -256,7 +259,11 @@ class ClawPlotData(Data):
                 print(
                     (
                         "    Reading  Frame %s at t = %g  from outdir = %s"
-                        % (frameno, framesoln.t, outdir,)
+                        % (
+                            frameno,
+                            framesoln.t,
+                            outdir,
+                        )
                     )
                 )
             else:
@@ -387,10 +394,10 @@ class ClawPlotData(Data):
         from io import StringIO
 
         import numpy as np
-        from matplotlib.mlab import find
+
         from pyclaw.plotters import gaugetools
 
-        fname = outdir + "/fort.gauge"
+        fname = os.path.join(outdir, "fort.gauge")
         if not os.path.isfile(fname):
             print(("*** Gauge file not found: ", fname))
             gauges = {}
@@ -430,14 +437,13 @@ class ClawPlotData(Data):
         q = gdata[:, 3:]  # all remaining columns are stored in q
 
         setgauges = gaugetools.read_setgauges(datadir=outdir)
-
         gauges = {}
         gaugenos = set(gaugeno)  # reduces to unique elements
         for n in gaugenos:
             n = int(n)
             gauges[n] = GaugeSolution()
             gauges[n].gaugeno = n
-            nn = find(gaugeno == n)
+            nn = np.flatnonzero(gaugeno == n)
             gauges[n].level = level[nn]
             gauges[n].t = t[nn]
             gauges[n].q = q[nn, :]
@@ -766,6 +772,7 @@ class ClawPlotAxes(Data):
         self.name = name
         self.title = name
         self.title_with_t = True  # creates title of form 'title at time t = ...'
+        self.title_t_units = None
         self.axescmd = "subplot(1,1,1)"
         self.user = Data()  # for user to pass things into
         # afteraxes, for example

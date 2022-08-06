@@ -69,6 +69,8 @@ if clawmatlabdir not in MATLABPATH:
 #  atheos - AtheOS
 if sys.platform.lower() == 'linux2':
     dylib_string = "LD_LIBRARY_PATH"
+if sys.platform.lower() == 'linux': # this is wsl as of July 2022
+    dylib_string = "LD_LIBRARY_PATH"
 elif sys.platform.lower() == 'darwin':
     dylib_string = "DYLD_LIBRARY_PATH"
 else:

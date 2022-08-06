@@ -35,9 +35,10 @@ Authors: Dave George and Randy LeVeque
 import os
 import string
 
+import numpy as np
+
 import dclaw.fixdata as fixdata
 import dclaw.iotools as iotools
-import numpy as np
 
 Rearth = 6367.5e3  # average of polar and equatorial radii
 
@@ -432,7 +433,7 @@ def esriheaderwrite(topoheader, outputfile, closefile=True):
 
     fout.write("%s %s\n" % ("NCOLS", topoheader["ncols"]))
     fout.write("%s %s\n" % ("NROWS", topoheader["nrows"]))
-    fout.write("%s %s\n" % ("XLLCORNER", float(topoheader["xll"])))
+    fout.write("%s %s\n" % ("XLLCORNER", float(topoheader["xll"]))) # KRB NOTE: I think this should be xllcenter
     fout.write("%s %s\n" % ("YLLCORNER", float(topoheader["yll"])))
     fout.write("%s %s\n" % ("CELLSIZE", float(topoheader["cellsize"])))
     fout.write("%s %s\n" % ("NODATA_VALUE", topoheader["nodata_value"]))
@@ -580,6 +581,9 @@ def griddata2topofile(
     """
     griddata2topofile takes gridded data and produces a topofile with a header
 
+    X, Y are expected to reflect the grid cell centers. The lower left corner
+    will be inferred and written to the header.
+
     Q is expected to be in the shape [meqn, nrow, ncol] and will be written
     to meqn bands.
 
@@ -587,19 +591,24 @@ def griddata2topofile(
 
     nrows = len(Z[:, 0])
     ncols = len(Z[0, :])
-    xll = X[0, 0]
-    yll = Y[-1, 0]
+    xllcc = X[0, 0] # lower left cell center
+    yllcc = Y[-1, 0]
     nodata_value = nodata_value_out
-    xupper = X[0, -1]
-    yupper = Y[0, 0]
+    xuppercc = X[0, -1] # upper right cell center
+    yuppercc = Y[0, 0]
 
-    if yupper < yll:
+    if yuppercc < yllcc:
         print("geotools.topotools.griddata2topofile:")
         print("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
         print("The matrix Y, should advance from north to south rowwise")
 
-    cellsizeX = (xupper - xll) / (ncols - 1)
-    cellsizeY = (yupper - yll) / (nrows - 1)
+    cellsizeX = (xuppercc - xllcc) / (ncols - 1) # this diff is correct if cell centers are used.
+    cellsizeY = (yuppercc - yllcc) / (nrows - 1) # because the distance between the cell centers is
+    # the total number of rows/columns minus one.
+
+    # calculate the lower left corner location.
+    xll = xllcc - 0.5 * cellsizeX
+    yll = yllcc - 0.5 * cellsizeY
 
     topoheader = {}
     topoheader["nrows"] = nrows
@@ -659,30 +668,31 @@ def griddata2gtif(
     nrows = len(X[:, 0])
     ncols = len(X[0, :])
     meqn = Q.shape[0]
-    xll = X[0, 0]
-    yll = Y[-1, 0]
+    xllcc = X[0, 0]
+    yllcc = Y[-1, 0]
     nodata_value = nodata_value_out
-    xupper = X[0, -1]
-    yupper = Y[0, 0]
+    xuppercc = X[0, -1]
+    yuppercc = Y[0, 0]
 
-    if yupper < yll:
+    if yuppercc < yllcc:
         print("geotools.topotools.griddata2topofile:")
         print("ERROR: griddata is not in the proper format: Y[0,0]<Y[-1,0] ")
         print("The matrix Y, should advance from north to south rowwise")
 
-    cellsizeX = (xupper - xll) / (ncols - 1)
-    cellsizeY = (yupper - yll) / (nrows - 1)
+    cellsizeX = (xuppercc - xllcc) / (ncols - 1)
+    cellsizeY = (yuppercc - yllcc) / (nrows - 1)
 
     # define rasterio profile
     out_profile = {}
     out_profile["transform"] = rasterio.transform.from_bounds(
-        xll - cellsizeX / 2,
-        yll - cellsizeX / 2,
-        xupper + cellsizeX / 2,
-        yupper + cellsizeX / 2,
+        xllcc - cellsizeX / 2,
+        yllcc - cellsizeX / 2,
+        xuppercc + cellsizeX / 2,
+        yuppercc + cellsizeX / 2,
         ncols,
         nrows,
-    )
+    ) # rasterio transform is based on lower left corner of lower left grid
+    # cell, X and Y used here are cell centers.
 
     out_profile["height"], out_profile["width"] = X.shape
     out_profile["dtype"] = "float32"

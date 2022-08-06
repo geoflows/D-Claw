@@ -5,6 +5,7 @@ Useful things for plotting GeoClaw results.
 import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
+
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -296,6 +297,13 @@ def density(current_data):
     return rho
 
 
+def basalP(current_data):
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    basalP = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
+    return basalP
+
+
 def lithostaticP(current_data):
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
@@ -488,7 +496,8 @@ def particle_size(current_data):
 
 def velocity(current_data):
     """
-    Return a masked array containing velocity v in wet cells.
+    Return a masked array containing a tuple of x and y directed velocity (u,v)
+    in wet cells.
 
     velocity defined as sqrt(u**2 + v**2)
     """
@@ -504,6 +513,27 @@ def velocity(current_data):
         v = ma.masked_where(h <= drytol, hv / h)
     return (u, v)
 
+def velocity_magnitude(current_data):
+    """
+    Return a masked array of the magnitude of velocity at wet cells.
+
+    velocity defined as sqrt(u**2 + v**2)
+    """
+    from numpy import ma
+
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = q[:, :, 0]
+    hu = q[:, :, 1]
+    hv = q[:, :, 2]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        u = hu / h
+        v = hv / h
+    vel = np.sqrt(u**2 + v**2)
+
+    vel = ma.masked_where(h <= drytol, vel)
+
+    return vel
 
 def fs(current_data):
     """
@@ -601,6 +631,7 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
+
     from pyclaw.data import Data
 
     fname = topoplotdata.fname
@@ -660,7 +691,11 @@ def plot_topo_file(topoplotdata):
         if 0:
             topo = []
             for i in range(nrows):
-                topo.append(pylab.array(lines[6 + i],))
+                topo.append(
+                    pylab.array(
+                        lines[6 + i],
+                    )
+                )
             print(("+++ topo = ", topo))
             topo = pylab.array(topo)
 

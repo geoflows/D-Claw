@@ -4,6 +4,7 @@ Useful things for plotting GeoClaw results.
 
 from matplotlib.colors import Normalize
 from numpy import ma
+
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -254,6 +255,7 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
+
     from pyclaw.data import Data
 
     fname = topoplotdata.fname

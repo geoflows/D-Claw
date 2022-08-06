@@ -934,7 +934,10 @@ def plots2latex(plot_pages_data):
             print(
                 (
                     "\nSuccessfully created pdf file:  %s/%s.pdf"
-                    % (plotdir, ppd.latex_fname,)
+                    % (
+                        plotdir,
+                        ppd.latex_fname,
+                    )
                 )
             )
         except:
@@ -2058,6 +2061,7 @@ def plotclaw_driver(plotdata, verbose=False):
     import sys
 
     import numpy as np
+
     from pyclaw.plotters import frametools, gaugetools, plotpages
     from pyclaw.plotters.data import ClawPlotData
 
@@ -2248,13 +2252,42 @@ def plotclaw_driver(plotdata, verbose=False):
     else:
         print("Now making png files for all figures...")
 
-        for frameno in framenos:
-            frametools.plotframe(frameno, plotdata, verbose)
-            print(("Frame %i at time t = %s" % (frameno, frametimes[frameno])))
+        # this is the part to parallelize:
+        if plotdata.parallel:
+            try:
+                from joblib import Parallel, delayed
+            except ImportError:
+                raise ImportError("joblib needed for parallel functionality")
 
-        for gaugeno in gaugenos:
-            gaugetools.plotgauge(gaugeno, plotdata, verbose)
-            print(("Gauge %i " % gaugeno))
+            for frameno in framenos:
+                print(
+                    (
+                        "Parallel: Frame %i at time t = %s"
+                        % (frameno, frametimes[frameno])
+                    )
+                )
+
+            Parallel(n_jobs=plotdata.num_cores)(
+                delayed(frametools.plotframe)(frameno, plotdata, verbose)
+                for frameno in framenos
+            )
+
+            for gaugeno in gaugenos:
+                print(("Parallel: Gauge %i " % gaugeno))
+
+            Parallel(n_jobs=plotdata.num_cores)(
+                delayed(gaugetools.plotgauge)(gaugeno, plotdata, verbose)
+                for gaugeno in gaugenos
+            )
+
+        else:
+            for frameno in framenos:
+                frametools.plotframe(frameno, plotdata, verbose)
+                print(("Frame %i at time t = %s" % (frameno, frametimes[frameno])))
+
+            for gaugeno in gaugenos:
+                gaugetools.plotgauge(gaugeno, plotdata, verbose)
+                print(("Gauge %i " % gaugeno))
 
     if plotdata.latex:
         plotpages.timeframes2latex(plotdata)
@@ -2275,10 +2308,10 @@ def plotclaw_driver(plotdata, verbose=False):
 
     if plotdata.ffmpeg_movie:
         print("Making mp4 with ffmpeg.  This may take some time....")
-        for figno in fignos:
+        for figno in fignos_each_frame:
             try:
-                cmd = "ffmpeg -y -r 6 -f image2 -i frame%4dfig{}.png -vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p {}moviefig{}.mp4".format(
-                    figno, plotdata.ffmpeg_name, figno
+                cmd = "ffmpeg -y -r 6 -f image2 -i frame%4dfig{figno}.png -vcodec libx264 -vf scale=1800:-2 -crf 20 -pix_fmt yuv420p {name}moviefig{figno}.mp4".format(
+                    figno=figno, name=plotdata.ffmpeg_name
                 )
                 print(cmd)
                 os.system(cmd)
