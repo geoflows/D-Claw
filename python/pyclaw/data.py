@@ -1516,7 +1516,7 @@ class DigclawInputData(Data):
         self.add_attribute("theta_input", 0.0, "slope angle (degrees)")
         self.add_attribute("delta", 0.01, "characteristic grain diameter (m)")
         self.add_attribute(
-            "kappita", 0.0001, "characteristic grain diameter parameter in kperm (m)"
+            "kappitaS", 0.0001, "characteristic grain diameter parameter in kperm (m)"
         )
         self.add_attribute("mu", 0.001, "viscosity of pore-fluid (Pa-s)")
         self.add_attribute("alpha_c", 1.0, "debris compressibility constant (#)")
@@ -1564,6 +1564,17 @@ class DigclawInputData(Data):
             0.05,
             "percentage of max momentum for autostop, default is 0.05 (5%)",
         )
+        self.add_attribute("src_ftn_num_sr",0,'number of in-domain sources')
+
+        self.add_attribute('fric_offset_val', 0.0, 'start/stop friction offset in degrees')
+        self.add_attribute('fric_star_val', 0.0, 'deep friction offset in degrees')
+
+        self.add_attribute('chi_init_val', 0.0, 'initial mixture of species size 0-1')
+        self.add_attribute('kappita_diff', 1.0, 'permeability multiplier for different size species')
+        #self.add_attribute('m_crit2', 0.62, 'critical state value of m (#) for different size species')
+        #self.add_attribute('rho_s2', 2700.0, 'solid grain density (kg/m^3) different size species')
+        #self.add_attribute('fric_offset_val2', 0.0, 'start/stop friction offset in degrees for different size species')
+        #self.add_attribute('fric_star_val2', 0.0, 'deep friction offset in degrees for different size species')
 
     def write(self):
 
@@ -1575,7 +1586,7 @@ class DigclawInputData(Data):
         data_write(file, self, "phi_bed", "basal friction angle (degrees)")
         data_write(file, self, "theta_input", "slope angle (degrees)")
         data_write(file, self, "delta", "characteristic grain diameter (m)")
-        data_write(file, self, "kappita", "characteristic grain diameter in kperm (m)")
+        data_write(file, self, "kappitaS", "characteristic grain diameter in kperm (m)")
         data_write(file, self, "mu", "viscosity of pore-fluid (Pa-s)")
         data_write(file, self, "alpha_c", "debris compressibility constant (#)")
         data_write(file, self, "m_crit", "critical state value of m (#)")
@@ -1616,6 +1627,16 @@ class DigclawInputData(Data):
             "mom_perc",
             "percentage of max momentum for autostop, default is 0.05 (5%)",
         )
+        data_write(file,self,"src_ftn_num_sr","number of in-domain sources")
+        data_write(file, self, 'fric_offset_val', 'start/stop friction offset in degrees')
+        data_write(file, self, 'fric_star_val', 'deep friction offset in degrees')
+
+        data_write(file, self, 'chi_init_val', 'initial mixture of species size 0-1')
+        data_write(file, self, 'kappita_diff', 'permeability multiplier for different size species')
+        #data_write(file, self, 'm_crit2', 'critical state value of m (#) for different size species')
+        #data_write(file, self, 'rho_s2', 'solid grain density (kg/m^3) different size species')
+        #data_write(file, self, 'fric_offset_val2', 'start/stop friction offset in degrees for different size species')
+        #data_write(file, self, 'fric_star_val2', 'deep friction offset in degrees for different size species')
 
         file.close()
 
