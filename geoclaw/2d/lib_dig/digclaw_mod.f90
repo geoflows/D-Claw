@@ -20,7 +20,7 @@ module digclaw_module
     ! ========================================================================
     ! General digclaw parameters
     ! ========================================================================
-    double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita
+    double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita,kappita2
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
     double precision :: mom_perc
     logical :: mom_autostop
@@ -28,9 +28,16 @@ module digclaw_module
     double precision :: globmaxmom = 0. ! initialize values for global max momentum
     logical :: amidoneyet = .False. ! and momentum based stopping criterion.
 
+    logical :: src_fountain_active = .True.
+    integer :: src_ftn_num, src_ftn_num_sr ! maximum number sources defined for below arrays
+    double precision :: src_ftn_end_time, src_ftn_length
+    double precision :: src_ftn_vtot(2000), src_ftn_m0(2000)
+    double precision :: src_ftn_xloc(2000), src_ftn_yloc(2000), src_ftn_angle(2000)
+
     integer :: init_ptype,p_initialized,bed_normal,entrainment
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
     double precision :: grad_eta_max,cohesion_max,grad_eta_ave,eta_cell_count
+    double precision :: fric_offset_val, fric_star_val, chi_init_val, kappita_diff
 
     integer, parameter ::  i_dig    = 4 !Start of digclaw aux variables
     integer, parameter ::  i_phi    = i_dig
@@ -99,6 +106,16 @@ contains
          read(iunit,*) entrainment_rate
          read(iunit,*) mom_autostop
          read(iunit,*) mom_perc
+         read(iunit,*) src_ftn_num_sr
+         read(iunit,*) fric_offset_val
+         read(iunit,*) fric_star_val
+         read(iunit,*) chi_init_val
+         read(iunit,*) kappita_diff
+
+         !read(iunit,*) m_crit2
+         !read(iunit,*) rho_s2
+         !read(iunit,*) fric_offset_val2
+         !read(iunit,*) fric_star_val2
 
          close(iunit)
          alpha_seg = 1.0 - alpha_seg
@@ -128,6 +145,16 @@ contains
          write(DIG_PARM_UNIT,*) '    entrainment_rate:', entrainment_rate
          write(DIG_PARM_UNIT,*) '    mom_autostop:', mom_autostop
          write(DIG_PARM_UNIT,*) '    mom_perc:', mom_perc
+         write(DIG_PARM_UNIT,*) '    num_src_ftn_sr', src_ftn_num_sr
+         write(DIG_PARM_UNIT,*) '    fric_offset_val', fric_offset_val
+         write(DIG_PARM_UNIT,*) '    fric_star_val', fric_star_val
+         write(DIG_PARM_UNIT,*) '    chi_init_val', chi_init_val
+         write(DIG_PARM_UNIT,*) '    kappita_diff', kappita_diff
+         !write(DIG_PARM_UNIT,*) '    m_crit2', m_crit2
+         !write(DIG_PARM_UNIT,*) '    rho_s2', rho_s2
+         !write(DIG_PARM_UNIT,*) '    fric_offset_val2', fric_offset_val2
+         !write(DIG_PARM_UNIT,*) '    fric_star_val2', fric_star_val2
+
 
    end subroutine set_dig
 
@@ -183,7 +210,7 @@ contains
          write(DIG_PARM_UNIT,*) '    init_ptype:',init_ptype
          write(DIG_PARM_UNIT,*) '    init_pmax_ratio:',init_pmax_ratio
          write(DIG_PARM_UNIT,*) '    init_ptf:',init_ptf
-         close(DIG_PARM_UNIT)
+!         close(DIG_PARM_UNIT)   ! leave open for hydrograph file
 
 
 
@@ -212,10 +239,10 @@ contains
       if (bed_normal.eq.1) gmod = grav*dcos(theta)
 
       if (h.le.dry_tol) then
-         h =  0.d0
+         !h =  0.d0
          hu = 0.d0
          hv = 0.d0
-         hm = h*m0
+         hm = h*m
          p  = h*gmod*rho_f
          u = 0.d0
          v = 0.d0
@@ -275,12 +302,17 @@ contains
       double precision, intent(out) :: S,rho,tanpsi,D,tau,kappa
       double precision, intent(out) :: sigbed,kperm,compress
 
+            !Friction
+      double precision :: phi1f,phi2f,phi3f,Frf,Fr_starf,betaf,Lambdaf, Lf,Gamf,diamf
+      double precision :: mu_df,mu_sf,mu_bf,PIf,mu1f,mu2f,mu3f,viscf
+
       !local
       double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,rho_fp
-      double precision :: seg,pmtanh01,m_crit_m,m_crit_pm
+      double precision :: seg,pmtanh01,m_crit_m,m_crit_pm, phi, kequiv
 
       if (h.lt.drytolerance) return
 
+      phi = phi_bed
       hbounded = h!max(h,0.1)
       gmod=grav
       pm = max(0.0,pm)
@@ -321,7 +353,11 @@ contains
       !pmtanh01 = seg*0.5*(tanh(20.0*(pm-0.80))+1.0)
       !pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
+      kappita2 = kappita * kappita_diff
+
+      kequiv = kappita2 * pm + kappita * (1-pm) !kappitaS!
+      kperm = kequiv*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
+      !kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
       !m_crit_pm - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)
       !m_crit_pm =  max(pm-0.7,0.0)*((m_crit- 0.55)/0.5) + max(0.3-pm,0.0)*((m_crit-0.55)/0.5)
       m_crit_pm =  0.! max(pm-0.6,0.0)*((m_crit- 0.55)/0.4) + max(0.3-pm,0.0)*((m_crit-0.55)/0.3)
@@ -369,6 +405,61 @@ contains
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
+
+                     !friction from granular material based on h_start and h_stop
+            !based on Rocha and Gray, JFM 2019
+            !! for now let h_stop be h_start - 10 deg, h_start = h_stop + 2 deg
+            ! Other values are for sand
+
+            !degrees
+      phi2f = phi
+      phi1f = phi2f - fric_offset_val*PIf/180.d0
+      phi3f = phi1f + fric_star_val*PIf/180.d0
+
+      PIf = 4.D0*ATAN(1.D0)
+      mu1f = tan(phi1f)
+      mu2f = tan(phi2f)
+      mu3f = tan(phi3f)
+
+      Lambdaf = 1.34d0
+      diamf = 0.25
+      Lf = 2.d0 * diamf
+      betaf = 0.65d0 / sqrt(cos(theta))
+      Gamf = 0.77d0 / sqrt(cos(theta))
+      Fr_starf = Lambdaf * betaf - Gamf
+
+      !Local Froude number
+      Frf = vnorm / sqrt(gmod*h)
+      mu_df = mu1f + (mu2f - mu1f) / (1 + h * betaf / (Lf * (Frf + Gamf)))
+      if (Frf >= Fr_starf) then ! mu_dynamic
+         mu_bf = mu_df
+         goto 456
+      endif
+      mu_sf = mu3f + (mu2f - mu1f) / (1 + h/Lf)
+      if (Frf < 1.e-16) then ! mu_static
+         mu_bf = mu_sf
+         goto 456
+      endif
+
+      !mu_intermediate
+      mu_bf = (Frf/Fr_starf) * (mu_df - mu_sf) + mu_sf
+      goto 456
+
+456      continue
+      ! convert friction coefficient to tau
+      ! F = mu N = tau / h
+      ! do we assume tau is per unit area or calculate specific for cell?
+      !!!tau = gmod * mu_bf * rho_s * h**2.0
+      !!!tau = gmod * mu_bf * rho_s * h**2.0 * dx*dy
+      !mu = tanphi ?
+      !!!tau = sigbed*mu_bf
+      !!!tau = sigbed*tan(atan(mu_bf)+atan(tanpsi))
+      tau = dmax1(0.d0,(m/m_crit)*sigbed*tan(atan(mu_bf)+atan(tanpsi)))
+
+      ! viscosity (depth averaged is vh^(1/2)/2)
+      viscf = (m/m_crit)*(2*Lf*sqrt(grav)*sin(theta))/(9*betaf*sqrt(cos(theta)))*((mu2f - tan(theta))/(tan(theta)-mu1f))
+
+
 
       tau = dmax1(0.d0,sigbed*tanphi)
 
@@ -926,6 +1017,74 @@ subroutine calc_pmtanh(pm,seg,pmtanh)
       return
 
    end subroutine calc_pmtanh
+
+
+
+    ! ========================================================================
+    !  set_hydrographs(fname)
+    ! ========================================================================
+    !  Reads in user parameters from the given file name if provided
+    ! ========================================================================
+   subroutine set_hydrographs(fname)
+
+      implicit none
+
+      ! Input
+      character*25, intent(in), optional :: fname
+
+      ! Locals
+      integer, parameter :: iunit = 127
+      character*25 :: file_name
+      logical :: found_file
+      integer :: i
+
+
+       ! Read user parameters from setgeo.data
+       if (present(fname)) then
+          file_name = fname
+       else
+          file_name = 'sethydrographs.data'
+       endif
+       inquire(file=file_name,exist=found_file)
+       if (.not. found_file) then
+          print *, 'No hydrograph file ', file_name
+          src_ftn_num = 0
+          src_ftn_end_time = 0.0
+          src_ftn_length = 1.0
+          return
+
+          !print *, 'You must provide a file ', file_name
+          !stop
+       endif
+
+       call opendatafile(iunit, file_name)
+       read(iunit,*) src_ftn_num
+       read(iunit,*) src_ftn_end_time
+       read(iunit,*) src_ftn_length
+       read(iunit,*)  (src_ftn_vtot(i), i=1, src_ftn_num)
+       read(iunit,*)  (src_ftn_xloc(i), i=1, src_ftn_num)
+       read(iunit,*)  (src_ftn_yloc(i), i=1, src_ftn_num)
+       read(iunit,*)  (src_ftn_angle(i), i=1, src_ftn_num)
+       read(iunit,*)  (src_ftn_m0(i), i=1, src_ftn_num)
+
+       write(DIG_PARM_UNIT,*) ' '
+       write(DIG_PARM_UNIT,*) '--------------------------------------------'
+       write(DIG_PARM_UNIT,*) 'SETHYDROGRAPH:'
+       write(DIG_PARM_UNIT,*) '---------'
+       write(DIG_PARM_UNIT,*) '    src_ftn_num:',src_ftn_num
+       write(DIG_PARM_UNIT,*) '    src_ftn_end_time:',src_ftn_end_time
+       write(DIG_PARM_UNIT,*) '    src_ftn_length:',src_ftn_length
+       write(DIG_PARM_UNIT,*) '    src_ftn_vtot:',(src_ftn_vtot(i), i=1, src_ftn_num)
+       write(DIG_PARM_UNIT,*) '    src_ftn_xloc:',(src_ftn_xloc(i), i=1, src_ftn_num)
+       write(DIG_PARM_UNIT,*) '    src_ftn_yloc:',(src_ftn_yloc(i), i=1, src_ftn_num)
+       write(DIG_PARM_UNIT,*) '    src_ftn_angle:',(src_ftn_angle(i), i=1, src_ftn_num)
+       write(DIG_PARM_UNIT,*) '    src_ftn_m0:',(src_ftn_m0(i), i=1, src_ftn_num)
+       close(DIG_PARM_UNIT)
+
+
+
+   end subroutine set_hydrographs
+
 
 
 end module digclaw_module

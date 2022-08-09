@@ -1,5 +1,5 @@
 
-      parameter (maxregions=20)
+      parameter (maxregions=2000)
 
       dimension xlowregion(maxregions)
       dimension ylowregion(maxregions)

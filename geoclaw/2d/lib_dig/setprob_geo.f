@@ -21,6 +21,7 @@ c=========================================================================
       call set_dtopo        !# specifies moving topo 'dtopo' from earthquake
       call set_dig
       call set_pinit
+      call set_hydrographs    !# set hydrograph input data
       call setregions       !# specifies where refinement is allowed/forced
       call setgauges        !# locations of measuring gauges
       call setfixedgrids    !# specifies output on arbitrary uniform fixed grids

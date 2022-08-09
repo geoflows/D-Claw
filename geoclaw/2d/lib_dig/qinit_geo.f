@@ -1,7 +1,7 @@
 
 
 c     =====================================================
-       subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
+      subroutine qinit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,
      &                   dx,dy,q,maux,aux)
 c     =====================================================
 c
@@ -25,21 +25,20 @@ c      # been strored in qinitwork.
       do i=1-mbc,mx+mbc
          x = xlower + (i-0.5d0)*dx
          do j=1-mbc,my+mbc
-             y = ylower + (j-0.5d0)*dy
-             q(i,j,1) = dmax1(0.d0,sealevel-aux(i,j,1))
-             do m=2,meqn
+            y = ylower + (j-0.5d0)*dy
+            q(i,j,1) = dmax1(0.d0,sealevel-aux(i,j,1))
+            do m=2,meqn
                q(i,j,m)=0.d0
-             enddo
+            enddo
          enddo
       enddo
-c
+
 
       xhigher = xlower + (mx-0.5d0)*dx
       yhigher = ylower + (my-0.5d0)*dy
-c
       do mf =1,mqinitfiles
 
-        if ((xlower.le.xhiqinit(mf).and.xhigher.ge.xlowqinit(mf)).and.
+         if ((xlower.le.xhiqinit(mf).and.xhigher.ge.xlowqinit(mf)).and.
      &     (ylower.le.yhiqinit(mf).and.yhigher.ge.ylowqinit(mf))) then
 
             xintlow = dmax1(xlower,xlowqinit(mf))
@@ -85,12 +84,10 @@ c
                         q(i,j,iqinit(mf)) = q(i,j,iqinit(mf)) + dq
                      else
                         if (dq-aux(i,j,1).gt.0.d0) then
-                          q(i,j,1) = dmax1(q(i,j,1),dq-aux(i,j,1))
+                        q(i,j,1) = dmax1(q(i,j,1),dq-aux(i,j,1))
                         endif
                      endif
-c
                   endif
-c
                enddo
             enddo
          endif
@@ -114,21 +111,21 @@ c
                   q(i,j,4) = q(i,j,1)*q(i,j,4)
                endif
                if (initchi.eq.0) then
-                  q(i,j,6) = 0.5*q(i,j,1)
+                  q(i,j,6) = chi_init_val*q(i,j,1)
                else
                   q(i,j,6) = q(i,j,1)*q(i,j,6)
                endif
                if (initu.eq.1) then
-                  q(i,j,2) = q(i,j,1)*q(i,j,2)   
+                  q(i,j,2) = q(i,j,1)*q(i,j,2)
                endif
                if (initv.eq.1) then
-                  q(i,j,3) = q(i,j,1)*q(i,j,3)   
+                  q(i,j,3) = q(i,j,1)*q(i,j,3)
                endif
                if (initpv.eq.1) then
-                  q(i,j,5) = q(i,j,1)*q(i,j,5)   
+                  q(i,j,5) = q(i,j,1)*q(i,j,5)
                endif
                if (q(i,j,1).le.drytolerance) then
-                  do m = 1,meqn
+                  do m = 2,meqn
                      q(i,j,m) = 0.d0
                   enddo
                endif
@@ -146,8 +143,8 @@ c=============== Pressure initialization for Mobilization Modeling======
             !set to hydrostatic
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
-                 if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
-                 q(i,j,5) = rho_f*gmod*q(i,j,1)
+               if (bed_normal.eq.1) gmod = grav*dcos(aux(i,j,i_theta))
+               q(i,j,5) = rho_f*gmod*q(i,j,1)
                enddo
             enddo
             p_initialized = 1
@@ -168,7 +165,7 @@ c=============== Pressure initialization for Mobilization Modeling======
      &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1)
                   endif
                   rho = sv*rho_s + (1.0-sv)*rho_f
-                 q(i,j,5) = p_ratioij*rho*gmod*q(i,j,1)
+               q(i,j,5) = p_ratioij*rho*gmod*q(i,j,1)
                enddo
             enddo
             p_initialized = 1
@@ -176,19 +173,19 @@ c=============== Pressure initialization for Mobilization Modeling======
             !p will be updated in b4step2
             do i=1-mbc,mx+mbc
                do j=1-mbc,my+mbc
-                 p_ratioij = init_pmin_ratio
-                 if (q(i,j,1).le.drytolerance) then
+               p_ratioij = init_pmin_ratio
+               if (q(i,j,1).le.drytolerance) then
                      q(i,j,5) = init_pmin_ratio*rho_f*gmod*q(i,j,1)
                      cycle
-                 endif
-                 call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
+               endif
+               call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),
      &                       q(i,j,4),q(i,j,5),u,v,sv,aux(i,j,i_theta))
-                 if (bed_normal.eq.1) then
+               if (bed_normal.eq.1) then
                      gmod = grav*dcos(aux(i,j,i_theta))
                      p_ratioij = init_pmin_ratio
      &                   + (init_pmin_ratio - 1.0)*aux(i,j,1)/q(i,j,1)
-                 endif
-                 rho = sv*rho_s + (1.0-sv)*rho_f
+               endif
+               rho = sv*rho_s + (1.0-sv)*rho_f
                      pfail = p_ratioij*rho*gmod*q(i,j,1)
                      q(i,j,5) = pfail - abs(pfail)
                enddo
