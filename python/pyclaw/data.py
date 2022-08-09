@@ -1532,7 +1532,7 @@ class DigclawInputData(Data):
         self.add_attribute(
             "init_ptype",
             0,
-            "0 = hydrostatic, 1,2 = failure pressure, 3,4 = rising pressure",
+            "-1 = zero pressure or user defined files in qinit, 0 = hydrostatic, 1,2 = failure pressure (1=min, 2=avg), 3,4 = rising pressure (3=min, 4=avg)",
         )
         self.add_attribute(
             "init_pmax_ratio", 1.0, "pressure rise to hydrostatic *init_pmax_ratio"
