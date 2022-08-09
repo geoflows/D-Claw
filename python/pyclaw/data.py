@@ -1516,7 +1516,7 @@ class DigclawInputData(Data):
         self.add_attribute("theta_input", 0.0, "slope angle (degrees)")
         self.add_attribute("delta", 0.01, "characteristic grain diameter (m)")
         self.add_attribute(
-            "kappita", 0.0001, "characteristic grain diameter parameter in kperm (m)"
+            "kappita", 0.0001, "permeability at m=setdig.m0 (m^2), k0 in G&I eq 2.7"
         )
         self.add_attribute("mu", 0.001, "viscosity of pore-fluid (Pa-s)")
         self.add_attribute("alpha_c", 1.0, "debris compressibility constant (#)")
@@ -1535,7 +1535,7 @@ class DigclawInputData(Data):
             "-1 = zero pressure or user defined files in qinit, 0 = hydrostatic, 1,2 = failure pressure (1=min, 2=avg), 3,4 = rising pressure (3=min, 4=avg)",
         )
         self.add_attribute(
-            "init_pmax_ratio", 1.0, "pressure rise to hydrostatic *init_pmax_ratio"
+            "init_pmax_ratio", 1.0, "pressure rise to hydrostatic *init_pmax_ratio (KRBNOTE: don't this is used.)"
         )
         self.add_attribute(
             "init_ptf", 1.0, "pressure will rise until t = init_ptf without dilatancy"

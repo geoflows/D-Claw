@@ -160,7 +160,7 @@ In contrast, type 2 and 4 should be different because in init_ptype = 2 many loc
 #### 1.5.4 Misc notes:
 NOTES from DG: For future development the (non-qinitfile) options should be 0, hydrostatic, failure (which is P_scaled = min_domain (p_b/h) such that failure occurs , applied everywhere: p_b = P_scaled*h). All of these options could occur at t=0 with no time interval used...Qinit files should override every other option.  
 
-2022-08-09 : KRB cannot find evidence that any option uses `init_pmax_ratio`. It is read, but is only reference by geoclaw/1d/lib_dig/b4step1_dig.f. This routine not used in current makefiles. 
+2022-08-09 : KRB cannot find evidence that any option uses `init_pmax_ratio`. It is read, but is only reference by geoclaw/1d/lib_dig/b4step1_dig.f. This routine not used in current makefiles.
 
 ### 1.6 A note about coordinate system and slope normals
 
@@ -219,7 +219,7 @@ Note that some of these can be set as spatially variable using values of `q` or 
 | phi_bed          | aux_4   | 40.           | basal friction angle (degrees) |    |
 | theta_input      | aux_5   | 0.            | slope angle (degrees) |    |
 | delta            |         | 0.01          | characteristic grain diameter (m) |    |
-| kappita          |         | 0.0001        | permeability at m=setdig.m0 (units) | k0 in G&I eq 2.7 - modified such that setdig.m0 is used instead of 0.6  |
+| kappita          |         | 0.0001        | permeability at m=setdig.m0 (m^2) | k0 in G&I eq 2.7 - modified such that setdig.m0 is used instead of 0.6  |
 | mu               |         | 0.001         | viscosity of pore-fluid (Pa-s) |    |
 | alpha_c          |         | 1.0           | debris compressibility constant (#) | This is the a constant in the equation for alpha  |
 | m_crit           |         | 0.62          | critical state value of m (#) |    |
