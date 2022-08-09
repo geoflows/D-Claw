@@ -20,7 +20,7 @@ module digclaw_module
     ! ========================================================================
     ! General digclaw parameters
     ! ========================================================================
-    double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappitaS,kappitaL
+    double precision :: rho_s,rho_f,phi_bed,theta_input,delta,kappita,kappita2
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
     double precision :: mom_perc
     logical :: mom_autostop
@@ -92,7 +92,7 @@ contains
          read(iunit,*) theta_input
          theta_input = deg2rad*theta_input
          read(iunit,*) delta
-         read(iunit,*) kappitaS
+         read(iunit,*) kappita
          read(iunit,*) mu
          read(iunit,*) alpha
          read(iunit,*) m_crit
@@ -131,7 +131,7 @@ contains
          write(DIG_PARM_UNIT,*) '    phi_bed:', phi_bed/deg2rad
          write(DIG_PARM_UNIT,*) '    theta_input:', theta_input/deg2rad
          write(DIG_PARM_UNIT,*) '    delta:', delta
-         write(DIG_PARM_UNIT,*) '    kappitaS:', kappitaS
+         write(DIG_PARM_UNIT,*) '    kappita:', kappita
          write(DIG_PARM_UNIT,*) '    mu:', mu
          write(DIG_PARM_UNIT,*) '    alpha:', alpha
          write(DIG_PARM_UNIT,*) '    m_crit:', m_crit
@@ -353,9 +353,9 @@ contains
       !pmtanh01 = seg*0.5*(tanh(20.0*(pm-0.80))+1.0)
       !pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kappitaL = kappitaS * kappita_diff
+      kappita2 = kappita * kappita_diff
 
-      kequiv = kappitaL * pm + kappitaS * (1-pm) !kappitaS!
+      kequiv = kappita2 * pm + kappita * (1-pm) !kappitaS!
       kperm = kequiv*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
       !kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
       !m_crit_pm - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)

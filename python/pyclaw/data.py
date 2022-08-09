@@ -1516,7 +1516,7 @@ class DigclawInputData(Data):
         self.add_attribute("theta_input", 0.0, "slope angle (degrees)")
         self.add_attribute("delta", 0.01, "characteristic grain diameter (m)")
         self.add_attribute(
-            "kappitaS", 0.0001, "characteristic grain diameter parameter in kperm (m)"
+            "kappita", 0.0001, "characteristic grain diameter parameter in kperm (m)"
         )
         self.add_attribute("mu", 0.001, "viscosity of pore-fluid (Pa-s)")
         self.add_attribute("alpha_c", 1.0, "debris compressibility constant (#)")
@@ -1586,7 +1586,7 @@ class DigclawInputData(Data):
         data_write(file, self, "phi_bed", "basal friction angle (degrees)")
         data_write(file, self, "theta_input", "slope angle (degrees)")
         data_write(file, self, "delta", "characteristic grain diameter (m)")
-        data_write(file, self, "kappitaS", "characteristic grain diameter in kperm (m)")
+        data_write(file, self, "kappita", "characteristic grain diameter in kperm (m)")
         data_write(file, self, "mu", "viscosity of pore-fluid (Pa-s)")
         data_write(file, self, "alpha_c", "debris compressibility constant (#)")
         data_write(file, self, "m_crit", "critical state value of m (#)")
