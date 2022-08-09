@@ -95,31 +95,72 @@ The aux array contains the following:
 - taudir_x
 - taudir_y
 
-### 1.5 Conceptual statement of failure options
+### 1.5 Initialization of basal pressure pb (q5)
 
-Failure is indicated by the `init_ptype` variable, and some of the other `init_p***` variables.
+Basal pressure, pb (q5) is initialized in the subroutine qinit(...) located in the file geoclaw/2d/lib_dig/qinit_geo.f.
 
-(?? some of these have implications for how q (?) and aux (?) are initialized. To the extent to which this is true, it is noted below)
+The method for setting basal pressure is controlled by the variable `init_ptype` variable. Depending on the value for `init_ptype` some other variables (`init_p***` variables may or may not be used).
+
+#### 1.5.0 How is init_pmin_ratio calculated
+
+The parameter `init_pmin_ratio` is fraction of hydrostatic pressure used to initialize spatially variable pressure if `init_ptype>0`. It depends on the gradient of the surface (eta) and the basal friction angle (phi). It does not depend on m because later on (todo: in what routine) asking whether there is sufficent m to keep material static is addressed.
+
+Across the entire domain the ratio between surface slope and tan(phi) is calculated at all locations where h>drytolerance.
+
+If `init_ptype` is 1 or 3, `init_pmin_ratio` is the absolute minimum pressure ratio that yields liquifaction at at least one location in the domain. That is, if multiple cells may fail at the same lowest pressure ratio, then all of those cells, but no other cells will fail.
+
+If type 2 or 4, `init_pmin_ratio` is the average value of grad_eta/tan(phi) across the domain.
+
+grad_eta = sqrt(d_eta_dx^2 + d_eta_dy^2)
+init_ptype_ratio = 1.0 - (grad_eta / tan (phi))
 
 Main options:
 
-#### 1.5.1 Hydrostatic
-`init_ptype = 0`
+#### 1.5.1 Zero pressure or user defined files.
+If `init_ptype = -1` then q5 is initialized to zero everwhere. If files for pb are also provided in the qinitfiles list, then the value of pb=0 is overwritten by the quantity specified times q1.
 
+Note, if user provided files are provided but `init_ptype != -1` then the user provided files will be overwritten without any warning.
 
-#### 1.5.1 Failure Pressure
-`init_ptype = 1 or 2`
+#### 1.5.2 Hydrostatic
+If `init_ptype = 0` then the basal pressure is set to hydrostatic everwhere based on the material thickness h and the fluid pressure rho_f:
 
+pb = rho_f * gmod * h
 
-#### 1.5.1 Rising Pressure
+Note that in this calculation gmod is gravitational acceleration normal to the basal surface.
+
+#### 1.5.3 Set to Failure Pressure
+If `init_ptype = 1 or 2` then the
+
+if h > drytolerance:
+  rho = sv*rho_s + (1.0-sv)*rho_f
+  pb = init_pmin_ratio * rho * gmod * h
+
+1 = minimum <- gives you failure at t=0 at the one location in which the lowest pressure yields liquifaction.
+
+2 = average <- gives you failure at t=0 at a range of locations in which the pressure needed for liquifaction is lower than average failure pressure.
+
+#### 1.5.4 Rising Pressure
 `init_ptype = 3 or 4`
 
-DG: The rise to failure option starts a p_b =0, raises it uniformly everywhere (scaled by depth) until failure is reached at one location, and then let go everywhere.
+The pressure is raised linearly in time over the duration t=0 to t=init_ptf from pressure = zero to pressure = pfail where
 
-KRB: How is the rate of rise specified?
+pfail = hydrostatic * init_pmin_ratio
 
-#### 1.5.4
+This is acomplished in the routine b4step2(...) (geoclaw/2d/lib_dig/b4step2_geo.f).
+
+Like in the failure pressure options the value for init_pmin_ratio can be set based on either the minimum or average value.
+
+3 = minimum
+4 = average
+
+Setting init_ptype = 3 should be equivalent init_ptype = 1, but with the time of failure at t=init_ptf instead of t=0 (this has not been verified).
+
+In contrast, type 2 and 4 should be different because in init_ptype = 2 many locations may fail at t=0, while in init_ptype=4, failure may occur at different locations over the duration t=0 to t=init_ptf. Note (2022-08-09), as best as KRB/RPJ can tell from the code itself, use of type=4 would result in resetting the pressure back to the linear increase *even in cells which have failed and are moving* this could be fixed by adding a velocity check in b4step2. The use of init_ptype = 4 is not recommended.
+
+#### 1.5.4 Misc notes:
 NOTES from DG: For future development the (non-qinitfile) options should be 0, hydrostatic, failure (which is P_scaled = min_domain (p_b/h) such that failure occurs , applied everywhere: p_b = P_scaled*h). All of these options could occur at t=0 with no time interval used...Qinit files should override every other option.  
+
+2022-08-09 : KRB cannot find evidence that any option uses `init_pmax_ratio`. It is read, but is only reference by geoclaw/1d/lib_dig/b4step1_dig.f. This routine not used in current makefiles. 
 
 ### 1.6 A note about coordinate system and slope normals
 
@@ -178,7 +219,7 @@ Note that some of these can be set as spatially variable using values of `q` or 
 | phi_bed          | aux_4   | 40.           | basal friction angle (degrees) |    |
 | theta_input      | aux_5   | 0.            | slope angle (degrees) |    |
 | delta            |         | 0.01          | characteristic grain diameter (m) |    |
-| kappita          |         | 0.0001        | permeability at m=0.6 (units) | k0 in G&I eq 2.7   |
+| kappita          |         | 0.0001        | permeability at m=setdig.m0 (units) | k0 in G&I eq 2.7 - modified such that setdig.m0 is used instead of 0.6  |
 | mu               |         | 0.001         | viscosity of pore-fluid (Pa-s) |    |
 | alpha_c          |         | 1.0           | debris compressibility constant (#) | This is the a constant in the equation for alpha  |
 | m_crit           |         | 0.62          | critical state value of m (#) |    |
@@ -199,8 +240,6 @@ These are specified by modifying the object `digdata` in `setrun.py`, for exampl
 ```python
 digdata.rho_f = 1100.0
 ```
-
-TODO: Don't yet understand init_ptype, init_pmax_ratio, init_ptf, init_ptf2. Unsure if these control when/if failure occurs. Should probably start with understanding init_ptype.
 
 ### 2.4 Format of spatially variable inputs
 Start by reading the information in the [topography data documentation on Clawpack website](http://www.clawpack.org/topo.html#topo). Cribnotes: Four styles of input are supported (3 ascii and 1 netcdf).
@@ -250,7 +289,7 @@ The qinit specification is used to state modification of the initial conditions 
 geodata.qinitfiles = []
 geodata.qinitfiles.append(qinitftype,iqinit, minlevel, maxlevel, fname])
 ```
-The `qinitftype` is the file type, the same as is permitted for topo. `iqinit` is the type of perterbation, e.g. which element of q is perterbed. Note here that while h is the first element of q, with python index zero, it cooresponds to `iqinit=1`
+The `qinitftype` is the file type, the same as is permitted for topo. `iqinit` is the type of perturbation, e.g. which element of q is perterbed. Note here that while h is the first element of q, with python index zero, it cooresponds to `iqinit=1`
 
 While the surface elevation, eta, is not technically a state variable, it can be set as the eight element of qinit.
 
