@@ -1390,8 +1390,13 @@ class GeoclawInputData(Data):
             try:
                 fname = os.path.abspath(tfile[-1])
             except:
+                print(("*** Error: file not valid string ", tfile[-1]))
+                raise ValueError("file not valid string")
+            # todo could also test for length of maximum string (as defined)
+            if not os.path.exists(fname):
                 print(("*** Error: file not found: ", tfile[-1]))
-                raise MissingFile("file not found")
+                raise ValueError("file not found")
+
             file.write("\n'%s' \n " % fname)
             file.write("%3i %3i %3i %20.10e %20.10e \n" % tuple(tfile[:-1]))
         file.close()
@@ -1406,8 +1411,12 @@ class GeoclawInputData(Data):
             try:
                 fname = "'%s'" % os.path.abspath(tfile[-1])
             except:
+                print(("*** Error: file not valid string ", tfile[-1]))
+                raise ValueError("file not valid string")
+            # todo could also test for length of maximum string (as defined)
+            if not os.path.exists(tfile[-1]):
                 print(("*** Error: file not found: ", tfile[-1]))
-                raise MissingFile("file not found")
+                raise ValueError("file not found")
             file.write("\n%s \n" % fname)
             file.write("%3i %3i %3i\n" % tuple(tfile[:-1]))
         file.close()
@@ -1423,8 +1432,12 @@ class GeoclawInputData(Data):
             try:
                 fname = "'%s'" % os.path.abspath(tfile[-1])
             except:
+                print(("*** Error: file not valid string ", tfile[-1]))
+                raise ValueError("file not valid string")
+            # todo could also test for length of maximum string (as defined)
+            if not os.path.exists(tfile[-1]):
                 print(("*** Error: file not found: ", tfile[-1]))
-                raise MissingFile("file not found")
+                raise ValueError("file not found")
             file.write("\n%s  \n" % fname)
             file.write("%3i %3i %3i %3i \n" % tuple(tfile[:-1]))
         file.close()
@@ -1440,8 +1453,12 @@ class GeoclawInputData(Data):
             try:
                 fname = "'%s'" % os.path.abspath(tfile[-1])
             except:
+                print(("*** Error: file not valid string ", tfile[-1]))
+                raise ValueError("file not valid string")
+            # todo could also test for length of maximum string (as defined)
+            if not os.path.exists(tfile[-1]):
                 print(("*** Error: file not found: ", tfile[-1]))
-                raise MissingFile("file not found")
+                raise ValueError("file not found")
             file.write("\n%s  \n" % fname)
             file.write("%3i %3i %3i %3i \n" % tuple(tfile[:-1]))
         file.close()
