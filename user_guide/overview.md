@@ -80,7 +80,7 @@ Note, however, that in D-Claw the output written in the fort.qXXX files includes
 - hv
 - hm
 - pb
-- something related to the optional particle size distribution function which permits treatment of segregation.
+- h*chi, where chi is the fraction of particle species 1. This is optionally used in the treatment of particle species segregation.
 - positive downward elevation change of the erodible layer, a
 - eta, the surface elevation.
 
@@ -117,7 +117,7 @@ init_ptype_ratio = 1.0 - (grad_eta / tan (phi))
 Main options:
 
 #### 1.5.1 Zero pressure or user defined files.
-If `init_ptype = -1` then q5 is initialized to zero everwhere. If files for pb are also provided in the qinitfiles list, then the value of pb=0 is overwritten by the quantity specified times q1.
+If `init_ptype = -1` then q5 is initialized to zero everwhere. If files for pb are also provided in the qinitfiles list, then the value of pb=0 is overwritten by the quantity specified times q1. That is, the value provided is the pressure relative to material thickness pb/h.
 
 Note, if user provided files are provided but `init_ptype != -1` then the user provided files will be overwritten without any warning.
 
@@ -291,7 +291,9 @@ geodata.qinitfiles.append(qinitftype,iqinit, minlevel, maxlevel, fname])
 ```
 The `qinitftype` is the file type, the same as is permitted for topo. `iqinit` is the type of perturbation, e.g. which element of q is perterbed. Note here that while h is the first element of q, with python index zero, it cooresponds to `iqinit=1`
 
-While the surface elevation, eta, is not technically a state variable, it can be set as the eight element of qinit.
+While the surface elevation, eta, is not technically a state variable, it can be set as the eighth element of qinit.
+
+NOTE: q4 must be provided as the quantity m, not hm, and q5 must be provided as the quantity pb/h, not pb.
 
 TODO: What happens if inputs are over specified in a conflicting way (e.g., topo, h, and eta such that topo + h != eta), or `digdata.m0` and a value for q_5.
 
