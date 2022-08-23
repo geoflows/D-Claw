@@ -236,6 +236,12 @@ def plotframe(frameno, plotdata, verbose=False):
                     current_data.aux = grid.aux
                     current_data.xlower = grid.dimensions[0].lower
                     current_data.xupper = grid.dimensions[0].upper
+                    current_data.ylower = grid.dimensions[1].lower
+                    current_data.yupper = grid.dimensions[1].upper
+                    current_data.mx = grid.dimensions[0].n
+                    current_data.my = grid.dimensions[1].n
+                    current_data.dx = (current_data.xupper - current_data.xlower)/current_data.mx
+                    current_data.dy = (current_data.yupper - current_data.ylower)/current_data.my
 
                     # loop over items:
                     # ----------------
