@@ -24,6 +24,7 @@ module digclaw_module
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
     double precision :: mom_perc
     logical :: mom_autostop
+    logical :: outaux
 
     double precision :: globmaxmom = 0. ! initialize values for global max momentum
     logical :: amidoneyet = .False. ! and momentum based stopping criterion.
@@ -111,7 +112,7 @@ contains
          read(iunit,*) fric_star_val
          read(iunit,*) chi_init_val
          read(iunit,*) kappita_diff
-
+         read(iunit,*) outaux
          !read(iunit,*) m_crit2
          !read(iunit,*) rho_s2
          !read(iunit,*) fric_offset_val2
