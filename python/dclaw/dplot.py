@@ -502,8 +502,8 @@ def Fgravitational(current_data):
     # gravitational driving force.
 
     drytol = getattr(current_data.user, "drytol", drytol_default)
-    bed_normal = getattr(current_data.user, "bed_normal", bed_normal)
-    gmod = gmod(current_data)
+    bed_normal = getattr(current_data.user, "bed_normal", bed_normal_default)
+    g = gmod(current_data)
 
     q = current_data.q
     h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
@@ -522,28 +522,31 @@ def Fgravitational(current_data):
     hL[:, 0] = np.nan # first column has undefined values
     hR = np.roll(h.copy(), -1, axis = 1)
     hR[:, -1] = np.nan
-    hT = np.roll(h.copy, -1, axis = 0)
+    hT = np.roll(h.copy(), -1, axis = 0)
     hT[-1, :] = np.nan
-    hB = np.roll(h.copy, 1, axis = 0)
+    hB = np.roll(h.copy(), 1, axis = 0)
     hB[0, :] = np.nan
 
     etaL = np.roll(eta.copy(), 1, axis = 1)
     etaL[:, 0] = np.nan
     etaR = np.roll(eta.copy(), -1, axis = 1)
     etaR[:, -1] = np.nan
-    etaT = np.roll(eta.copy, -1, axis = 0)
+    etaT = np.roll(eta.copy(), -1, axis = 0)
     etaT[-1, :] = np.nan
-    etaB = np.roll(eta.copy, 1, axis = 0)
+    etaB = np.roll(eta.copy(), 1, axis = 0)
     etaB[0, :] = np.nan
 
-    FxL = -gmod*0.5*(h+hL)*(eta-etaL)/(dx) + gmod*0.5*(h+hL)*np.sin(theta)
-    FyL = -gmod*0.5*(h+hB)*(eta-etaB)/(dy)
+    FxL = np.abs(-g*0.5*(h+hL)*(eta-etaL)/(dx) + g*0.5*(h+hL)*np.sin(theta))
+    FyB = np.abs(-g*0.5*(h+hB)*(eta-etaB)/(dy))
 
-    FxR = -gmod*0.5*(h+hR)*(etaR-eta)/(dx) + gmod*0.5*(h+hR)*np.sin(theta)
-    FyR = -gmod*0.5*(h+hT)*(etaT-eta)/(dy)
+    FxR = np.abs(-g*0.5*(h+hR)*(etaR-eta)/(dx) + g*0.5*(h+hR)*np.sin(theta))
+    FyT = np.abs(-g*0.5*(h+hT)*(etaT-eta)/(dy))
 
-    Fx = np.min(np.abs(FxR), np.abs(FxL))
-    Fy = np.min(np.abs(FyR), np.abs(FyL))
+
+    Fx = FxL
+    Fx[FxR>FxL] = FxR[FxR>FxL]
+    Fy = FyB
+    Fy[FyT>FyB] = FyT[FyT>FyB]
 
     F = np.sqrt(Fx**2, Fy**2)
     # Royal Proceedings, Part 2, equation 2.4b,c (momentum source terms) first term on RHS
