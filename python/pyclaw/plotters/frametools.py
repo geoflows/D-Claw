@@ -480,13 +480,13 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # Convert each plot parameter into a local variable starting with 'pp_'.
 
+    pp_dict = {}
     for plot_param in plot_params:
-        cmd = "pp_%s = getattr(plotitem, '%s',None)" % (plot_param, plot_param)
-        exec(cmd)
+        pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
 
-    if pp_mapc2p is None:
+    if pp_dict["pp_mapc2p"] is None:
         # if this item does not have a mapping, check for a global mapping:
-        pp_mapc2p = getattr(plotdata, "mapc2p", None)
+        pp_dict["pp_mapc2p"] = getattr(plotdata, "mapc2p", None)
 
     grid = framesoln.grids[gridno]
     current_data.grid = grid
@@ -507,15 +507,18 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     # parameter and if so select the value corresponding to the level of
     # this grid.  Otherwise, use plotitem attribute of this name.
     # The resulting variable starts with 'pp_'.
+    for plot_param in plot_params:
+        pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
 
     for plot_param in plot_params:
         amr_plot_param = "amr_%s" % plot_param
         amr_list = getattr(plotitem, amr_plot_param, [])
         if len(amr_list) > 0:
             index = min(grid.level, len(amr_list)) - 1
-            exec("pp_%s = amr_list[%i]" % (plot_param, index))
+            pp_dict["pp_%s" % plot_param] = amr_list[index]
         else:
-            exec("pp_%s = getattr(plotitem, '%s', None)" % (plot_param, plot_param))
+            pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
+
 
     if pp_dict["pp_plot_type"] == "1d":
         pp_dict["pp_plot_type"] = "1d_plot"  # '1d' is deprecated
@@ -612,7 +615,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             return
 
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
-        gaugesoln = plotdata.getgauge(pp_gaugeno)
+        gaugesoln = plotdata.getgauge(pp_dict['pp_gaugeno'])
         xc_center = None
         xc_edge = None
 
@@ -628,14 +631,14 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # Grid mapping:
 
-    if pp_MappedGrid is None:
-        pp_MappedGrid = pp_mapc2p is not None
+    if pp_dict['pp_MappedGrid'] is None:
+        pp_dict['pp_MappedGrid'] = pp_dict['pp_mapc2p'] is not None
 
-    if pp_MappedGrid & (pp_mapc2p is None):
+    if pp_dict['pp_MappedGrid'] & (pp_dict['pp_mapc2p'] is None):
         print("*** Warning: MappedGrid == True but no mapc2p specified")
-    elif pp_MappedGrid:
-        X_center = pp_mapc2p(xc_center)
-        X_edge = pp_mapc2p(xc_edge)
+    elif pp_dict['pp_MappedGrid']:
+        X_center = pp_dict['pp_mapc2p'](xc_center)
+        X_edge = pp_dict['pp_mapc2p'](xc_edge)
     else:
         X_center = xc_center
         X_edge = xc_edge
@@ -684,11 +687,16 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             exec(plotcommand)
 
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
+        if pp_dict['pp_color']:
+            pp_kwargs["color"] = pp_dict['pp_color']
+        if pp_dict['pp_plot_var'] is None:
+            pp_plot_var = -1 # eta by default
 
         gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[:, -1]  # plot eta by default here.
-        plotcommand = "pobj=plt.plot(gauget, gaugeq)"
-        if pp_plot_show:
+        gaugeq = gaugesoln.q[:, pp_dict['pp_plot_var']]  # plot eta by default here.
+        plotcommand = "pobj=plt.plot(gauget, gaugeq, **pp_dict['pp_kwargs'])"
+
+        if pp_dict['pp_plot_show']:
             exec(plotcommand)
 
         # interpolate to the current time t:
@@ -700,7 +708,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
         except:
             qt = gaugeq[0]
             print("Warning: t out of range")
-        plt.plot([t], [qt], "ro")
+        plt.plot([t], [qt], "ro") # TODO make this dynamic
 
     elif pp_dict["pp_plot_type"] == "1d_empty":
         # no plot to create (user might make one in afteritem or
@@ -710,9 +718,9 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     else:
         raise ValueError("Unrecognized plot_type: %s" % pp_dict["pp_plot_type"])
         return None
-
+# TODO fix references to dict.
     # call an aftergrid function if present:
-    if pp_aftergrid:
+    if pp_dict['pp_aftergrid']:
         if isinstance(pp_aftergrid, str):
             # a string to be executed
             exec(pp_aftergrid)
