@@ -1587,7 +1587,7 @@ class DigclawInputData(Data):
         self.add_attribute('fric_star_val', 0.0, 'deep friction offset in degrees')
 
         self.add_attribute('chi_init_val', 0.0, 'initial mixture of species size 0-1')
-        self.add_attribute('kappita_diff', 1.0, 'permeability multiplier for different size species')
+        self.add_attribute('kappita_diff', 1.0, 'permeability multiplier for different size species, kappita is used for species1, kappita*kappita_diff used for species2')
         self.add_attribute(
             "outaux",
             False,
@@ -1654,7 +1654,7 @@ class DigclawInputData(Data):
         data_write(file, self, 'fric_star_val', 'deep friction offset in degrees')
 
         data_write(file, self, 'chi_init_val', 'initial mixture of species size 0-1')
-        data_write(file, self, 'kappita_diff', 'permeability multiplier for different size species')
+        data_write(file, self, 'kappita_diff', 'permeability multiplier for different size species, kappita is used for species1, kappita*kappita_diff used for species2')
 
         data_write(file, self, 'outaux', "flag for writing aux to output F = not written, T = written")
 
