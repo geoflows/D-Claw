@@ -365,7 +365,7 @@ def sigma_e(current_data):
     p = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
     sigma_e = rho * gmod(current_data) * h - p
     sigma_e[sigma_e < 0.0] = 0.0
-return sigma_e
+    return sigma_e
 
 
 def sigma_e_over_hydrostatic(current_data):
