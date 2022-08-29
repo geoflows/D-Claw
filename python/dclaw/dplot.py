@@ -5,7 +5,6 @@ Useful things for plotting GeoClaw results.
 import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
-
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -257,27 +256,59 @@ drytol_default = 1.0e-3
 rho_f_default = 1000.0
 rho_s_default = 2700.0
 grav_default = 9.81
+mu_default = 0.001
+kappita_default = 0.0001
+kappita_diff_default = 1.0
+m0_default = 0.52
+delta_default = 0.01
+m_crit_default = 0.62
+sigma_0_default = 1.0e3
+alpha_c_default = 1.0
+alpha_seg_default = 0.0
+phi_bed_default = 40
+bed_normal_default = 1
+c1_default = 1.0
 
 
 def gmod(current_data):
-
+    # gravity
     grav = getattr(current_data.user, "gravity", grav_default)
+    bed_normal = getattr(current_data.user, "bed_normal", bed_normal_default)
+
     gmod = grav
+
+    if bed_normal==1:
+        aux = current_data.aux
+        theta = aux[:, :, i_theta]
+        gmod = grav*np.cos(theta)
+
     return gmod
 
 
 def solid_frac(current_data):
+    # solid volume fraction
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
     hm = q[:, :, 3]
     with np.errstate(divide="ignore", invalid="ignore"):
         m = ma.masked_where(h < drytol, hm / h)
+    return m
 
+
+def m_minus_mcrit(current_data):
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    m_crit = getattr(current_data.user, "m_crit", drytol_default)
+    q = current_data.q
+    h = q[:, :, 0]
+    hm = q[:, :, 3]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = ma.masked_where(h < drytol, (hm / h) - m_crit)
     return m
 
 
 def solid_frac_gt03(current_data):
+    # solid fraction where it is greater than 0.3
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = q[:, :, 0]
@@ -289,15 +320,16 @@ def solid_frac_gt03(current_data):
 
 
 def density(current_data):
+    # new segregation might modify.
     m = solid_frac(current_data)
     rho_f = getattr(current_data.user, "rho_f", rho_f_default)
     rho_s = getattr(current_data.user, "rho_s", rho_s_default)
     rho = (1.0 - m) * rho_f + m * rho_s
-
     return rho
 
 
 def basalP(current_data):
+    # basal pressure.
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     basalP = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
@@ -305,14 +337,290 @@ def basalP(current_data):
 
 
 def lithostaticP(current_data):
+    # lithostatic pressure
     drytol = getattr(current_data.user, "drytol", drytol_default)
     q = current_data.q
     h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
-    m = solid_frac(current_data)
     rho = density(current_data)
     var = ma.masked_where(h < drytol, gmod(current_data) * rho * h)
-
     return var
+
+
+def hydrostaticP(current_data):
+    # hydrostatic pressure
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    var = ma.masked_where(h < drytol, gmod(current_data) * rho_f * h)
+    return var
+
+
+def sigma_e(current_data):
+    # effective basal pressure.
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    rho = density(current_data)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    p = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
+    sigma_e = rho * gmod(current_data) * h - p
+    sigma_e[sigma_e < 0.0] = 0.0
+return sigma_e
+
+
+def sigma_e_over_hydrostatic(current_data):
+    # effective basal pressure.
+    return sigma_e(current_data)/hydrostaticP(current_data)
+
+
+def N(current_data):  # dimensionless state parameter
+    mu = getattr(current_data.user, "mu", mu_default)
+    rho_s = getattr(current_data.user, "rho_s", rho_s_default)
+    delta = getattr(current_data.user, "delta", delta_default)
+    gamma = shear(current_data)
+    sigbedc = rho_s * (gamma * delta) ** 2.0 + sigma_e(current_data)
+    N = mu * gamma / (sigbedc)
+    N[sigbedc < 0.0] = 0.0
+    return N
+
+
+def m_eqn(current_data):
+    # equilibrium value for m.
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    sigma_0 = getattr(current_data.user, "sigma_0", sigma_0_default)
+    alpha_c = getattr(
+        current_data.user, "alpha_c", alpha_c_default
+    )  # this is a in part 2, equation 2.8
+    m_crit = getattr(current_data.user, "m_crit", m_crit_default)
+    alpha_seg = getattr(current_data.user, "alpha_seg", alpha_seg_default)
+
+    alpha_seg = 1.0 - alpha_seg  # digclaw.mod.f90 line 121
+
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    hm = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 3])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = hm / h
+
+    pm = species1_fraction(current_data)
+
+    # if segregation occurs, then need to reduce
+    # mcrit by m_crit_pm
+    # TODO. this part of code may change as segregation use is changed.
+
+    if alpha_seg - 1.0 < 1.0e-6:
+        seg = 0.0
+        rho_fp = rho_f
+        pmtanh01 = 0.0
+    else:
+        seg = 1.0
+        pmtanh01 = seg * (0.5 * (np.tanh(40.0 * (pm - 0.90)) + 1.0))
+        rho_fp = (1.0 - pmtanh01) * rho_f
+
+    m_crit_pm = pmtanh01 * 0.09
+    m_crit_m = m_crit - m_crit_pm
+
+    m_eqn = m_crit_m / (1.0 + np.sqrt(N(current_data)))
+
+    return m_eqn
+
+
+def meqn_over_mcrit(current_data):
+    mcrit = getattr(current_data.user, "mcrit", drytol_default)
+    return m_eqn(current_data) / mcrit
+
+
+def m_minus_meqn(current_data):
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    hm = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 3])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = hm / h
+    return m - m_eqn(current_data)
+
+
+def shear(current_data):
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    hu = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 1])
+    hv = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 2])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        u = hu / h
+        v = hv / h
+    vnorm = np.sqrt(u ** 2.0 + v ** 2.0)
+    return 2.0 * vnorm / h  # in code refered to as hbounded (defined as h)
+
+
+def kperm(current_data):
+    # permeability
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    kappita = getattr(current_data.user, "kappita", kappita_default)
+    m0 = getattr(current_data.user, "m0", m0_default)
+    kappita_diff = getattr(current_data.user, "kappita_diff", kappita_diff_default)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    hm = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 3])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = hm / h
+    pm = species1_fraction(current_data)
+    kappita2 = kappita * kappita_diff
+    kequiv = kappita2 * pm + kappita * (1 - pm)
+    return kequiv * np.exp(-(m - m0) / (0.04))
+
+
+def dilatency(current_data):
+    # depth averaged dilatency rate
+    mu = getattr(current_data.user, "mu", mu_default)
+    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    p = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
+    # Royal Society, Part 2, Eq 2.6
+    D = 2.0 * (kperm(current_data) / (mu * h)) * (rho_f * gmod(current_data) * h - p)
+    return D
+
+
+def tanpsi(current_data):
+    # dilation angle.
+    c1 = getattr(current_data.user, "c1", c1_default)
+    gamma = shear(current_data)
+
+    # in code, m-meqn is regularized based on shear.
+    # c1*(m-m_eqn)*tanh(shear/0.1)
+    return c1 * m_minus_meqn(current_data) * np.tanh(shear/0.1)
+
+
+def psi(current_data):
+    return np.arctan(m_minus_meqn(current_data)) # maybe this should be arctan of tanpsi (with the regularization)
+
+
+def Fgravitational(current_data):
+    # gravitational driving force.
+
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    bed_normal = getattr(current_data.user, "bed_normal", bed_normal)
+    gmod = gmod(current_data)
+
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    eta = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 7])
+
+    if bed_normal == 1:
+        theta = q[:, :, i_theta]
+        sintheta = np.sin(theta)
+    else:
+        sintheta = 0.
+
+    dx = current_data.dx
+    dy = current_data.dy
+
+    hL = np.roll(h.copy(), 1, axis = 1) # roll right on columns so that value at (i, j-1) is at (i,j)
+    hL[:, 0] = np.nan # first column has undefined values
+    hR = np.roll(h.copy(), -1, axis = 1)
+    hR[:, -1] = np.nan
+    hT = np.roll(h.copy, -1, axis = 0)
+    hT[-1, :] = np.nan
+    hB = np.roll(h.copy, 1, axis = 0)
+    hB[0, :] = np.nan
+
+    etaL = np.roll(eta.copy(), 1, axis = 1)
+    etaL[:, 0] = np.nan
+    etaR = np.roll(eta.copy(), -1, axis = 1)
+    etaR[:, -1] = np.nan
+    etaT = np.roll(eta.copy, -1, axis = 0)
+    etaT[-1, :] = np.nan
+    etaB = np.roll(eta.copy, 1, axis = 0)
+    etaB[0, :] = np.nan
+
+    FxL = -gmod*0.5*(h+hL)*(eta-etaL)/(dx) + gmod*0.5*(h+hL)*np.sin(theta)
+    FyL = -gmod*0.5*(h+hB)*(eta-etaB)/(dy)
+
+    FxR = -gmod*0.5*(h+hR)*(etaR-eta)/(dx) + gmod*0.5*(h+hR)*np.sin(theta)
+    FyR = -gmod*0.5*(h+hT)*(etaT-eta)/(dy)
+
+    Fx = np.min(np.abs(FxR), np.abs(FxL))
+    Fy = np.min(np.abs(FyR), np.abs(FyL))
+
+    F = np.sqrt(Fx**2, Fy**2)
+    # Royal Proceedings, Part 2, equation 2.4b,c (momentum source terms) first term on RHS
+    # deta/dx portion taken from calc_taudir
+    return np.sqrt(Fx**2, Fy**2)
+
+
+def Fdrag(current_data):  # units of force per unit area
+# Royal Proceedings, Part 2, equation 2.4b,c (momentum source terms) second term on RHS
+# what is this term?
+# katy asks: driving force due to longitudinal stress gradients? (based on text right before part 2 eq 2.15
+# dave says: I don't know if there's a simple interpretation...it sort of drops out from the derivation and then rearrangement of the equations into conservative form (ie. derivatives on hu not u). I think it might be similar to a drag term that appears on fully two-phase equations for solid and fluid velocity fields. ...I'll revisit the derivation and see if I can shed more light on it.
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    hu = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 1])
+    hv = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 2])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        u = hu / h
+        v = hv / h
+    vnorm = np.sqrt(u ** 2.0 + v ** 2.0)
+    D = dilatency(current_data)
+    rho = density(current_data)
+
+    return vnorm * D * (rho - rho_f) / rho
+
+
+def Ffluid(current_data):  # units of force per unit area
+    # Resisting force due to fluid.
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    mu = getattr(current_data.user, "mu", drytol_default)
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    hu = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 1])
+    hv = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 2])
+    hm = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 3])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        u = hu / h
+        v = hv / h
+        m = hm / h
+    vnorm = np.sqrt(u ** 2.0 + v ** 2.0)
+    tauf = 2.0 * mu * (1.0 - m) * vnorm / h
+    return tauf
+
+
+def Fsolid(current_data):  # units of force per unit area
+    # resisting force due to solid.
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    phi_bed = getattr(current_data.user, "phi_bed", phi_bed_default)
+
+    q = current_data.q
+    h = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 0])
+    p = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
+
+    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    hydrostatic = ma.masked_where(h < drytol, gmod(current_data) * rho_f * h)
+    sigma_e = hydrostatic - p
+    tau_s = sigma_e * np.tan(phi_bed + psi(current_data))
+
+    # where tau_s>F, then material is static. Make taus = F driving.
+    F = Fdriving(current_data)
+    tau_s[tau_s > F] = F[tau_s > F]
+    return tau_s
+
+
+def Fdriving(current_data):  # units of force per unit area
+    return Fgravitational(current_data) + Fdrag(current_data)
+
+
+def Fresisting(current_data):  # units of force per unit area
+    return Ffluid(current_data) + Fsolid(current_data)
+
+
+def Fnet(current_data):  # units of force per unit area
+    return Fresisting(current_data) - Fdriving(current_data)
 
 
 def liquefaction_ratio(current_data):
@@ -321,7 +629,6 @@ def liquefaction_ratio(current_data):
     p = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
     litho = lithostaticP(current_data)
     ratio = ma.masked_where(q[:, :, 0] < drytol, p / litho)
-
     return ratio
 
 
@@ -478,9 +785,9 @@ def velocity_v(current_data):
     return v
 
 
-def particle_size(current_data):
+def species1_fraction(current_data):
     """
-    Return a masked array containing velocity v in wet cells.
+    Return a masked array containing the fraction of species 1 in wet cells.
     """
     from numpy import ma
 
@@ -488,10 +795,26 @@ def particle_size(current_data):
     # drytol = 1.0
     q = current_data.q
     h = q[:, :, 0]
-    hv = q[:, :, 5]
+    hchi = q[:, :, 5]
     with np.errstate(divide="ignore", invalid="ignore"):
-        v = ma.masked_where(h <= drytol, hv / h)
-    return v
+        chi1 = ma.masked_where(h <= drytol, hchi / h)
+    return chi1
+
+
+def species2_fraction(current_data):
+    """
+    Return a masked array containing the fraction of species 2 in wet cells.
+    """
+    from numpy import ma
+
+    drytol = getattr(current_data.user, "drytol", drytol_default)
+    # drytol = 1.0
+    q = current_data.q
+    h = q[:, :, 0]
+    hchi = q[:, :, 5]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        chi2 = ma.masked_where(h <= drytol, 1.0 - (hchi / h))
+    return chi2
 
 
 def velocity(current_data):
@@ -513,6 +836,7 @@ def velocity(current_data):
         v = ma.masked_where(h <= drytol, hv / h)
     return (u, v)
 
+
 def velocity_magnitude(current_data):
     """
     Return a masked array of the magnitude of velocity at wet cells.
@@ -529,11 +853,12 @@ def velocity_magnitude(current_data):
     with np.errstate(divide="ignore", invalid="ignore"):
         u = hu / h
         v = hv / h
-    vel = np.sqrt(u**2 + v**2)
+    vel = np.sqrt(u ** 2 + v ** 2)
 
     vel = ma.masked_where(h <= drytol, vel)
 
     return vel
+
 
 def fs(current_data):
     """
@@ -547,7 +872,6 @@ def fs(current_data):
     aux = current_data.aux
     fs = aux[:, :, i_fs]
     fs = ma.masked_where(h <= drytol, fs)
-
     return fs
 
 
@@ -631,7 +955,6 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
-
     from pyclaw.data import Data
 
     fname = topoplotdata.fname
