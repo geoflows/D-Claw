@@ -323,9 +323,11 @@ contains
          rho_fp = rho_f
          pmtanh01=0.0
       else
+         ! this will eventually reduce mcrit
+         ! and creates rho_fp
          seg = 1.0
-         call calc_pmtanh(pm,seg,pmtanh01)
-         rho_fp = (1.0-pmtanh01)*rho_f
+         call calc_pmtanh(pm,seg,pmtanh01) ! this reduces mcrit based on segregation
+         rho_fp = rho_f !(1.0-pmtanh01)*rho_f ! this reduces rho_fluid based on segregation (makes rhof lighter)
       endif
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
@@ -366,7 +368,7 @@ contains
       m_crit_pm = pmtanh01*0.09
       m_crit_m = m_crit - m_crit_pm
       m_eqn = m_crit_m/(1.d0 + sqrt(S))
-      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
+      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1) ! this regularizes dilatency angle tanpsi to zero as velocity goes to zero
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
