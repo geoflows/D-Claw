@@ -656,7 +656,7 @@ def phi(current_data):
     else:
         mu_bf = phi_bed
 
-    return mu_bf
+    return np.arctan(mu_bf)
 
 
 def Fsolid(current_data):  # units of force per unit area
@@ -665,7 +665,7 @@ def Fsolid(current_data):  # units of force per unit area
     m = solid_frac(current_data)
     mc = m_crit(current_data)
     mreg = m / mc
-    tau_s = sigma_e(current_data) * np.tan(phi_bed + psi(current_data))
+    tau_s = mreg * sigma_e(current_data) * np.tan(phi_bed + psi(current_data))
 
     # tau = dmax1(0.d0,mreg*sigbed*tan(atan(mu_bf)+atan(tanpsi)))
 
