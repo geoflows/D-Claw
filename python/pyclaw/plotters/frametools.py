@@ -694,21 +694,14 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
         gauget = gaugesoln.t
         gaugeq = gaugesoln.q[:, pp_dict['pp_plot_var']]  # plot eta by default here.
-        plotcommand = "pobj=plt.plot(gauget, gaugeq, **pp_dict['pp_kwargs'])"
+        plotcommand = "pobj=plt.plot(gauget, gaugeq, zorder=6, **pp_dict['pp_kwargs'])"
 
         if pp_dict['pp_plot_show']:
             exec(plotcommand)
 
-        # interpolate to the current time t:
-        try:
-            i1 = plt.find(gauget < t)[-1]
-            i1 = min(i1, len(gauget) - 2)
-            slope = (gaugeq[i1 + 1] - gaugeq[i1]) / (gauget[i1 + 1] - gauget[i1])
-            qt = gaugeq[i1] + slope * (t - gauget[i1])
-        except:
-            qt = gaugeq[0]
-            print("Warning: t out of range")
-        plt.plot([t], [qt], "ro") # TODO make this dynamic
+        # put vertical line at current time.     print("Warning: t out of range")
+        ymin, ymax = plt.gca().get_ylim()
+        plt.vlines(t, ymin, ymax, "k", zorder=4) # TODO make this dynamic
 
     elif pp_dict["pp_plot_type"] == "1d_empty":
         # no plot to create (user might make one in afteritem or
