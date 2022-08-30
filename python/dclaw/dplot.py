@@ -5,6 +5,7 @@ Useful things for plotting GeoClaw results.
 import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
+
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -268,6 +269,8 @@ alpha_seg_default = 0.0
 phi_bed_default = 40
 bed_normal_default = 1
 c1_default = 1.0
+fric_offset_val_default = 0.0
+fric_star_val_default = 0.0
 
 
 def gmod(current_data):
@@ -277,10 +280,10 @@ def gmod(current_data):
 
     gmod = grav
 
-    if bed_normal==1:
+    if bed_normal == 1:
         aux = current_data.aux
         theta = aux[:, :, i_theta]
-        gmod = grav*np.cos(theta)
+        gmod = grav * np.cos(theta)
 
     return gmod
 
@@ -344,24 +347,24 @@ def hydrostaticP(current_data):
 def sigma_e(current_data):
     # effective basal pressure (lithostatic less basal pressure)
     se = lithostaticP(current_data) - basalP(current_data)
-    se[se < 0.0] = 0.0 # cannot be negative.
+    se[se < 0.0] = 0.0  # cannot be negative.
     return se
 
 
 def sigma_e_over_hydrostatic(current_data):
     # effective basal pressure.
-    return sigma_e(current_data)/hydrostaticP(current_data)
+    return sigma_e(current_data) / hydrostaticP(current_data)
 
 
 def sigma_e_over_lithostatic(current_data):
     # effective basal pressure.
-    return sigma_e(current_data)/lithostaticP(current_data)
+    return sigma_e(current_data) / lithostaticP(current_data)
 
 
 def Iv(current_data):
     mu = getattr(current_data.user, "mu", mu_default)
     gamma = shear(current_data)
-    return (mu * gamma)/sigma_e(current_data)
+    return (mu * gamma) / sigma_e(current_data)
 
 
 def Stokes(current_data):
@@ -369,7 +372,7 @@ def Stokes(current_data):
     rho_s = getattr(current_data.user, "rho_s", rho_s_default)
     delta = getattr(current_data.user, "delta", delta_default)
     gamma = shear(current_data)
-    return rho_s * gamma * delta**2 /mu
+    return rho_s * gamma * delta ** 2 / mu
 
 
 def N(current_data):  # dimensionless state parameter
@@ -390,17 +393,17 @@ def m_crit(current_data):
 
 def m_eqn(current_data):
     # equilibrium value for m.
-    #rho_f = getattr(current_data.user, "rho_f", rho_f_default)
-    #sigma_0 = getattr(current_data.user, "sigma_0", sigma_0_default)
-    #alpha_c = getattr(
+    # rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    # sigma_0 = getattr(current_data.user, "sigma_0", sigma_0_default)
+    # alpha_c = getattr(
     #    current_data.user, "alpha_c", alpha_c_default
-    #)  # this is a in part 2, equation 2.8
+    # )  # this is a in part 2, equation 2.8
     m_c = m_crit(current_data)
-    #alpha_seg = getattr(current_data.user, "alpha_seg", alpha_seg_default)
+    # alpha_seg = getattr(current_data.user, "alpha_seg", alpha_seg_default)
 
-    #alpha_seg = 1.0 - alpha_seg  # digclaw.mod.f90 line 121
+    # alpha_seg = 1.0 - alpha_seg  # digclaw.mod.f90 line 121
     m = solid_frac(current_data)
-    #pm = species1_fraction(current_data)
+    # pm = species1_fraction(current_data)
 
     # # if segregation occurs, then need to reduce
     # # mcrit by m_crit_pm
@@ -436,6 +439,7 @@ def shear(current_data):
     vnorm = velocity_magnitude(current_data)
     return 2.0 * vnorm / h  # in code refered to as hbounded (defined as h)
 
+
 def kperm(current_data):
     # permeability
     kappita = getattr(current_data.user, "kappita", kappita_default)
@@ -455,7 +459,7 @@ def dilatency(current_data):
     # Royal Society, Part 2, Eq 2.6
     D = 2.0 * (kperm(current_data) / (mu * h)) * sigma_e(current_data)
     vnorm = velocity_magnitude(current_data)
-    D[vnorm<=0] = 0
+    D[vnorm <= 0] = 0
     # depth averaged dilatency has units of L/T (this is consistent with Part 1 Eq 4.6)
     # k [=] L**2
     # mu [=] Pa-s = M / (L * T)
@@ -470,21 +474,23 @@ def dilatency(current_data):
 
 def tanpsi(current_data):
     # dilation angle.
-    #c1 = getattr(current_data.user, "c1", c1_default)
-    #gamma = shear(current_data)
+    # c1 = getattr(current_data.user, "c1", c1_default)
+    # gamma = shear(current_data)
     # in code, m-meqn is regularized based on shear.
     # c1*(m-m_eqn)*tanh(shear/0.1)
-    #return c1 * m_minus_meqn(current_data) * np.tanh(shear/0.1)
+    # return c1 * m_minus_meqn(current_data) * np.tanh(shear/0.1)
 
     vnorm = velocity_magnitude(current_data)
     tpsi = m_minus_meqn(current_data)
-    tpsi[vnorm<=0] = 0
+    tpsi[vnorm <= 0] = 0
 
     return tpsi
 
 
 def psi(current_data):
-    return np.arctan(m_minus_meqn(current_data)) # maybe this should be arctan of tanpsi (with the regularization)
+    return np.arctan(
+        m_minus_meqn(current_data)
+    )  # maybe this should be arctan of tanpsi (with the regularization)
 
 
 def Fgravitational(current_data):
@@ -500,34 +506,43 @@ def Fgravitational(current_data):
         theta = q[:, :, i_theta]
         sintheta = np.sin(theta)
     else:
-        sintheta = 0.
+        sintheta = 0.0
 
     dx = current_data.dx
     dy = current_data.dy
 
-    hL = np.roll(h.copy(), 1, axis = 1) # roll right on columns so that value at (i, j-1) is at (i,j)
-    hL[:, 0] = np.nan # first column has undefined values
-    hR = np.roll(h.copy(), -1, axis = 1)
+    hL = np.roll(
+        h.copy(), 1, axis=1
+    )  # roll right on columns so that value at (i, j-1) is at (i,j)
+    hL[:, 0] = np.nan  # first column has undefined values
+    hR = np.roll(h.copy(), -1, axis=1)
     hR[:, -1] = np.nan
-    hB = np.roll(h.copy(), 1, axis = 0)
+    hB = np.roll(h.copy(), 1, axis=0)
     hB[0, :] = np.nan
-    hT = np.roll(h.copy(), -1, axis = 0)
+    hT = np.roll(h.copy(), -1, axis=0)
     hT[-1, :] = np.nan
 
-    etaL = np.roll(eta.copy(), 1, axis = 1)
+    etaL = np.roll(eta.copy(), 1, axis=1)
     etaL[:, 0] = np.nan
-    etaR = np.roll(eta.copy(), -1, axis = 1)
+    etaR = np.roll(eta.copy(), -1, axis=1)
     etaR[:, -1] = np.nan
-    etaB = np.roll(eta.copy(), 1, axis = 0)
+    etaB = np.roll(eta.copy(), 1, axis=0)
     etaB[0, :] = np.nan
-    etaT = np.roll(eta.copy(), -1, axis = 0)
+    etaT = np.roll(eta.copy(), -1, axis=0)
     etaT[-1, :] = np.nan
 
-    FxL = rho * (np.abs(-g*0.5*(h+hL)*(eta-etaL)/(dx) + g*0.5*(h+hL)*np.sin(theta)))
-    FyB = rho * (np.abs(-g*0.5*(h+hB)*(eta-etaB)/(dy)))
+    FxL = rho * (
+        np.abs(
+            -g * 0.5 * (h + hL) * (eta - etaL) / (dx)
+            + g * 0.5 * (h + hL) * np.sin(theta)
+        )
+    )
+    FyB = rho * (np.abs(-g * 0.5 * (h + hB) * (eta - etaB) / (dy)))
 
-    FxR = rho * (-g*0.5*(h+hR)*(etaR-eta)/(dx) + g*0.5*(h+hR)*np.sin(theta))
-    FyT = rho * (-g*0.5*(h+hT)*(etaT-eta)/(dy))
+    FxR = rho * (
+        -g * 0.5 * (h + hR) * (etaR - eta) / (dx) + g * 0.5 * (h + hR) * np.sin(theta)
+    )
+    FyT = rho * (-g * 0.5 * (h + hT) * (etaT - eta) / (dy))
 
     # units are M/L**3 * L/T**2 * L
     # = M / (L * T**2) = Pressure  =  Force per unit area (OK)
@@ -543,7 +558,7 @@ def Fgravitational(current_data):
     FyB_mag_smaller = np.abs(FyB) < np.abs(FyT)
     Fy[FyB_mag_smaller] = np.abs(FyB)[FyB_mag_smaller]
     Fy[different_sign_y] = 0
-    Fg = np.sqrt(Fx**2, Fy**2)
+    Fg = np.sqrt(Fx ** 2, Fy ** 2)
     # Royal Proceedings, Part 2, equation 2.4b,c (momentum source terms) first term on RHS
     # deta/dx portion taken from calc_taudir
     return Fg
@@ -581,11 +596,80 @@ def Ffluid(current_data):  # units of force per unit area
     return tauf
 
 
+def phi(current_data):
+    # todo. needs rocha and gray adjudsting.
+    phi_bed = getattr(current_data.user, "phi_bed", phi_bed_default)
+    fric_offset_val = getattr(
+        current_data.user, "fric_offset_val", fric_offset_val_default
+    )
+    fric_star_val = getattr(current_data.user, "fric_star_val", fric_star_val_default)
+    if fric_offset_val > 0.0:
+
+        bed_normal = getattr(current_data.user, "bed_normal", bed_normal_default)
+
+        if bed_normal == 1:
+            aux = current_data.aux
+            theta = aux[:, :, i_theta]
+        else:
+            theta = 0.0
+
+        h = depth(current_data)
+        vnorm = velocity_magnitude(current_data)
+        g = gmod(current_data)
+
+        phi2f = np.deg2rad(phi_bed)
+
+        phi1f = phi2f - np.deg2rad(fric_offset_val)
+        phi3f = phi1f + np.deg2rad(fric_star_val)
+
+        mu1f = np.tan(phi1f)
+        mu2f = np.tan(phi2f)
+        mu3f = np.tan(phi3f)
+
+        Lambdaf = 1.34
+        diamf = 0.25
+        Lf = 2.0 * diamf
+        betaf = 0.65 / np.sqrt(np.cos(theta))
+        Gamf = 0.77 / np.sqrt(np.cos(theta))
+
+        Fr_starf = Lambdaf * betaf - Gamf
+
+        # Calculate local Froude number
+        Frf = vnorm / np.sqrt(g * h)
+
+        # calculate different static and dynamic mu values.
+        mu_df = mu1f + (mu2f - mu1f) / (
+            1 + h * betaf / (Lf * (Frf + Gamf))
+        )  # Rocha, Johnson and Gray, Eq 2.10
+        mu_sf = mu3f + (mu2f - mu1f) / (1 + h / Lf)
+
+        # as default, use intermediat Fr value for mu
+        mu_bf = (Frf / Fr_starf) * (mu_df - mu_sf) + mu_sf
+
+        # fill in mu dynamic and static as need.
+        mu_dynamic = Frf >= Fr_starf
+        mu_bf[mu_dynamic] = mu_df[mu_dynamic]
+
+        mu_static = Frf < 1.0e-16
+        mu_bf[mu_static] = mu_sf[mu_static]
+
+    else:
+        mu_bf = phi_bed
+
+    return mu_bf
+
+
 def Fsolid(current_data):  # units of force per unit area
     # resisting force due to solid.
-    phi_bed = getattr(current_data.user, "phi_bed", phi_bed_default)
+    phi_bed = phi(current_data)
+    m = solid_frac(current_data)
+    mc = m_crit(current_data)
+    mreg = m / mc
     tau_s = sigma_e(current_data) * np.tan(phi_bed + psi(current_data))
-    tau_s[tau_s<0] = 0
+
+    # tau = dmax1(0.d0,mreg*sigbed*tan(atan(mu_bf)+atan(tanpsi)))
+
+    tau_s[tau_s < 0] = 0
     # units
     # sigma_e * [-]
     # sigma_e is pressure, so OK.
@@ -607,7 +691,8 @@ def Fresisting(current_data):  # units of force per unit area
 
 
 def Fnet(current_data):  # units of force per unit area
-    return Fresisting(current_data) - Fdriving(current_data)
+    # at lowest Fnet is zero because friction will just balance driving.
+    return Fdriving(current_data) - Fresisting(current_data)
 
 
 def liquefaction_ratio(current_data):
@@ -926,6 +1011,7 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
+
     from pyclaw.data import Data
 
     fname = topoplotdata.fname
