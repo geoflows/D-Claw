@@ -31,6 +31,40 @@ import os
 import re
 import shutil
 
+# place DIG attributes and description in one place (since this is documents )
+_DIG_ATTRS = {
+"rho_s": "solid grain density (kg/m^3)",
+"rho_s" :  "solid grain density (kg/m^3)",
+"rho_f" :  "pore-fluid density  (kg/m^3)",
+"phi_bed" :  "basal friction angle (degrees)",
+"theta_input" :  "slope angle (degrees)",
+"delta" :  "characteristic grain diameter (m)",
+"kappita" :  "permeability at m=setdig.m0 (m^2), k0 in G&I eq 2.7",
+"mu" :  "viscosity of pore-fluid (Pa-s)",
+"alpha_c" :  "debris compressibility constant (#)",
+"m_crit" :  "critical state value of m (#)",
+"c1" :  "dilation coefficient 1 (#)",
+"m0" :  "initial solid volume fraction (#)",
+"sigma_0" :  "baseline stress for definition of compressibility",
+"alpha_seg" :  "coefficient of segregation velocity profile",
+"bed_normal" :  "bed_normal = 1 requires theta in aux for slope in one direction",
+"phi_seg_coeff" :  "adjustment to friction coefficient based on segregation",
+"entrainment" :  "flag for entrainment, 0 = no entrainment",
+"entrainment_rate" :  "rate of entrainment parameter 0-1",
+"mom_autostop" :  "flag for momentum autostop F = no autostop, T = autostop",
+"mom_perc" :  "percentage of max momentum for autostop, default is 0.05 (5%)",
+"src_ftn_num_sr" : "number of in-domain sources",
+"fric_offset_val" :  "start/stop friction offset in degrees. if this value is >0, then hysteretic friction is used."),
+"fric_star_val" :  "deep friction offset in degrees"),
+"chi_init_val" :  "initial mixture of species size 0-1"),
+"kappita_diff" :  "permeability multiplier for different size species, kappita is used for species1, kappita*kappita_diff used for species2"),
+"outaux" :  "flag for writing aux to output F = not written, T = written",
+"init_ptype" :  "0 = hydro, 1 = failure, 2= p(t)",
+"init_pmax_ratio" :  "p(init_ptf2)= hydro*init_pmax_ratio",
+"init_ptf" :  " p(init_ptf) = failure",
+"init_ptf2" :  "p(init_ptf2)= hydro*init_pmax_ratio",
+}
+
 
 # ========== Parse Value Utility Function ====================================
 def _parse_value(value):
@@ -1527,72 +1561,35 @@ class DigclawInputData(Data):
         super(DigclawInputData, self).__init__()
 
         # Set default values:
-        self.add_attribute("rho_s", 2700.0, "solid grain density (kg/m^3)")
-        self.add_attribute("rho_f", 1000.0, "pore-fluid density  (kg/m^3)")
-        self.add_attribute("phi_bed", 40.0, "basal friction angle (degrees)")
-        self.add_attribute("theta_input", 0.0, "slope angle (degrees)")
-        self.add_attribute("delta", 0.01, "characteristic grain diameter (m)")
-        self.add_attribute(
-            "kappita", 0.0001, "permeability at m=setdig.m0 (m^2), k0 in G&I eq 2.7"
-        )
-        self.add_attribute("mu", 0.001, "viscosity of pore-fluid (Pa-s)")
-        self.add_attribute("alpha_c", 1.0, "debris compressibility constant (#)")
-        self.add_attribute("m_crit", 0.62, "critical state value of m (#)")
-        self.add_attribute("c1", 1.0, "dilation coefficient 1 (#)")
-        self.add_attribute("m0", 0.52, "initial solid volume fraction (#)")
-        self.add_attribute(
-            "sigma_0", 1.0e3, "baseline stress for definition of compessibility"
-        )
-        self.add_attribute(
-            "alpha_seg", 0.0, "coefficient of segregation velocity profile"
-        )
-        self.add_attribute(
-            "init_ptype",
-            0,
-            "-1 = zero pressure or user defined files in qinit, 0 = hydrostatic, 1,2 = failure pressure (1=min, 2=avg), 3,4 = rising pressure (3=min, 4=avg)",
-        )
-        self.add_attribute(
-            "init_pmax_ratio", 1.0, "pressure rise to hydrostatic *init_pmax_ratio (KRBNOTE: don't this is used.)"
-        )
-        self.add_attribute(
-            "init_ptf", 1.0, "pressure will rise until t = init_ptf without dilatancy"
-        )
-        self.add_attribute("init_ptf2", 0.0, "will rise until t = init_ptf2")
-        self.add_attribute(
-            "bed_normal",
-            0,
-            "bed_normal =1 requires theta in aux. for slope in one direction",
-        )
-        self.add_attribute(
-            "phi_seg_coeff",
-            0.0,
-            "adjustment to friction coefficient based on segregation",
-        )
-        self.add_attribute("entrainment", 0, "flag for entrainment, 0 = no entrainment")
-        self.add_attribute("entrainment_rate", 0.2, "rate of entrainment parameter 0-1")
-
-        self.add_attribute(
-            "mom_autostop",
-            False,
-            "flag for momentum autostop F = no autostop, T = autostop",
-        )
-        self.add_attribute(
-            "mom_perc",
-            0.05,
-            "percentage of max momentum for autostop, default is 0.05 (5%)",
-        )
-        self.add_attribute("src_ftn_num_sr",0,'number of in-domain sources')
-
-        self.add_attribute('fric_offset_val', 0.0, 'start/stop friction offset in degrees. if this value is >0, then hysteretic friction is used.')
-        self.add_attribute('fric_star_val', 0.0, 'deep friction offset in degrees')
-
-        self.add_attribute('chi_init_val', 0.0, 'initial mixture of species size 0-1')
-        self.add_attribute('kappita_diff', 1.0, 'permeability multiplier for different size species, kappita is used for species1, kappita*kappita_diff used for species2')
-        self.add_attribute(
-            "outaux",
-            False,
-            "flag for writing aux to output F = not written, T = written",
-        )
+        self.add_attribute("rho_s", 2700.0, _DIG_ATTRS["rho_s"])
+        self.add_attribute("rho_f", 1000.0, _DIG_ATTRS["rho_f"])
+        self.add_attribute("phi_bed", 40.0, _DIG_ATTRS["phi_bed"])
+        self.add_attribute("theta_input", 0.0, _DIG_ATTRS["theta_input"])
+        self.add_attribute("delta", 0.01, _DIG_ATTRS["delta"])
+        self.add_attribute("kappita", 0.0001, _DIG_ATTRS["kappita"])
+        self.add_attribute("mu", 0.001, _DIG_ATTRS["mu"])
+        self.add_attribute("alpha_c", 1.0, _DIG_ATTRS["alpha_c"])
+        self.add_attribute("m_crit", 0.62, _DIG_ATTRS["m_crit"])
+        self.add_attribute("c1", 1.0, _DIG_ATTRS["c1"])
+        self.add_attribute("m0", 0.52, _DIG_ATTRS["m0"])
+        self.add_attribute("sigma_0", 1.0e3, _DIG_ATTRS["sigma_0"])
+        self.add_attribute("alpha_seg", 0.0, _DIG_ATTRS["alpha_seg"])
+        self.add_attribute("init_ptype", 0, _DIG_ATTRS["init_pmax_ratio"])
+        self.add_attribute("init_pmax_ratio", 1.0, _DIG_ATTRS[""])
+        self.add_attribute("init_ptf", 1.0, _DIG_ATTRS["init_ptf"])
+        self.add_attribute("init_ptf2", 0.0, _DIG_ATTRS["init_ptf2"])
+        self.add_attribute("bed_normal", 0,_DIG_ATTRS["bed_normal"])
+        self.add_attribute("phi_seg_coeff", 0.0, _DIG_ATTRS["phi_seg_coeff"])
+        self.add_attribute("entrainment", 0, _DIG_ATTRS["entrainment"])
+        self.add_attribute("entrainment_rate", 0.2, _DIG_ATTRS["entrainment_rate"])
+        self.add_attribute("mom_autostop", False, _DIG_ATTRS["mom_autostop"])
+        self.add_attribute("mom_perc", 0.05, _DIG_ATTRS["mom_perc"])
+        self.add_attribute("src_ftn_num_sr",0, _DIG_ATTRS["src_ftn_num_sr"])
+        self.add_attribute('fric_offset_val', 0.0, _DIG_ATTRS["fric_offset_val"])
+        self.add_attribute('fric_star_val', 0.0, _DIG_ATTRS["fric_star_val"])
+        self.add_attribute('chi_init_val', 0.0, _DIG_ATTRS["chi_init_val"])
+        self.add_attribute('kappita_diff', 1.0, _DIG_ATTRS["kappita_diff"])
+        self.add_attribute("outaux", False, _DIG_ATTRS["outaux"])
         #self.add_attribute('m_crit2', 0.62, 'critical state value of m (#) for different size species')
         #self.add_attribute('rho_s2', 2700.0, 'solid grain density (kg/m^3) different size species')
         #self.add_attribute('fric_offset_val2', 0.0, 'start/stop friction offset in degrees for different size species')
@@ -1603,60 +1600,31 @@ class DigclawInputData(Data):
         print("Creating data file setdig.data")
         # open file and write a warning header:
         file = open_datafile("setdig.data")
-        data_write(file, self, "rho_s", "solid grain density (kg/m^3)")
-        data_write(file, self, "rho_f", "pore-fluid density  (kg/m^3)")
-        data_write(file, self, "phi_bed", "basal friction angle (degrees)")
-        data_write(file, self, "theta_input", "slope angle (degrees)")
-        data_write(file, self, "delta", "characteristic grain diameter (m)")
-        data_write(file, self, "kappita", "characteristic grain diameter in kperm (m)")
-        data_write(file, self, "mu", "viscosity of pore-fluid (Pa-s)")
-        data_write(file, self, "alpha_c", "debris compressibility constant (#)")
-        data_write(file, self, "m_crit", "critical state value of m (#)")
-        data_write(file, self, "c1", "dilation coefficient 1 (#)")
-        data_write(file, self, "m0", "initial solid volume fraction (#)")
-        data_write(
-            file, self, "sigma_0", "baseline stress for definition of compessibility"
-        )
-        data_write(
-            file, self, "alpha_seg", "coefficient of segregation velocity profile"
-        )
-        data_write(
-            file,
-            self,
-            "bed_normal",
-            "bed_normal = 1 requires theta in aux for slope in one direction",
-        )
-        data_write(
-            file,
-            self,
-            "phi_seg_coeff",
-            "adjustment to friction coefficient based on segregation",
-        )
-        data_write(
-            file, self, "entrainment", "flag for entrainment, 0 = no entrainment"
-        )
-
-        data_write(file, self, "entrainment_rate", "rate of entrainment parameter 0-1")
-        data_write(
-            file,
-            self,
-            "mom_autostop",
-            "flag for momentum autostop F = no autostop, T = autostop",
-        )
-        data_write(
-            file,
-            self,
-            "mom_perc",
-            "percentage of max momentum for autostop, default is 0.05 (5%)",
-        )
-        data_write(file,self,"src_ftn_num_sr","number of in-domain sources")
-        data_write(file, self, 'fric_offset_val', 'start/stop friction offset in degrees. if this value is >0, then hysteretic friction is used.')
-        data_write(file, self, 'fric_star_val', 'deep friction offset in degrees')
-
-        data_write(file, self, 'chi_init_val', 'initial mixture of species size 0-1')
-        data_write(file, self, 'kappita_diff', 'permeability multiplier for different size species, kappita is used for species1, kappita*kappita_diff used for species2')
-
-        data_write(file, self, 'outaux', "flag for writing aux to output F = not written, T = written")
+        data_write(file, self, "rho_s", _DIG_ATTRS["rho_s"])
+        data_write(file, self, "rho_f", _DIG_ATTRS["rho_f"])
+        data_write(file, self, "phi_bed", _DIG_ATTRS["phi_bed"])
+        data_write(file, self, "theta_input", _DIG_ATTRS["theta_input"])
+        data_write(file, self, "delta", _DIG_ATTRS["delta"])
+        data_write(file, self, "kappita", _DIG_ATTRS["kappita"])
+        data_write(file, self, "mu", _DIG_ATTRS["mu"])
+        data_write(file, self, "alpha_c", _DIG_ATTRS["alpha_c"])
+        data_write(file, self, "m_crit", _DIG_ATTRS["m_crit"])
+        data_write(file, self, "c1", _DIG_ATTRS["c1"])
+        data_write(file, self, "m0", _DIG_ATTRS["m0"])
+        data_write(file, self, "sigma_0", _DIG_ATTRS["sigma_0"])
+        data_write(file, self, "alpha_seg", _DIG_ATTRS["alpha_seg"])
+        data_write(file, self, "bed_normal", _DIG_ATTRS["bed_normal"])
+        data_write(file, self, "phi_seg_coeff", _DIG_ATTRS["phi_seg_coeff"])
+        data_write(file, self, "entrainment", _DIG_ATTRS["entrainment"])
+        data_write(file, self, "entrainment_rate", _DIG_ATTRS["entrainment_rate"])
+        data_write(file, self, "mom_autostop", _DIG_ATTRS["mom_autostop"])
+        data_write(file, self, "mom_perc", _DIG_ATTRS["mom_perc"])
+        data_write(file,self,"src_ftn_num_sr",_DIG_ATTRS["src_ftn_num_sr"])
+        data_write(file, self, 'fric_offset_val', _DIG_ATTRS["fric_offset_val"])
+        data_write(file, self, 'fric_star_val', _DIG_ATTRS["fric_star_val"])
+        data_write(file, self, 'chi_init_val', '_DIG_ATTRS["chi_init_val"])
+        data_write(file, self, 'kappita_diff',_DIG_ATTRS["kappita_diff"])
+        data_write(file, self, 'outaux', _DIG_ATTRS["outaux"])
 
         #data_write(file, self, 'm_crit2', 'critical state value of m (#) for different size species')
         #data_write(file, self, 'rho_s2', 'solid grain density (kg/m^3) different size species')
@@ -1668,8 +1636,8 @@ class DigclawInputData(Data):
         print("Creating data file setpinit.data")
         # open file and write a warning header:
         file = open_datafile("setpinit.data")
-        data_write(file, self, "init_ptype", "0 = hydro, 1 = failure, 2= p(t)")
-        data_write(file, self, "init_pmax_ratio", "p(init_ptf2)= hydro*init_pmax_ratio")
-        data_write(file, self, "init_ptf", " p(init_ptf) = failure")
-        data_write(file, self, "init_ptf2", "p(init_ptf2)= hydro*init_pmax_ratio")
+        data_write(file, self, "init_ptype", _DIG_ATTRS["init_ptype"])
+        data_write(file, self, "init_pmax_ratio", _DIG_ATTRS["init_pmax_ratio"])
+        data_write(file, self, "init_ptf", _DIG_ATTRS["init_ptf"])
+        data_write(file, self, "init_ptf2", _DIG_ATTRS["init_ptf2"])
         file.close()
