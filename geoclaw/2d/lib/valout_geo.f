@@ -5,14 +5,13 @@ c
 c
       use digclaw_module, only : rho_f,rho_s,mom_autostop,mom_perc
       use digclaw_module, only: amidoneyet,globmaxmom
+      use digclaw_module, only: outaux
 
       implicit double precision (a-h,o-z)
       character*10  matname1, matname2, matname3
       double precision :: locmaxmom
       double precision momh, momvel, momm, momrho, momprop
       include  "call.i"
-
-      logical outaux
 
       iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
       iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
@@ -26,7 +25,6 @@ c :::::::::::::::::::::::::::::::::::::;:::::::::::::::::::::::::::::::;
 c
 c     ### MATLAB graphics output
 c
-      outaux = .false.
       if (matlabout) then
 c        ###  make the file names and open output files
          matname1 = 'fort.qxxxx'

@@ -24,6 +24,7 @@ module digclaw_module
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
     double precision :: mom_perc
     logical :: mom_autostop
+    logical :: outaux
 
     double precision :: globmaxmom = 0. ! initialize values for global max momentum
     logical :: amidoneyet = .False. ! and momentum based stopping criterion.
@@ -111,7 +112,7 @@ contains
          read(iunit,*) fric_star_val
          read(iunit,*) chi_init_val
          read(iunit,*) kappita_diff
-
+         read(iunit,*) outaux
          !read(iunit,*) m_crit2
          !read(iunit,*) rho_s2
          !read(iunit,*) fric_offset_val2
@@ -322,9 +323,11 @@ contains
          rho_fp = rho_f
          pmtanh01=0.0
       else
+         ! this will eventually reduce mcrit
+         ! and creates rho_fp
          seg = 1.0
-         call calc_pmtanh(pm,seg,pmtanh01)
-         rho_fp = (1.0-pmtanh01)*rho_f
+         call calc_pmtanh(pm,seg,pmtanh01) ! this reduces mcrit based on segregation
+         rho_fp = (1.0-pmtanh01)*rho_f ! this reduces rho_fluid based on segregation (makes rhof lighter)
       endif
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))

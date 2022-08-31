@@ -218,6 +218,8 @@ def read_ascii(
     # Read in values from fort.t file:
     [t, meqn, ngrids, maux, ndim] = read_ascii_t(frame, path, file_prefix)
 
+    # store grid number inds to be used if aux is read.
+    grid_no_inds = {}
     # Read in values from fort.q file:
     try:
         with open(q_fname, "r") as f:
@@ -309,6 +311,10 @@ def read_ascii(
                 # Add new grid to solution
                 solution.grids.append(grid)
 
+                # save solution grid index for use with aux reading.
+                grid_no_inds[gridno] = len(solution.grids) - 1
+
+
     except (IOError):
         raise
     except:
@@ -320,6 +326,7 @@ def read_ascii(
         # Check for aux file
         fname1 = os.path.join(base_path, "%s.a" % file_prefix) + str(frame).zfill(4)
         fname2 = os.path.join(base_path, "%s.a" % file_prefix)
+
         if os.path.exists(fname1):
             fname = fname1
         elif os.path.exists(fname2):
@@ -336,34 +343,34 @@ def read_ascii(
                 for n in range(len(solution.grids)):
                     # Fetch correct grid
                     gridno = read_data_line(f, type="int")
-                    grid = solution.grids[gridno - 1]
+                    m = grid_no_inds[gridno]
+                    grid = solution.grids[m]
+
+                    if not (grid.gridno == gridno):
+                        print("Grid number in aux file header did not match grid no %s."% grid.gridno)
+                        raise IOError()
+
                     # These should match this grid already, raise exception otherwise
                     if not (grid.level == read_data_line(f, type="int")):
-                        raise IOError(
-                            "Grid level in aux file header did not match grid no %s."
-                            % grid.gridno
-                        )
+                        print("Grid level in aux file header did not match grid no %s."% grid.gridno)
+                        raise IOError()
+
                     for dim in grid.dimensions:
                         if not (dim.n == read_data_line(f, type="int")):
-                            raise IOError(
-                                "Dimension %s's n in aux file header did not match grid no %s."
-                                % (dim.name, grid.gridno)
-                            )
+                            print("Dimension %s's n in aux file header did not match grid no %s."% grid.gridno)
+                            raise IOError()
+
                     for dim in grid.dimensions:
                         if not (abs(dim.lower - read_data_line(f, type="float")) < 1.0e-4):
-                            raise IOError(
-                                "Dimension %s's lower in aux file header did not match grid no %s."
-                                % (dim.name, grid.gridno)
-                            )
+                            print("Dimension %s's lower in aux file header did not match grid no %s."% grid.gridno)
+                            raise IOError()
+
                     for dim in grid.dimensions:
                         if not (abs(dim.d - read_data_line(f, type="float")) < 1.0e-4):
-                            raise IOError(
-                                "Dimension %s's d in aux file header did not match grid no %s."
-                                % (dim.name, grid.gridno)
-                            )
+                            print("Dimension %s's d in aux file header did not match grid no %s."% (dim.name, grid.gridno))
+                            raise IOError()
 
                     f.readline()
-
                     # Read in auxillary array
                     if grid.ndim == 1:
                         for i in range(grid.dimensions[0].n):
@@ -383,6 +390,7 @@ def read_ascii(
                                 for m in range(grid.maux):
                                     grid.aux[i, j, m] = float(l[m])
                             blank = f.readline()
+
                     elif grid.ndim == 3:
                         for k in range(grid.dimensions[2].n):
                             for j in range(grid.dimensions[1].n):
@@ -398,11 +406,11 @@ def read_ascii(
                     else:
                         logger.critical("Read aux only up to 3d is supported.")
                         raise Exception("Read aux only up to 3d is supported.")
-        except (IOError):
-            raise
+
         except:
-            logger.error("File %s was not able to be read." % q_fname)
-            raise
+            print("File %s was not able to be read." % fname)
+            logger.error("File %s was not able to be read." % fname)
+            raise IOError
 
 
 def read_ascii_t(frame, path="./", file_prefix="fort"):

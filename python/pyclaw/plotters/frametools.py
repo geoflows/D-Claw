@@ -236,6 +236,12 @@ def plotframe(frameno, plotdata, verbose=False):
                     current_data.aux = grid.aux
                     current_data.xlower = grid.dimensions[0].lower
                     current_data.xupper = grid.dimensions[0].upper
+                    current_data.ylower = grid.dimensions[1].lower
+                    current_data.yupper = grid.dimensions[1].upper
+                    current_data.mx = grid.dimensions[0].n
+                    current_data.my = grid.dimensions[1].n
+                    current_data.dx = (current_data.xupper - current_data.xlower)/current_data.mx
+                    current_data.dy = (current_data.yupper - current_data.ylower)/current_data.my
 
                     # loop over items:
                     # ----------------
@@ -474,13 +480,13 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # Convert each plot parameter into a local variable starting with 'pp_'.
 
+    pp_dict = {}
     for plot_param in plot_params:
-        cmd = "pp_%s = getattr(plotitem, '%s',None)" % (plot_param, plot_param)
-        exec(cmd)
+        pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
 
-    if pp_mapc2p is None:
+    if pp_dict["pp_mapc2p"] is None:
         # if this item does not have a mapping, check for a global mapping:
-        pp_mapc2p = getattr(plotdata, "mapc2p", None)
+        pp_dict["pp_mapc2p"] = getattr(plotdata, "mapc2p", None)
 
     grid = framesoln.grids[gridno]
     current_data.grid = grid
@@ -501,15 +507,18 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     # parameter and if so select the value corresponding to the level of
     # this grid.  Otherwise, use plotitem attribute of this name.
     # The resulting variable starts with 'pp_'.
+    for plot_param in plot_params:
+        pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
 
     for plot_param in plot_params:
         amr_plot_param = "amr_%s" % plot_param
         amr_list = getattr(plotitem, amr_plot_param, [])
         if len(amr_list) > 0:
             index = min(grid.level, len(amr_list)) - 1
-            exec("pp_%s = amr_list[%i]" % (plot_param, index))
+            pp_dict["pp_%s" % plot_param] = amr_list[index]
         else:
-            exec("pp_%s = getattr(plotitem, '%s', None)" % (plot_param, plot_param))
+            pp_dict["pp_%s" % plot_param] = getattr(plotitem, plot_param, None)
+
 
     if pp_dict["pp_plot_type"] == "1d":
         pp_dict["pp_plot_type"] = "1d_plot"  # '1d' is deprecated
@@ -529,8 +538,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             print("*** This version of plt is missing fill_between")
             print("*** Reverting to 1d_plot")
             pp_dict["pp_plot_type"] = "1d_plot"
-        thisgridvar = get_gridvar(grid, pp_plot_var, 1, current_data)
-        thisgridvar2 = get_gridvar(grid, pp_plot_var2, 1, current_data)
+        thisgridvar = get_gridvar(grid, pp_dict["pp_plot_var"], 1, current_data)
+        thisgridvar2 = get_gridvar(grid, pp_dict["pp_plot_var2"], 1, current_data)
         xc_center = thisgridvar.xc_center  # cell centers
         xc_edge = thisgridvar.xc_edge  # cell edges
         var = thisgridvar.var  # variable to be plotted
@@ -541,7 +550,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     elif pp_dict["pp_plot_type"] == "1d_fill_between_from_2d_data":
 
-        if not pp_map_2d_to_1d:
+        if not pp_dict["pp_map_2d_to_1d"]:
             print("*** Error, plot_type = 1d_from_2d_data requires ")
             print("*** map_2d_to_1d function as plotitem attribute")
             raise
@@ -554,8 +563,8 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_dict["pp_plot_type"] = "1d_plot"
 
         try:
-            thisgridvar = get_gridvar(grid, pp_plot_var, 2, current_data)
-            thisgridvar2 = get_gridvar(grid, pp_plot_var2, 2, current_data)
+            thisgridvar = get_gridvar(grid, pp_dict["pp_plot_var"], 2, current_data)
+            thisgridvar2 = get_gridvar(grid, pp_dict["pp_plot_var2"], 2, current_data)
             xc_center = thisgridvar.xc_center  # cell centers
             yc_center = thisgridvar.yc_center
             xc_edge = thisgridvar.xc_edge  # cell edge
@@ -566,24 +575,24 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             current_data.y = yc_center
             current_data.var = var
             current_data.var2 = var2
-            xc_center, var, var2 = pp_map_2d_to_1d(current_data)
+            xc_center, var, var2 = pp_dict["pp_map_2d_to_1d"](current_data)
             xc_center = xc_center.flatten()  # convert to 1d
             var = var.flatten()  # convert to 1d
             var2 = var2.flatten()
         except:
             print("*** Error with map_2d_to_1d function")
-            print(("map_2d_to_1d = ", pp_map_2d_to_1d))
+            print(("map_2d_to_1d = ", pp_dict["pp_map_2d_to_1d"]))
             raise
             return
 
     elif pp_dict["pp_plot_type"] == "1d_from_2d_data":
-        if not pp_map_2d_to_1d:
+        if not pp_dict["pp_map_2d_to_1d"]:
             print("*** Error, plot_type = 1d_from_2d_data requires ")
             print("*** map_2d_to_1d function as plotitem attribute")
             raise
             return
         try:
-            thisgridvar = get_gridvar(grid, pp_plot_var, 2, current_data)
+            thisgridvar = get_gridvar(grid, pp_dict["pp_plot_var"], 2, current_data)
             xc_center = thisgridvar.xc_center  # cell centers
             yc_center = thisgridvar.yc_center
             xc_edge = thisgridvar.xc_edge  # cell edge
@@ -593,7 +602,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             current_data.y = yc_center
             current_data.var = var
             # TODO: fix for xp, yp??
-            xc_center, var = pp_map_2d_to_1d(current_data)
+            xc_center, var = pp_dict["pp_map_2d_to_1d"](current_data)
             xc_center = xc_center.flatten()  # convert to 1d
             var = var.flatten()  # convert to 1d
 
@@ -601,18 +610,18 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             # xc_edge, var = pp_map_2d_to_1d(var,xc_edge,yc_edge,t)
         except:
             print("*** Error with map_2d_to_1d function")
-            print(("map_2d_to_1d = ", pp_map_2d_to_1d))
+            print(("map_2d_to_1d = ", pp_dict["pp_map_2d_to_1d"]))
             raise
             return
 
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
-        gaugesoln = plotdata.getgauge(pp_gaugeno)
+        gaugesoln = plotdata.getgauge(pp_dict['pp_gaugeno'])
         xc_center = None
         xc_edge = None
 
     elif pp_dict["pp_plot_type"] == "1d_empty":
         pp_plot_var = 0  # shouldn't be used but needed below *FIX*
-        thisgridvar = get_gridvar(grid, pp_plot_var, 1, current_data)
+        thisgridvar = get_gridvar(grid, pp_dict["pp_plot_var"], 1, current_data)
         xc_center = thisgridvar.xc_center  # cell centers
         xc_edge = thisgridvar.xc_edge  # cell edges
 
@@ -622,14 +631,14 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
 
     # Grid mapping:
 
-    if pp_MappedGrid is None:
-        pp_MappedGrid = pp_mapc2p is not None
+    if pp_dict['pp_MappedGrid'] is None:
+        pp_dict['pp_MappedGrid'] = pp_dict['pp_mapc2p'] is not None
 
-    if pp_MappedGrid & (pp_mapc2p is None):
+    if pp_dict['pp_MappedGrid'] & (pp_dict['pp_mapc2p'] is None):
         print("*** Warning: MappedGrid == True but no mapc2p specified")
-    elif pp_MappedGrid:
-        X_center = pp_mapc2p(xc_center)
-        X_edge = pp_mapc2p(xc_edge)
+    elif pp_dict['pp_MappedGrid']:
+        X_center = pp_dict['pp_mapc2p'](xc_center)
+        X_edge = pp_dict['pp_mapc2p'](xc_edge)
     else:
         X_center = xc_center
         X_edge = xc_edge
@@ -643,28 +652,28 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             pp_kwargs["color"] = pp_color
 
         plotcommand = (
-            "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_plotstyle
+            "pobj=plt.plot(X_center,var,'%s', **pp_dict['pp_kwargs'])" % pp_dict['pp_plotstyle']
         )
-        if pp_plot_show:
+        if pp_dict['pp_plot_show']:
             exec(plotcommand)
 
     elif pp_dict["pp_plot_type"] == "1d_semilogy":
-        if pp_color:
-            pp_kwargs["color"] = pp_color
+        if pp_dict['pp_color']:
+            pp_kwargs["color"] = pp_dict['pp_color']
 
         plotcommand = (
             "pobj=plt.semilogy(X_center,var,'%s', **pp_dict['pp_kwargs'])"
-            % pp_plotstyle
+            % pp_dict['pp_plotstyle']
         )
-        if pp_plot_show:
+        if pp_dict['pp_plot_show']:
             exec(plotcommand)
 
     elif pp_dict["pp_plot_type"] in ["1d_fill_between", "1d_fill_between_from_2d_data"]:
-        if pp_color:
-            pp_kwargs["color"] = pp_color
+        if pp_dict['pp_color']:
+            pp_kwargs["color"] = pp_dict['pp_color']
         if pp_fill_where:
-            pp_fill_where = pp_fill_where.replace("plot_var", "var")
-            pp_fill_where = pp_fill_where.replace("plot_var2", "var2")
+            pp_fill_where = pp_dict['pp_fill_where'].replace("plot_var", "var")
+            pp_fill_where = pp_dict['pp_fill_where'].replace("plot_var2", "var2")
             plotcommand = (
                 "pobj=plt.fill_between(X_center,var,var2,%s,**pp_dict['pp_kwargs'])"
                 % pp_fill_where
@@ -674,27 +683,25 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
             plotcommand = (
                 "pobj=plt.fill_between(X_center,var,var2,**pp_dict['pp_kwargs'])"
             )
-        if pp_plot_show:
+        if pp_dict['pp_plot_show']:
             exec(plotcommand)
 
     elif pp_dict["pp_plot_type"] == "1d_gauge_trace":
+        if pp_dict['pp_color']:
+            pp_kwargs["color"] = pp_dict['pp_color']
+        if pp_dict['pp_plot_var'] is None:
+            pp_plot_var = -1 # eta by default
 
         gauget = gaugesoln.t
-        gaugeq = gaugesoln.q[:, -1]  # plot eta by default here.
-        plotcommand = "pobj=plt.plot(gauget, gaugeq)"
-        if pp_plot_show:
+        gaugeq = gaugesoln.q[:, pp_dict['pp_plot_var']]  # plot eta by default here.
+        plotcommand = "pobj=plt.plot(gauget, gaugeq, zorder=6, **pp_dict['pp_kwargs'])"
+
+        if pp_dict['pp_plot_show']:
             exec(plotcommand)
 
-        # interpolate to the current time t:
-        try:
-            i1 = plt.find(gauget < t)[-1]
-            i1 = min(i1, len(gauget) - 2)
-            slope = (gaugeq[i1 + 1] - gaugeq[i1]) / (gauget[i1 + 1] - gauget[i1])
-            qt = gaugeq[i1] + slope * (t - gauget[i1])
-        except:
-            qt = gaugeq[0]
-            print("Warning: t out of range")
-        plt.plot([t], [qt], "ro")
+        # put vertical line at current time.     print("Warning: t out of range")
+        ymin, ymax = plt.gca().get_ylim()
+        plt.vlines(t, ymin, ymax, "k", zorder=4) # TODO make this dynamic
 
     elif pp_dict["pp_plot_type"] == "1d_empty":
         # no plot to create (user might make one in afteritem or
@@ -704,12 +711,12 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
     else:
         raise ValueError("Unrecognized plot_type: %s" % pp_dict["pp_plot_type"])
         return None
-
+# TODO fix references to dict.
     # call an aftergrid function if present:
-    if pp_aftergrid:
-        if isinstance(pp_aftergrid, str):
+    if pp_dict['pp_aftergrid']:
+        if isinstance(pp_dict['pp_aftergrid'], str):
             # a string to be executed
-            exec(pp_aftergrid)
+            exec(pp_dict['pp_aftergrid'])
         else:
             # assume it's a function
             try:
@@ -722,7 +729,7 @@ def plotitem1(framesoln, plotitem, current_data, gridno):
                 current_data.xupper = grid.dimensions[0].upper
                 current_data.x = X_center  # cell centers
                 current_data.dx = grid.d[0]
-                output = pp_aftergrid(current_data)
+                output = pp_dict['pp_aftergrid'](current_data)
                 if output:
                     current_data = output
             except:

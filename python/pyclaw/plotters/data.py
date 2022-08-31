@@ -910,7 +910,7 @@ class ClawPlotItem(Data):
             self.add_attribute("plotstyle", "-")
             self.add_attribute("color", None)
             self.add_attribute("kwargs", {})
-
+            self.add_attribute("add_colorbar", False)
             if plot_type == "1d_fill_between":
                 zero_function = lambda current_data: 0.0
                 self.add_attribute("plot_var2", zero_function)
@@ -918,6 +918,10 @@ class ClawPlotItem(Data):
 
             if plot_type == "1d_from_2d_data":
                 self.add_attribute("map2d_to_1d", None)
+
+            if plot_type == "1d_gauge_trace":
+                self.add_attribute("gaugeno", None)
+                self.add_attribute("plot_var", None)
 
         elif ndim == 2:
 
