@@ -352,22 +352,24 @@ def sigma_e(current_data):
 
 
 def sigma_e_over_hydrostatic(current_data):
-    # effective basal pressure.
+    # effective basal pressure over rho_f * g * h
     return sigma_e(current_data) / hydrostaticP(current_data)
 
 
 def sigma_e_over_lithostatic(current_data):
-    # effective basal pressure.
+    # this is the same as the liquifaction ratio.
     return sigma_e(current_data) / lithostaticP(current_data)
 
 
 def Iv(current_data):
+    # inertial number
     mu = getattr(current_data.user, "mu", mu_default)
     gamma = shear(current_data)
     return (mu * gamma) / sigma_e(current_data)
 
 
 def Stokes(current_data):
+    # stokes number
     mu = getattr(current_data.user, "mu", mu_default)
     rho_s = getattr(current_data.user, "rho_s", rho_s_default)
     delta = getattr(current_data.user, "delta", delta_default)
@@ -375,7 +377,7 @@ def Stokes(current_data):
     return rho_s * gamma * delta ** 2 / mu
 
 
-def N(current_data):  # dimensionless state parameter
+def N(current_data):  # dimensionless state parameter N
     mu = getattr(current_data.user, "mu", mu_default)
     rho_s = getattr(current_data.user, "rho_s", rho_s_default)
     delta = getattr(current_data.user, "delta", delta_default)
@@ -392,12 +394,7 @@ def m_crit(current_data):
 
 
 def m_eqn(current_data):
-    # equilibrium value for m.
-    # rho_f = getattr(current_data.user, "rho_f", rho_f_default)
-    # sigma_0 = getattr(current_data.user, "sigma_0", sigma_0_default)
-    # alpha_c = getattr(
-    #    current_data.user, "alpha_c", alpha_c_default
-    # )  # this is a in part 2, equation 2.8
+    # equilibrium value for m (not currently correct if segregation is used (but segregation may change))
     m_c = m_crit(current_data)
     # alpha_seg = getattr(current_data.user, "alpha_seg", alpha_seg_default)
 
@@ -441,7 +438,7 @@ def shear(current_data):
 
 
 def kperm(current_data):
-    # permeability
+    # permeability (m^2)
     kappita = getattr(current_data.user, "kappita", kappita_default)
     m0 = getattr(current_data.user, "m0", m0_default)
     kappita_diff = getattr(current_data.user, "kappita_diff", kappita_diff_default)
@@ -453,7 +450,7 @@ def kperm(current_data):
 
 
 def dilatency(current_data):
-    # depth averaged dilatency rate
+    # depth averaged dilatency rate (m/s)
     mu = getattr(current_data.user, "mu", mu_default)
     h = depth(current_data)
     # Royal Society, Part 2, Eq 2.6
@@ -473,13 +470,12 @@ def dilatency(current_data):
 
 
 def tanpsi(current_data):
-    # dilation angle.
+    # tangent of dilation angle (#)
     # c1 = getattr(current_data.user, "c1", c1_default)
     # gamma = shear(current_data)
-    # in code, m-meqn is regularized based on shear.
+    # in code, m-meqn is regularized based on shear. here no regularization is shown.
     # c1*(m-m_eqn)*tanh(shear/0.1)
     # return c1 * m_minus_meqn(current_data) * np.tanh(shear/0.1)
-
     vnorm = velocity_magnitude(current_data)
     tpsi = m_minus_meqn(current_data)
     tpsi[vnorm <= 0] = 0
@@ -490,7 +486,7 @@ def tanpsi(current_data):
 def psi(current_data):
     return np.arctan(
         m_minus_meqn(current_data)
-    )  # maybe this should be arctan of tanpsi (with the regularization)
+    )  # maybe this should be arctan of tanpsi (with the regularization as is discussed for tanpsi
 
 
 def Fgravitational(current_data):
@@ -567,8 +563,13 @@ def Fgravitational(current_data):
 def Fdrag(current_data):  # units of force per unit area
     # Royal Proceedings, Part 2, equation 2.4b,c (momentum source terms) second term on RHS
     # what is this term?
-    # katy asks: driving force due to longitudinal stress gradients? (based on text right before part 2 eq 2.15
-    # dave says: I don't know if there's a simple interpretation...it sort of drops out from the derivation and then rearrangement of the equations into conservative form (ie. derivatives on hu not u). I think it might be similar to a drag term that appears on fully two-phase equations for solid and fluid velocity fields. ...I'll revisit the derivation and see if I can shed more light on it.
+    # katy asks: driving force due to longitudinal stress gradients?
+    # (based on text right before part 2 eq 2.15
+    # dave says: I don't know if there's a simple interpretation...it sort of
+    # drops out from the derivation and then rearrangement of the equations into
+    # conservative form (ie. derivatives on hu not u). I think it might be
+    # similar to a drag term that appears on fully two-phase equations for solid
+    # and fluid velocity fields.
     rho_f = getattr(current_data.user, "rho_f", rho_f_default)
     h = depth(current_data)
     vnorm = velocity_magnitude(current_data)
@@ -597,7 +598,8 @@ def Ffluid(current_data):  # units of force per unit area
 
 
 def phi(current_data):
-    # todo. needs rocha and gray adjudsting.
+    # angle of internal friction (radians)
+    # consideres potential hysteretic friction, if specified.
     phi_bed = getattr(current_data.user, "phi_bed", phi_bed_default)
     fric_offset_val = getattr(
         current_data.user, "fric_offset_val", fric_offset_val_default
@@ -680,15 +682,17 @@ def Fsolid(current_data):  # units of force per unit area
 
 
 def Fdriving(current_data):  # units of force per unit area
+    # driving force.
     return Fgravitational(current_data) + Fdrag(current_data)
 
 
 def Fresisting(current_data):  # units of force per unit area
+    # resisting force
     return Ffluid(current_data) + Fsolid(current_data)
 
 
 def Fnet(current_data):  # units of force per unit area
-    # at lowest Fnet is zero because friction will just balance driving.
+    # at lowest Fnet is zero because friction will just balance driving force
     return Fdriving(current_data) - Fresisting(current_data)
 
 
