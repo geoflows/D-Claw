@@ -327,7 +327,7 @@ contains
          ! and creates rho_fp
          seg = 1.0
          call calc_pmtanh(pm,seg,pmtanh01) ! this reduces mcrit based on segregation
-         rho_fp = rho_f !(1.0-pmtanh01)*rho_f ! this reduces rho_fluid based on segregation (makes rhof lighter)
+         rho_fp = (1.0-pmtanh01)*rho_f ! this reduces rho_fluid based on segregation (makes rhof lighter)
       endif
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))

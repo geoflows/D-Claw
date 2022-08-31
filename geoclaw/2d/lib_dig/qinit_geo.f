@@ -122,7 +122,7 @@ c      # been strored in qinitwork.
                   q(i,j,3) = q(i,j,1)*q(i,j,3)
                endif
                if (initpv.eq.1) then
-                  q(i,j,5) = q(i,j,5)*q(i,j,1)
+                  q(i,j,5) = q(i,j,1)*q(i,j,5)
                endif
                if (q(i,j,1).le.drytolerance) then
                   do m = 2,meqn
