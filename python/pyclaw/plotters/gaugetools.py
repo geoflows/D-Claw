@@ -383,6 +383,7 @@ def read_setgauges(datadir):
     setgauges = Data()
 
     # default values if no gauges found:
+    setgauges.numgauges = 0
     setgauges.gaugenos = []
     setgauges.x = {}
     setgauges.y = {}
