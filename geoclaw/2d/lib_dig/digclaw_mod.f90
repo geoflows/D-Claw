@@ -304,7 +304,7 @@ contains
 
             !Friction
       double precision :: phi1f,phi2f,phi3f,Frf,Fr_starf,betaf,Lambdaf, Lf,Gamf,diamf
-      double precision :: mu_df,mu_sf,mu_bf,PIf,mu1f,mu2f,mu3f,viscf
+      double precision :: mu_df,mu_sf,mu_bf,PIf,mu1f,mu2f,mu3f
 
       !local
       double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,rho_fp
@@ -365,7 +365,7 @@ contains
       m_crit_pm = pmtanh01*0.09
       m_crit_m = m_crit - m_crit_pm
       m_eqn = m_crit_m/(1.d0 + sqrt(S))
-      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1)
+      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1) ! this regularizes dilatency angle tanpsi to zero as velocity goes to zero
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
@@ -401,51 +401,65 @@ contains
          D = 0.d0
       endif
 
-      tanphi = dtan(phi_bed + datan(tanpsi))! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
+      ! this is now calculated below.
+      ! tanphi = dtan(phi_bed + datan(tanpsi))  ! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
+
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
 
-                     !friction from granular material based on h_start and h_stop
-            !based on Rocha and Gray, JFM 2019
-            !! for now let h_stop be h_start - 10 deg, h_start = h_stop + 2 deg
-            ! Other values are for sand
+      if (fric_offset_val.gt.0.0) then ! do hysteretic friction.
+        !friction from granular material based on h_start and h_stop
+        ! based on Rocha, Johnson, and Gray, JFM 2019, 10.1017/jfm.2019.518
+        !! mu_start = phi2f = phi_bed
+        !! mu_stop = phi1f = mu_start - fric_offset_val
+        !! mu_start = phi3f = mu_stop + fric_star_val
+        !! Equation 2.7
+        ! Other values are for sand
 
-            !degrees
-      phi2f = phi
-      phi1f = phi2f - fric_offset_val*PIf/180.d0
-      phi3f = phi1f + fric_star_val*PIf/180.d0
+        ! convert degrees to radians and calculate mu values.
 
-      PIf = 4.D0*ATAN(1.D0)
-      mu1f = tan(phi1f)
-      mu2f = tan(phi2f)
-      mu3f = tan(phi3f)
+        PIf = 4.D0*ATAN(1.D0)
 
-      Lambdaf = 1.34d0
-      diamf = 0.25
-      Lf = 2.d0 * diamf
-      betaf = 0.65d0 / sqrt(cos(theta))
-      Gamf = 0.77d0 / sqrt(cos(theta))
-      Fr_starf = Lambdaf * betaf - Gamf
+        phi2f = phi
+        phi1f = phi2f - fric_offset_val*PIf/180.d0
+        phi3f = phi1f + fric_star_val*PIf/180.d0
 
-      !Local Froude number
-      Frf = vnorm / sqrt(gmod*h)
-      mu_df = mu1f + (mu2f - mu1f) / (1 + h * betaf / (Lf * (Frf + Gamf)))
-      if (Frf >= Fr_starf) then ! mu_dynamic
-         mu_bf = mu_df
-         goto 456
+        mu1f = tan(phi1f)
+        mu2f = tan(phi2f)
+        mu3f = tan(phi3f)
+
+        ! these are hard coded. presumably values for sand per RPJ comment above.
+        Lambdaf = 1.34d0
+        diamf = 0.25
+        Lf = 2.d0 * diamf
+        betaf = 0.65d0 / sqrt(cos(theta))
+        Gamf = 0.77d0 / sqrt(cos(theta))
+
+        Fr_starf = Lambdaf * betaf - Gamf
+
+        ! Calculate local Froude number
+        Frf = vnorm / sqrt(gmod*h)
+        mu_df = mu1f + (mu2f - mu1f) / (1 + h * betaf / (Lf * (Frf + Gamf))) ! Rocha, Johnson and Gray, Eq 2.10
+        if (Frf >= Fr_starf) then ! mu_dynamic
+           mu_bf = mu_df
+           goto 456
+        endif
+        mu_sf = mu3f + (mu2f - mu1f) / (1 + h/Lf)
+        if (Frf < 1.e-16) then ! mu_static
+           mu_bf = mu_sf
+           goto 456
+        endif
+
+        !mu_intermediate
+        mu_bf = (Frf/Fr_starf) * (mu_df - mu_sf) + mu_sf
+        goto 456
+      else ! do not adjust phi_bed based on hysteretic friction.
+        mu_bf = phi_bed
       endif
-      mu_sf = mu3f + (mu2f - mu1f) / (1 + h/Lf)
-      if (Frf < 1.e-16) then ! mu_static
-         mu_bf = mu_sf
-         goto 456
-      endif
 
-      !mu_intermediate
-      mu_bf = (Frf/Fr_starf) * (mu_df - mu_sf) + mu_sf
-      goto 456
+  456      continue
 
-456      continue
       ! convert friction coefficient to tau
       ! F = mu N = tau / h
       ! do we assume tau is per unit area or calculate specific for cell?
@@ -454,14 +468,22 @@ contains
       !mu = tanphi ?
       !!!tau = sigbed*mu_bf
       !!!tau = sigbed*tan(atan(mu_bf)+atan(tanpsi))
-      tau = dmax1(0.d0,(m/m_crit)*sigbed*tan(atan(mu_bf)+atan(tanpsi)))
+
+      ! KRB notes Aug 30, 2022
+      ! The following line is the tau associated with granular friction.
+      ! mu_bf is the effective coulomb friction after froude adjustement (or without it).
+      ! RPJ reduced tau_solid by m/mcrit to reflect the loss of granular friction for low values of m.
+      ! this regularization may be improved.
+
+      tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))
 
       ! viscosity (depth averaged is vh^(1/2)/2)
-      viscf = (m/m_crit)*(2*Lf*sqrt(grav)*sin(theta))/(9*betaf*sqrt(cos(theta)))*((mu2f - tan(theta))/(tan(theta)-mu1f))
+      ! in Rocha, Johnson, and Gray, they calculate viscosity.
+      ! KRB note: This is not used elsewhere.
+      ! viscf = (m/m_crit)*(2*Lf*sqrt(grav)*sin(theta))/(9*betaf*sqrt(cos(theta)))*((mu2f - tan(theta))/(tan(theta)-mu1f))
 
-
-
-      tau = dmax1(0.d0,sigbed*tanphi)
+      ! this is the friction calculation before RPJ implemented the mu_bf adjustment. It lacks the m/mcrit term.
+      ! tau = dmax1(0.d0,sigbed*tanphi)
 
       !tau = (grav/gmod)*dmax1(0.d0,sigbed*tanphi)
       !kappa: earth pressure coefficient
