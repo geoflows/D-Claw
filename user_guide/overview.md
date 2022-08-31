@@ -212,6 +212,10 @@ m0 is typically a scalar.
 Many of these are defined in Iverson and George (2014) and George and Iverson (2014). Where relevant there is a place for this definition to be noted (TODO).
 Note that some of these can be set as spatially variable using values of `q` or `aux`. This is accomplished setting auxinit or qinit (see below). Here q_1 means the first element of the q array (python index zero, iqinit=1)
 
+
+For the most up-to-date description of D-Claw specific inputs, look at the dictionary _DIG_ATTRS python/pyclaw/data.py
+
+
 | Parameter Name     | How to specify if spatially variable? | Default Value | Description (units)| Where to find in G&I(2014) |
 | --- | --- | --- | --- | --- |
 | rho_s            |         | 2700.0        | solid grain density (kg/m^3) |    |

@@ -32,39 +32,38 @@ import re
 import shutil
 
 # place DIG attributes and description in one place (since this is documents )
+# This is the best place to see documentation for D-Claw specific input parameters.
 _DIG_ATTRS = {
-    "rho_s": "solid grain density (kg/m^3)",
     "rho_s": "solid grain density (kg/m^3)",
     "rho_f": "pore-fluid density  (kg/m^3)",
     "phi_bed": "basal friction angle (degrees)",
     "theta_input": "slope angle (degrees)",
     "delta": "characteristic grain diameter (m)",
-    "kappita": "permeability at m=setdig.m0 (m^2), k0 in G&I eq 2.7",
+    "kappita": "permeability at m=setdig.m0 (m^2), k0 in G&I eq 2.7 if m0 is 0.6",
     "mu": "viscosity of pore-fluid (Pa-s)",
     "alpha_c": "debris compressibility constant (#)",
     "m_crit": "critical state value of m (#)",
-    "c1": "dilation coefficient 1 (#)",
+    "c1": "dilation regularization coefficient 1 (#)",
     "m0": "initial solid volume fraction (#)",
     "sigma_0": "baseline stress for definition of compressibility",
-    "alpha_seg": "coefficient of segregation velocity profile",
-    "bed_normal": "bed_normal = 1 requires theta in aux for slope in one direction",
-    "phi_seg_coeff": "adjustment to friction coefficient based on segregation",
+    "alpha_seg": "coefficient of segregation velocity profile. When alpha_seg = 0, no segregation occurs",
+    "bed_normal": "use of bed normal coordinates (0=false, 1=true). bed_normal = 1 requires theta in aux for slope in one direction",
+    "phi_seg_coeff": "adjustment to friction coefficient based on segregation", # not currently used.
     "entrainment": "flag for entrainment, 0 = no entrainment",
     "entrainment_rate": "rate of entrainment parameter 0-1",
     "mom_autostop": "flag for momentum autostop F = no autostop, T = autostop",
     "mom_perc": "percentage of max momentum for autostop, default is 0.05 (5%)",
-    "src_ftn_num_sr": "number of in-domain sources",
-    "fric_offset_val": "start/stop friction offset in degrees. if this value is >0, then hysteretic friction is used.",
-    "fric_star_val": "deep friction offset in degrees",
-    "chi_init_val": "initial mixture of species size 0-1",
-    "kappita_diff": "permeability multiplier for different size species, kappita is used for species1, kappita*kappita_diff used for species2",
+    "src_ftn_num_sr": "number of in-domain sources, if used the file 'sethydrographs.data' is required",
+    "fric_offset_val": "start/stop friction offset (degrees). if this value is >0, then hysteretic friction is used (Rocha, Johnson, Gray, 2019)",
+    "fric_star_val": "deep friction offset (degrees). only used when fric_offset_val > 0 (Rocha, Johnson, Gray, 2019)",
+    "chi_init_val": "initial fraction of species 1, (#). Between 0-1.",
+    "kappita_diff": "permeability multiplier for different size species. Only used when alpha_seg>0. kappita is used for species1, kappita*kappita_diff used for species2",
     "outaux": "flag for writing aux to output F = not written, T = written",
-    "init_ptype": "0 = hydro, 1 = failure, 2= p(t)",
-    "init_pmax_ratio": "p(init_ptf2)= hydro*init_pmax_ratio",
-    "init_ptf": " p(init_ptf) = failure",
-    "init_ptf2": "p(init_ptf2)= hydro*init_pmax_ratio",
+    "init_ptype": "-1 = zero pressure or user defined files in qinit, 0 = hydrostatic, 1,2 = failure pressure (1=min, 2=avg), 3,4 = rising pressure (3=min, 4=avg)",
+    "init_pmax_ratio": "p(init_ptf2)= hydro*init_pmax_ratio: pressure will rise to hydrostatic *init_pmax_ratio",
+    "init_ptf": " p(init_ptf) = failure, pressure will rise until t = init_ptf without dilatancy",
+    "init_ptf2": "p(init_ptf2)= hydro*init_pmax_ratio, pressure will rise until t = init_ptf2",
 }
-
 
 # ========== Parse Value Utility Function ====================================
 def _parse_value(value):
