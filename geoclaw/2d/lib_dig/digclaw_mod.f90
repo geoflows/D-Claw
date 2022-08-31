@@ -305,8 +305,6 @@ contains
             !Friction
       double precision :: phi1f,phi2f,phi3f,Frf,Fr_starf,betaf,Lambdaf, Lf,Gamf,diamf
       double precision :: mu_df,mu_sf,mu_bf,PIf,mu1f,mu2f,mu3f
-      ! reduction of tau friction for low m
-      double precision :: mreg
 
       !local
       double precision :: m_eqn,vnorm,gmod,sigbedc,hbounded,shear,tanphi,rho_fp
@@ -477,8 +475,7 @@ contains
       ! RPJ reduced tau_solid by m/mcrit to reflect the loss of granular friction for low values of m.
       ! this regularization may be improved.
 
-      mreg = m/m_crit
-      tau = dmax1(0.d0,mreg*sigbed*tan(atan(mu_bf)+atan(tanpsi)))
+      tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))
 
       ! viscosity (depth averaged is vh^(1/2)/2)
       ! in Rocha, Johnson, and Gray, they calculate viscosity.
