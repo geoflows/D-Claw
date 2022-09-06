@@ -24,7 +24,7 @@ Katy Barnhart
   ln -s ../../../amrclaw/2d/lib/call.i call.i
   ```
 
-## Compilation fails: type mismatch error 
+## Compilation fails: type mismatch error
 
   If you have fortran compiler > v8 (I think) you will probably get the error:
 
@@ -37,3 +37,11 @@ Katy Barnhart
   I do not get this with GNU Fortran (GCC) 8.3.0 20190222 but get it with GNU Fortran (GCC) 11.2.0
 
   add `-fallow-argument-mismatch` to $FFLAGS
+
+  There are two ways to do this, one option is to put it directly into the makefile, the second is to type in your terminal
+
+  ```bash
+  export FFLAGS="-fallow-argument-mismatch"
+  ```
+
+  

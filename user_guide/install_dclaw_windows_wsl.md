@@ -126,7 +126,8 @@ options = "metadata"
   make .plots
   ```
 
-  This worked for me. It took maybe 10 minutes.
+  This worked for me. It took maybe 10 minutes. If you have compiler errors, look at compiling.md.
+  Sept 2022: will probably get a compiler error related to type mismatch. 
 
   Presuming you have a latex distribution installed you can also compile a PDF of the figures with
 
