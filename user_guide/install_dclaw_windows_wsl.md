@@ -63,7 +63,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   b. Compile the python parts of D-Claw (this will help access the D-Claw python code).
 
   ```bash
-  cd D-Claw\python.
+  cd python
   pip install -e .
   ```
 
