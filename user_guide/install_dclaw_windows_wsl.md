@@ -7,6 +7,25 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
 1. Install WSL
 2. Install UBUNTU 18.04
+
+On Sept 6, 2022 we had a bunch of permissions issues related to wsl-windows file permissions.
+
+https://devblogs.microsoft.com/commandline/chmod-chown-wsl-improvements/
+
+Second answer here worked:
+https://askubuntu.com/questions/1115564/wsl-ubuntu-distro-how-to-solve-operation-not-permitted-on-cloning-repository Quoting from this answer:
+On WSL edit `/etc/wsl.conf` (create it if it doesn't exist). Add the following:
+
+```bash
+[automount]
+options = "metadata"
+```
+  Then either:
+
+  Reboot Windows
+  Exit any WSL sessions, run `wsl --shutdown` from PowerShell or CMD, and start WSL again
+  Exit your only session, terminate it with `wsl --terminate <distroName>`, and start it again,
+
 3. In a WSL terminal, create a symlink to the folders _on the Windows side_ where you want to have your source files. This will allow you to edit with native Windows apps and run on WSL.
 
   For example I made a directory called `source`.
