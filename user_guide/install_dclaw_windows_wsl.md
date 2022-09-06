@@ -51,21 +51,23 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   conda update -n base -c defaults conda
   ```
 
-  d. Create python environment with necessary dependencies.
+5. Create compute environment (this is probably where to start if you are on a mac)
+
+  a. Create python environment with necessary dependencies.
   ```bash
   cd D-Claw
   conda env create --file=environment.yml
   conda activate dclaw
   ```
 
-  e. Compile the python parts of D-Claw (this will help access the D-Claw python code).
+  b. Compile the python parts of D-Claw (this will help access the D-Claw python code).
 
   ```bash
   cd D-Claw\python.
   pip install -e .
   ```
 
-5. Within the D-Claw repository configure paths correctly. One should expect to compile D-Claw for each simulation evaluation. Thus "installation" takes the form of setting environment variables and paths correctly.
+6. Within the D-Claw repository configure paths correctly. One should expect to compile D-Claw for each simulation evaluation. Thus "installation" takes the form of setting environment variables and paths correctly.
 
   a. Inspect `setenv.py` and modify if necessary. I found no changes necessary.
 
@@ -79,7 +81,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
   EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., FOR SLURM) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
 
-  
+
   On my WSL install the contents of `setenv.bash` is as follows:
   ```
   export CLAW='/mnt/c/Users/krbarnhart/source/D-Claw'
@@ -98,7 +100,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   alias clawserver='xterm -e python $CLAW/python/startserver.py &'
 ```
 
-6. Test based on running an example. I used the USGS gate release example. Following the instructions in  ``dclaw-apps/USGSFlume/gate_release_example\readme.md`` a minimal approach to this is:
+7. Test based on running an example. I used the USGS gate release example. Following the instructions in  ``dclaw-apps/USGSFlume/gate_release_example\readme.md`` a minimal approach to this is:
 
   ```bash
   python setinit.py
