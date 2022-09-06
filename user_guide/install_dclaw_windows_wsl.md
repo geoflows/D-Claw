@@ -92,14 +92,27 @@ options = "metadata"
 
   b. Run the following to set environments correctly.
 
+  You'll need to go up one directory level.
+
   ```bash
   python setenv.py
   source setenv.bash
   ```
+  You'll get a message like:
 
+  ------------------------------------------------------------
+Full path to claw directory should be:
+      $CLAW =  /Users/krbarnhart/krbarnhart/source/D-Claw
+------------------------------------------------------------
+The files setenv.csh and setenv.bash contain the appropriate
+commands to set environment variables for csh or bash shells
+  and also some aliases you may find convenient
+------------------------------------------------------------
+
+This means TODO.
 
   EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., FOR SLURM) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
-
+TODO> ALSO NEED TO activeate the conda env.
 
   On my WSL install the contents of `setenv.bash` is as follows:
   ```
@@ -123,11 +136,12 @@ options = "metadata"
 
   ```bash
   python setinit.py
+  make new
   make .plots
   ```
 
   This worked for me. It took maybe 10 minutes. If you have compiler errors, look at compiling.md.
-  Sept 2022: will probably get a compiler error related to type mismatch. 
+  Sept 2022: will probably get a compiler error related to type mismatch.
 
   Presuming you have a latex distribution installed you can also compile a PDF of the figures with
 
