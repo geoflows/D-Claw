@@ -100,6 +100,7 @@ options = "metadata"
   ```
   You'll get a message like:
 
+```
   ------------------------------------------------------------
 Full path to claw directory should be:
       $CLAW =  /Users/krbarnhart/krbarnhart/source/D-Claw
@@ -108,11 +109,15 @@ The files setenv.csh and setenv.bash contain the appropriate
 commands to set environment variables for csh or bash shells
   and also some aliases you may find convenient
 ------------------------------------------------------------
+```
 
-This means TODO.
+Presumably the path listed in $CLAW is where you've installed the D-Claw folder.
 
-  EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., FOR SLURM) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
-TODO> ALSO NEED TO activeate the conda env.
+The file setenv.bash will set environment variables for you.
+
+EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., A SLURM SCRIPT) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
+
+LIKEWISE, YOU'LL NEED TO ACTIVATE THE CONDA ENVIRONMENT (HERE IT IS CALLED 'dclaw').
 
   On my WSL install the contents of `setenv.bash` is as follows:
   ```
@@ -140,8 +145,8 @@ TODO> ALSO NEED TO activeate the conda env.
   make .plots
   ```
 
-  This worked for me. It took maybe 10 minutes. If you have compiler errors, look at compiling.md.
-  Sept 2022: will probably get a compiler error related to type mismatch.
+  This worked for me. It took maybe 10 minutes. If you have compiler errors, look at the file compiling.md.
+  Sept 2022: will probably get a compiler error related to type mismatch. 
 
   Presuming you have a latex distribution installed you can also compile a PDF of the figures with
 
