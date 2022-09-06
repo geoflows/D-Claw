@@ -2,6 +2,7 @@ name: dclaw
 channels:
   - conda-forge
 dependencies:
+- ffmpeg
 - pip
 - pip:
   - -r requirements.txt

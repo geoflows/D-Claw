@@ -219,7 +219,7 @@ For the most up-to-date description of D-Claw specific inputs, look at the dicti
 | Parameter Name     | How to specify if spatially variable? | Default Value | Description (units)| Where to find in G&I(2014) |
 | --- | --- | --- | --- | --- |
 | rho_s            |         | 2700.0        | solid grain density (kg/m^3) |    |
-| rho_f            |         | 1000.0        | pore-fluid density  (kg/m^3) |    |
+| rho_f            |         | 1100.0        | pore-fluid density  (kg/m^3) |    |
 | phi_bed          | aux_4   | 40.           | basal friction angle (degrees) |    |
 | theta_input      | aux_5   | 0.            | slope angle (degrees) |    |
 | delta            |         | 0.01          | characteristic grain diameter (m) |    |
@@ -409,7 +409,7 @@ clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
 
 ### 2.9 Flowgrades and AMR control
 
-There are two ways that AMR refinement is controlled in D-Claw. The first is a set of AMR regions which define the permissible range of AMR refinement over a region. Note that if you have a large region which permits refinement between levels 1 and 4, and then a smaller contained region which indicates refinement between levels 2 and 3, the larger,  more permissive region with trump. In other words, regions can't be used to "restrict" AMR levels, unless they are the ONLY region that applies to an area.
+There are two ways that AMR refinement is controlled in D-Claw. The first is a set of AMR regions which define the permissible range of AMR refinement over a region. Note that if you have a large region which permits refinement between levels 1 and 4, and then a smaller contained region which indicates refinement between levels 2 and 3, the larger,  more permissive region will trump. In other words, regions can't be used to "restrict" AMR levels, unless they are the ONLY region that applies to an area.
 
 Regions are specified as bounding boxes.
 

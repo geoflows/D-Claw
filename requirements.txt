@@ -8,3 +8,4 @@ scikit-image[optional]
 descartes
 click
 pyproj>2.5
+cmocean

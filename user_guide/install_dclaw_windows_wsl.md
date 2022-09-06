@@ -117,7 +117,7 @@ The file setenv.bash will set environment variables for you.
 
 EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., A SLURM SCRIPT) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
 
-LIKEWISE, YOU'LL NEED TO ACTIVATE THE CONDA ENVIRONMENT (HERE IT IS CALLED 'dclaw').
+LIKEWISE, YOU'LL NEED TO ACTIVATE THE CONDA ENVIRONMENT (HERE IT IS CALLED 'dclaw' so you would type "conda activate dclaw"). You probably want to first activate the environment and then set the environment variables with setenv.bash.
 
   On my WSL install the contents of `setenv.bash` is as follows:
   ```
@@ -146,7 +146,7 @@ LIKEWISE, YOU'LL NEED TO ACTIVATE THE CONDA ENVIRONMENT (HERE IT IS CALLED 'dcla
   ```
 
   This worked for me. It took maybe 10 minutes. If you have compiler errors, look at the file compiling.md.
-  Sept 2022: will probably get a compiler error related to type mismatch. 
+  Sept 2022: will probably get a compiler error related to type mismatch.
 
   Presuming you have a latex distribution installed you can also compile a PDF of the figures with
 
