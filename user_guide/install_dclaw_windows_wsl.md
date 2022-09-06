@@ -47,7 +47,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
   c. Then install miniconda and ensure conda is updated.
   ```bash
-  bash /Miniconda3-latest-Linux-x86.sh
+  bash /Miniconda3-latest-Linux-x86_64.sh
   conda update -n base -c defaults conda
   ```
 
