@@ -11,8 +11,10 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
   For example I made a directory called `source`.
 
+  First make this on the windows side (wherever you'd like it located) and then create a simlink for ease of access while in WSL.
+
   ```bash
-  ln -s /mnt/c/Users/krbarnhart/data/source source
+  ln -s /mnt/c/Users/username/source source
   ```
 
   Critical Note. From the WSL terminal, into the symlinked folder, download the following source distributions using git.
@@ -49,36 +51,20 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   conda update -n base -c defaults conda
   ```
 
-  d. Create python 2.7 environment.
+  d. Create python environment with necessary dependencies.
   ```bash
-  conda create -n py27 python=2.7
+  cd D-Claw
+  conda env create --file=environment.yml
+  conda activate dclaw
   ```
 
-  f. Add core python dependencies and clean up.
+  e. Compile the python parts of D-Claw (this will help access the D-Claw python code).
 
   ```bash
-  conda activate py27
-  conda install numpy scipy matplotlib
-  conda clean --all
+  cd D-Claw\python.
+  pip install -e .
   ```
 
-  scipy seems to be a requirement but was not listed as such.
-
-  There are other potentially relevant packages to install (based on casting about the python code, but running examples has not yet necessitated these). Specifically:
-    - petsc4py
-    - mpi4py
-    - h5py
-    - ipython
-
-  As I gain an understanding about whether/if these are needed, I'll update this to describe for what.
-
-  I also installed ipython and jupyter because I find them useful.
-
-  ```bash
-  conda activate py27
-  conda install ipython jupyter
-  conda clean --all
-  ```
 5. Within the D-Claw repository configure paths correctly. One should expect to compile D-Claw for each simulation evaluation. Thus "installation" takes the form of setting environment variables and paths correctly.
 
   a. Inspect `setenv.py` and modify if necessary. I found no changes necessary.
