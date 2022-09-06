@@ -45,7 +45,7 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
   ```
 
-  c. Then install miniconda and ensure conda is updated.
+  c. Then install miniconda and ensure conda is updated. Might need to remove the slash (seems to depend based on platform).
   ```bash
   bash /Miniconda3-latest-Linux-x86_64.sh
   conda update -n base -c defaults conda
@@ -76,6 +76,10 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   source setenv.bash
   ```
 
+
+  EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., FOR SLURM) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
+
+  
   On my WSL install the contents of `setenv.bash` is as follows:
   ```
   export CLAW='/mnt/c/Users/krbarnhart/source/D-Claw'
