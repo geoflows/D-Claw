@@ -13,3 +13,4 @@ setenv.bash
 setenv.csh
 
 python/dclaw.egg-info/*
+python/ipythondir
