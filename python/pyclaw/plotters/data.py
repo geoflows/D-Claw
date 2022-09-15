@@ -946,7 +946,7 @@ class ClawPlotItem(Data):
                 self.add_attribute("pcolor_cmax", None)
                 self.add_attribute("add_colorbar", True)
                 self.add_attribute("colorbar_kwargs", {})
-                self.add_attribute("colorbar_label")
+                self.add_attribute("colorbar_label", "")
 
             elif plot_type == "2d_imshow":
                 # from pylab import cm
@@ -972,7 +972,7 @@ class ClawPlotItem(Data):
                 self.add_attribute("contour_cmap", None)
                 self.add_attribute("add_colorbar", False)
                 self.add_attribute("colorbar_kwargs", {})
-                self.add_attribute("colorbar_label")
+                self.add_attribute("colorbar_label", "")
 
             elif plot_type == "2d_schlieren":
                 from pyclaw.plotters import colormaps
@@ -982,7 +982,7 @@ class ClawPlotItem(Data):
                 self.add_attribute("schlieren_cmax", None)
                 self.add_attribute("add_colorbar", False)
                 self.add_attribute("colorbar_kwargs", {})
-                self.add_attribute("colorbar_label")
+                self.add_attribute("colorbar_label", "")
 
             elif plot_type == "2d_grid":
                 self.add_attribute("max_density", None)

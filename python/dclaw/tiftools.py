@@ -84,6 +84,9 @@ def rasterio2tt3(array, transform, nodata, outpath, strformat=r"%7.5e", nanerror
     dx = transform[0]
     xllcenter = west + (dx / 2)
     yllcenter = south + (dx / 2)
+
+    if nodata is None:
+        nodata = -9999
     with open(outpath, "w") as f:
 
         f.write("%6i ncols\n" % ncols)
