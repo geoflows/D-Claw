@@ -9,3 +9,4 @@ descartes
 click
 pyproj>2.5
 cmocean
+joblib
