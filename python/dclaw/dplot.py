@@ -382,9 +382,10 @@ def N(current_data):  # dimensionless state parameter N
     rho_s = getattr(current_data.user, "rho_s", rho_s_default)
     delta = getattr(current_data.user, "delta", delta_default)
     gamma = shear(current_data)
-    sigbedc = rho_s * (gamma * delta) ** 2.0 + sigma_e(current_data)
-    N = mu * gamma / (sigbedc)
+    sigbedc = (rho_s * ((gamma * delta) ** 2.0)) + sigma_e(current_data)
+    N = (mu * gamma) / (sigbedc)
     N[sigbedc < 0.0] = 0.0
+    #print(N.max())
     return N
 
 
