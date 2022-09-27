@@ -557,8 +557,10 @@ c
 
 
       call outtre (mstart,printout,nvar,naux)
-      write(outunit,*) "  original total mass ..."
-      call conck(1,nvar,time,rest)
+      write(outunit,*) "  original total mass at each level ..."
+      do level = 1,mxnest
+        call conck(level,nvar,time,rest)
+      enddo
       call valout(1,lfine,time,nvar,naux)
       close(parmunit)
 c
@@ -606,6 +608,7 @@ c
       endif
       write(outunit,907) ratmet
       write(outunit,908) cflmax
+      write(*,908) cflmax
 
  901  format('current  space usage = ',i12)
  902  format('maximum  space usage = ',i12)
