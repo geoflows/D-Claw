@@ -35,7 +35,7 @@ module digclaw_module
     double precision :: src_ftn_vtot(2000), src_ftn_m0(2000)
     double precision :: src_ftn_xloc(2000), src_ftn_yloc(2000), src_ftn_angle(2000)
 
-    integer :: init_ptype,p_initialized,bed_normal,entrainment
+    integer :: init_ptype,p_initialized,bed_normal,entrainment,curvature
     double precision :: init_pmax_ratio,init_ptf2,init_ptf,init_pmin_ratio
     double precision :: grad_eta_max,cohesion_max,grad_eta_ave,eta_cell_count
     double precision :: fric_offset_val, fric_star_val, chi_init_val, kappita_diff
@@ -113,6 +113,8 @@ contains
          read(iunit,*) chi_init_val
          read(iunit,*) kappita_diff
          read(iunit,*) outaux
+         read(iunit,*) curvature
+
          !read(iunit,*) m_crit2
          !read(iunit,*) rho_s2
          !read(iunit,*) fric_offset_val2
@@ -151,6 +153,9 @@ contains
          write(DIG_PARM_UNIT,*) '    fric_star_val', fric_star_val
          write(DIG_PARM_UNIT,*) '    chi_init_val', chi_init_val
          write(DIG_PARM_UNIT,*) '    kappita_diff', kappita_diff
+         write(DIG_PARM_UNIT,*) '    outaux', outaux
+         write(DIG_PARM_UNIT,*) '    curvature', curvature
+
          !write(DIG_PARM_UNIT,*) '    m_crit2', m_crit2
          !write(DIG_PARM_UNIT,*) '    rho_s2', rho_s2
          !write(DIG_PARM_UNIT,*) '    fric_offset_val2', fric_offset_val2

@@ -24,7 +24,7 @@
       double precision :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
       double precision :: vlow,m2,vreg,slopebound
       double precision :: b_eroded,b_remaining,dtcoeff
-      integer :: i,j,ii,jj,jjend,icount,curvature
+      integer :: i,j,ii,jj,jjend,icount
       logical :: ent
 
             !source fountain
@@ -43,7 +43,6 @@
       gmod=grav
       coeff = coeffmanning
       tol = drytolerance !# to prevent divide by zero in gamma
-      curvature = 0 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
       if (entrainment>0) then
          ent = .true.
