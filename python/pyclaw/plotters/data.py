@@ -935,7 +935,8 @@ class ClawPlotItem(Data):
             self.add_attribute("gridedges_linewidth", 0.1)
 
             self.add_attribute("kwargs", {})
-
+            self.add_attribute("colorbar_label", None)
+            self.add_attribute("add_colorbar", False)
             if plot_type == "2d_pcolor":
                 # from pylab import cm
                 # self.add_attribute('pcolor_cmap',cm.RdYlBu,True)
@@ -960,7 +961,7 @@ class ClawPlotItem(Data):
                 self.add_attribute("imshow_norm", None)
                 self.add_attribute("add_colorbar", True)
                 self.add_attribute("colorbar_kwargs", {})
-                self.add_attribute("colorbar_label")
+                self.add_attribute("colorbar_label", "")
 
             elif plot_type == "2d_contour":
                 self.add_attribute("contour_nlevels", 20)
