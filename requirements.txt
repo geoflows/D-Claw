@@ -1,0 +1,12 @@
+numpy
+rasterio
+fiona
+shapely
+matplotlib
+scipy
+scikit-image[optional]
+descartes
+click
+pyproj>2.5
+cmocean
+joblib

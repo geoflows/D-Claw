@@ -24,7 +24,7 @@
       double precision :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
       double precision :: vlow,m2,vreg,slopebound
       double precision :: b_eroded,b_remaining,dtcoeff
-      integer :: i,j,ii,jj,jjend,icount,curvature
+      integer :: i,j,ii,jj,jjend,icount
       logical :: ent
 
             !source fountain
@@ -43,7 +43,6 @@
       gmod=grav
       coeff = coeffmanning
       tol = drytolerance !# to prevent divide by zero in gamma
-      curvature = 0 !add friction due to curvature acceleration
       !write(*,*) 'src:init,value',p_initialized,init_pmin_ratio
       if (entrainment>0) then
          ent = .true.
@@ -331,11 +330,12 @@
                   call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
                   if (h.lt.tol) then
+                     q(i,j,1)=0.d0
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
                      beta = 1.0-m !tan(1.5*p/(rho*gmod*h))/14.0
-                     gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.0/3.0))
+                     gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.d0/3.d0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
                      q(i,j,3)= q(i,j,3)/dgamma

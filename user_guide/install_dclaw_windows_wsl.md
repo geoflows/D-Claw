@@ -7,12 +7,33 @@ Additional goals: Be able to edit files on Windows side and have them run on the
 
 1. Install WSL
 2. Install UBUNTU 18.04
+
+On Sept 6, 2022 we had a bunch of permissions issues related to wsl-windows file permissions.
+
+https://devblogs.microsoft.com/commandline/chmod-chown-wsl-improvements/
+
+Second answer here worked:
+https://askubuntu.com/questions/1115564/wsl-ubuntu-distro-how-to-solve-operation-not-permitted-on-cloning-repository Quoting from this answer:
+On WSL edit `/etc/wsl.conf` (create it if it doesn't exist). Add the following:
+
+```bash
+[automount]
+options = "metadata"
+```
+  Then either:
+
+  Reboot Windows
+  Exit any WSL sessions, run `wsl --shutdown` from PowerShell or CMD, and start WSL again
+  Exit your only session, terminate it with `wsl --terminate <distroName>`, and start it again,
+
 3. In a WSL terminal, create a symlink to the folders _on the Windows side_ where you want to have your source files. This will allow you to edit with native Windows apps and run on WSL.
 
   For example I made a directory called `source`.
 
+  First make this on the windows side (wherever you'd like it located) and then create a simlink for ease of access while in WSL.
+
   ```bash
-  ln -s /mnt/c/Users/krbarnhart/data/source source
+  ln -s /mnt/c/Users/username/source source
   ```
 
   Critical Note. From the WSL terminal, into the symlinked folder, download the following source distributions using git.
@@ -43,52 +64,60 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
   ```
 
-  c. Then install miniconda and ensure conda is updated.
+  c. Then install miniconda and ensure conda is updated. Might need to remove the slash (seems to depend based on platform).
   ```bash
-  bash /Miniconda3-latest-Linux-x86.sh
+  bash /Miniconda3-latest-Linux-x86_64.sh
   conda update -n base -c defaults conda
   ```
 
-  d. Create python 2.7 environment.
+5. Create compute environment (this is probably where to start if you are on a mac)
+
+  a. Create python environment with necessary dependencies.
   ```bash
-  conda create -n py27 python=2.7
+  cd D-Claw
+  conda env create --file=environment.yml
+  conda activate dclaw
   ```
 
-  f. Add core python dependencies and clean up.
+  b. Compile the python parts of D-Claw (this will help access the D-Claw python code).
 
   ```bash
-  conda activate py27
-  conda install numpy scipy matplotlib
-  conda clean --all
+  cd python
+  pip install -e .
   ```
 
-  scipy seems to be a requirement but was not listed as such.
-
-  There are other potentially relevant packages to install (based on casting about the python code, but running examples has not yet necessitated these). Specifically:
-    - petsc4py
-    - mpi4py
-    - h5py
-    - ipython
-
-  As I gain an understanding about whether/if these are needed, I'll update this to describe for what.
-
-  I also installed ipython and jupyter because I find them useful.
-
-  ```bash
-  conda activate py27
-  conda install ipython jupyter
-  conda clean --all
-  ```
-5. Within the D-Claw repository configure paths correctly. One should expect to compile D-Claw for each simulation evaluation. Thus "installation" takes the form of setting environment variables and paths correctly.
+6. Within the D-Claw repository configure paths correctly. One should expect to compile D-Claw for each simulation evaluation. Thus "installation" takes the form of setting environment variables and paths correctly.
 
   a. Inspect `setenv.py` and modify if necessary. I found no changes necessary.
 
   b. Run the following to set environments correctly.
 
+  You'll need to go up one directory level.
+
   ```bash
   python setenv.py
   source setenv.bash
   ```
+  You'll get a message like:
+
+```
+  ------------------------------------------------------------
+Full path to claw directory should be:
+      $CLAW =  /Users/krbarnhart/krbarnhart/source/D-Claw
+------------------------------------------------------------
+The files setenv.csh and setenv.bash contain the appropriate
+commands to set environment variables for csh or bash shells
+  and also some aliases you may find convenient
+------------------------------------------------------------
+```
+
+Presumably the path listed in $CLAW is where you've installed the D-Claw folder.
+
+The file setenv.bash will set environment variables for you.
+
+EVERY TIME YOU RUN DCLAW, THESE ENVIRONMENT VARIABLES MUST BE SET. THIS MEANS YOU EITHER NEED TO COPY THIS TEXT INTO AN ENVIRONMENT FILE (E.G., A SLURM SCRIPT) OR YOU NEED TO NAVIGATE HERE AND SOURCE SETENV.BASH
+
+LIKEWISE, YOU'LL NEED TO ACTIVATE THE CONDA ENVIRONMENT (HERE IT IS CALLED 'dclaw' so you would type "conda activate dclaw"). You probably want to first activate the environment and then set the environment variables with setenv.bash.
 
   On my WSL install the contents of `setenv.bash` is as follows:
   ```
@@ -108,14 +137,16 @@ Additional goals: Be able to edit files on Windows side and have them run on the
   alias clawserver='xterm -e python $CLAW/python/startserver.py &'
 ```
 
-6. Test based on running an example. I used the USGS gate release example. Following the instructions in  ``dclaw-apps/USGSFlume/gate_release_example\readme.md`` a minimal approach to this is:
+7. Test based on running an example. I used the USGS gate release example. Following the instructions in  ``dclaw-apps/USGSFlume/gate_release_example\readme.md`` a minimal approach to this is:
 
   ```bash
   python setinit.py
+  make new
   make .plots
   ```
 
-  This worked for me. It took maybe 10 minutes.
+  This worked for me. It took maybe 10 minutes. If you have compiler errors, look at the file compiling.md.
+  Sept 2022: will probably get a compiler error related to type mismatch.
 
   Presuming you have a latex distribution installed you can also compile a PDF of the figures with
 

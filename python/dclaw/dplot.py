@@ -350,6 +350,12 @@ def sigma_e(current_data):
     se[se < 0.0] = 0.0  # cannot be negative.
     return se
 
+def hydrostatic_minus_basal_pressure(current_data):
+    # effective basal pressure (lithostatic less basal pressure)
+    se = hydrostaticP(current_data) - basalP(current_data)
+    # can be negative.
+    return se
+
 
 def sigma_e_over_hydrostatic(current_data):
     # effective basal pressure over rho_f * g * h
@@ -382,9 +388,10 @@ def N(current_data):  # dimensionless state parameter N
     rho_s = getattr(current_data.user, "rho_s", rho_s_default)
     delta = getattr(current_data.user, "delta", delta_default)
     gamma = shear(current_data)
-    sigbedc = rho_s * (gamma * delta) ** 2.0 + sigma_e(current_data)
-    N = mu * gamma / (sigbedc)
+    sigbedc = (rho_s * ((gamma * delta) ** 2.0)) + sigma_e(current_data)
+    N = (mu * gamma) / (sigbedc)
     N[sigbedc < 0.0] = 0.0
+    #print(N.max())
     return N
 
 
@@ -454,7 +461,7 @@ def dilatency(current_data):
     mu = getattr(current_data.user, "mu", mu_default)
     h = depth(current_data)
     # Royal Society, Part 2, Eq 2.6
-    D = 2.0 * (kperm(current_data) / (mu * h)) * sigma_e(current_data)
+    D = 2.0 * (kperm(current_data) / (mu * h)) * hydrostatic_minus_basal_pressure(current_data)
     vnorm = velocity_magnitude(current_data)
     D[vnorm <= 0] = 0
     # depth averaged dilatency has units of L/T (this is consistent with Part 1 Eq 4.6)
@@ -471,15 +478,12 @@ def dilatency(current_data):
 
 def tanpsi(current_data):
     # tangent of dilation angle (#)
-    # c1 = getattr(current_data.user, "c1", c1_default)
-    # gamma = shear(current_data)
-    # in code, m-meqn is regularized based on shear. here no regularization is shown.
-    # c1*(m-m_eqn)*tanh(shear/0.1)
-    # return c1 * m_minus_meqn(current_data) * np.tanh(shear/0.1)
+    c1 = getattr(current_data.user, "c1", c1_default)
+    gamma = shear(current_data)
+    # in code, m-meqn is regularized based on shear
     vnorm = velocity_magnitude(current_data)
-    tpsi = m_minus_meqn(current_data)
+    tpsi = c1*m_minus_meqn(current_data)*np.tanh(gamma/0.1)
     tpsi[vnorm <= 0] = 0
-
     return tpsi
 
 
