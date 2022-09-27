@@ -330,11 +330,12 @@
                   call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
                   if (h.lt.tol) then
+                     q(i,j,1)=0.d0
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
                      beta = 1.0-m !tan(1.5*p/(rho*gmod*h))/14.0
-                     gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.0/3.0))
+                     gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.d0/3.d0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
                      q(i,j,3)= q(i,j,3)/dgamma
