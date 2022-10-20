@@ -5,7 +5,6 @@ Useful things for plotting GeoClaw results.
 import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
-
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -326,7 +325,7 @@ def basalP(current_data):
 
 
 def basal_pressure_over_hydrostatic(current_data):
-    return basalP(current_data)/hydrostaticP(current_data)
+    return basalP(current_data) / hydrostaticP(current_data)
 
 
 def lithostaticP(current_data):
@@ -353,6 +352,7 @@ def sigma_e(current_data):
     se = lithostaticP(current_data) - basalP(current_data)
     se[se < 0.0] = 0.0  # cannot be negative.
     return se
+
 
 def hydrostatic_minus_basal_pressure(current_data):
     # effective basal pressure (lithostatic less basal pressure)
@@ -395,7 +395,7 @@ def N(current_data):  # dimensionless state parameter N
     sigbedc = (rho_s * ((gamma * delta) ** 2.0)) + sigma_e(current_data)
     N = (mu * gamma) / (sigbedc)
     N[sigbedc < 0.0] = 0.0
-    #print(N.max())
+    # print(N.max())
     return N
 
 
@@ -465,7 +465,11 @@ def dilatency(current_data):
     mu = getattr(current_data.user, "mu", mu_default)
     h = depth(current_data)
     # Royal Society, Part 2, Eq 2.6
-    D = 2.0 * (kperm(current_data) / (mu * h)) * hydrostatic_minus_basal_pressure(current_data)
+    D = (
+        2.0
+        * (kperm(current_data) / (mu * h))
+        * hydrostatic_minus_basal_pressure(current_data)
+    )
     vnorm = velocity_magnitude(current_data)
     D[vnorm <= 0] = 0
     # depth averaged dilatency has units of L/T (this is consistent with Part 1 Eq 4.6)
@@ -486,7 +490,7 @@ def tanpsi(current_data):
     gamma = shear(current_data)
     # in code, m-meqn is regularized based on shear
     vnorm = velocity_magnitude(current_data)
-    tpsi = c1*m_minus_meqn(current_data)*np.tanh(gamma/0.1)
+    tpsi = c1 * m_minus_meqn(current_data) * np.tanh(gamma / 0.1)
     tpsi[vnorm <= 0] = 0
     return tpsi
 
@@ -1020,7 +1024,6 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
-
     from pyclaw.data import Data
 
     fname = topoplotdata.fname
