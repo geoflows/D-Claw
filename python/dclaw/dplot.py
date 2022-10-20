@@ -325,6 +325,10 @@ def basalP(current_data):
     return basalP
 
 
+def basal_pressure_over_hydrostatic(current_data):
+    return basalP(current_data)/hydrostaticP(current_data)
+
+
 def lithostaticP(current_data):
     # lithostatic pressure
     drytol = getattr(current_data.user, "drytol", drytol_default)
