@@ -138,12 +138,20 @@ c            # determine if flowgrades are used
                   if (iflowgradevariable(iflow).eq.1) then
                     flowgradenorm=depth
                     flowgradegrad=depth
+
                   elseif (iflowgradevariable(iflow).eq.2) then
                     flowgradenorm=momentum
                     flowgradegrad=momentum
+
                   elseif (iflowgradevariable(iflow).eq.3) then
-                    flowgradenorm=dabs(surface)
-                    flowgradegrad=dabs(surface)
+
+                    if (depth.gt.drytolerance) then
+                      flowgradenorm=dabs(surface)
+                      flowgradegrad=dabs(surface)
+                    else
+                      flowgradenorm=0.0
+                      flowgradegrad=0.0
+                    endif
                   endif
 
                   if (iflowgradetype(iflow).eq.1) then

@@ -17,6 +17,7 @@ will call the plotclaw function from this module.
 """
 
 import os
+import glob
 import sys
 
 import matplotlib
@@ -45,7 +46,9 @@ def plotclaw(outdir=".", plotdir="_plots", setplot="setplot.py"):
     from pyclaw.plotters import plotpages
     from pyclaw.plotters.data import ClawPlotData
 
-    plotdata = ClawPlotData()
+    data_file_search = os.path.abspath(os.path.join(outdir, "*.data"))
+    data_files = glob.glob(data_file_search)
+    plotdata = ClawPlotData(data_files=data_files)
     plotdata.outdir = outdir
     plotdata.plotdir = plotdir
     plotdata.setplot = setplot

@@ -59,7 +59,7 @@ _DIG_ATTRS = {
     "chi_init_val": "initial fraction of species 1, (#). Between 0-1.",
     "kappita_diff": "permeability multiplier for different size species. Only used when alpha_seg>0. kappita is used for species1, kappita*kappita_diff used for species2",
     "outaux": "flag for writing aux to output F = not written, T = written",
-    "curvature": "flag for curvature correction F = not used, T = used",
+    "curvature": "flag for curvature correction 0 = not used, 1 = used",
     "init_ptype": "-1 = zero pressure or user defined files in qinit, 0 = hydrostatic, 1,2 = failure pressure (1=min, 2=avg), 3,4 = rising pressure (3=min, 4=avg)",
     "init_pmax_ratio": "p(init_ptf2)= hydro*init_pmax_ratio: pressure will rise to hydrostatic *init_pmax_ratio",
     "init_ptf": " p(init_ptf) = failure, pressure will rise until t = init_ptf without dilatancy",
@@ -1590,7 +1590,7 @@ class DigclawInputData(Data):
         self.add_attribute("chi_init_val", 0.0, _DIG_ATTRS["chi_init_val"])
         self.add_attribute("kappita_diff", 1.0, _DIG_ATTRS["kappita_diff"])
         self.add_attribute("outaux", False, _DIG_ATTRS["outaux"])
-        self.add_attribute("curvature", False, _DIG_ATTRS["curvature"])
+        self.add_attribute("curvature", 1, _DIG_ATTRS["curvature"])
 
         # self.add_attribute('m_crit2', 0.62, 'critical state value of m (#) for different size species')
         # self.add_attribute('rho_s2', 2700.0, 'solid grain density (kg/m^3) different size species')

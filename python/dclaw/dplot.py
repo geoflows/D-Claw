@@ -5,7 +5,6 @@ Useful things for plotting GeoClaw results.
 import numpy as np
 from matplotlib.colors import Normalize
 from numpy import ma as ma
-
 from pyclaw.geotools import topotools
 from pyclaw.plotters import colormaps
 
@@ -253,30 +252,10 @@ water_colors = tsunami_colormap
 # a beforeframe function, for example.  If it's not set by the user,
 # the following default value is used (in meters):
 
-drytol_default = 1.0e-3
-rho_f_default = 1000.0
-rho_s_default = 2700.0
-grav_default = 9.81
-mu_default = 0.001
-kappita_default = 0.0001
-kappita_diff_default = 1.0
-m0_default = 0.52
-delta_default = 0.01
-m_crit_default = 0.62
-sigma_0_default = 1.0e3
-alpha_c_default = 1.0
-alpha_seg_default = 0.0
-phi_bed_default = 40
-bed_normal_default = 1
-c1_default = 1.0
-fric_offset_val_default = 0.0
-fric_star_val_default = 0.0
-
-
 def gmod(current_data):
     # gravity
-    grav = getattr(current_data.user, "gravity", grav_default)
-    bed_normal = getattr(current_data.user, "bed_normal", bed_normal_default)
+    grav = current_data.plotdata.gravity
+    bed_normal = current_data.plotdata.bed_normal
 
     gmod = grav
 
@@ -290,7 +269,7 @@ def gmod(current_data):
 
 def solid_frac(current_data):
     # solid volume fraction
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     hm = q[:, :, 3]
@@ -311,23 +290,27 @@ def solid_frac_gt03(current_data):
 def density(current_data):
     # new segregation might modify.
     m = solid_frac(current_data)
-    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
-    rho_s = getattr(current_data.user, "rho_s", rho_s_default)
+    rho_f = current_data.plotdata.rho_f
+    rho_s = current_data.plotdata.rho_s
     rho = (1.0 - m) * rho_f + m * rho_s
     return rho
 
 
 def basalP(current_data):
     # basal pressure.
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     basalP = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
     return basalP
 
 
+def basal_pressure_over_hydrostatic(current_data):
+    return basalP(current_data) / hydrostaticP(current_data)
+
+
 def lithostaticP(current_data):
     # lithostatic pressure
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = depth(current_data)
     rho = density(current_data)
@@ -337,10 +320,10 @@ def lithostaticP(current_data):
 
 def hydrostaticP(current_data):
     # hydrostatic pressure
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = depth(current_data)
-    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    rho_f = current_data.plotdata.rho_f
     return gmod(current_data) * rho_f * h
 
 
@@ -349,6 +332,7 @@ def sigma_e(current_data):
     se = lithostaticP(current_data) - basalP(current_data)
     se[se < 0.0] = 0.0  # cannot be negative.
     return se
+
 
 def hydrostatic_minus_basal_pressure(current_data):
     # effective basal pressure (lithostatic less basal pressure)
@@ -369,41 +353,41 @@ def sigma_e_over_lithostatic(current_data):
 
 def Iv(current_data):
     # inertial number
-    mu = getattr(current_data.user, "mu", mu_default)
+    mu = current_data.plotdata.mu
     gamma = shear(current_data)
     return (mu * gamma) / sigma_e(current_data)
 
 
 def Stokes(current_data):
     # stokes number
-    mu = getattr(current_data.user, "mu", mu_default)
-    rho_s = getattr(current_data.user, "rho_s", rho_s_default)
-    delta = getattr(current_data.user, "delta", delta_default)
+    mu = current_data.plotdata.mu
+    rho_s = current_data.plotdata.rho_s
+    delta = current_data.plotdata.delta
     gamma = shear(current_data)
     return rho_s * gamma * delta ** 2 / mu
 
 
 def N(current_data):  # dimensionless state parameter N
-    mu = getattr(current_data.user, "mu", mu_default)
-    rho_s = getattr(current_data.user, "rho_s", rho_s_default)
-    delta = getattr(current_data.user, "delta", delta_default)
+    mu = current_data.plotdata.mu
+    rho_s = current_data.plotdata.rho_s
+    delta = current_data.plotdata.delta
     gamma = shear(current_data)
     sigbedc = (rho_s * ((gamma * delta) ** 2.0)) + sigma_e(current_data)
     N = (mu * gamma) / (sigbedc)
     N[sigbedc < 0.0] = 0.0
-    #print(N.max())
+    # print(N.max())
     return N
 
 
 def m_crit(current_data):
     # eventually this may need modification based on segregation (just like kperm)
-    return getattr(current_data.user, "m_crit", m_crit_default)
+    return current_data.plotdata.m_crit
 
 
 def m_eqn(current_data):
     # equilibrium value for m (not currently correct if segregation is used (but segregation may change))
     m_c = m_crit(current_data)
-    # alpha_seg = getattr(current_data.user, "alpha_seg", alpha_seg_default)
+    # alpha_seg = current_data.plotdata.alpha_seg", alpha_seg_default)
 
     # alpha_seg = 1.0 - alpha_seg  # digclaw.mod.f90 line 121
     m = solid_frac(current_data)
@@ -446,22 +430,27 @@ def shear(current_data):
 
 def kperm(current_data):
     # permeability (m^2)
-    kappita = getattr(current_data.user, "kappita", kappita_default)
-    m0 = getattr(current_data.user, "m0", m0_default)
-    kappita_diff = getattr(current_data.user, "kappita_diff", kappita_diff_default)
+    kappita = current_data.plotdata.kappita
+    m0 = current_data.plotdata.m0
+    #print(current_data.attributes)
+    kappita_diff = current_data.plotdata.kappita_diff
     m = solid_frac(current_data)
     pm = species1_fraction(current_data)
     kappita2 = kappita * kappita_diff
-    kequiv = kappita2 * pm + kappita * (1 - pm)
+    kequiv = kappita * pm + kappita2 * (1.0 - pm)
     return kequiv * np.exp(-(m - m0) / (0.04))
 
 
 def dilatency(current_data):
     # depth averaged dilatency rate (m/s)
-    mu = getattr(current_data.user, "mu", mu_default)
+    mu = current_data.plotdata.mu
     h = depth(current_data)
     # Royal Society, Part 2, Eq 2.6
-    D = 2.0 * (kperm(current_data) / (mu * h)) * hydrostatic_minus_basal_pressure(current_data)
+    D = (
+        2.0
+        * (kperm(current_data) / (mu * h))
+        * hydrostatic_minus_basal_pressure(current_data)
+    )
     vnorm = velocity_magnitude(current_data)
     D[vnorm <= 0] = 0
     # depth averaged dilatency has units of L/T (this is consistent with Part 1 Eq 4.6)
@@ -478,11 +467,11 @@ def dilatency(current_data):
 
 def tanpsi(current_data):
     # tangent of dilation angle (#)
-    c1 = getattr(current_data.user, "c1", c1_default)
+    c1 = current_data.plotdata.c1
     gamma = shear(current_data)
     # in code, m-meqn is regularized based on shear
     vnorm = velocity_magnitude(current_data)
-    tpsi = c1*m_minus_meqn(current_data)*np.tanh(gamma/0.1)
+    tpsi = c1 * m_minus_meqn(current_data) * np.tanh(gamma / 0.1)
     tpsi[vnorm <= 0] = 0
     return tpsi
 
@@ -495,7 +484,7 @@ def psi(current_data):
 
 def Fgravitational(current_data):
     # gravitational driving force per unit area.
-    bed_normal = getattr(current_data.user, "bed_normal", bed_normal_default)
+    bed_normal = current_data.plotdata.bed_normal
     g = gmod(current_data)
     h = depth(current_data)
     eta = surface(current_data)
@@ -534,13 +523,13 @@ def Fgravitational(current_data):
     FxL = rho * (
         np.abs(
             -g * 0.5 * (h + hL) * (eta - etaL) / (dx)
-            + g * 0.5 * (h + hL) * np.sin(theta)
+            + g * 0.5 * (h + hL) * sintheta
         )
     )
     FyB = rho * (np.abs(-g * 0.5 * (h + hB) * (eta - etaB) / (dy)))
 
     FxR = rho * (
-        -g * 0.5 * (h + hR) * (etaR - eta) / (dx) + g * 0.5 * (h + hR) * np.sin(theta)
+        -g * 0.5 * (h + hR) * (etaR - eta) / (dx) + g * 0.5 * (h + hR) * sintheta
     )
     FyT = rho * (-g * 0.5 * (h + hT) * (etaT - eta) / (dy))
 
@@ -574,7 +563,7 @@ def Fdrag(current_data):  # units of force per unit area
     # conservative form (ie. derivatives on hu not u). I think it might be
     # similar to a drag term that appears on fully two-phase equations for solid
     # and fluid velocity fields.
-    rho_f = getattr(current_data.user, "rho_f", rho_f_default)
+    rho_f = current_data.plotdata.rho_f
     h = depth(current_data)
     vnorm = velocity_magnitude(current_data)
     D = dilatency(current_data)
@@ -589,7 +578,7 @@ def Fdrag(current_data):  # units of force per unit area
 
 def Ffluid(current_data):  # units of force per unit area
     # Resisting force due to fluid.
-    mu = getattr(current_data.user, "mu", drytol_default)
+    mu = current_data.plotdata.mu
     h = depth(current_data)
     m = solid_frac(current_data)
     vnorm = velocity_magnitude(current_data)
@@ -604,14 +593,12 @@ def Ffluid(current_data):  # units of force per unit area
 def phi(current_data):
     # angle of internal friction (radians)
     # consideres potential hysteretic friction, if specified.
-    phi_bed = getattr(current_data.user, "phi_bed", phi_bed_default)
-    fric_offset_val = getattr(
-        current_data.user, "fric_offset_val", fric_offset_val_default
-    )
-    fric_star_val = getattr(current_data.user, "fric_star_val", fric_star_val_default)
+    phi_bed = current_data.plotdata.phi_bed
+    fric_offset_val = current_data.plotdata.fric_offset_val
+    fric_star_val = current_data.plotdata.fric_star_val
     if fric_offset_val > 0.0:
 
-        bed_normal = getattr(current_data.user, "bed_normal", bed_normal_default)
+        bed_normal = current_data.plotdata.bed_normal
 
         if bed_normal == 1:
             aux = current_data.aux
@@ -701,7 +688,7 @@ def Fnet(current_data):  # units of force per unit area
 
 
 def liquefaction_ratio(current_data):
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     p = ma.masked_where(q[:, :, 0] < drytol, q[:, :, 4])
     litho = lithostaticP(current_data)
@@ -735,7 +722,7 @@ def land(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     # drytol = 5.e-2
     q = current_data.q
     h = q[:, :, 0]
@@ -748,7 +735,7 @@ def water(current_data):
     """Deprecated: use surface instead."""
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     eta = q[:, :, i_eta]
@@ -762,7 +749,7 @@ def depth(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     # drytol = 5.e-2
     q = current_data.q
     h = q[:, :, 0]
@@ -778,7 +765,7 @@ def surface(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     eta = q[:, :, i_eta]
@@ -794,7 +781,7 @@ def surface_solid_frac_lt03(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     eta = q[:, :, i_eta]
@@ -819,7 +806,7 @@ def surface_or_depth(current_data):
     """
     from numpy import ma, where
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     eta = q[:, :, i_eta]
@@ -836,7 +823,7 @@ def velocity_u(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     drytol = 1.0
     q = current_data.q
     h = q[:, :, 0]
@@ -852,7 +839,7 @@ def velocity_v(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     drytol = 1.0
     q = current_data.q
     h = q[:, :, 0]
@@ -868,7 +855,7 @@ def species1_fraction(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     # drytol = 1.0
     q = current_data.q
     h = q[:, :, 0]
@@ -884,7 +871,7 @@ def species2_fraction(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     # drytol = 1.0
     q = current_data.q
     h = q[:, :, 0]
@@ -903,7 +890,7 @@ def velocity(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     hu = q[:, :, 1]
@@ -922,7 +909,7 @@ def velocity_magnitude(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     hu = q[:, :, 1]
@@ -943,7 +930,7 @@ def fs(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     aux = current_data.aux
@@ -958,7 +945,7 @@ def cohesion(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     aux = current_data.aux
@@ -974,7 +961,7 @@ def taudir(current_data):
     """
     from numpy import ma
 
-    drytol = getattr(current_data.user, "drytol", drytol_default)
+    drytol = current_data.plotdata.drytolerance
     q = current_data.q
     h = q[:, :, 0]
     aux = current_data.aux
@@ -1016,7 +1003,6 @@ def plot_topo_file(topoplotdata):
     import os
 
     import pylab
-
     from pyclaw.data import Data
 
     fname = topoplotdata.fname

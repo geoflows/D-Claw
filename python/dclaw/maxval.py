@@ -11,8 +11,13 @@ from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
 from dclaw.fortconvert import convertfortdir, fort2list
-from dclaw.get_data import (get_amr2ez_data, get_dig_data, get_region_data,
-                            get_tsunami_data)
+from dclaw.get_data import (
+    get_amr2ez_data,
+    get_dig_data,
+    get_region_data,
+    get_tsunami_data,
+)
+from dclaw.max_extent import calc_max_extent
 
 
 def main():
@@ -83,11 +88,12 @@ def main():
         default=None,
     )
     parser.add_argument(
-        "-b", "--bilinear",
+        "-b",
+        "--bilinear",
         help="use bilinear interpolation (default =False) in fortconvert",
-        default = False,
+        default=False,
         action="store_false",
-        )
+    )
     parser.add_argument(
         "-w",
         "--west",
@@ -178,9 +184,34 @@ def main():
     )
 
     args = parser.parse_args()
+    args_dict = vars(args)
+    output2maxval(**args_dict)
+
+
+def output2maxval(
+    wdir=".",
+    odir="_output",
+    gdir="_gridded_output",
+    outfile="maxval.tif",
+    check_done=True,
+    num_cores=8,
+    epsg=None,
+    bilinear=False,
+    west=None,
+    north=None,
+    east=None,
+    south=None,
+    region=None,
+    overwrite_level=None,
+    write_froude=False,
+    extent_shp=False,
+    extent_shp_val="height",
+    extent_shp_val_thresh=0.0,
+    extent_shp_val_out_file="extent.shp",
+):
 
     # do some checking with the region.
-    amrdata = get_amr2ez_data(args.wdir, args.odir)
+    amrdata = get_amr2ez_data(wdir, odir)
 
     # full extent.
     xhi = amrdata["xupper"]
@@ -188,17 +219,24 @@ def main():
     xlow = amrdata["xlower"]
     ylow = amrdata["ylower"]
 
-    if args.region is not None:
-        region_data = get_region_data(args.wdir, args.odir)
-        west = region_data[args.region]["x1"]
-        east = region_data[args.region]["x2"]
-        south = region_data[args.region]["y1"]
-        north = region_data[args.region]["y2"]
+    if region is not None:
+        if region == "max_highest_level":
+            west, south, east, north = calc_max_extent()
+        else:
+            region_data = get_region_data(wdir, odir)
+            try:
+                west = region_data[region]["x1"]
+                east = region_data[region]["x2"]
+                south = region_data[region]["y1"]
+                north = region_data[region]["y2"]
+            except KeyError:
+                raise ValueError("Bad region value provided.")
+
     else:
-        west = args.west
-        east = args.east
-        south = args.south
-        north = args.north
+        west = west
+        east = east
+        south = south
+        north = north
         if west is None:
             west = xlow
         if east is None:
@@ -220,53 +258,53 @@ def main():
 
     mx = int((xhi - xlow) / fine_dx)
     my = int((yhi - ylow) / fine_dy)
-#    print(my, mx)
-#    print(xlow, xhi)
-#    print(ylow, yhi)
-#    print(fine_dx, fine_dy, coarse_dx, coarse_dy)
+    #    print(my, mx)
+    #    print(xlow, xhi)
+    #    print(ylow, yhi)
+    #    print(fine_dx, fine_dy, coarse_dx, coarse_dy)
 
     # snap values to the grid (HERE THE GRID IS THE CELL BOUNDING BOXES, NOT
     # THE CELL CENTERS).
     if east is not None or west is not None:
-        xs = np.linspace(xlow, xhi+fine_dx, mx+2)
+        xs = np.linspace(xlow, xhi + fine_dx, mx + 2)
         if east is not None:
             xhi = np.max(xs[xs <= east])
         if west is not None:
             xlow = np.min(xs[xs >= west])
         mx = int((xhi - xlow) / fine_dx)
     if north is not None or south is not None:
-        ys = np.linspace(ylow, yhi+fine_dy, my+2)
+        ys = np.linspace(ylow, yhi + fine_dy, my + 2)
         if north is not None:
             yhi = np.max(ys[ys <= north])
         if south is not None:
             ylow = np.min(ys[ys >= south])
         my = int((yhi - ylow) / fine_dy)
 
-#    print(my, mx)
-#    print(fine_dx, fine_dy)
-#    print(xlow, xhi)
-#    print(ylow, yhi)
+    #    print(my, mx)
+    #    print(fine_dx, fine_dy)
+    #    print(xlow, xhi)
+    #    print(ylow, yhi)
 
     # make output dir
-    if not os.path.exists(os.path.join(args.wdir, args.gdir)):
-        os.mkdir(os.path.join(args.wdir, args.gdir))
+    if not os.path.exists(os.path.join(wdir, gdir)):
+        os.mkdir(os.path.join(wdir, gdir))
 
     # check which files to convert. Could do a temporal filter here..
     # get all files.
-    tfiles = np.sort(glob.glob(os.path.join(args.wdir, *[args.odir, "fort.t*"])))
+    tfiles = np.sort(glob.glob(os.path.join(wdir, *[odir, "fort.t*"])))
     tfiles = [file for file in tfiles if "tck" not in file]  # remove checkpoint file.
-    ntifs = np.sort(glob.glob(os.path.join(args.wdir, *[args.gdir, "fort_q*.tif"])))
+    ntifs = np.sort(glob.glob(os.path.join(wdir, *[gdir, "fort_q*.tif"])))
 
     nfiles = []
 
-    # print(args.check_done)
+    # print(check_done)
     for tfile in tfiles:
         file = tfile.replace("fort.t", "fort.q")
         numstr = os.path.basename(tfile)[6:]
         tifname = os.path.join(
-            ".", *[os.path.join(args.wdir, args.gdir), "fort_q{}.tif".format(numstr)]
+            ".", *[os.path.join(wdir, gdir), "fort_q{}.tif".format(numstr)]
         )
-        if os.path.exists(tifname) and args.check_done:
+        if os.path.exists(tifname) and check_done:
             mtime_fort = os.path.getmtime(file)
             mtime_tif = os.path.getmtime(tifname)
             if mtime_tif > mtime_fort:
@@ -295,14 +333,14 @@ def main():
             nplots=nfiles,
             outputname="fort_q",
             components="all",
-            outdir=os.path.join(args.wdir, args.gdir),
-            fortdir=os.path.join(args.wdir, args.odir),
+            outdir=os.path.join(wdir, gdir),
+            fortdir=os.path.join(wdir, odir),
             parallel=True,
-            num_cores=args.num_cores,
+            num_cores=num_cores,
             topotype="gtif",
             write_level=True,
-            epsg=args.epsg,
-            bilinear=args.bilinear,
+            epsg=epsg,
+            bilinear=bilinear,
             xlower=xlow,
             xupper=xhi,
             ylower=ylow,
@@ -311,24 +349,24 @@ def main():
             my=my,
         )
 
-    dig_data = get_dig_data(args.wdir, args.odir)
+    dig_data = get_dig_data(wdir, odir)
     rho_f = dig_data["rho_f"]
     rho_s = dig_data["rho_s"]
 
     dclaw2maxval_withlev(
-        wdir=args.wdir,
-        odir=args.odir,
-        gdir=args.gdir,
-        out_file=args.outfile,
-        overwrite_level=args.overwrite_level,
-        write_froude=args.write_froude,
-        epsg=args.epsg,
+        wdir=wdir,
+        odir=odir,
+        gdir=gdir,
+        out_file=outfile,
+        overwrite_level=overwrite_level,
+        write_froude=write_froude,
+        epsg=epsg,
         rho_f=rho_f,
         rho_s=rho_s,
-        extent_shp=args.extent_shp,
-        extent_shp_val=args.extent_shp_val,
-        extent_shp_val_thresh=args.extent_shp_val_thresh,
-        extent_shp_val_out_file=args.extent_shp_val_out_file,
+        extent_shp=extent_shp,
+        extent_shp_val=extent_shp_val,
+        extent_shp_val_thresh=extent_shp_val_thresh,
+        extent_shp_val_out_file=extent_shp_val_out_file,
     )
 
 
@@ -352,8 +390,8 @@ def dclaw2maxval_withlev(
     # get drytol:
     tsudata = get_tsunami_data(wdir, odir)
     drytolerance = tsudata["drytolerance"]
-    wavetolerance=tsudata["wavetolerance"]
-    sealevel=tsudata["sealevel"]
+    wavetolerance = tsudata["wavetolerance"]
+    sealevel = tsudata["sealevel"]
     # do some checking with the region.
     amrdata = get_amr2ez_data(wdir, odir)
     mxnest = amrdata["mxnest"]  # max number of levels.
@@ -386,7 +424,7 @@ def dclaw2maxval_withlev(
     # constants.
     hmin_fill = 99999.0
     nodata = -9999
-    time_fill = -1.
+    time_fill = -1.0
 
     # initialize arrays for output values.
     eta_max = nodata * np.ones(dims, dtype="float32")
@@ -533,7 +571,9 @@ def dclaw2maxval_withlev(
                 # determine if it is the first time greater than the overwrite
                 # level (and h_present)
                 geq_ovr = lev_max >= owr_level
-                first_time_owr = geq_ovr & (first_geq_owr == False) & h_present & wave_now
+                first_time_owr = (
+                    geq_ovr & (first_geq_owr == False) & h_present & wave_now
+                )
                 first_geq_owr[first_time_owr] = True
 
                 # update h_level_masked
@@ -560,7 +600,7 @@ def dclaw2maxval_withlev(
                 update_eta_max = (level >= eta_owr_lev) & (eta > eta_max) & wave_now
                 update_h_max = (level >= h_owr_lev) & (h > h_max) & wave_now
                 update_h_min = (level >= h_min_owr_lev) & (h < h_min) & wave_now
-                update_m = (level >= m_owr_lev) & (m > m_max)& wave_now
+                update_m = (level >= m_owr_lev) & (m > m_max) & wave_now
                 update_vel = (level >= vel_owr_lev) & (vel > vel_max) & wave_now
                 update_mom = (level >= mom_owr_lev) & (mom > mom_max) & wave_now
                 update_fr = (level >= fr_owr_lev) & (fr > fr_max) & wave_now
@@ -596,7 +636,12 @@ def dclaw2maxval_withlev(
                 # update arrival time,
                 # set arrival time to the first timestep that has eta>0.01 and highest level seen.
                 # here
-                owr_arrival = (np.abs(eta - sealevel) > wavetolerance) & (arrival_time < 0) & (level > arrival_lev) & h_present
+                owr_arrival = (
+                    (np.abs(eta - sealevel) > wavetolerance)
+                    & (arrival_time < 0)
+                    & (level > arrival_lev)
+                    & h_present
+                )
                 arrival_lev[owr_arrival] = level[owr_arrival]
                 arrival_time[owr_arrival] = time
 
