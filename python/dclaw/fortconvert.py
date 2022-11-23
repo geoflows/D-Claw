@@ -49,6 +49,7 @@ import string
 import numpy as np
 
 import dclaw.topotools as gt
+import dclaw.netcdf_tools as gn
 
 
 # ================================================================================
@@ -512,6 +513,38 @@ def fort2uniform(
                     Q_out,
                     outfile,
                     epsg=epsg,
+                )
+
+            elif topotype == "netcdf":
+
+                outfile = outfortq.replace("fortq.", "fortq_") + ".nc"
+                # this should only change the file name.
+
+                # manipulate shape.order of Q
+                # written row by row, so shape into my, mx, meqn
+                # reorder into my, mx, meqn by shift axis so meq is at front,
+                # finally flip along axis 1 so that up is up.
+
+                Q_out = np.flip(
+                    np.moveaxis(Q.reshape((my, mx, len(qlst))), (0, 1, 2), (1, 2, 0)),
+                    axis=1,
+                )
+                if write_level:
+                    source_level = np.flipud(source_level)
+                    Q_out = np.concatenate(
+                        (np.atleast_3d(Q_out), source_level.reshape((1, my, mx))),
+                        axis=0,
+                    )
+
+                gn.griddata2netcdf(
+                    fortheader["time"],
+                    X,
+                    Y,
+                    Q_out,
+                    outfile,
+                    qlst,
+                    write_level,
+                    epsg=None
                 )
 
             else:

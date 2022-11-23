@@ -2,9 +2,8 @@ name: dclaw
 channels:
   - conda-forge
 dependencies:
-- python>=3.6.0, <3.10
+- python
 - ffmpeg
-- openmp
 - pip
 - pip:
   - -r requirements.txt

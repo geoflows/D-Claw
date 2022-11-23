@@ -18,7 +18,7 @@ time_unit="seconds"
 reference_time="model start"
 space_unit="meters"
 
-#TODO CHECK REGISTRATION.
+# TODO CHECK REGISTRATION - Checked as consistent with .tif on 11/23/2022
 
 def griddata2netcdf(time, X, Y, Q_out, outfile, qlst, write_level, epsg=None):
 
