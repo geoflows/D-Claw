@@ -1387,6 +1387,8 @@ class GeoclawInputData(Data):
         self.add_attribute("icoriolis", 1)
         self.add_attribute("Rearth", 6367500.0)
         self.add_attribute("variable_dt_refinement_ratios", False)
+        self.add_attribute("keep_fine", False)
+
         # NEED TO CONTINUE!
 
     def write(self):
@@ -1549,6 +1551,7 @@ class GeoclawInputData(Data):
         data_write(file, self, None)
         for flowgrade in self.flowgrades:
             file.write(4 * "%g  " % tuple(flowgrade) + "\n")
+        data_write(file, self, "keep_fine")
         file.close()
 
 
