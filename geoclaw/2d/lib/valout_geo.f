@@ -136,9 +136,16 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
           ! calculate new momentum proportion.
           momprop = locmaxmom / globmaxmom
 
-          ! test if done condition is met.
-          if (momprop .le. mom_perc) then
-            amidoneyet = .True. ! assign amidoneyet as true if done.
+          if (time .gt. 60) then
+            ! test if done condition is met.
+            if (momprop .le. mom_perc) then
+              amidoneyet = .TRUE. ! assign amidoneyet as true if done.
+            endif
+
+            ! if absolute value of local momentum is very close to zero, then stop.
+            if (locmaxmom .le. 0.001) then ! add a full stop criterion.
+              amidoneyet = .TRUE.
+            endif
           endif
 
           ! write current status to the log.

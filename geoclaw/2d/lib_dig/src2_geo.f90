@@ -8,6 +8,7 @@
 
       implicit none
 
+
       !i/o
       double precision :: q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, meqn)
       double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
@@ -34,6 +35,10 @@
       double precision :: s_slope,s_slope_x,s_slope_y,s_tend
       double precision :: s_vel,s_velx,s_vely,s_Vtot,s_xloc,s_yloc
       double precision :: srcXComp,srcYComp,x,y
+
+      ! level awareness
+      double precision :: dxmin, dymin
+      common /comfine/ dxmin,dymin
 
       double precision, allocatable :: moll(:,:)
 
@@ -350,32 +355,28 @@
       !------------------------------
       ! In domain source fountain
       ! RPJ: 3/7/22
+      ! KRB: 11/30/2022
       ! Specifically for post-fire debris flow hazard assessment
       ! assumes triangle hydrograph as several locations
       ! Peak volume and concentration given
       !------------------------------
-      !write(*,*) ' '
-      !!write(*,*) ' SFA= ', src_fountain_active
-      !write(*,*) ' SFNsh= ', src_ftn_num
-      !write(*,*) ' SFNsr= ', src_ftn_num_sr
-      !write(*,*) ' SFt= ', src_ftn_end_time
-      !write(*,*) ' t= ', t
 
-      if (src_fountain_active .eqv. .True.) then
+      if (src_fountain_active .eqv. .TRUE.) then
          if (src_ftn_num .eq. 0) then
-            src_fountain_active = .False.
+            src_fountain_active = .FALSE.
          endif
          if (t .gt. src_ftn_end_time) then
-            src_fountain_active = .False.
+            src_fountain_active = .FALSE.
          endif
 
-
          do ii = 1,src_ftn_num
-
-            ! inefficient testing of needing to be at the finest grid
-            if (dx .gt. 21.0) then
+            ! only add material at finest level
+            if (dx .gt. dxmin) then
                cycle
             endif
+
+            ! calculate discharge to determine if
+            ! end time has occured.
             s_Vtot = src_ftn_vtot(ii)
             s_Qp = 0.1 * (s_Vtot ** 0.833)
             if (s_Qp .lt. 0.0001) then
@@ -387,18 +388,20 @@
                cycle
             endif
 
+            ! get source location.
             s_xloc = src_ftn_xloc(ii)
             s_yloc = src_ftn_yloc(ii)
 
+            ! get source location I/J
             srcI = floor((s_xloc-xlower)/dx)
             srcJ = floor((s_yloc-ylower)/dy)
 
+            ! determine if source is on this grid
             if(srcI.lt.1 .or. srcJ.lt.1 .or. srcI.gt.mx .or. srcJ.gt.my) then
-               !source in a different grid
                cycle
             endif
 
-
+            ! if source is on this grid, calculate local slope to use for velocity.
             s_slope_x = (aux(srcI+1,srcJ,1)-aux(srcI-1,srcJ,1))/(2.d0*dx)
             s_slope_y = (aux(srcI,srcJ+1,1)-aux(srcI,srcJ-1,1))/(2.d0*dy)
             !s_slope = sqrt((s_slope_x * srcXComp)**2 + (s_slope_y * srcYComp)**2)
@@ -407,23 +410,29 @@
                ! if no slope use a value for the component calculations (which will still be 0 in each direction)
                s_slope = 0.1
             endif
+            ! get x and y components of slope.
             srcXComp = s_slope_x/s_slope
             srcYComp = s_slope_y/s_slope
 
+            ! Calculate discharge
+            ! triangle function with peak centered at 0.5 * s_end
+            s_q = 2.0*s_Qp*(t/s_tend-0.5)*sign(1.0d0,(0.5-t/s_tend))+s_Qp
 
 
-            !!!! Only adding volume
-            s_q = 2.0*s_Qp*(t/s_tend-0.5)*sign(1.0d0,(0.5-t/s_tend))+s_Qp ! triangle function centered at 0.5
-
+            ! if current discharge is very small, don't add.
             if (s_q .lt. 1e-4) then
                cycle
             endif
 
+            ! calculate x and y components of velocity.
             s_vel = abs(2.1 * s_Qp**0.33 * s_slope**0.33) !Rickenmann Eq 21
             s_velx = s_vel * srcXComp
             s_vely = s_vel * srcYComp
+
+            ! get m0
             s_m0 = src_ftn_m0(ii)
 
+            !numcells = length/dx
 
             if (dx .lt. 4.0) then
                ! 3.3 grid size
