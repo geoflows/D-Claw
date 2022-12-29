@@ -163,6 +163,19 @@ plots:
 
 #----------------------------------------------------------------------------
 
+# Rule to run a postprocessing python script
+#
+
+.postprocess: .output $(CLAW_setplot_file) $(MAKEFILE_LIST) ;
+	$(PYTHON) $(CLAW_setpostprocess_file)
+	touch .postprocess
+
+# Postprocess without checking dependencies:
+postprocess:
+	$(PYTHON) $(CLAW_setpostprocess_file)
+
+#----------------------------------------------------------------------------
+
 # Rule to make full program by catenating all source files.
 # Sometimes useful for debugging:
 
@@ -182,6 +195,11 @@ clobber:
 	$(MAKE) clean
 	-rm -f -r fort.*  *.pyc *.db pyclaw.log output *.so
 	-rm -f -r _plots* _output* 
+
+remove_output:
+	-rm -f $(CLAW_OBJECTS) $(CLAW_EXE) $(HTML)
+	-rm -f -r fort.* fort*nc *.pyc *.db pyclaw.log output *.so *.mod
+	-rm -f -r _plots* _output* _gridded_output*
 
 #----------------------------------------------------------------------------
 
@@ -209,14 +227,16 @@ help:
 	@echo '   "make output"   to run code with no dependency checking'
 	@echo '   "make .plots"   to produce plots'
 	@echo '   "make plots"    to produce plots with no dependency checking'
+	@echo '   "make postprocess"  to run a postprocess script'
 	@echo '   "make .htmls"   to produce html versions of files'
 	@echo '   "make .program" to produce single program file'
 	@echo '   "make regression_test"     to compare against archived results'
 	@echo '   "make new"      to remove all objs and then make .exe'
 	@echo '   "make clean"    to clean up compilation and html files'
 	@echo '   "make clobber"  to also clean up output and plot files'
+	@echo '   "make remove_output"  to selectively clean up some output files'
+
 	@echo '   "make all"      to make .htmls and make .plots'
 	@echo '   "make help"     to print this message'
 
 .help: help
-
