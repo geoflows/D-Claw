@@ -93,15 +93,16 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
             if (mom_autostop .eqv. .TRUE.) then
               if (level .eq. lst ) then
                 ! calculate and add to momentum to get a level one momentum sum.
+
                 momh = alloc(iadd(i,j,1))
                 if (momh .gt. 0.0001) then ! if substantial thickness.
 
                   momvel = (  (alloc(iadd(i,j,2))/momh)**2.
      &                      + (alloc(iadd(i,j,3))/momh)**2.)**0.5
                   momm = alloc(iadd(i,j,4)) / momh
+
                   momrho = (rho_s * momm) + ((1.-momm) * rho_f)
-                  ! hard code values for sediment and fluid density, but
-                  ! better than nothing and prob approx right.
+
                   locmaxmom = locmaxmom ! momentum = (mass * velocity) = density * volume * velocity.
      &                        + (momh * hxposs(level) * hyposs(level)
      &                        * momrho * momvel)
