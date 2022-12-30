@@ -21,7 +21,7 @@ c     # is also called from errf1.
       implicit double precision (a-h,o-z)
 
       include 'regions.i'
-
+      include 'call.i'
 c========================================================================
 
 
@@ -40,10 +40,16 @@ c          allowflag = .true.
 c          go to 900  !# no need to check anything else
 c          endif
 
+
+      xlo = x - 0.5*hxposs(level)
+      xhi = x + 0.5*hxposs(level)
+      ylo = y - 0.5*hxposs(level)
+      yhi = y + 0.5*hxposs(level)
+
       do m=1,mtopofiles
      	if (level.lt.maxleveltopo(m)) then
-      	  if (x.gt.xlowtopo(m).and.x.lt.xhitopo(m) .and.
-     &	      y.gt.ylowtopo(m).and.y.lt.yhitopo(m) .and.
+      	  if (xlo.lt.xhitopo(m).and.xhi.gt.xlowtopo(m) .and.
+     &	      ylo.lt.yhitopo(m).and.yhi.gt.ylowtopo(m) .and.
      &	      t.gt.tlowtopo(m).and.t.lt.thitopo(m)) then
      		  allowflag=.true.
                   go to 900  !# no need to check anything else
@@ -53,8 +59,8 @@ c          endif
 
       do m=1,mregions
      	if (level.lt.maxlevelregion(m)) then
-      	  if (x.gt.xlowregion(m).and.x.lt.xhiregion(m).and.
-     &	      y.gt.ylowregion(m).and.y.lt.yhiregion(m).and.
+      	  if (xlo.lt.xhiregion(m).and.xhi.gt.lowregion(m).and.
+     &	      ylo.lt.yhiregion(m).and.yhi.gt.ylowregion(m).and.
      &	      t.ge.tlowregion(m).and.t.le.thiregion(m)) then
      		  allowflag=.true.
                   go to 900  !# no need to check anything else
@@ -64,9 +70,9 @@ c          endif
 
       do m=1,num_dtopo
         if (x.gt.xlowdtopo(m).and.x.lt.xhidtopo(m).and.
-     &       y.gt.ylowdtopo(m).and.y.lt.yhidtopo(m).and.
-     &       t.ge.t0dtopo(m).and.t.le.tfdtopo(m)) then
-             if (level.lt.maxleveldtopo(m)) then
+     &      y.gt.ylowdtopo(m).and.y.lt.yhidtopo(m).and.
+     &      t.ge.t0dtopo(m).and.t.le.tfdtopo(m)) then
+            if (level.lt.maxleveldtopo(m)) then
                   allowflag=.true.
                   go to 900  !# no need to check anything else
                   endif
@@ -75,8 +81,8 @@ c          endif
 
       do m=1,mqinitfiles
          if (abs(t).lt.1.d0) then
-            if (x.gt.xlowqinit(m).and.x.lt.xhiqinit(m).and.
-     &	     y.gt.ylowqinit(m).and.y.lt.yhiqinit(m)) then
+            if (xlo.lt.xhiqinit(m).and.xhi.gt.xlowqinit(m).and.
+     &	        ylo.lt.yhiqinit(m).and.yhi.gt.ylowqinit(m)) then
      		        if (level.lt.maxlevelqinit(m)) then
                      allowflag=.true.
                      go to 900  !# no need to check anything else
