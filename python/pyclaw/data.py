@@ -53,6 +53,7 @@ _DIG_ATTRS = {
     "entrainment_rate": "rate of entrainment parameter 0-1",
     "mom_autostop": "flag for momentum autostop F = no autostop, T = autostop",
     "mom_perc": "percentage of max momentum for autostop, default is 0.05 (5%)",
+    "momlevel": "level to do momentum calculation IF mom_autostop==True",
     "src_ftn_num": "number of in-domain sources, if used the file 'sethydrographs.data' is required",
     "fric_offset_val": "start/stop friction offset (degrees). if this value is >0, then hysteretic friction is used (Rocha, Johnson, Gray, 2019)",
     "fric_star_val": "deep friction offset (degrees). only used when fric_offset_val > 0 (Rocha, Johnson, Gray, 2019)",
@@ -1594,6 +1595,7 @@ class DigclawInputData(Data):
         self.add_attribute("kappita_diff", 1.0, _DIG_ATTRS["kappita_diff"])
         self.add_attribute("outaux", False, _DIG_ATTRS["outaux"])
         self.add_attribute("curvature", 1, _DIG_ATTRS["curvature"])
+        self.add_attribute("momlevel", 1, _DIG_ATTRS["momlevel"])
 
         # self.add_attribute('m_crit2', 0.62, 'critical state value of m (#) for different size species')
         # self.add_attribute('rho_s2', 2700.0, 'solid grain density (kg/m^3) different size species')
@@ -1631,6 +1633,8 @@ class DigclawInputData(Data):
         data_write(file, self, "kappita_diff", _DIG_ATTRS["kappita_diff"])
         data_write(file, self, "outaux", _DIG_ATTRS["outaux"])
         data_write(file, self, "curvature", _DIG_ATTRS["curvature"])
+        data_write(file, self, "momlevel", _DIG_ATTRS["momlevel"])
+
 
         # data_write(file, self, 'm_crit2', 'critical state value of m (#) for different size species')
         # data_write(file, self, 'rho_s2', 'solid grain density (kg/m^3) different size species')

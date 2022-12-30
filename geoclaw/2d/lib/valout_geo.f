@@ -4,7 +4,7 @@ c
       subroutine valout (lst, lend, time, nvar, naux)
 c
       use digclaw_module, only : rho_f,rho_s,mom_autostop,mom_perc
-      use digclaw_module, only: amidoneyet,globmaxmom
+      use digclaw_module, only: amidoneyet,globmaxmom,momlevel
       use digclaw_module, only: outaux
 
       implicit double precision (a-h,o-z)
@@ -91,8 +91,8 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                endif
             enddo
             if (mom_autostop .eqv. .TRUE.) then
-              if (level .eq. lst ) then
-                ! calculate and add to momentum to get a level one momentum sum.
+              if (level .eq. momlevel ) then
+                ! calculate and add to momentum to get a momlevel momentum sum.
 
                 momh = alloc(iadd(i,j,1))
                 if (momh .gt. 0.0001) then ! if substantial thickness.
@@ -150,10 +150,10 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
           endif
 
           ! write current status to the log.
-          write(6,112) momprop, locmaxmom, globmaxmom, time
+          write(6,112) momprop, locmaxmom, globmaxmom, time, momlevel
  112      format('GeoClaw: Current momentum proportion ', d12.6,
      &           ' ( ', d12.6 ' / ', d12.6,
-     &           ') at t = ', d12.6,/)
+     &           ') at t = ', d12.6, ' lev =',i2)
 
       endif
       ! end if mom_autostop

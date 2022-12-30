@@ -24,6 +24,7 @@ module digclaw_module
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
     double precision :: mom_perc
     logical :: mom_autostop
+    integer :: momlevel
     logical :: outaux
 
     double precision :: globmaxmom = 0. ! initialize values for global max momentum
@@ -114,6 +115,8 @@ contains
          read(iunit,*) kappita_diff
          read(iunit,*) outaux
          read(iunit,*) curvature
+         read(iunit,*) momlevel
+
 
          !read(iunit,*) m_crit2
          !read(iunit,*) rho_s2
@@ -155,6 +158,7 @@ contains
          write(DIG_PARM_UNIT,*) '    kappita_diff', kappita_diff
          write(DIG_PARM_UNIT,*) '    outaux', outaux
          write(DIG_PARM_UNIT,*) '    curvature', curvature
+         write(DIG_PARM_UNIT,*) '    momlevel:', momlevel
 
          !write(DIG_PARM_UNIT,*) '    m_crit2', m_crit2
          !write(DIG_PARM_UNIT,*) '    rho_s2', rho_s2
