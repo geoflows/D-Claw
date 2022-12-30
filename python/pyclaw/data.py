@@ -1540,7 +1540,7 @@ class GeoclawInputData(Data):
         data_write(file, self, "nregions")
         data_write(file, self, None)
         for regions in self.regions:
-            file.write(8 * "%g  " % tuple(regions) + "\n")
+            file.write(8 * "%.8g  " % tuple(regions) + "\n")
         file.close()
 
         print("Creating data file setflowgrades.data")
