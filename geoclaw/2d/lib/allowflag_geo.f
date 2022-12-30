@@ -8,6 +8,8 @@ c
 c     # Modified for GeoClaw to check whether the point lies in any of
 c     # the various regions specified in the data files.
 c
+c     # KRB modify 12/30/2023 to use overlap region istead of contain.
+c
 c     # This routine is called from routine flag2refine.
 c
 c     # If Richardson error estimates are used (if tol>0) then this routine
@@ -20,8 +22,11 @@ c     # is also called from errf1.
 
       implicit double precision (a-h,o-z)
 
-      include 'regions.i'
+      double precision :: xlo,ylo,xhi,yhi
+
+      include 'regions.i' ! needed for hxposs
       include 'call.i'
+
 c========================================================================
 
 
@@ -51,7 +56,7 @@ c          endif
       	  if (xlo.lt.xhitopo(m).and.xhi.gt.xlowtopo(m) .and.
      &	      ylo.lt.yhitopo(m).and.yhi.gt.ylowtopo(m) .and.
      &	      t.gt.tlowtopo(m).and.t.lt.thitopo(m)) then
-     		  allowflag=.true.
+                  allowflag=.true.
                   go to 900  !# no need to check anything else
 	  endif
 	endif
@@ -59,10 +64,10 @@ c          endif
 
       do m=1,mregions
      	if (level.lt.maxlevelregion(m)) then
-      	  if (xlo.lt.xhiregion(m).and.xhi.gt.lowregion(m).and.
+      	  if (xlo.lt.xhiregion(m).and.xhi.gt.xlowregion(m).and.
      &	      ylo.lt.yhiregion(m).and.yhi.gt.ylowregion(m).and.
      &	      t.ge.tlowregion(m).and.t.le.thiregion(m)) then
-     		  allowflag=.true.
+                  allowflag=.true.
                   go to 900  !# no need to check anything else
 	  endif
 	endif
@@ -83,7 +88,7 @@ c          endif
          if (abs(t).lt.1.d0) then
             if (xlo.lt.xhiqinit(m).and.xhi.gt.xlowqinit(m).and.
      &	        ylo.lt.yhiqinit(m).and.yhi.gt.ylowqinit(m)) then
-     		        if (level.lt.maxlevelqinit(m)) then
+                if (level.lt.maxlevelqinit(m)) then
                      allowflag=.true.
                      go to 900  !# no need to check anything else
                  endif
