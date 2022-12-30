@@ -43,9 +43,7 @@ c
       external  allowflag
       logical shoreregion,wave
 
-      ! for keep_fine
       include 'call.i'
-
       include 'regions.i'
 
       iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
@@ -179,7 +177,6 @@ c            # determine if flowgrades are used
 
             ! eventually make keep_fine a user defined variable.
             if (keep_fine.and.mflowgrades.gt.0) then
-
               ! if level is lower than lfine a grid exists here on lfine,
               ! enforce refinement here.
               ! here, ignore ghost cells on the fine grid (e.g., no adjustment
