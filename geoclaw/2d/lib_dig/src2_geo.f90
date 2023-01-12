@@ -375,6 +375,8 @@
                cycle
             endif
 
+            !write(*,*) "fountain valid"
+
             ! calculate discharge to determine if
             ! end time has occured.
             s_Vtot = src_ftn_vtot(ii)
@@ -388,29 +390,57 @@
                cycle
             endif
 
-            ! get source location.
-            s_xloc = src_ftn_xloc(ii)
-            s_yloc = src_ftn_yloc(ii)
+            ! get number of cells for a box of dimensions [numCellsX, numCellsY]
+            ! centered at the location indicated by
+            ! [src_ftn_xloc[ii], src_ftn_yloc[ii]]
+            numCellsX = max(1, nint(src_ftn_length/dx))
+            numCellsY = max(1, nint(src_ftn_length/dy))
+            numCellsHalfX = int(numCellsX/2) ! num half cells as int
+            numCellsHalfY = int(numCellsY/2) ! num half cells as int
 
-            ! get source location I/J
-            srcI = floor((s_xloc-xlower)/dx)
-            srcJ = floor((s_yloc-ylower)/dy)
+            ! get source location extent
+            src_xloc = src_ftn_xloc(ii)
+            src_yloc = src_ftn_yloc(ii)
+!            s_xloclo = src_ftn_xloc(ii) - numCellsHalfX * dx
+!            s_yloclo = src_ftn_yloc(ii) - numCellsHalfY * dy
 
-            ! determine if source is on this grid
+            ! get source center index location I/J
+            srcI = int((src_xloc-xlower)/dx)
+            srcJ = int((src_yloc-ylower)/dy)
+
+            !write(*,*) xlower, xlower+mx*dx, ylower,ylower+my*dy
+
+            !write(*,*) srcI,srcJ
+
+            ! determine if source center is on this grid
             if(srcI.lt.1 .or. srcJ.lt.1 .or. srcI.gt.mx .or. srcJ.gt.my) then
                cycle
             endif
 
-            ! if source is on this grid, calculate local slope to use for velocity.
+            ! if source is on this grid, add material.
+
+            ! get index location of edges, snapped to grid extent.
+            srcIlo = max(1, srcI-numCellsHalfX)
+            srcJlo = max(1, srcJ-numCellsHalfY)
+            srcIhi = min(srcIlo+numCellsX-1, mx)
+            srcJhi = min(srcJlo+numCellsY-1, my)
+
+            ! calculate total number of input cells.
+            numCells = (srcIhi - srcIlo + 1) * (srcJhi - srcJlo + 1)
+
+            !write(*,*) srcIlo,srcIhi,srcJlo,srcJhi,numCells,numCellsX,numCellsY
+
+            ! calculate local slope to use for velocity.
             s_slope_x = (aux(srcI+1,srcJ,1)-aux(srcI-1,srcJ,1))/(2.d0*dx)
             s_slope_y = (aux(srcI,srcJ+1,1)-aux(srcI,srcJ-1,1))/(2.d0*dy)
             !s_slope = sqrt((s_slope_x * srcXComp)**2 + (s_slope_y * srcYComp)**2)
             s_slope = sqrt((s_slope_x)**2 + (s_slope_y)**2)
             if(s_slope .lt. 0.0001) then
                ! if no slope use a value for the component calculations (which will still be 0 in each direction)
-               s_slope = 0.1
+               s_slope = 0.1 ! about 6 degrees.
             endif
             ! get x and y components of slope.
+
             srcXComp = s_slope_x/s_slope
             srcYComp = s_slope_y/s_slope
 
@@ -432,180 +462,34 @@
             ! get m0
             s_m0 = src_ftn_m0(ii)
 
-            !numcells = length/dx
 
-            if (dx .lt. 4.0) then
-               ! 3.3 grid size
-               !numCells = 9
-               !check for grid edge, if needed adjust to keep all source on same grid
-               if(srcI.gt.1 .and. srcI.lt.mx) then
-                  xcells = -1
-               else if(srcI.eq.1) then
-                  xcells = 0
-               else
-                  xcells = -2
-               endif
-               if(srcJ.gt.1 .and. srcJ.lt.my) then
-                  ycells = -1
-               else if(srcI.eq.1) then
-                  ycells = 0
-               else
-                  ycells = -2
-               endif
-
-               ! add volume equally across all grid cells
-               do i=xcells,xcells+2
-                  do j=ycells,ycells+2
-                     q(srcI+i,srcJ+j,1) = q(srcI+i,srcJ+j,1) + s_q*dt/(9*dx*dy)
-                     q(srcI+i,srcJ+j,2) = q(srcI+i,srcJ+j,2) + s_q*dt/(9*dx*dy)*s_velx
-                     q(srcI+i,srcJ+j,3) = q(srcI+i,srcJ+j,3) + s_q*dt/(9*dx*dy)*s_vely
-                     q(srcI+i,srcJ+j,4) = q(srcI+i,srcJ+j,4) + s_q*dt/(9*dx*dy)*s_m0
-                  end do
-               end do
-            else if(dx .lt. 6.0) then
-               ! 5.0 m cells
-               !numcells = 4
-               ! check for grid edge, if not find direction of cell closest to source loc
-               if(srcI.gt.1 .and. srcI.lt.mx) then
-                  if(((s_xloc-xlower)-(srcI*dx))/dx .lt. 0.5) then
-                     xcells = -1
-                  else
-                     xcells = 0
-                  endif
-               else if(srcI.eq.1) then
-                  xcells = 0
-               else
-                  xcells = -1
-               end if
-
-               if(srcJ.gt.1 .and. srcJ.lt.my) then
-                  if(((s_yloc-ylower)-(srcJ*dy))/dy .lt. 0.5) then
-                     ycells = -1
-                  else
-                     ycells = 0
-                  endif
-               else if(srcJ.eq.1) then
-                  ycells = 0
-               else
-                  ycells = -1
-               end if
-
-               do i=xcells,xcells+1
-                  do j=ycells,ycells+1
-                     q(srcI+i,srcJ+j,1) = q(srcI+i,srcJ+j,1) + s_q*dt/(4*dx*dy)
-                     q(srcI+i,srcJ+j,2) = q(srcI+i,srcJ+j,2) + s_q*dt/(4*dx*dy)*s_velx
-                     q(srcI+i,srcJ+j,3) = q(srcI+i,srcJ+j,3) + s_q*dt/(4*dx*dy)*s_vely
-                     q(srcI+i,srcJ+j,4) = q(srcI+i,srcJ+j,4) + s_q*dt/(4*dx*dy)*s_m0
-                  end do
-               end do
-
-            else
-               ! grid is 10 or 20m
-               ! numcells = 1
-               q(srcI,srcJ,1) = q(srcI,srcJ,1) + s_q*dt/(dx*dy)
-               q(srcI,srcJ,2) = q(srcI,srcJ,2) + s_q*dt/(dx*dy)*s_velx
-               q(srcI,srcJ,3) = q(srcI,srcJ,3) + s_q*dt/(dx*dy)*s_vely
-               q(srcI,srcJ,4) = q(srcI,srcJ,4) + s_q*dt/(dx*dy)*s_m0
-            end if
+            !write(*,*) "adding fountain: ", srcIlo,srcIhi,srcJlo,srcJhi,numCells
+            ! add volume equally across all grid cells
+            do i=srcIlo,srcIhi
+              do j=srcJlo,srcJhi
+                 q(i,j,1) = q(i,j,1) + s_q*dt/(numCells*dx*dy)
+                 q(i,j,2) = q(i,j,2) + s_q*dt/(numCells*dx*dy)*s_velx
+                 q(i,j,3) = q(i,j,3) + s_q*dt/(numCells*dx*dy)*s_vely
+                 q(i,j,4) = q(i,j,4) + s_q*dt/(numCells*dx*dy)*s_m0
 
 
+                 h = q(i,j,1)
+                 hm = q(i,j,4)
+                 if (hm/h.gt.0.8.or.hm/h.lt.0.3) then
+                   write(*,*) "src2_3 call admissibleq(h,hu,hv,hm,p,u,v,m,theta) m=", hm/h
+                 endif
 
-            !!!!
-!            s_angle = src_ftn_angle(ii)
-!            ! north is 0 degrees for aspect
-!            srcXComp = sin(s_angle*3.14/180)
-!            srcYComp = cos(s_angle*3.14/180)
+                 call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
+                 call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm,m_eqn)
 
-!            s_slope_x = (aux(srcI+1,srcJ,1)-aux(srcI-1,srcJ,1))/(2.d0*dx)
-!            s_slope_y = (aux(srcI,srcJ+1,1)-aux(srcI,srcJ-1,1))/(2.d0*dy)
-!            !s_slope = sqrt((s_slope_x * srcXComp)**2 + (s_slope_y * srcYComp)**2)
-!            s_slope = sqrt((s_slope_x)**2 + (s_slope_y)**2)
-!            !!
+                 !  Calc RHO and set q5 to hydrostatic?
+                 !p_hydro = h*rho_fp*gmod
+                 !q(i,j,5) = p_hydro
 
-!            if(s_slope .lt. 0.0001) then
-!               !write(*,*) '\n slope =  ,ii= ', s_slope,ii
-!               s_slope = 0.1
-!            endif
-!            srcXComp = s_slope_x/s_slope
-!            srcYComp = s_slope_y/s_slope
+                 !call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
 
-!            s_q = 2.0*s_Qp*(t/s_tend-0.5)*sign(1.0d0,(0.5-t/s_tend))+s_Qp ! triangle function centered at 0.5
-!            if (s_q .lt. 1e-6) then
-!               cycle
-!            endif
-!            s_qx = s_q * srcXComp
-!            s_qy = s_q * srcYComp
-!            s_vel = abs(2.1 * s_q**0.33 * s_slope**0.33) !Rickenmann Eq 21
-!            s_velx = s_vel * srcXComp
-!            s_vely = s_vel * srcYComp
-
-!            !write(*,*) '\n sq= ,ii= , t= ,dx =', s_q,ii, t, dx
-!            !write(*,*) '\n sl= ', src_ftn_length
-!            !write(*,*) '\n dx= ', dx
-!            if (src_ftn_length .lt. dx) then
-!               s_h = abs(s_q / (dx * s_vel))
-!               !write(*,*) '\n sq= ,sh= ,ii= , t= ,dx =', s_q, s_h,ii, t, dx
-!               if (s_h .lt. tol) then
-!                  cycle
-!               endif
-!               q(srcI,srcJ,1) = s_h
-!               !calculate velocity for correct flux along each axis
-!               q(srcI,srcJ,2) = q(srcI,srcJ,1) * s_qx/(dx*s_h)
-!               q(srcI,srcJ,3) = q(srcI,srcJ,1) * s_qy/(dy*s_h)
-!               q(srcI,srcJ,4) = q(srcI,srcJ,1) * s_m0
-!               q(srcI,srcJ,5) = (rho_F*(1-s_m0)+rho_S*s_m0)*grav*q(srcI,srcJ,1)
-!            else
-!               xCells = floor(src_ftn_length*srcXComp/dx)
-!               yCells = floor(src_ftn_length*srcYComp/dy)
-!               iBeg = max(srcI - xCells,1)
-!               iEnd = min(srcI + xCells,mx)
-!               jBeg = max(srcJ - yCells,1)
-!               jEnd = min(srcJ + yCells,my)
-
-!               !Loop through both directions to count faces
-!               !Sum topography for volume flux calcs
-!               numCellsX = 0
-!               numCellsY = 0
-!               do i=iBeg,iEnd
-!                  x=xlower + (i-0.5d0)*dx
-!                  if (abs(x-s_xloc).lt.(src_ftn_length*srcXComp)) then
-!                     numCellsY = numCellsY + 1
-!                  endif
-!               enddo
-
-!               !Loop other order to find other face count
-!               do j=jBeg,jEnd
-!                  y=ylower + (j-0.5d0)*dy
-!                  if (abs(y-s_yloc)<(src_ftn_length*srcYComp)) then
-!                     numCellsX = numCellsX + 1
-!                  endif
-!               enddo
-
-!               ! find h for total flux across x and y faces to equal flow rate
-!               ! gives correct total flux into domain
-!               s_h = abs(s_q /(numCellsX*dx*s_velx + numCellsY*dy*s_vely))
-
-!               if (s_h .lt. tol) then
-!                  cycle
-!               endif
-
-!               do i=iBeg,iEnd
-!                  x=xlower + (i-0.5d0)*dx
-!                  if (abs(x-s_xloc).lt.(src_ftn_length*srcXComp)) then
-!                     do j=jBeg,jEnd
-!                        y=ylower + (j-0.5d0)*dy
-!                        if (abs(y-s_yloc).lt.(src_ftn_length*srcYComp)) then
-!                           q(i,j,1) = s_h
-!                           q(i,j,2) = q(i,j,1) * s_velx
-!                           q(i,j,3) = q(i,j,1) * s_vely
-!                           q(i,j,4) = q(i,j,1) * s_m0
-!                           q(i,j,5) = (rho_F*(1-s_m0)+rho_S*s_m0)*grav*q(i,j,1)
-!                        endif
-!                     enddo
-!                  endif
-!               enddo
-
-!            endif  ! src length
+              end do
+            end do
 
          enddo ! source number
 
