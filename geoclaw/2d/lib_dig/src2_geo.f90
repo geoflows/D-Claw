@@ -28,9 +28,13 @@
       integer :: i,j,ii,jj,jjend,icount
       logical :: ent
 
-            !source fountain
-      integer :: iBeg,iEnd,jBeg,jEnd,numCellsX,numCellsY,srcI,srcJ,numCells
-      integer :: xCells,yCells
+      !source fountain
+      integer :: numCellsX,numCellsY,numCells
+      integer :: numCellsHalfX,numCellsHalfY,numCellsHalf
+      integer :: srcI,srcJ,srcJlo,srcIlo,srcIhi,srcJhi
+      double precision :: src_xloc, src_yloc
+      double precision :: s_xloclo,s_yloclo
+      double precision :: s_xlochi,s_ylochi
       double precision :: s_angle,s_h,s_m0,s_q,s_Qp,s_qx,s_qy
       double precision :: s_slope,s_slope_x,s_slope_y,s_tend
       double precision :: s_vel,s_velx,s_vely,s_Vtot,s_xloc,s_yloc
