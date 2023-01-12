@@ -596,11 +596,12 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             h = q(i,j,1)
             hu = q(i,j,2)
             hv = q(i,j,3)
+            hm = q(i,j,4)
             if (h<dry_tol) then
                hu=0.0
                hv=0.0
+               hm=0.0
             endif
-            hm = q(i,j,4)
             p  = q(i,j,5)
             b = aux(i,j,1)
             eta = h+b
