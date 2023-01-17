@@ -484,7 +484,7 @@
                  endif
 
                  call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
-                 call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm,m_eqn)
+                 call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
                  !  Calc RHO and set q5 to hydrostatic?
                  !p_hydro = h*rho_fp*gmod
