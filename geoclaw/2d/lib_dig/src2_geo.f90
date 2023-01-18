@@ -479,9 +479,6 @@
 
                  h = q(i,j,1)
                  hm = q(i,j,4)
-                 if (hm/h.gt.0.8.or.hm/h.lt.0.3) then
-                   write(*,*) "src2_3 call admissibleq(h,hu,hv,hm,p,u,v,m,theta) m=", hm/h
-                 endif
 
                  call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
                  call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
