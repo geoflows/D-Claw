@@ -35,9 +35,8 @@
       double precision :: src_xloc, src_yloc
       double precision :: s_xloclo,s_yloclo
       double precision :: s_xlochi,s_ylochi
-      double precision :: s_angle,s_h,s_m0,s_q,s_Qp,s_qx,s_qy
-      double precision :: s_slope,s_slope_x,s_slope_y,s_tend
-      double precision :: s_vel,s_velx,s_vely,s_Vtot,s_xloc,s_yloc
+      double precision :: s_m0,s_q,s_Qp
+      double precision :: s_tend,s_Vtot,s_xloc,s_yloc
       double precision :: srcXComp,srcYComp,x,y
 
       ! level awareness
@@ -434,20 +433,6 @@
 
             !write(*,*) srcIlo,srcIhi,srcJlo,srcJhi,numCells,numCellsX,numCellsY
 
-            ! calculate local slope to use for velocity.
-            s_slope_x = (aux(srcI+1,srcJ,1)-aux(srcI-1,srcJ,1))/(2.d0*dx)
-            s_slope_y = (aux(srcI,srcJ+1,1)-aux(srcI,srcJ-1,1))/(2.d0*dy)
-            !s_slope = sqrt((s_slope_x * srcXComp)**2 + (s_slope_y * srcYComp)**2)
-            s_slope = sqrt((s_slope_x)**2 + (s_slope_y)**2)
-            if(s_slope .lt. 0.0001) then
-               ! if no slope use a value for the component calculations (which will still be 0 in each direction)
-               s_slope = 0.1 ! about 6 degrees.
-            endif
-            ! get x and y components of slope.
-
-            srcXComp = s_slope_x/s_slope
-            srcYComp = s_slope_y/s_slope
-
             ! Calculate discharge
             ! triangle function with peak centered at 0.5 * s_end
             s_q = 2.0*s_Qp*(t/s_tend-0.5)*sign(1.0d0,(0.5-t/s_tend))+s_Qp
@@ -458,36 +443,21 @@
                cycle
             endif
 
-            ! calculate x and y components of velocity.
-            s_vel = abs(2.1 * s_Qp**0.33 * s_slope**0.33) !Rickenmann Eq 21
-            s_velx = s_vel * srcXComp
-            s_vely = s_vel * srcYComp
-
             ! get m0
             s_m0 = src_ftn_m0(ii)
-
 
             !write(*,*) "adding fountain: ", srcIlo,srcIhi,srcJlo,srcJhi,numCells
             ! add volume equally across all grid cells
             do i=srcIlo,srcIhi
               do j=srcJlo,srcJhi
                  q(i,j,1) = q(i,j,1) + s_q*dt/(numCells*dx*dy)
-                 q(i,j,2) = q(i,j,2) + s_q*dt/(numCells*dx*dy)*s_velx
-                 q(i,j,3) = q(i,j,3) + s_q*dt/(numCells*dx*dy)*s_vely
                  q(i,j,4) = q(i,j,4) + s_q*dt/(numCells*dx*dy)*s_m0
-
 
                  h = q(i,j,1)
                  hm = q(i,j,4)
 
                  call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
                  call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
-                 !  Calc RHO and set q5 to hydrostatic?
-                 !p_hydro = h*rho_fp*gmod
-                 !q(i,j,5) = p_hydro
-
-                 !call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
 
               end do
             end do
