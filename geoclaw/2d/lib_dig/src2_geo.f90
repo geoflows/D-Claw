@@ -385,8 +385,6 @@
             ! get source location extent
             src_xloc = src_ftn_xloc(ii)
             src_yloc = src_ftn_yloc(ii)
-!            s_xloclo = src_ftn_xloc(ii) - numCellsHalfX * dx
-!            s_yloclo = src_ftn_yloc(ii) - numCellsHalfY * dy
 
             ! get source center index location I/J
             srcI = int((src_xloc-xlower)/dx)
