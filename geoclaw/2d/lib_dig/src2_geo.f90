@@ -86,25 +86,6 @@
             !do jj=1,jjend
 
 
-            !Ocean material removal
-            !RPJ: 04/28/22
-            ! If material reaches the ocean (topology = 0 elevation)
-            ! and has moved away from the shoreline (all surrounding topo = 0)
-            ! then remove the material to stop the slow creep into the flat ocean topo
-            !topo = 0.0
-            !do ii = -1,1
-            !   do jj = -1,1
-            !      topo = topo + aux(i+ii,j+jj,1)
-            !   enddo
-            !enddo
-            !if (topo .lt. 1.0) then
-            !   q(i,j,1) = 0.0
-            !   q(i,j,2) = 0.0
-            !   q(i,j,3) = 0.0
-            !   q(i,j,4) = 0.0
-            !   q(i,j,5) = 0.0
-            !   cycle
-            !endif
 
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
