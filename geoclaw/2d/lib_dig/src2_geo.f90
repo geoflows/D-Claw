@@ -432,15 +432,14 @@
                  q(i,j,1) = q(i,j,1) + s_q*dt/(numCells*dx*dy)
                  q(i,j,4) = q(i,j,4) + s_q*dt/(numCells*dx*dy)*s_m0
 
-                 h = q(i,j,1)
-                 hm = q(i,j,4)
-
-                 call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
-                 call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
               end do
             end do
 
+            h = q(i,j,1)
+            hm = q(i,j,4)
+
+            call admissibleq(q(i,j,1),q(i,j,2),q(i,j,3),q(i,j,4),q(i,j,5),u,v,m,theta)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
          enddo ! source number
 
       endif ! source fountain active
