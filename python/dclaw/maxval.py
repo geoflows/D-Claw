@@ -719,6 +719,9 @@ def dclaw2maxval_withlev(
             eta_max_time[update_eta_time] = time
             vel_max_time[update_vel_time] = time
 
+    if outformat == "netcdf":
+        ds.close()
+
     never_inundated = h_max < drytolerance
     never_wave = wave_all == False
 
