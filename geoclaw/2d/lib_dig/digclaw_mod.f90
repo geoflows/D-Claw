@@ -24,13 +24,14 @@ module digclaw_module
     double precision :: mu,alpha,m_crit,c1,m0,alpha_seg,sigma_0,phi_seg_coeff,entrainment_rate
     double precision :: mom_perc
     logical :: mom_autostop
+    integer :: momlevel
     logical :: outaux
 
     double precision :: globmaxmom = 0. ! initialize values for global max momentum
-    logical :: amidoneyet = .False. ! and momentum based stopping criterion.
+    logical :: amidoneyet = .FALSE. ! and momentum based stopping criterion.
 
-    logical :: src_fountain_active = .True.
-    integer :: src_ftn_num, src_ftn_num_sr ! maximum number sources defined for below arrays
+    logical :: src_fountain_active = .TRUE.
+    integer :: src_ftn_num
     double precision :: src_ftn_end_time, src_ftn_length
     double precision :: src_ftn_vtot(2000), src_ftn_m0(2000)
     double precision :: src_ftn_xloc(2000), src_ftn_yloc(2000), src_ftn_angle(2000)
@@ -107,13 +108,15 @@ contains
          read(iunit,*) entrainment_rate
          read(iunit,*) mom_autostop
          read(iunit,*) mom_perc
-         read(iunit,*) src_ftn_num_sr
+         read(iunit,*) src_ftn_num
          read(iunit,*) fric_offset_val
          read(iunit,*) fric_star_val
          read(iunit,*) chi_init_val
          read(iunit,*) kappita_diff
          read(iunit,*) outaux
          read(iunit,*) curvature
+         read(iunit,*) momlevel
+
 
          !read(iunit,*) m_crit2
          !read(iunit,*) rho_s2
@@ -148,13 +151,14 @@ contains
          write(DIG_PARM_UNIT,*) '    entrainment_rate:', entrainment_rate
          write(DIG_PARM_UNIT,*) '    mom_autostop:', mom_autostop
          write(DIG_PARM_UNIT,*) '    mom_perc:', mom_perc
-         write(DIG_PARM_UNIT,*) '    num_src_ftn_sr', src_ftn_num_sr
+         write(DIG_PARM_UNIT,*) '    src_ftn_num', src_ftn_num
          write(DIG_PARM_UNIT,*) '    fric_offset_val', fric_offset_val
          write(DIG_PARM_UNIT,*) '    fric_star_val', fric_star_val
          write(DIG_PARM_UNIT,*) '    chi_init_val', chi_init_val
          write(DIG_PARM_UNIT,*) '    kappita_diff', kappita_diff
          write(DIG_PARM_UNIT,*) '    outaux', outaux
          write(DIG_PARM_UNIT,*) '    curvature', curvature
+         write(DIG_PARM_UNIT,*) '    momlevel:', momlevel
 
          !write(DIG_PARM_UNIT,*) '    m_crit2', m_crit2
          !write(DIG_PARM_UNIT,*) '    rho_s2', rho_s2
@@ -592,11 +596,12 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             h = q(i,j,1)
             hu = q(i,j,2)
             hv = q(i,j,3)
+            hm = q(i,j,4)
             if (h<dry_tol) then
                hu=0.0
                hv=0.0
+               hm=0.0
             endif
-            hm = q(i,j,4)
             p  = q(i,j,5)
             b = aux(i,j,1)
             eta = h+b
@@ -1055,7 +1060,7 @@ subroutine calc_pmtanh(pm,seg,pmtanh)
     ! ========================================================================
     !  Reads in user parameters from the given file name if provided
     ! ========================================================================
-   subroutine set_hydrographs(fname)
+    subroutine set_hydrographs(fname)
 
       implicit none
 
@@ -1076,17 +1081,17 @@ subroutine calc_pmtanh(pm,seg,pmtanh)
           file_name = 'sethydrographs.data'
        endif
        inquire(file=file_name,exist=found_file)
+
        if (.not. found_file) then
-          print *, 'No hydrograph file ', file_name
+          write(*, *) 'No hydrograph file ', file_name
+          src_fountain_active = .FALSE.
           src_ftn_num = 0
           src_ftn_end_time = 0.0
           src_ftn_length = 1.0
           return
-
-          !print *, 'You must provide a file ', file_name
-          !stop
        endif
 
+       src_fountain_active = .TRUE.
        call opendatafile(iunit, file_name)
        read(iunit,*) src_ftn_num
        read(iunit,*) src_ftn_end_time

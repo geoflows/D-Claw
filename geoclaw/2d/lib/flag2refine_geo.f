@@ -1,7 +1,8 @@
 c
 c -------------------------------------------------------------------
-      subroutine flag2refine(mx,my,mbc,meqn,maux,xlower,ylower,dx,dy,
-     &                 t,level,tolsp,q,aux,amrflags,DONTFLAG,DOFLAG)
+      subroutine flag2refine(mx,my,mbc,meqn,maux,xxlower,yylower,dx,
+     &                 dy,t,level,ttolsp,q,aux,amrflags,DONTFLAG,
+     &                 DOFLAG)
 c -------------------------------------------------------------------
 
 c
@@ -42,18 +43,21 @@ c
       external  allowflag
       logical shoreregion,wave
 
+      include 'call.i'
       include 'regions.i'
 
-c     # loop over interior points on this grid:
+      iadd(i,j,ivar) = loc + i - 1 + mitot*((ivar-1)*mjtot+j-1)
+      iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
 
+c     # loop over interior points on this grid:
       do 200 j = 1,my
-        y = ylower +  (j-0.5d0)*dy
-        y1 = ylower + (j-1)*dy
-        y2 = ylower + j*dy
+        y = yylower +  (j-0.5d0)*dy
+        y1 = yylower + (j-1)*dy
+        y2 = yylower + j*dy
         do 100 i = 1,mx
-          x = xlower +  (i-0.5d0)*dx
-          x1 = xlower +  (i-1)*dx
-          x2 = xlower +  i*dx
+          x = xxlower +  (i-0.5d0)*dx
+          x1 = xxlower +  (i-1)*dx
+          x2 = xxlower +  i*dx
 c         # (i,j) grid cell is [x1,x2] x [y1,y2].
 
 c         # default for each point is not to flag unless some condition
@@ -70,7 +74,7 @@ c           # check to see if refinement is forced in any topo file region:
               xhi = xhitopo(m)
               ylow = ylowtopo(m)
               yhi = yhitopo(m)
-                 if (x2.gt.xlow.and.x1.lt.xhi.and.
+                 if (x2.gt.xlow.and.x1.lt.xhi.and. ! topo file region overlaps with grid cell
      &               y2.gt.ylow.and.y1.lt.yhi) then
                     amrflags(i,j) = DOFLAG
                     go to 100 !# flagged, so no need to check anything else
@@ -86,7 +90,7 @@ c           # check to see if refinement is forced in any other region:
               xhi = xhiregion(m)
               ylow = ylowregion(m)
               yhi = yhiregion(m)
-                 if (x2.gt.xlow.and.x1.lt.xhi.and.
+                 if (x2.gt.xlow.and.x1.lt.xhi.and. ! region overlaps with grid cell
      &               y2.gt.ylow.and.y1.lt.yhi) then
                     amrflags(i,j) = DOFLAG
                     go to 100 !# flagged, so no need to check anything else
@@ -168,6 +172,118 @@ c            # determine if flowgrades are used
                     go to 100 !# flagged, so no need to check anything else
                   endif
             enddo
+
+            ! keep fine added by KRB 2022/12/28
+
+            ! eventually make keep_fine a user defined variable.
+            if (keep_fine.and.mflowgrades.gt.0) then
+              ! if level is lower than lfine a grid exists here on lfine,
+              ! enforce refinement here.
+              ! here, ignore ghost cells on the fine grid (e.g., no adjustment
+              ! of extent)
+              if (level .lt. lfine) then
+
+                 ! loop through lfine grids (code modified by valout)
+                 mptr = lstart(lfine)
+70               if (mptr .eq. 0) go to 80 ! no fine grids present (I think)
+
+                    ! calculate extent of fine grid
+                    nx      = node(ndihi,mptr) - node(ndilo,mptr) + 1
+                    ny      = node(ndjhi,mptr) - node(ndjlo,mptr) + 1
+                    loc     = node(store1, mptr)
+                    locaux  = node(storeaux,mptr)
+                    mitot   = nx + 2*nghost
+                    mjtot   = ny + 2*nghost
+
+                    xlow = rnode(cornxlo,mptr)
+                    ylow = rnode(cornylo,mptr)
+                    xhi = xlow + nx*hxposs(lfine)
+                    yhi = ylow + ny*hxposs(lfine)
+
+                    ! if there is overlap between the fine grid and this
+                    ! location on the coarse grid, flag.
+                    ! (i,j) grid cell is [x1,x2] x [y1,y2].
+                    ! fine grid is [xlow,xhi] x [ylow,yhi]
+                    if (x2.gt.xlow.and.x1.lt.xhi.and.
+     &                          y2.gt.ylow.and.y1.lt.yhi) then
+
+                       ! this loop includes ghosts, update extent and
+                       mitot   = nx + 2*nghost
+                       mjtot   = ny + 2*nghost
+                       xlow = rnode(cornxlo,mptr)-nghost*hxposs(lfine)
+                       ylow = rnode(cornylo,mptr)-nghost*hxposs(lfine)
+                       xhi = xlow + mitot*hxposs(lfine)
+                       yhi = ylow + mjtot*hxposs(lfine)
+
+                       ! get pointers
+                       loc     = node(store1, mptr)
+                       locaux  = node(storeaux,mptr)
+
+                       ! loop through fine grid cells.
+                       do jj = nghost+1, mjtot-nghost
+                          do ii = nghost+1, mitot-nghost
+                            ! check overlap between fine and coarse cells
+                            ! ignore ghost cells
+                            xxlow = xlow + hxposs(lfine)*ii
+                            xxhi = xxlow + hxposs(lfine)
+                            yylow = ylow + hxposs(lfine)*jj
+                            yyhi = yylow + hxposs(lfine)
+
+                            ! if fine grid cell is inside of coarse grid cell
+                            ! calculate flowgrade values
+                            if (x2.gt.xxlow.and.x1.lt.xxhi.and.
+     &                                 y2.gt.yylow.and.y1.lt.yyhi) then
+                              h = alloc(iadd(ii,jj,1))
+                              hu = alloc(iadd(ii,jj,2))
+                              hv = alloc(iadd(ii, jj,3))
+                              momentum = sqrt((hu**2)+(hv**2))
+                              surface = h + alloc(iaddaux(ii,jj,1))
+
+                    ! check flowgrade values on fine grid.
+                    do iflow=1,mflowgrades
+                      if (iflowgradevariable(iflow).eq.1) then
+                        flowgradenorm=depth
+                        flowgradegrad=depth
+                      elseif (iflowgradevariable(iflow).eq.2) then
+                        flowgradenorm=momentum
+                        flowgradegrad=momentum
+                      elseif (iflowgradevariable(iflow).eq.3) then
+                        if (depth.gt.drytolerance) then
+                          flowgradenorm=dabs(surface)
+                          flowgradegrad=dabs(surface)
+                        else
+                          flowgradenorm=0.0
+                          flowgradegrad=0.0
+                        endif
+                      endif
+                      if (iflowgradetype(iflow).eq.1) then
+                        flowgrademeasure=flowgradenorm
+                      else
+                        write(*,*) 'flowgradetype not supported'
+                        stop
+                        flowgrademeasure=flowgradegrad
+                      endif
+                      if (flowgrademeasure.gt.flowgradevalue(iflow)
+     &                 .and.level.lt.iflowgrademinlevel(iflow)) then
+                        amrflags(i,j)=DOFLAG
+                        go to 100 ! flagged, so no need to check anything else
+                      endif
+                    enddo ! end flowgrade loop
+
+                            endif ! end if coarse and fine cell overlap
+                          enddo ! endif fine cell loop ii
+                       enddo ! endif fine cell loop jj
+
+                    endif ! endif coarse cell overlaps fine grid
+                    mptr = node(levelptr, mptr)
+                    go to 70
+
+80               continue ! end of if mptr eq 0
+
+              endif ! (end level .lt. lfine)
+            endif ! (end if keep_fine)
+            ! end keep fine
+
 
             if (mflowgrades.eq.0) then !tsunami-type refinement
                shoreregion = dabs(aux(i,j,1)) .lt. depthdeep

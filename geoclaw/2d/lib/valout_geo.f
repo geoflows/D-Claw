@@ -4,7 +4,7 @@ c
       subroutine valout (lst, lend, time, nvar, naux)
 c
       use digclaw_module, only : rho_f,rho_s,mom_autostop,mom_perc
-      use digclaw_module, only: amidoneyet,globmaxmom
+      use digclaw_module, only: amidoneyet,globmaxmom,momlevel
       use digclaw_module, only: outaux
 
       implicit double precision (a-h,o-z)
@@ -91,17 +91,18 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
                endif
             enddo
             if (mom_autostop .eqv. .TRUE.) then
-              if (level .eq. lst ) then
-                ! calculate and add to momentum to get a level one momentum sum.
+              if (level .eq. momlevel ) then
+                ! calculate and add to momentum to get a momlevel momentum sum.
+
                 momh = alloc(iadd(i,j,1))
                 if (momh .gt. 0.0001) then ! if substantial thickness.
 
                   momvel = (  (alloc(iadd(i,j,2))/momh)**2.
      &                      + (alloc(iadd(i,j,3))/momh)**2.)**0.5
                   momm = alloc(iadd(i,j,4)) / momh
+
                   momrho = (rho_s * momm) + ((1.-momm) * rho_f)
-                  ! hard code values for sediment and fluid density, but
-                  ! better than nothing and prob approx right.
+
                   locmaxmom = locmaxmom ! momentum = (mass * velocity) = density * volume * velocity.
      &                        + (momh * hxposs(level) * hyposs(level)
      &                        * momrho * momvel)
@@ -136,16 +137,23 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
           ! calculate new momentum proportion.
           momprop = locmaxmom / globmaxmom
 
-          ! test if done condition is met.
-          if (momprop .le. mom_perc) then
-            amidoneyet = .True. ! assign amidoneyet as true if done.
+          if (time .gt. 60) then
+            ! test if done condition is met.
+            if (momprop .le. mom_perc) then
+              amidoneyet = .TRUE. ! assign amidoneyet as true if done.
+            endif
+
+            ! if absolute value of local momentum is very close to zero, then stop.
+            if (locmaxmom .le. 0.001) then ! add a full stop criterion.
+              amidoneyet = .TRUE.
+            endif
           endif
 
           ! write current status to the log.
-          write(6,112) momprop, locmaxmom, globmaxmom, time
+          write(6,112) momprop, locmaxmom, globmaxmom, time, momlevel
  112      format('GeoClaw: Current momentum proportion ', d12.6,
      &           ' ( ', d12.6 ' / ', d12.6,
-     &           ') at t = ', d12.6,/)
+     &           ') at t = ', d12.6, ' lev =',i2)
 
       endif
       ! end if mom_autostop

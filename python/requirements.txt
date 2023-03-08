@@ -3,3 +3,6 @@ scipy
 matplotlib
 rasterio
 scipy
+rioxarray
+xarray
+pyproj

@@ -8,6 +8,8 @@ c
 c     # Modified for GeoClaw to check whether the point lies in any of
 c     # the various regions specified in the data files.
 c
+c     # KRB modify 12/30/2023 to use overlap region istead of contain.
+c
 c     # This routine is called from routine flag2refine.
 c
 c     # If Richardson error estimates are used (if tol>0) then this routine
@@ -20,7 +22,8 @@ c     # is also called from errf1.
 
       implicit double precision (a-h,o-z)
 
-      include 'regions.i'
+      include 'regions.i' ! needed for hxposs
+      include 'call.i'
 
 c========================================================================
 
@@ -40,51 +43,85 @@ c          allowflag = .true.
 c          go to 900  !# no need to check anything else
 c          endif
 
+
+      x1 = x - 0.5*hxposs(level)
+      x2 = x + 0.5*hxposs(level)
+      y1 = y - 0.5*hxposs(level)
+      y2 = y + 0.5*hxposs(level)
+
       do m=1,mtopofiles
-     	if (level.lt.maxleveltopo(m)) then
-      	  if (x.gt.xlowtopo(m).and.x.lt.xhitopo(m) .and.
-     &	      y.gt.ylowtopo(m).and.y.lt.yhitopo(m) .and.
-     &	      t.gt.tlowtopo(m).and.t.lt.thitopo(m)) then
-     		  allowflag=.true.
-                  go to 900  !# no need to check anything else
-	  endif
-	endif
+       	if (level.lt.maxleveltopo(m)) then
+
+          xlow = xlowtopo(m)
+          xhi = xhitopo(m)
+          ylow = ylowtopo(m)
+          yhi = yhitopo(m)
+
+          if (x2.gt.xlow.and.x1.lt.xhi.and.
+     &        y2.gt.ylow.and.y1.lt.yhi.and.
+     &  	    t.gt.tlowtopo(m).and.t.lt.thitopo(m)) then
+            allowflag=.true.
+            go to 900  !# no need to check anything else
+      	  endif
+      	endif
       enddo
 
       do m=1,mregions
-     	if (level.lt.maxlevelregion(m)) then
-      	  if (x.gt.xlowregion(m).and.x.lt.xhiregion(m).and.
-     &	      y.gt.ylowregion(m).and.y.lt.yhiregion(m).and.
-     &	      t.ge.tlowregion(m).and.t.le.thiregion(m)) then
-     		  allowflag=.true.
-                  go to 900  !# no need to check anything else
-	  endif
-	endif
-       enddo
+       	if (level.lt.maxlevelregion(m)) then
+
+          xlow = xlowregion(m)
+          xhi = xhiregion(m)
+          ylow = ylowregion(m)
+          yhi = yhiregion(m)
+
+          if (x2.gt.xlow.and.x1.lt.xhi.and.
+     &        y2.gt.ylow.and.y1.lt.yhi.and.
+     &  	    t.ge.tlowregion(m).and.t.le.thiregion(m)) then
+            allowflag=.true.
+            go to 900  !# no need to check anything else
+          endif
+  	    endif
+      enddo
 
       do m=1,num_dtopo
-        if (x.gt.xlowdtopo(m).and.x.lt.xhidtopo(m).and.
-     &       y.gt.ylowdtopo(m).and.y.lt.yhidtopo(m).and.
-     &       t.ge.t0dtopo(m).and.t.le.tfdtopo(m)) then
-             if (level.lt.maxleveldtopo(m)) then
-                  allowflag=.true.
-                  go to 900  !# no need to check anything else
-                  endif
+        if (level.lt.maxleveldtopo(m)) then
+          xlow = xlowdtopo(m)
+          xhi = xhidtopo(m)
+          ylow = ylowdtopo(m)
+          yhi = yhidtopo(m)
+
+          if (x2.gt.xlow.and.x1.lt.xhi.and.
+     &      y2.gt.ylow.and.y1.lt.yhi.and.
+     &      t.ge.t0dtopo(m).and.t.le.tfdtopo(m)) then
+
+              allowflag=.true.
+              go to 900  !# no need to check anything else
+          endif
         endif
       enddo
 
       do m=1,mqinitfiles
-         if (abs(t).lt.1.d0) then
-            if (x.gt.xlowqinit(m).and.x.lt.xhiqinit(m).and.
-     &	     y.gt.ylowqinit(m).and.y.lt.yhiqinit(m)) then
-     		        if (level.lt.maxlevelqinit(m)) then
-                     allowflag=.true.
-                     go to 900  !# no need to check anything else
-                 endif
+        if (level.lt.maxlevelqinit(m)) then
+          if (abs(t).lt.1.d0) then
+            xlow = xlowqinit(m)
+            xhi = xhiqinit(m)
+            ylow = ylowqinit(m)
+            yhi = yhiqinit(m)
+
+            if (x2.gt.xlow.and.x1.lt.xhi.and.
+     &          y2.gt.ylow.and.y1.lt.yhi.and.
+     &          t.ge.t0dtopo(m).and.t.le.tfdtopo(m)) then
+
+              allowflag=.true.
+              go to 900  !# no need to check anything else
             endif
+          endif
          endif
       enddo
 
   900 continue
+!      if (level.gt.1) then
+!        write(*,*) "overlap", allowflag, level
+!      endif
       return
       end

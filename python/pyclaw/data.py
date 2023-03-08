@@ -53,7 +53,8 @@ _DIG_ATTRS = {
     "entrainment_rate": "rate of entrainment parameter 0-1",
     "mom_autostop": "flag for momentum autostop F = no autostop, T = autostop",
     "mom_perc": "percentage of max momentum for autostop, default is 0.05 (5%)",
-    "src_ftn_num_sr": "number of in-domain sources, if used the file 'sethydrographs.data' is required",
+    "momlevel": "level to do momentum calculation IF mom_autostop==True",
+    "src_ftn_num": "number of in-domain sources, if used the file 'sethydrographs.data' is required",
     "fric_offset_val": "start/stop friction offset (degrees). if this value is >0, then hysteretic friction is used (Rocha, Johnson, Gray, 2019)",
     "fric_star_val": "deep friction offset (degrees). only used when fric_offset_val > 0 (Rocha, Johnson, Gray, 2019)",
     "chi_init_val": "initial fraction of species 1, (#). Between 0-1.",
@@ -1387,6 +1388,8 @@ class GeoclawInputData(Data):
         self.add_attribute("icoriolis", 1)
         self.add_attribute("Rearth", 6367500.0)
         self.add_attribute("variable_dt_refinement_ratios", False)
+        self.add_attribute("keep_fine", False)
+
         # NEED TO CONTINUE!
 
     def write(self):
@@ -1538,7 +1541,7 @@ class GeoclawInputData(Data):
         data_write(file, self, "nregions")
         data_write(file, self, None)
         for regions in self.regions:
-            file.write(8 * "%g  " % tuple(regions) + "\n")
+            file.write(8 * "%.8g  " % tuple(regions) + "\n")
         file.close()
 
         print("Creating data file setflowgrades.data")
@@ -1549,6 +1552,7 @@ class GeoclawInputData(Data):
         data_write(file, self, None)
         for flowgrade in self.flowgrades:
             file.write(4 * "%g  " % tuple(flowgrade) + "\n")
+        data_write(file, self, "keep_fine")
         file.close()
 
 
@@ -1584,13 +1588,14 @@ class DigclawInputData(Data):
         self.add_attribute("entrainment_rate", 0.2, _DIG_ATTRS["entrainment_rate"])
         self.add_attribute("mom_autostop", False, _DIG_ATTRS["mom_autostop"])
         self.add_attribute("mom_perc", 0.05, _DIG_ATTRS["mom_perc"])
-        self.add_attribute("src_ftn_num_sr", 0, _DIG_ATTRS["src_ftn_num_sr"])
+        self.add_attribute("src_ftn_num", 0, _DIG_ATTRS["src_ftn_num"])
         self.add_attribute("fric_offset_val", 0.0, _DIG_ATTRS["fric_offset_val"])
         self.add_attribute("fric_star_val", 0.0, _DIG_ATTRS["fric_star_val"])
         self.add_attribute("chi_init_val", 0.0, _DIG_ATTRS["chi_init_val"])
         self.add_attribute("kappita_diff", 1.0, _DIG_ATTRS["kappita_diff"])
         self.add_attribute("outaux", False, _DIG_ATTRS["outaux"])
         self.add_attribute("curvature", 1, _DIG_ATTRS["curvature"])
+        self.add_attribute("momlevel", 1, _DIG_ATTRS["momlevel"])
 
         # self.add_attribute('m_crit2', 0.62, 'critical state value of m (#) for different size species')
         # self.add_attribute('rho_s2', 2700.0, 'solid grain density (kg/m^3) different size species')
@@ -1621,13 +1626,15 @@ class DigclawInputData(Data):
         data_write(file, self, "entrainment_rate", _DIG_ATTRS["entrainment_rate"])
         data_write(file, self, "mom_autostop", _DIG_ATTRS["mom_autostop"])
         data_write(file, self, "mom_perc", _DIG_ATTRS["mom_perc"])
-        data_write(file, self, "src_ftn_num_sr", _DIG_ATTRS["src_ftn_num_sr"])
+        data_write(file, self, "src_ftn_num", _DIG_ATTRS["src_ftn_num"])
         data_write(file, self, "fric_offset_val", _DIG_ATTRS["fric_offset_val"])
         data_write(file, self, "fric_star_val", _DIG_ATTRS["fric_star_val"])
         data_write(file, self, "chi_init_val", _DIG_ATTRS["chi_init_val"])
         data_write(file, self, "kappita_diff", _DIG_ATTRS["kappita_diff"])
         data_write(file, self, "outaux", _DIG_ATTRS["outaux"])
         data_write(file, self, "curvature", _DIG_ATTRS["curvature"])
+        data_write(file, self, "momlevel", _DIG_ATTRS["momlevel"])
+
 
         # data_write(file, self, 'm_crit2', 'critical state value of m (#) for different size species')
         # data_write(file, self, 'rho_s2', 'solid grain density (kg/m^3) different size species')

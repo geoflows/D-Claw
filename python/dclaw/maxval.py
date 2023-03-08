@@ -6,17 +6,17 @@ import fiona
 import numpy as np
 import rasterio
 import rasterio.transform
+import rioxarray  # activate the rio accessor
+import xarray as xr
+from fiona.crs import from_epsg
+from pyproj import CRS
 from rasterio import features
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
 from dclaw.fortconvert import convertfortdir, fort2list
-from dclaw.get_data import (
-    get_amr2ez_data,
-    get_dig_data,
-    get_region_data,
-    get_tsunami_data,
-)
+from dclaw.get_data import (get_amr2ez_data, get_dig_data, get_region_data,
+                            get_tsunami_data)
 from dclaw.max_extent import calc_max_extent
 
 
@@ -60,6 +60,14 @@ def main():
         nargs="?",
         help="Output maximum value file name. Placed in -wdir",
         default="maxval.tif",
+        type=str,
+    )
+    parser.add_argument(
+        "-ft",
+        "--outformat",
+        nargs="?",
+        help="Output format (netcdf or tif).",
+        default="tif",
         type=str,
     )
 
@@ -193,6 +201,7 @@ def output2maxval(
     odir="_output",
     gdir="_gridded_output",
     outfile="maxval.tif",
+    outformat="tif",
     check_done=True,
     num_cores=8,
     epsg=None,
@@ -209,6 +218,18 @@ def output2maxval(
     extent_shp_val_thresh=0.0,
     extent_shp_val_out_file="extent.shp",
 ):
+
+    if outformat == "tif":
+        output_extension = "tif"
+        fortconvert_format = "gtif"
+    elif outformat == "netcdf":
+        output_extension = "nc"
+        fortconvert_format = "netcdf"
+    else:
+        raise ValueError("Unsupported output format")
+
+    if output_extension not in outfile:
+        raise ValueError("Incompatible output format and output filename.")
 
     # do some checking with the region.
     amrdata = get_amr2ez_data(wdir, odir)
@@ -293,7 +314,9 @@ def output2maxval(
     # get all files.
     tfiles = np.sort(glob.glob(os.path.join(wdir, *[odir, "fort.t*"])))
     tfiles = [file for file in tfiles if "tck" not in file]  # remove checkpoint file.
-    ntifs = np.sort(glob.glob(os.path.join(wdir, *[gdir, "fort_q*.tif"])))
+    nout_files = np.sort(
+        glob.glob(os.path.join(wdir, *[gdir, "fort_q*." + output_extension]))
+    )
 
     nfiles = []
 
@@ -301,16 +324,17 @@ def output2maxval(
     for tfile in tfiles:
         file = tfile.replace("fort.t", "fort.q")
         numstr = os.path.basename(tfile)[6:]
-        tifname = os.path.join(
-            ".", *[os.path.join(wdir, gdir), "fort_q{}.tif".format(numstr)]
+        out_file_name = os.path.join(
+            ".",
+            *[os.path.join(wdir, gdir), "fort_q{}.{}".format(numstr, output_extension)]
         )
-        if os.path.exists(tifname) and check_done:
+        if os.path.exists(out_file_name) and check_done:
             mtime_fort = os.path.getmtime(file)
-            mtime_tif = os.path.getmtime(tifname)
+            mtime_tif = os.path.getmtime(out_file_name)
             if mtime_tif > mtime_fort:
                 process = False
                 try:
-                    with rasterio.open(tifname, "r"):
+                    with rasterio.open(out_file_name, "r"):
                         pass  # test this more?
                 except:
                     process = True
@@ -337,7 +361,7 @@ def output2maxval(
             fortdir=os.path.join(wdir, odir),
             parallel=True,
             num_cores=num_cores,
-            topotype="gtif",
+            topotype=fortconvert_format,  # gtif or netcdf.
             write_level=True,
             epsg=epsg,
             bilinear=bilinear,
@@ -358,6 +382,7 @@ def output2maxval(
         odir=odir,
         gdir=gdir,
         out_file=outfile,
+        outformat=outformat,
         overwrite_level=overwrite_level,
         write_froude=write_froude,
         epsg=epsg,
@@ -376,6 +401,7 @@ def dclaw2maxval_withlev(
     gdir="_gridded_output",
     nplots=None,
     out_file=None,
+    outformat="tif",
     rho_f=1000,
     rho_s=2700,
     epsg=None,
@@ -386,7 +412,16 @@ def dclaw2maxval_withlev(
     extent_shp_val_thresh=0.0,
     extent_shp_val_out_file=None,
 ):
+
+    if outformat == "tif":
+        output_extension = "tif"
+    elif outformat == "netcdf":
+        output_extension = "nc"
+    else:
+        raise ValueError("Unsupported output format")
+
     owr_level = overwrite_level
+
     # get drytol:
     tsudata = get_tsunami_data(wdir, odir)
     drytolerance = tsudata["drytolerance"]
@@ -401,7 +436,8 @@ def dclaw2maxval_withlev(
     owr_level = owr_level or maxlevel
     print("****** owr_level is ", owr_level)
 
-    out_file = out_file or os.path.join(wdir, "maxval.tif")
+    out_file = out_file or os.path.join(wdir, "maxval.{}".format(output_extension))
+
     extent_shp_val_out_file = extent_shp_val_out_file or os.path.join(
         wdir, "extent.shp"
     )
@@ -409,17 +445,25 @@ def dclaw2maxval_withlev(
     # loop through fortq files and add:
 
     if epsg is not None:
-        crs = rasterio.crs.CRS.from_epsg(epsg)
+        crs = from_epsg(CRS.from_user_input(epsg).to_epsg())
     else:
         crs = None
 
-    files = np.sort(glob.glob(os.path.join(wdir, gdir, "*.tif")))
+    search_str = os.path.join(wdir, gdir, "*.{}".format(output_extension))
+    files = np.sort(glob.glob(search_str))
+
     if len(files) == 0:
         raise ValueError("no files")
 
     # Read them all in.
-    with rasterio.open(files[0], "r") as src:
-        dims = (src.meta["height"], src.meta["width"])
+
+    if outformat == "tif":
+        with rasterio.open(files[0], "r") as src:
+            dims = (src.meta["height"], src.meta["width"])
+
+    if outformat == "netcdf":
+        ds = xr.open_mfdataset(files)
+        dims = (ds.y.size, ds.x.size)
 
     # constants.
     hmin_fill = 99999.0
@@ -461,208 +505,222 @@ def dclaw2maxval_withlev(
     # if present, its equal to the largest level seen.
     h_level_masked = np.zeros(dims, dtype=int)
 
-    for file in files:
-        fortt = file[:-4].replace("fort_q", "fort.t")
-        # print(file)
-        frameno = int(file[-8:-4])
+    for fidx, file in enumerate(files):
+
+        if outformat == "tif":
+            fortt = file[:-4].replace("fort_q", "fort.t")
+            frameno = int(file[-8:-4])
+        if outformat == "netcdf":
+            frameno = int(file[-7:-3])
+            fortt = file[:-3].replace("fort_q", "fort.t")
 
         calc = True
+
         if nplots is not None:
             if frameno not in nplots:
                 calc = False
+
         if calc:
-            # print(file[-8:-4], frameno)
             with open(fortt, "r") as f:
                 lines = f.readlines()
             time = float(lines[0].split()[0])
-            with rasterio.open(file, "r") as src:
-                profile = src.profile
-                transform = src.transform
+            if outformat == "tif":
+                with rasterio.open(file, "r") as src:
+                    profile = src.profile
+                    transform = src.transform
 
-                dx = transform[0]
+                    dx = transform[0]
+                    h = src.read(1)
+                    hu = src.read(2)
+                    hv = src.read(3)
+                    hm = src.read(4)
+                    eta = src.read(8)
+                    level = src.read(9)
 
-                h = src.read(1)
-                hu = src.read(2)
-                hv = src.read(3)
-                hm = src.read(4)
-                eta = src.read(8)
-                level = src.read(9)
+            if outformat == "netcdf":
+                h = ds.h[fidx, :, :].to_numpy()
+                hu = ds.hu[fidx, :, :].to_numpy()
+                hv = ds.hv[fidx, :, :].to_numpy()
+                hm = ds.hm[fidx, :, :].to_numpy()
+                eta = ds.eta[fidx, :, :].to_numpy()
+                level = ds.AMR_level[fidx, :, :].to_numpy()
 
-                with np.errstate(divide="ignore", invalid="ignore"):
-                    m = hm / h
-                    m[np.isnan(m)] = 0
-                    vel = ((hu / h) ** 2 + (hv / h) ** 2) ** 0.5
-                    vel[np.isnan(vel)] = 0
+                dx = ds.x.to_numpy()[1] - ds.x.to_numpy()[0]
 
-                    fr = vel / np.sqrt(9.81 * h)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                m = hm / h
+                m[np.isnan(m)] = 0
+                vel = ((hu / h) ** 2 + (hv / h) ** 2) ** 0.5
+                vel[np.isnan(vel)] = 0
 
-                density = (1.0 - m) * rho_f + (m * rho_s)
-                mom = (h * dx * dx) * density * vel
+                fr = vel / np.sqrt(9.81 * h)
 
-                # May 12, 2022, maxval algorithm updated in light of issues
-                # identified using tsunami-style refinement. That is, late in
-                # a simulation, after the wave has passed, a cell might get
-                # refined to the highest (shoreline) level, but only because it
-                # was needed to make an efficient bounding box around the
-                # flagged cells. This meant that there were cells in just-deeper
-                # that shoreline water which would get set to maximum eta values
-                # of zero only because the refinement level went from second
-                # highest to highest.
-                # this issue was addressed in the following way.
-                #   creation of an overwrite_level input, to permit a user to
-                #   indicate that any level greater than or equal to this level
-                #   should be considered equivalent in the eyes of the maxval
-                #   algorithm. That is, it is only when the refinement level
-                #   trips over the boundary between less than overwrite_level
-                #   and geq overwrite level THE FIRST TIME that increasing the
-                #   triggers resetting the maximum value to the the current
-                #   value.
+            density = (1.0 - m) * rho_f + (m * rho_s)
+            mom = (h * dx * dx) * density * vel
 
-                # keep track of where level increased and max level.
-                level_increased = level > lev_max
-                lev_max[level_increased] = level[level_increased]
+            # May 12, 2022, maxval algorithm updated in light of issues
+            # identified using tsunami-style refinement. That is, late in
+            # a simulation, after the wave has passed, a cell might get
+            # refined to the highest (shoreline) level, but only because it
+            # was needed to make an efficient bounding box around the
+            # flagged cells. This meant that there were cells in just-deeper
+            # that shoreline water which would get set to maximum eta values
+            # of zero only because the refinement level went from second
+            # highest to highest.
+            # this issue was addressed in the following way.
+            #   creation of an overwrite_level input, to permit a user to
+            #   indicate that any level greater than or equal to this level
+            #   should be considered equivalent in the eyes of the maxval
+            #   algorithm. That is, it is only when the refinement level
+            #   trips over the boundary between less than overwrite_level
+            #   and geq overwrite level THE FIRST TIME that increasing the
+            #   triggers resetting the maximum value to the the current
+            #   value.
 
-                # determine where h is located at this timestep.
-                h_present = h > drytolerance
+            # keep track of where level increased and max level.
+            level_increased = level > lev_max
+            lev_max[level_increased] = level[level_increased]
 
-                # determine where h is present and the level was refined to
-                # a higher level.
-                h_present_and_level_higher = h_present & (level > h_level_masked)
+            # determine where h is located at this timestep.
+            h_present = h > drytolerance
 
-                # determine where refinement resulted in a cell becoming dry
-                # because we use level>h_level_masked this should only occur
-                # the first time the cell refines to the next highest level.
-                refined_to_dry = (h_present == False) & (level > h_level_masked)
+            # determine where h is present and the level was refined to
+            # a higher level.
+            h_present_and_level_higher = h_present & (level > h_level_masked)
 
-                # set values of h, hmin, m, eta, vel, froude to nodata or
-                # zero where refined to dry occured.
-                eta_max[refined_to_dry] = nodata
-                h_max[refined_to_dry] = 0
-                h_min[refined_to_dry] = hmin_fill
-                m_max[refined_to_dry] = 0
-                vel_max[refined_to_dry] = 0
-                mom_max[refined_to_dry] = 0
-                fr_max[refined_to_dry] = 0
-                arrival_time[refined_to_dry] = time_fill
-                eta_max_time[refined_to_dry] = time_fill
-                vel_max_time[refined_to_dry] = time_fill
+            # determine where refinement resulted in a cell becoming dry
+            # because we use level>h_level_masked this should only occur
+            # the first time the cell refines to the next highest level.
+            refined_to_dry = (h_present == False) & (level > h_level_masked)
 
-                # if refinement is to sea-level, eta, hmax, and hmin should be
-                # reset. this implies incoming refinement.
-                # set values of h, hmin to sea level (or current value)
-                refined_to_sea_level = (eta == sealevel) & (level > h_level_masked)
+            # set values of h, hmin, m, eta, vel, froude to nodata or
+            # zero where refined to dry occured.
+            eta_max[refined_to_dry] = nodata
+            h_max[refined_to_dry] = 0
+            h_min[refined_to_dry] = hmin_fill
+            m_max[refined_to_dry] = 0
+            vel_max[refined_to_dry] = 0
+            mom_max[refined_to_dry] = 0
+            fr_max[refined_to_dry] = 0
+            arrival_time[refined_to_dry] = time_fill
+            eta_max_time[refined_to_dry] = time_fill
+            vel_max_time[refined_to_dry] = time_fill
 
-                eta_max[refined_to_sea_level] = sealevel
-                h_max[refined_to_sea_level] = h[refined_to_sea_level]
-                h_min[refined_to_sea_level] = h[refined_to_sea_level]
-                arrival_time[refined_to_sea_level] = time_fill
-                eta_max_time[refined_to_sea_level] = time_fill
-                vel_max_time[refined_to_sea_level] = time_fill
+            # if refinement is to sea-level, eta, hmax, and hmin should be
+            # reset. this implies incoming refinement.
+            # set values of h, hmin to sea level (or current value)
+            refined_to_sea_level = (eta == sealevel) & (level > h_level_masked)
 
-                # use definition of a wave defined in tsunami refinement.
-                # reset wave based on
-                wave_now = (np.abs(eta - sealevel) > wavetolerance) & h_present
-                wave_all[wave_now] = True
+            eta_max[refined_to_sea_level] = sealevel
+            h_max[refined_to_sea_level] = h[refined_to_sea_level]
+            h_min[refined_to_sea_level] = h[refined_to_sea_level]
+            arrival_time[refined_to_sea_level] = time_fill
+            eta_max_time[refined_to_sea_level] = time_fill
+            vel_max_time[refined_to_sea_level] = time_fill
 
-                # reset where refined to dry or sea level.
-                wave_all[refined_to_sea_level] = False
-                wave_all[refined_to_dry] = False
+            # use definition of a wave defined in tsunami refinement.
+            # reset wave based on
+            wave_now = (np.abs(eta - sealevel) > wavetolerance) & h_present
+            wave_all[wave_now] = True
 
-                # determine if it is the first time greater than the overwrite
-                # level (and h_present)
-                geq_ovr = lev_max >= owr_level
-                first_time_owr = (
-                    geq_ovr & (first_geq_owr == False) & h_present & wave_now
-                )
-                first_geq_owr[first_time_owr] = True
+            # reset where refined to dry or sea level.
+            wave_all[refined_to_sea_level] = False
+            wave_all[refined_to_dry] = False
 
-                # update h_level_masked
-                h_level_masked[h_present_and_level_higher] = level[
-                    h_present_and_level_higher
-                ]
+            # determine if it is the first time greater than the overwrite
+            # level (and h_present)
+            geq_ovr = lev_max >= owr_level
+            first_time_owr = geq_ovr & (first_geq_owr == False) & h_present & wave_now
+            first_geq_owr[first_time_owr] = True
 
-                # set values of h, hmin, m, eta, vel, froude to value the first time
-                # overwrite.
-                eta_max[first_time_owr] = eta[first_time_owr]
-                h_max[first_time_owr] = h[first_time_owr]
-                h_min[first_time_owr] = h[first_time_owr]
-                m_max[first_time_owr] = m[first_time_owr]
-                vel_max[first_time_owr] = vel[first_time_owr]
-                mom_max[first_time_owr] = mom[first_time_owr]
-                fr_max[first_time_owr] = fr[first_time_owr]
+            # update h_level_masked
+            h_level_masked[h_present_and_level_higher] = level[
+                h_present_and_level_higher
+            ]
 
-                # determine whether to update. condition is:
-                #    level greater than or equal to the overwrite level and
-                #    value greater than existing value
-                # OR
-                #    first time greater than the overwrite level.
-                #
-                update_eta_max = (level >= eta_owr_lev) & (eta > eta_max) & wave_now
-                update_h_max = (level >= h_owr_lev) & (h > h_max) & wave_now
-                update_h_min = (level >= h_min_owr_lev) & (h < h_min) & wave_now
-                update_m = (level >= m_owr_lev) & (m > m_max) & wave_now
-                update_vel = (level >= vel_owr_lev) & (vel > vel_max) & wave_now
-                update_mom = (level >= mom_owr_lev) & (mom > mom_max) & wave_now
-                update_fr = (level >= fr_owr_lev) & (fr > fr_max) & wave_now
+            # set values of h, hmin, m, eta, vel, froude to value the first time
+            # overwrite.
+            eta_max[first_time_owr] = eta[first_time_owr]
+            h_max[first_time_owr] = h[first_time_owr]
+            h_min[first_time_owr] = h[first_time_owr]
+            m_max[first_time_owr] = m[first_time_owr]
+            vel_max[first_time_owr] = vel[first_time_owr]
+            mom_max[first_time_owr] = mom[first_time_owr]
+            fr_max[first_time_owr] = fr[first_time_owr]
 
-                # ensure owr_level arrays do not exceed owr_level
-                # first update to level seen,
-                eta_owr_lev[update_eta_max] = level[update_eta_max]
-                h_owr_lev[update_h_max] = level[update_h_max]
-                h_min_owr_lev[update_h_min] = level[update_h_min]
-                m_owr_lev[update_m] = level[update_m]
-                vel_owr_lev[update_vel] = level[update_vel]
-                mom_owr_lev[update_mom] = level[update_mom]
-                fr_owr_lev[update_fr] = level[update_fr]
+            # determine whether to update. condition is:
+            #    level greater than or equal to the overwrite level and
+            #    value greater than existing value
+            # OR
+            #    first time greater than the overwrite level.
+            #
+            update_eta_max = (level >= eta_owr_lev) & (eta > eta_max) & wave_now
+            update_h_max = (level >= h_owr_lev) & (h > h_max) & wave_now
+            update_h_min = (level >= h_min_owr_lev) & (h < h_min) & wave_now
+            update_m = (level >= m_owr_lev) & (m > m_max) & wave_now
+            update_vel = (level >= vel_owr_lev) & (vel > vel_max) & wave_now
+            update_mom = (level >= mom_owr_lev) & (mom > mom_max) & wave_now
+            update_fr = (level >= fr_owr_lev) & (fr > fr_max) & wave_now
 
-                # second, ensure it doesn't exceed the owr level.
-                eta_owr_lev[eta_owr_lev > owr_level] = owr_level
-                h_owr_lev[h_owr_lev > owr_level] = owr_level
-                h_min_owr_lev[h_min_owr_lev > owr_level] = owr_level
-                m_owr_lev[m_owr_lev > owr_level] = owr_level
-                vel_owr_lev[vel_owr_lev > owr_level] = owr_level
-                mom_owr_lev[mom_owr_lev > owr_level] = owr_level
-                fr_owr_lev[fr_owr_lev > owr_level] = owr_level
+            # ensure owr_level arrays do not exceed owr_level
+            # first update to level seen,
+            eta_owr_lev[update_eta_max] = level[update_eta_max]
+            h_owr_lev[update_h_max] = level[update_h_max]
+            h_min_owr_lev[update_h_min] = level[update_h_min]
+            m_owr_lev[update_m] = level[update_m]
+            vel_owr_lev[update_vel] = level[update_vel]
+            mom_owr_lev[update_mom] = level[update_mom]
+            fr_owr_lev[update_fr] = level[update_fr]
 
-                # update max values.
-                eta_max[update_eta_max] = eta[update_eta_max]
-                h_max[update_h_max] = h[update_h_max]
-                h_min[update_h_min] = h[update_h_min]
-                m_max[update_m] = m[update_m]
-                vel_max[update_vel] = vel[update_vel]
-                mom_max[update_mom] = mom[update_mom]
-                fr_max[update_fr] = fr[update_fr]
+            # second, ensure it doesn't exceed the owr level.
+            eta_owr_lev[eta_owr_lev > owr_level] = owr_level
+            h_owr_lev[h_owr_lev > owr_level] = owr_level
+            h_min_owr_lev[h_min_owr_lev > owr_level] = owr_level
+            m_owr_lev[m_owr_lev > owr_level] = owr_level
+            vel_owr_lev[vel_owr_lev > owr_level] = owr_level
+            mom_owr_lev[mom_owr_lev > owr_level] = owr_level
+            fr_owr_lev[fr_owr_lev > owr_level] = owr_level
 
-                # update arrival time,
-                # set arrival time to the first timestep that has eta>0.01 and highest level seen.
-                # here
-                owr_arrival = (
-                    (np.abs(eta - sealevel) > wavetolerance)
-                    & (arrival_time < 0)
-                    & (level > arrival_lev)
-                    & h_present
-                )
-                arrival_lev[owr_arrival] = level[owr_arrival]
-                arrival_time[owr_arrival] = time
+            # update max values.
+            eta_max[update_eta_max] = eta[update_eta_max]
+            h_max[update_h_max] = h[update_h_max]
+            h_min[update_h_min] = h[update_h_min]
+            m_max[update_m] = m[update_m]
+            vel_max[update_vel] = vel[update_vel]
+            mom_max[update_mom] = mom[update_mom]
+            fr_max[update_fr] = fr[update_fr]
 
-                # set other times to arrival time, to indicate the wave has
-                # arrived there and thus its valid to set a max.
-                eta_max_time[owr_arrival] = time
-                vel_max_time[owr_arrival] = time
+            # update arrival time,
+            # set arrival time to the first timestep that has eta>0.01 and highest level seen.
+            # here
+            owr_arrival = (
+                (np.abs(eta - sealevel) > wavetolerance)
+                & (arrival_time < 0)
+                & (level > arrival_lev)
+                & h_present
+            )
+            arrival_lev[owr_arrival] = level[owr_arrival]
+            arrival_time[owr_arrival] = time
 
-                # we want the first peak
-                not_super_late = ((time - eta_max_time) < (1 * 60)) & (
-                    arrival_time >= 0
-                )
-                # use 10 minutes
-                # presuming time has been set.
-                # presuming the arrival time has passed.
-                # and presuming that this timestep eta gets updated.
-                update_eta_time = update_eta_max & not_super_late
-                update_vel_time = update_vel & not_super_late
+            # set other times to arrival time, to indicate the wave has
+            # arrived there and thus its valid to set a max.
+            eta_max_time[owr_arrival] = time
+            vel_max_time[owr_arrival] = time
 
-                eta_max_time[update_eta_time] = time
-                vel_max_time[update_vel_time] = time
+            # we want the first peak
+            not_super_late = ((time - eta_max_time) < (1 * 60)) & (arrival_time >= 0)
+            # use 10 minutes
+            # presuming time has been set.
+            # presuming the arrival time has passed.
+            # and presuming that this timestep eta gets updated.
+            update_eta_time = update_eta_max & not_super_late
+            update_vel_time = update_vel & not_super_late
+
+            eta_max_time[update_eta_time] = time
+            vel_max_time[update_vel_time] = time
+
+    if outformat == "netcdf":
+        ds.close()
 
     never_inundated = h_max < drytolerance
     never_wave = wave_all == False
@@ -692,28 +750,140 @@ def dclaw2maxval_withlev(
     # calculate output bands and write out as .tif
     # this is also where we figure out time of h max and time of vel max.
 
-    out_profile = profile
-    out_profile["height"], out_profile["width"] = m_max.shape
-    out_profile["dtype"] = "float32"
-    out_profile["count"] = 10
-    out_profile["transform"] = transform
-    out_profile["nodata"] = nodata
+    if outformat == "tif":
+        out_profile = profile
+        out_profile["height"], out_profile["width"] = m_max.shape
+        out_profile["dtype"] = "float32"
+        out_profile["count"] = 10
+        out_profile["transform"] = transform
+        out_profile["nodata"] = nodata
 
-    if write_froude:
-        out_profile["count"] = 11
-    with rasterio.open(out_file, "w", **out_profile) as dst:
-        dst.write(h_max, 1)
-        dst.write(vel_max, 2)
-        dst.write(mom_max, 3)
-        dst.write(m_max, 4)
-        dst.write(eta_max_time, 5)
-        dst.write(vel_max_time, 6)
-        dst.write(eta_max, 7)
-        dst.write(lev_max, 8)
-        dst.write(arrival_time, 9)
-        dst.write(h_min, 10)
         if write_froude:
-            dst.write(fr, 11)
+            out_profile["count"] = 11
+        with rasterio.open(out_file, "w", **out_profile) as dst:
+            dst.write(h_max, 1)
+            dst.write(vel_max, 2)
+            dst.write(mom_max, 3)
+            dst.write(m_max, 4)
+            dst.write(eta_max_time, 5)
+            dst.write(vel_max_time, 6)
+            dst.write(eta_max, 7)
+            dst.write(lev_max, 8)
+            dst.write(arrival_time, 9)
+            dst.write(h_min, 10)
+            if write_froude:
+                dst.write(fr, 11)
+
+    if outformat == "netcdf":
+        ds_attrs = {"description": "D-Claw model output"}
+        data_vars = {
+            "h_max": (
+                [
+                    "y",
+                    "x",
+                ],
+                h_max,
+                {"units": "meters", "_FillValue": nodata},
+            ),
+            "vel_max": (
+                [
+                    "y",
+                    "x",
+                ],
+                vel_max,
+                {"units": "meters per second", "_FillValue": nodata},
+            ),
+            "mom_max": (
+                [
+                    "y",
+                    "x",
+                ],
+                mom_max,
+                {"units": "kilogram meter per second", "_FillValue": nodata},
+            ),
+            "m_max": (
+                [
+                    "y",
+                    "x",
+                ],
+                m_max,
+                {},
+            ),
+            "eta_max_time": (
+                [
+                    "y",
+                    "x",
+                ],
+                eta_max_time,
+                {"units": "seconds", "_FillValue": nodata},
+            ),
+            "vel_max_time": (
+                [
+                    "y",
+                    "x",
+                ],
+                vel_max_time,
+                {"units": "seconds", "_FillValue": nodata},
+            ),
+            "eta_max": (
+                [
+                    "y",
+                    "x",
+                ],
+                eta_max,
+                {"units": "meters", "_FillValue": nodata},
+            ),
+            "lev_max": (
+                [
+                    "y",
+                    "x",
+                ],
+                lev_max,
+                {"units": "None", "_FillValue": nodata},
+            ),
+            "arrival_time": (
+                [
+                    "y",
+                    "x",
+                ],
+                arrival_time,
+                {"units": "seconds", "_FillValue": nodata},
+            ),
+            "h_min": (
+                [
+                    "y",
+                    "x",
+                ],
+                h_min,
+                {"units": "meters", "_FillValue": nodata},
+            ),
+        }
+        if write_froude:
+            data_vars["froude"] = (
+                (
+                    [
+                        "y",
+                        "x",
+                    ],
+                    fr,
+                    {"units": "None", "_FillValue": nodata},
+                ),
+            )
+
+        ds_out = xr.Dataset(
+            data_vars=data_vars,
+            coords=dict(
+                x=(["x"], ds.x.values, {"units": "meters"}),
+                y=(["y"], ds.y.values, {"units": "meters"}),
+            ),
+            attrs=ds_attrs,
+        )
+
+        if epsg is not None:
+            ds_out.rio.write_crs(epsg, inplace=True)
+            # print(ds.spatial_ref)
+        # print(ds)
+        ds_out.to_netcdf(out_file)
 
     if extent_shp:
         if extent_shp_val == "height":
@@ -722,7 +892,11 @@ def dclaw2maxval_withlev(
             extent = mom_max > extent_shp_val_thresh
         if extent_shp_val == "velocity":
             extent = vel_max > extent_shp_val_thresh
-        transform = out_profile["transform"]
+
+        if outformat == "netcdf":
+            transform = ds.rio.transform()
+        elif outformat == "tif":
+            transform = out_profile["transform"]
         geoms = []
         for i, (s, v) in enumerate(
             features.shapes(extent.astype(np.int16), mask=extent, transform=transform)
@@ -733,6 +907,7 @@ def dclaw2maxval_withlev(
         out_shp = unary_union(geoms).buffer(0)
 
         assert out_shp.is_valid == True
+
         with fiona.open(
             extent_shp_val_out_file,
             "w",

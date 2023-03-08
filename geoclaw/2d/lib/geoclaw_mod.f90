@@ -26,6 +26,7 @@ module geoclaw_module
     integer, parameter :: GEO_PARM_UNIT = 78
     logical            :: varRefTime = .FALSE.
 
+
     ! ========================================================================
     !  Flow grades flagging support
     ! ========================================================================
@@ -34,6 +35,7 @@ module geoclaw_module
     integer, allocatable :: iflowgradevariable(:), iflowgradetype(:)
     integer, allocatable :: iflowgrademinlevel(:)
     integer :: mflowgrades
+    logical :: keep_fine
 
 contains
 
@@ -232,6 +234,8 @@ contains
                 iflowgradetype(i),iflowgrademinlevel(i)
         enddo
 
+        read(iunit,*) keep_fine
+
         close(iunit)
 
         write(GEO_PARM_UNIT,*) '   mflowgrades:',  mflowgrades
@@ -241,6 +245,7 @@ contains
                 iflowgradevariable(i),iflowgradetype(i),iflowgrademinlevel(i)
 
         enddo
+        write(GEO_PARM_UNIT,*) '   keep_fine:',  keep_fine
 
     end subroutine set_flow_grades
 
