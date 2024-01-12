@@ -47,6 +47,7 @@ c
 
       !local
       integer m,i,mw,maxiter,mhu,nhv,mcapa,icom,jcom,waves
+      integer xxx, mmw
       double precision dtcom,dxcom,dycom,tcom
       double precision wall(3),fw(6,3),sw(3),wave(6,3)
       double precision lamL(3),lamR(3),beta(3)
@@ -287,11 +288,18 @@ c         call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
 c     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
 c     &         kappa,rho,kperm,compress,tanpsi,D,tau,
 c     &         theta,gamma,eps,dx,sw,fw,wave)
+         if (ixy.eq.2.and.i.ge.290.and.i.le.294) then 
+            write(58,799) i,hL,hR,huL,huR,hvL,hvR,hmL,hmR,
+     &                    pL,pR,bL,bR,uL,uR,vL,vR,mL,mR
+ 799        format(1i5, 18e10.3)
+         endif 
 
          call riemann_dig2_aug_sswave_ez(ixy,6,3,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
      &         taudirL,taudirR,chiL,chiR,fsL,fsR)
+
+
 
 
 c         call riemann_aug_JCP(1,3,3,hL,hR,huL,
@@ -310,61 +318,6 @@ c        !eliminate ghost fluxes for wall
             enddo
          enddo
 
-         !Entropy correction (Harten-Hyman) for nonlinear waves---------
-c         if (entropycorr1.and.entropycorr2.and.(.not.drystate)) then
-c            h1M =  max(hL  + wave(1,1),0.d0)
-c            h2M =  max(hR  - wave(1,3),0.d0)
-c            hu1M = huL + wave(2,1)
-c            hu2M = huR - wave(2,3)
-c            if (h1M.gt.drytol) then
-c               u1M = hu1M/h1M
-c            else
-c               u1M = 0.d0
-c            endif
-c            if (h2M.gt.drytol) then
-c               u2M = hu2M/h2M
-c            else
-c               u2M = 0.d0
-c            endif
-            !s1M = u1M - sqrt(gmod*h1M*eps)
-            !s2M = u2M + sqrt(gmod*h2M*eps)
-
-c            heL = max(hL + bL - max(bL,bR),0.d0)
-c            heR = max(hR + bR - max(bL,bR),0.d0)
-
-c            call riemanntype(heL,heR,uL,uR,hstar,s1M,s2M,
-c     &                                 rare1,rare2,1,drytol,g)
-
-c            if (sL.lt.-0.5d0*veltol.and.s1M.gt.0.5d0*veltol) then
-c               entropy(1) = .true.
-c               beta(1) = max(0.d0,s1M-sw(1))/(s1M - sL)
-c               lamL(1) = sL
-c               lamR(1) = s1M
-c               do m=1,meqn
-c                  fw(m,1) = fw(m,1)/sw(1)
-c               enddo
-c            endif
-c            if (sR.gt.0.5d0*veltol.and.s2M.lt.-0.5d0*veltol) then
-c               entropy(3) = .true.
-c               beta(3) = max(0.d0,sR-sw(3))/(sR - s2M)
-c               lamL(3) = s2M
-c               lamR(3) = sR
-c               do m=1,meqn
-c                  fw(m,3) = fw(m,3)/sw(3)
-c               enddo
-c            endif
-c         endif
-
-c=======================================================================
-c         do mw=1,mwaves
-c            s(i,mw)=sw(mw)
-c            fwave(i,1,mw)=fw(1,mw)
-c            fwave(i,mhu,mw)=fw(2,mw)
-c            fwave(i,nhv,mw)=fw(3,mw)
-c            fwave(i,4,mw) = fw(4,mw)
-c            fwave(i,5,mw) = fw(5,mw)
-c         enddo
-
 c============segregation================================================
 
          s(i,1) = sw(1)
@@ -372,6 +325,16 @@ c============segregation================================================
          s(i,3) = sw(2)
          s(i,4) = sw(2)
          s(i,5) = sw(3)
+
+         if (ixy.eq.2.and.i.ge.290.and.i.le.294) then 
+            do mmw = 1,3
+               write(58,699) i, mmw, (fw(xxx,mmw), xxx = 1,6)
+ 699           format(2i5, 6e15.7)
+            enddo 
+         endif 
+
+
+
 
          fwave(i,1,1) =   fw(1,1)
          fwave(i,mhu,1) = fw(2,1)
@@ -390,23 +353,23 @@ c============segregation================================================
          fwave(i,1,2) =   fw(1,2)
          fwave(i,mhu,2) = fw(2,2)
          fwave(i,nhv,2) = fw(3,2)
-         fwave(i,4,2)   = 0.0
-         fwave(i,5,2) =  0.0
+         fwave(i,4,2)   = 0.0d0
+         fwave(i,5,2) =  0.0d0
          fwave(i,6,2) = fw(6,2)
 
-         fwave(i,1,3) =   0.0
-         fwave(i,mhu,3) = 0.0
-         fwave(i,nhv,3) = 0.0
+         fwave(i,1,3) =   0.0d0
+         fwave(i,mhu,3) = 0.0d0
+         fwave(i,nhv,3) = 0.0d0
          fwave(i,4,3)   = fw(4,2)
-         fwave(i,5,3) =  0.0
-         fwave(i,6,3) =  0.0
+         fwave(i,5,3) =  0.0d0
+         fwave(i,6,3) =  0.0d0
 
-         fwave(i,1,4) =   0.0
-         fwave(i,mhu,4) = 0.0
-         fwave(i,nhv,4) = 0.0
-         fwave(i,4,4)   = 0.0
+         fwave(i,1,4) =   0.0d0
+         fwave(i,mhu,4) = 0.0d0
+         fwave(i,nhv,4) = 0.0d0
+         fwave(i,4,4)   = 0.0d0
          fwave(i,5,4) =  fw(5,2)
-         fwave(i,6,4) =  0.0
+         fwave(i,6,4) =  0.0d0
 
 
 c==========Capacity for mapping from latitude longitude to physical space====
@@ -450,6 +413,15 @@ c     &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
                endif
             enddo
          enddo
+
+         if (ixy.eq.2.and.i.ge.290.and.i.le.297) then 
+            do m=1,meqn  
+               do  mw=1,mwaves
+                  write(57, 599) i, m, mw, fwave(i,m,mw)
+ 599              format(3i5, 1e15.7)
+               enddo
+            enddo 
+         endif 
 
       enddo !-- end loop on i
 

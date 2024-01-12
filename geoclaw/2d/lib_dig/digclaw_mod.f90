@@ -487,7 +487,7 @@ contains
       ! RPJ reduced tau_solid by m/mcrit to reflect the loss of granular friction for low values of m.
       ! this regularization may be improved.
 
-      tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))
+      tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))*((tanh(100.0*(m-0.05))+1.0)*0.5)
 
       ! viscosity (depth averaged is vh^(1/2)/2)
       ! in Rocha, Johnson, and Gray, they calculate viscosity.
