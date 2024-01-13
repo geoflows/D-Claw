@@ -127,6 +127,15 @@ c        !set normal direction
             taudirL = auxr(i-1,i_taudir_y)
          endif
 
+         if (ixy.eq.2 .and. .false.) then
+            write(58,*) ""
+            write(58,*) " %%%%%% start of rpn2"
+            write(58,*) "i = ", i
+            write(58, 499) taudirR
+            write(58, 499) taudirL ! +++++++ dig krbdebug: here to make comparable
+ 499        format(8e15.7)        
+         endif
+
          fsL = auxr(i-1,i_fsphi)
          fsR = auxl(i,i_fsphi)
 
@@ -288,16 +297,24 @@ c         call riemann_dig2_aug_sswave(ixy,meqn,mwaves,hL,hR,huL,huR,
 c     &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
 c     &         kappa,rho,kperm,compress,tanpsi,D,tau,
 c     &         theta,gamma,eps,dx,sw,fw,wave)
-         if (ixy.eq.2.and.i.ge.290.and.i.le.294) then 
-            write(58,799) i,hL,hR,huL,huR,hvL,hvR,hmL,hmR,
-     &                    pL,pR,bL,bR,uL,uR,vL,vR,mL,mR
- 799        format(1i5, 18e10.3)
+         if (ixy.eq.2.and.i.ge.290.and.i.le.294.and..false.) then 
+            write(58,*) ""
+            write(58,*) "+++++ state going into sswave ez"
+            write(58,799) i
+            write(58,899) hL,hR,huL,huR,hvL,hvR
+            write(58,899) hmL,hmR,pL,pR,bL,bR
+            write(58,899) uL,uR,vL,vR,mL,mR
+            write(58,899) thetaL,thetaR,phi_bedL,phi_bedR
+            write(58,899) chiL,chiR,fsL,fsR
+            !write(58,899) dx, taudirL,taudirR
+ 799        format("i = ",1i5)
+ 899        format(6e10.3)
          endif 
 
          call riemann_dig2_aug_sswave_ez(ixy,6,3,hL,hR,huL,huR,
      &         hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phi_bedL,phi_bedR,dx,sw,fw,wave,wallprob,
-     &         taudirL,taudirR,chiL,chiR,fsL,fsR)
+     &         taudirL,taudirR,chiL,chiR,fsL,fsR,i)
 
 
 
@@ -326,7 +343,9 @@ c============segregation================================================
          s(i,4) = sw(2)
          s(i,5) = sw(3)
 
-         if (ixy.eq.2.and.i.ge.290.and.i.le.294) then 
+         if (ixy.eq.2.and.i.ge.290.and.i.le.294.and. .false.) then 
+            write(58,*) ""
+            write(58,*) "+++++ i, mmw, fw() after r ez"
             do mmw = 1,3
                write(58,699) i, mmw, (fw(xxx,mmw), xxx = 1,6)
  699           format(2i5, 6e15.7)
@@ -414,7 +433,7 @@ c     &              (1.d0-beta(mw))*lamR(mw)*fwave(i,m,mw)
             enddo
          enddo
 
-         if (ixy.eq.2.and.i.ge.290.and.i.le.297) then 
+         if (ixy.eq.2.and.i.ge.290.and.i.le.297.and. .false.) then 
             do m=1,meqn  
                do  mw=1,mwaves
                   write(57, 599) i, m, mw, fwave(i,m,mw)

@@ -50,6 +50,7 @@ c
       iaddaux(i,j,iaux) = locaux + i - 1 + mitot*((iaux-1)*mjtot+j-1)
 
 c     # loop over interior points on this grid:
+      ! (i,j) grid cell is [x1,x2] x [y1,y1], cell center at (x,y)
       do 200 j = 1,my
         y = yylower +  (j-0.5d0)*dy
         y1 = yylower + (j-1)*dy

@@ -167,7 +167,7 @@ c
                gp(i,j+1,m) = gp(i,j+1,m) + gaddp(i,m,2)
 
    25          continue
-         if  (j.eq.289 .or. j.eq.290) then
+         if  ((j.eq.289 .or. j.eq.290) .and. .false.) then
             write(55,*)  
             write(55,*) "+++ x-sweep"
             write(55,*) "+++ j", j
@@ -238,7 +238,7 @@ c
    75          continue
 
 
-         if  (i.eq.173 .or. i.eq.172) then
+         if  ((i.eq.173 .or. i.eq.172) .and. .false.) then
             write(55,*)  
             write(55,*) "+++ y-sweep"
             write(55,*) "+++ i",  i

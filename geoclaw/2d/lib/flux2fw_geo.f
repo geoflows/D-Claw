@@ -152,10 +152,12 @@ c   # Set fadd for the donor-cell upwind method (Godunov)
             faddm(i,m) = faddm(i,m) + amdq(i,m)
          enddo
 
+         if(.false.) then
          if (ixy.eq.2.and.i.ge.290.and.i.le.297) then
             write(56,*) "+++ flux2, ixy=2, amdq"
             write(56,599) i, (amdq(i,mm), mm=1,meqn)
  599        format(i5,7e15.7)
+          endif
           endif
 
          if (relimit) then
@@ -202,7 +204,6 @@ c
             faddm(i,m) = faddm(i,m) + 0.5d0 * cqxx(i,m)
             faddp(i,m) = faddp(i,m) + 0.5d0 * cqxx(i,m)
 
-            write(56,*) "++++ second order, shouldn't be here"
   120       continue
 c
 c

@@ -3,7 +3,7 @@ c-----------------------------------------------------------------------
       subroutine riemann_dig2_aug_sswave_ez(ixy,meqn,mwaves,hL,hR,
      &         huL,huR,hvL,hvR,hmL,hmR,pL,pR,bL,bR,uL,uR,vL,vR,mL,mR,
      &         thetaL,thetaR,phiL,phiR,dx,sw,fw,w,wallprob,taudirL,
-     &         taudirR,chiL,chiR,fsL,fsR)
+     &         taudirR,chiL,chiR,fsL,fsR,ilook)
 
       !-----------------------------------------------------------------
       ! solve the dig Riemann problem for debris flow eqn
@@ -25,7 +25,7 @@ c-----------------------------------------------------------------------
       implicit none
 
 *     !i/o
-      integer ixy,meqn,mwaves
+      integer ixy,meqn,mwaves,ilook
 
       double precision hL,hR,huL,huR,hvL,hvR,hmL,hmR,pL,pR
       double precision bL,bR,uL,uR,vL,vR,mL,mR,chiL,chiR,seg_L,seg_R
@@ -253,6 +253,29 @@ c     !find bounds in case of critical state resonance, or negative states
       del(4) = -gamma*rho*gmod*u*(hR-hL) + gamma*rho*gmod*del(1)
      &         + u*(pR-pL)
 
+      if (ixy.eq.2.and. .false.) then
+         write(58,*) ""
+         write(58,*) "++++ used to calculate del(2)"
+         write(58,599) hR
+         write(58,599) uR
+         write(58,599) hL
+         write(58,599) uL
+         write(58,599) kappa
+         write(58,599) gmod
+         write(58,599) h
+         write(58,599) rho
+
+         write(58,*) ""
+         write(58,*) "++++ used to calculate del(3)"
+         write(58,599) pR
+         write(58,599) pL
+         write(58,599) gamma
+         write(58,599) rho
+         write(58,599) gmod
+         write(58,599) deldelh
+ 599  format(1e15.7)
+      endif
+
 
 *     !determine the source term
 
@@ -274,8 +297,20 @@ c     !find bounds in case of critical state resonance, or negative states
          !endif
 
          if ((uL**2 + vL**2)==0.0d0) then
+            if (ixy.eq.2.and. .false.) then
+               write(58,*) ""
+               write(58,*) "^^^^^^^ taudirL = taudirR"
+               write(58,499) taudirL, taudirR
+            endif 
+
             taudirL = taudirR
          else
+            if (ixy.eq.2) then
+               write(58,*) ""
+               write(58,*) "^^^^^^^ taudirL = -uL/sqrt(uL**2 + vL**2)"
+               write(58,499) taudirL, -uL/sqrt(uL**2 + vL**2)
+            endif 
+
             taudirL = -uL/sqrt(uL**2 + vL**2)
          endif
 
@@ -305,6 +340,33 @@ c     !find bounds in case of critical state resonance, or negative states
       if (wallprob) then
          tausource = 0.0d0
       endif
+
+      if (ixy.eq.2.and. .false.) then
+         write(58,*) ""
+         write(58,*) "ilook = ", ilook
+
+         ! if (abs(taudirL-0.d0).lt.1d-15.and.ilook.eq.0) then
+         !    write(*,*) " %%%%%%% debugtaudir"
+         ! endif 
+
+         write(58,*) "+++++ del(2), source2dx, tausource"
+         write(58, 499) del(2)
+         write(58, 499) source2dx
+         write(58, 499) tausource
+         write(58,*) "+++++ taudirR, tauR, rhoR"
+         write(58, 499) taudirR
+         write(58, 499) tauR
+         write(58, 499) rhoR
+         write(58,*) "+++++ taudirL, tauL, rhoL"
+         write(58, 499) taudirL
+         write(58, 499) tauL
+         write(58, 499) rhoL
+         write(58,*) "+++++ uR, uL"
+         write(58, 499) uR
+         write(58, 499) uL
+499      format(8e15.7)
+      endif
+
       del(2) = del(2) - source2dx  - tausource
       !del(4) = del(4) + dx*3.0*vnorm*tanpsi/(h*compress)
 
@@ -341,6 +403,22 @@ c      del(4) = del(4) - 0.5d0*dx*psi(4)
             A(m+1,mw+1)=R(m,mw+1)
          enddo
       enddo
+
+      if (ixy.eq.2.and. .false.) then 
+         write(58,*) ""
+         write(58,*) "+++++ before gaussj"
+         write(58, 799) A(1,1:3)
+         write(58, 789) A(2,1:3)
+         write(58, 779) A(2,1:3)
+ 799      format("A(1,1:3)", 3e15.7)
+ 789      format("A(2,1:3)", 3e15.7)
+ 779      format("A(3,1:3)", 3e15.7)
+
+         write(58, 769) beta(1:3)
+ 769      format("beta(1:3)", 3e15.7)
+
+      endif 
+
       call gaussj(A,3,3,beta,1,1)
 
       do mw=1,3
@@ -349,7 +427,9 @@ c      del(4) = del(4) - 0.5d0*dx*psi(4)
          enddo
       enddo
 
-      if (ixy.eq.2) then 
+      if (ixy.eq.2.and. .false.) then 
+         write(58,*) ""
+         write(58,*) "+++++ after gaussj"
          write(58, 699) beta(1:3), del(0:2)
 699      format("beta(1:3), del(0:2)", 6e15.7)
       endif 
@@ -1120,7 +1200,7 @@ c  On output a is replaced by it's inverse, and b replaced by x.
         ipiv(j)=0
 11    continue
       do 22 i=1,n
-        big=0.
+        big=0.d0
         do 13 j=1,n
           if(ipiv(j).ne.1)then
             do 12 k=1,n
@@ -1152,7 +1232,7 @@ c  On output a is replaced by it's inverse, and b replaced by x.
         endif
         indxr(i)=irow
         indxc(i)=icol
-        if (a(icol,icol).eq.0.) write(*,*) 'singular matrix in gaussj'
+        if (a(icol,icol).eq.0.d0) write(*,*) 'singular matrix in gaussj'
 
         pivinv=1./a(icol,icol)
         a(icol,icol)=1.d0
