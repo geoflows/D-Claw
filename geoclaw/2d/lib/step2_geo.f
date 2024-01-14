@@ -167,16 +167,6 @@ c
                gp(i,j+1,m) = gp(i,j+1,m) + gaddp(i,m,2)
 
    25          continue
-         if  ((j.eq.289 .or. j.eq.290) .and. .false.) then
-            write(55,*)  
-            write(55,*) "+++ x-sweep"
-            write(55,*) "+++ j", j
-            do ii = 1,mx+1
-               write(55,599) ii, (gaddm(ii,mm,1), mm=1,7)
- 599           format(i5,7e15.7)
-               write(55,599) ii, (gaddm(ii,mm,2), mm=1,7)
-            enddo 
-         endif
 
    50    continue
 c
@@ -236,16 +226,6 @@ c
                fm(i+1,j,m) = fm(i+1,j,m)+ gaddm(j,m,2)
                fp(i+1,j,m) = fp(i+1,j,m)+ gaddp(j,m,2)
    75          continue
-
-
-         if  ((i.eq.173 .or. i.eq.172) .and. .false.) then
-            write(55,*)  
-            write(55,*) "+++ y-sweep"
-            write(55,*) "+++ i",  i
-            do jj = 1,my+1
-               write(55,599) jj, (faddm(jj,mm), mm=1,7)
-            enddo
-         endif
 
   100    continue
 
