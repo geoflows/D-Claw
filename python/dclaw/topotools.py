@@ -576,7 +576,7 @@ def topofile2griddata(inputfile, topotype=2):
 
 # ==================================================================================================
 def griddata2topofile(
-    X, Y, Q, outputfile, topotype=2, nodata_value_in=9999.0, nodata_value_out=9999.0
+    X, Y, Z, outputfile, topotype=2, nodata_value_in=9999.0, nodata_value_out=9999.0
 ):
     """
     griddata2topofile takes gridded data and produces a topofile with a header
