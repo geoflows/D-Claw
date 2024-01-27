@@ -22,13 +22,8 @@ c
 
       dimension aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
       logical use_phi_bed,use_theta_input,friction_correction
-      integer ii,jj,iint,jint,ilo,jlo
-      
 
       include "call.i"
-
-      ilo = floor((xlow - xlower + .05d0*dx)/dx)
-      jlo = floor((ylow - ylower + .05d0*dy)/dy)
 
       if (icoordsys.eq.2) then
          if (mcapa .ne. 2 .or. maux.lt.3) then
@@ -62,81 +57,16 @@ c           # for lat-lon grid on sphere:
 
             if (mtopofiles.gt.0) then
                topoint=0.d0
-               
-               ! DIG: add bypass to make equivalent with dclaw5. 1/12/2024
-               if ((ycell>yupper).or.(ycell<ylower).or.
-     &             (xcell>xupper).or.(xcell<xlower)) then
-               ! Skip setting as this cell sticks out of the physical
-               ! domain and we are not setting periodic BCs
-                  cycle
-               else
-
                call cellgridintegrate(topoint,xim,xcell,xip,yjm,ycell,
-     &            yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
-     &            mxtopo,mytopo,mtopo,i0topo,mtopoorder,
-     &            mtopofiles,mtoposize,topowork)
-                  aux(i,j,1) = topoint/(dx*dy*aux(i,j,2))
-               endif
+     &           yjp,xlowtopo,ylowtopo,xhitopo,yhitopo,dxtopo,dytopo,
+     &           mxtopo,mytopo,mtopo,i0topo,mtopoorder,
+     &           mtopofiles,mtoposize,topowork)
+               aux(i,j,1) = topoint/(dx*dy*aux(i,j,2))
 
             else
                aux(i,j,1) = 0.d0
 c               # or set-up your own topo
             endif
-!=================================
-! start of addition from dclaw5
-!=================================
-
-         enddo
-      enddo
-
-    ! Copy topo to ghost cells if outside physical domain and not periodic
-      if (.not. yperdom) then
-         do jj=1-mbc,my+mbc
-               y = ylower + (jlo+jj-.5d0) * dy
-               if ((y < ylower) .or. (y>yupper)) then
-                  do ii=1-mbc,mx+mbc
-                     x = xlower + (ilo+ii-.5d0) * dx
-                    iint = ii + max(0, ceiling((xlower-x)/dx)) 
-     &                      - max(0, ceiling((x-xupper)/dx))
-                     jint = jj + max(0, ceiling((ylower-y)/dy)) 
-     &                      - max(0, ceiling((y-yupper)/dy))
-                     aux(ii,jj,1) = aux(iint,jint,1)
-                  enddo
-               endif
-         enddo
-      endif
-      if (.not. xperdom) then
-         do ii=1-mbc,mx+mbc
-               x =  xlower + (ilo+ii-.5d0) * dx
-               if ((x < xlower) .or. (x > xupper)) then
-                  do jj=1-mbc,my+mbc
-                     y = ylower + (jlo+jj-.5d0) * dy
-                     iint = ii + max(0, ceiling((xlower-x)/dx)) 
-     &                     - max(0, ceiling((x-xupper)/dx))
-                     jint = jj + max(0, ceiling((ylower-y)/dy)) 
-     &                      - max(0, ceiling((y-yupper)/dy))
-                     aux(ii,jj,1) = aux(iint,jint,1)
-                  enddo
-               endif
-         enddo
-      endif
-       
-
-
-      do j=1-mbc,my+mbc
-         ycell = ylow +(j-0.5d0)*dy
-         yjm = ylow +(j-1.d0)*dy
-         yjp = ylow + j*dy
-
-         do i=1-mbc,mx+mbc
-            xcell= xlow + (i- 0.5d0)*dx
-            xim = xlow + (i - 1.d0)*dx
-            xip = xlow + i*dx
-
-!=================================
-! end of addition from dclaw5
-!=================================
-
 c        #------- zero aux variables that will be set by files
             do mf = 1,mauxinitfiles
                aux(i,j,iauxinit(mf)) = 0.d0

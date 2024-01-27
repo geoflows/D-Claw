@@ -124,7 +124,7 @@ contains
          !read(iunit,*) fric_star_val2
 
          close(iunit)
-         alpha_seg = 1.d0 - alpha_seg
+         alpha_seg = 1.0 - alpha_seg
 
          open(unit=DIG_PARM_UNIT,file='fort.dig',status="unknown",action="write")
 
@@ -207,9 +207,9 @@ contains
 
          p_initialized = 0
          init_pmin_ratio = 1.d16
-         grad_eta_max = 0.d0
-         cohesion_max = 0.d0
-         grad_eta_ave = 0.d0
+         grad_eta_max = 0.0
+         cohesion_max = 0.0
+         grad_eta_ave = 0.0
          eta_cell_count = 1.e-6
 
 
@@ -252,8 +252,8 @@ contains
          h =  0.d0
          hu = 0.d0
          hv = 0.d0
-         hm = 0.d0
-         p  = 0.d0 !h*gmod*rho_f
+         hm = h*m
+         p  = h*gmod*rho_f
          u = 0.d0
          v = 0.d0
          m = 0.d0
@@ -265,7 +265,7 @@ contains
       m = hm/h
 
       !mlo = 1.d-3
-      mlo = 0.0d0
+      mlo = 0.0
       mhi = 1.d0 - mlo
 
       if (m.lt.mlo) then
@@ -325,29 +325,29 @@ contains
       phi = phi_bed
       hbounded = h!max(h,0.1)
       gmod=grav
-      pm = max(0.d0,pm)
-      pm = min(1.d0,pm)
-      if (dabs(alpha_seg-1.0d0)<1.d-6) then
-         seg = 0.d0
+      pm = max(0.0,pm)
+      pm = min(1.0,pm)
+      if (dabs(alpha_seg-1.0)<1.d-6) then
+         seg = 0.0
          rho_fp = rho_f
-         pmtanh01=0.d0
+         pmtanh01=0.0
       else
          ! this will eventually reduce mcrit
          ! and creates rho_fp
-         seg = 1.d0
+         seg = 1.0
          call calc_pmtanh(pm,seg,pmtanh01) ! this reduces mcrit based on segregation
-         rho_fp = (1.d0-pmtanh01)*rho_f ! this reduces rho_fluid based on segregation (makes rhof lighter)
+         rho_fp = (1.0-pmtanh01)*rho_f ! this reduces rho_fluid based on segregation (makes rhof lighter)
       endif
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
 
       if (bed_normal.eq.1) gmod=grav*dcos(theta)
-      vnorm = dsqrt(u**2 + v**2)
+      vnorm = dsqrt(u**2.0 + v**2.0)
       rho = rho_s*m + rho_fp*(1.d0-m)
-      shear = 2.d0*vnorm/hbounded
+      shear = 2.0*vnorm/hbounded
       sigbed = dmax1(0.d0,rho*gmod*h - p)
-      sigbedc = rho_s*(shear*delta)**2 + sigbed
-      if (sigbedc.gt.0.d0) then
+      sigbedc = rho_s*(shear*delta)**2.0 + sigbed
+      if (sigbedc.gt.0.0) then
          S = (mu*shear/(sigbedc))
       else
          S = 0.d0
@@ -365,15 +365,19 @@ contains
       !pmtanh01 = seg*0.5*(tanh(20.0*(pm-0.80))+1.0)
       !pmtanh01s = seg*4.0*(tanh(8.0*(pm-0.95))+1.0)
 
-      kperm = kappita*exp(-(m-m0)/(0.04d0))!*(10**(pmtanh01))
+      kappita2 = kappita * kappita_diff
+
+      kequiv = kappita2 * pm + kappita * (1-pm) !kappitaS!
+      kperm = kequiv*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
+      !kperm = kappita*exp(-(m-m0)/(0.04))!*(10**(pmtanh01))
       !m_crit_pm - max(pm-0.5,0.0)*(0.15/0.5) - max(0.5-pm,0.0)*(0.15/0.5)
       !m_crit_pm =  max(pm-0.7,0.0)*((m_crit- 0.55)/0.5) + max(0.3-pm,0.0)*((m_crit-0.55)/0.5)
-      m_crit_pm =  0.d0! max(pm-0.6,0.0)*((m_crit- 0.55)/0.4) + max(0.3-pm,0.0)*((m_crit-0.55)/0.3)
+      m_crit_pm =  0.! max(pm-0.6,0.0)*((m_crit- 0.55)/0.4) + max(0.3-pm,0.0)*((m_crit-0.55)/0.3)
       !m_crit_pm = max(pm-0.9,0.0)*((m_crit- 0.55)/0.1) + max(0.1-pm,0.0)*((m_crit-0.55)/0.1);
-      m_crit_pm = pmtanh01*0.09d0
+      m_crit_pm = pmtanh01*0.09
       m_crit_m = m_crit - m_crit_pm
       m_eqn = m_crit_m/(1.d0 + sqrt(S))
-      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1d0) ! this regularizes dilatency angle tanpsi to zero as velocity goes to zero
+      tanpsi = c1*(m-m_eqn)*tanh(shear/0.1) ! this regularizes dilatency angle tanpsi to zero as velocity goes to zero
 
       !kperm = kperm + 1.0*pm*kappita
       !compress = alpha/(sigbed + 1.d5)
@@ -386,9 +390,9 @@ contains
 
       if (m.le.1.d-16) then
          compress = 1.d16
-         kperm = 0.d0
-         tanpsi = 0.d0
-         sigbed=0.d0
+         kperm = 0.0
+         tanpsi = 0.0
+         sigbed=0.0
       else
          compress = alpha/(m*(sigbed +  sigma_0))
       endif
@@ -404,67 +408,67 @@ contains
          tanpsi = 0.d0
          D = 0.d0
       elseif (h*mu.gt.0.d0) then
-         D = 2.d0*(kperm/(mu*h))*(rho_fp*gmod*h - p)
+         D = 2.0*(kperm/(mu*h))*(rho_fp*gmod*h - p)
       else
          D = 0.d0
       endif
 
       ! this is now calculated below.
-      tanphi = dtan(phi_bed + datan(tanpsi))  ! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
+      ! tanphi = dtan(phi_bed + datan(tanpsi))  ! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
 
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
       !endif
 
-      ! if (fric_offset_val.gt.0.d0) then ! do hysteretic friction.
-      !   !friction from granular material based on h_start and h_stop
-      !   ! based on Rocha, Johnson, and Gray, JFM 2019, 10.1017/jfm.2019.518
-      !   !! mu_start = phi2f = phi_bed
-      !   !! mu_stop = phi1f = mu_start - fric_offset_val
-      !   !! mu_start = phi3f = mu_stop + fric_star_val
-      !   !! Equation 2.7
-      !   ! Other values are for sand
+      if (fric_offset_val.gt.0.0) then ! do hysteretic friction.
+        !friction from granular material based on h_start and h_stop
+        ! based on Rocha, Johnson, and Gray, JFM 2019, 10.1017/jfm.2019.518
+        !! mu_start = phi2f = phi_bed
+        !! mu_stop = phi1f = mu_start - fric_offset_val
+        !! mu_start = phi3f = mu_stop + fric_star_val
+        !! Equation 2.7
+        ! Other values are for sand
 
-      !   ! convert degrees to radians and calculate mu values.
+        ! convert degrees to radians and calculate mu values.
 
-      !   PIf = 4.D0*ATAN(1.D0)
+        PIf = 4.D0*ATAN(1.D0)
 
-      !   phi2f = phi
-      !   phi1f = phi2f - fric_offset_val*PIf/180.d0
-      !   phi3f = phi1f + fric_star_val*PIf/180.d0
+        phi2f = phi
+        phi1f = phi2f - fric_offset_val*PIf/180.d0
+        phi3f = phi1f + fric_star_val*PIf/180.d0
 
-      !   mu1f = tan(phi1f)
-      !   mu2f = tan(phi2f)
-      !   mu3f = tan(phi3f)
+        mu1f = tan(phi1f)
+        mu2f = tan(phi2f)
+        mu3f = tan(phi3f)
 
-      !   ! these are hard coded. presumably values for sand per RPJ comment above.
-      !   Lambdaf = 1.34d0
-      !   diamf = 0.25
-      !   Lf = 2.d0 * diamf
-      !   betaf = 0.65d0 / sqrt(cos(theta))
-      !   Gamf = 0.77d0 / sqrt(cos(theta))
+        ! these are hard coded. presumably values for sand per RPJ comment above.
+        Lambdaf = 1.34d0
+        diamf = 0.25
+        Lf = 2.d0 * diamf
+        betaf = 0.65d0 / sqrt(cos(theta))
+        Gamf = 0.77d0 / sqrt(cos(theta))
 
-      !   Fr_starf = Lambdaf * betaf - Gamf
+        Fr_starf = Lambdaf * betaf - Gamf
 
-      !   ! Calculate local Froude number
-      !   Frf = vnorm / sqrt(gmod*h)
-      !   mu_df = mu1f + (mu2f - mu1f) / (1 + h * betaf / (Lf * (Frf + Gamf))) ! Rocha, Johnson and Gray, Eq 2.10
-      !   if (Frf >= Fr_starf) then ! mu_dynamic
-      !      mu_bf = mu_df
-      !      goto 456
-      !   endif
-      !   mu_sf = mu3f + (mu2f - mu1f) / (1 + h/Lf)
-      !   if (Frf < 1.e-16) then ! mu_static
-      !      mu_bf = mu_sf
-      !      goto 456
-      !   endif
+        ! Calculate local Froude number
+        Frf = vnorm / sqrt(gmod*h)
+        mu_df = mu1f + (mu2f - mu1f) / (1 + h * betaf / (Lf * (Frf + Gamf))) ! Rocha, Johnson and Gray, Eq 2.10
+        if (Frf >= Fr_starf) then ! mu_dynamic
+           mu_bf = mu_df
+           goto 456
+        endif
+        mu_sf = mu3f + (mu2f - mu1f) / (1 + h/Lf)
+        if (Frf < 1.e-16) then ! mu_static
+           mu_bf = mu_sf
+           goto 456
+        endif
 
-      !   !mu_intermediate
-      !   mu_bf = (Frf/Fr_starf) * (mu_df - mu_sf) + mu_sf
-      !   goto 456
-      ! else ! do not adjust phi_bed based on hysteretic friction.
-      !   mu_bf = phi_bed
-      ! endif
+        !mu_intermediate
+        mu_bf = (Frf/Fr_starf) * (mu_df - mu_sf) + mu_sf
+        goto 456
+      else ! do not adjust phi_bed based on hysteretic friction.
+        mu_bf = phi_bed
+      endif
 
   456      continue
 
@@ -483,9 +487,7 @@ contains
       ! RPJ reduced tau_solid by m/mcrit to reflect the loss of granular friction for low values of m.
       ! this regularization may be improved.
 
-      !tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))!*((tanh(100.0*(m-0.05))+1.0)*0.5)
-
-      tau = dmax1(0.d0,sigbed*tanphi)
+      tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))
 
       ! viscosity (depth averaged is vh^(1/2)/2)
       ! in Rocha, Johnson, and Gray, they calculate viscosity.
@@ -596,9 +598,9 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             hv = q(i,j,3)
             hm = q(i,j,4)
             if (h<dry_tol) then
-               hu=0.d0
-               hv=0.d0
-               hm=0.d0
+               hu=0.0
+               hv=0.0
+               hm=0.0
             endif
             p  = q(i,j,5)
             b = aux(i,j,1)
@@ -655,9 +657,9 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             endif
 
             if ((h+hL+hB+hR+hT)<dry_tol) then
-               aux(i,j,i_taudir_x) = 0.d0
-               aux(i,j,i_taudir_y) = 0.d0
-               aux(i,j,i_fsphi) = 0.d0
+               aux(i,j,i_taudir_x) = 0.0
+               aux(i,j,i_taudir_y) = 0.0
+               aux(i,j,i_fsphi) = 0.0
                cycle
             endif
 
@@ -672,7 +674,7 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
                thetaB = 0.d0
             endif
 
-            pm = 0.5d0 !does not effect tau. only need tau in different cells
+            pm = 0.5 !does not effect tau. only need tau in different cells
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call admissibleq(hL,huL,hvL,hmL,pL,uL,vL,mL,theta)
             call admissibleq(hB,huB,hvB,hmL,pB,uB,vB,mB,theta)
@@ -687,77 +689,69 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             call auxeval(hT,uT,vT,mT,pT,phi,theta,kappa,S,rhoT,tanpsi,D,tauT,sigbed,kperm,compress,pm)
 
             !minmod gradients
-            FxC = -gmod*h*(EtaR-EtaL)/(2.d0*dx) + gmod*h*sin(theta)
-            FyC = -gmod*h*(EtaT-EtaB)/(2.d0*dy)
+            FxC = -gmod*h*(EtaR-EtaL)/(2.0*dx) + gmod*h*sin(theta)
+            FyC = -gmod*h*(EtaT-EtaB)/(2.0*dy)
 
-            FxL = -gmod*0.5d0*(h+hL)*(Eta-EtaL)/(dx) + gmod*0.5d0*(h+hL)*sin(theta)
-            FyL = -gmod*0.5d0*(h+hB)*(Eta-EtaB)/(dy)
+            FxL = -gmod*0.5*(h+hL)*(Eta-EtaL)/(dx) + gmod*0.5*(h+hL)*sin(theta)
+            FyL = -gmod*0.5*(h+hB)*(Eta-EtaB)/(dy)
 
-            FxR = -gmod*0.5d0*(h+hR)*(EtaR-Eta)/(dx) + gmod*0.5d0*(h+hR)*sin(theta)
-            FyR = -gmod*0.5d0*(h+hT)*(EtaT-Eta)/(dy)
+            FxR = -gmod*0.5*(h+hR)*(EtaR-Eta)/(dx) + gmod*0.5*(h+hR)*sin(theta)
+            FyR = -gmod*0.5*(h+hT)*(EtaT-Eta)/(dy)
 
-            if (FxL*FxR.gt.0.d0) then
+            if (FxL*FxR.gt.0.0) then
                Fx = dsign(min(abs(FxL),abs(FxR)),FxL)
             else
-               Fx = 0.d0
+               Fx = 0.0
             endif
 
-            if (FyL*FyR.gt.0.d0) then
+            if (FyL*FyR.gt.0.0) then
                Fy = dsign(min(abs(FyL),abs(FyR)),FyL)
             else
-               Fy = 0.d0
+               Fy = 0.0
             endif
 
             vnorm = sqrt(hu**2 + hv**2)
-            if (vnorm>0.d0) then
+            if (vnorm>0.0) then
                aux(i,j,i_taudir_x) = -hu/sqrt(hv**2+hu**2)
                aux(i,j,i_taudir_y) = -hv/sqrt(hv**2+hu**2)
 
-               dot = min(max(0.d0,Fx*hu) , max(0.d0,Fy*hv))
-               if (dot>0.d0) then
+               dot = min(max(0.0,Fx*hu) , max(0.0,Fy*hv))
+               if (dot>0.0) then
                   !friction should oppose direction of velocity
                   !if net force is in same direction, split friction source term
                   !splitting is useful for small velocities and nearly balanced forces
                   !only split amount up to maximum net force for large velocities
                   !aux has cell centered interpretation in Riemann solver
                   Fproj = dot/vnorm
-                  aux(i,j,i_fsphi) = min(1.d0,Fproj*rho/max(tau,1.d-16))
-
-!                 DIG KRB  tau here (or in auxeval) to ensure that when  m goes to zero, 
-!                 tau goes to zero.
-
+                  aux(i,j,i_fsphi) = min(1.0,Fproj*rho/max(tau,1.d-16))
                else
                   !net force is in same direction as friction
                   !if nearly balanced steady state not due to friction
                   !no splitting, integrate friction in src
-                  aux(i,j,i_fsphi) = 0.d0
+                  aux(i,j,i_fsphi) = 0.0
                endif
 
 
             else
                !aux now have cell edge interpretation in Riemann solver
                !friction should oppose net force. resolve in Riemann solver
-               if ((FxL**2+Fy**2)>0.d0) then
+               if ((FxL**2+Fy**2)>0.0) then
                   aux(i,j,i_taudir_x) = -FxL/sqrt(FxL**2+Fy**2)
                else
-                  aux(i,j,i_taudir_x) = 1.d0
+                  aux(i,j,i_taudir_x) = 1.0
                endif
 
-               if ((Fx**2+FyL**2)>0.d0) then
+               if ((Fx**2+FyL**2)>0.0) then
                   aux(i,j,i_taudir_y) = -FyL/sqrt(Fx**2+FyL**2)
                else
                   !there is no motion or net force. resolve in src after Riemann
-                  aux(i,j,i_taudir_y) = 1.d0
+                  aux(i,j,i_taudir_y) = 1.0
                endif
 
-!DIG assert that taudiry**2 + taudirx**2 is equal to 1. I think this is guaranteed, but am not 
-!sure based on these two if blocks. 
-
-
-               if ((aux(i,j,i_taudir_y)**2 + aux(i,j,i_taudir_x)**2)>0.d0) then
-                  aux(i,j,i_fsphi) = 1.d0
+               if ((aux(i,j,i_taudir_y)**2 + aux(i,j,i_taudir_x)**2)>0.0) then
+                  aux(i,j,i_fsphi) = 1.0
                else
-                  aux(i,j,i_fsphi) = 0.d0
+                  aux(i,j,i_fsphi) = 0.0
                endif
             endif
 
@@ -796,7 +790,7 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
 
       dry_tol = drytolerance
       gmod = grav
-      rho = m0*rho_s + (1.d0-m0)*rho_f
+      rho = m0*rho_s + (1.0-m0)*rho_f
 
       do i=2-mbc,mx+mbc-1
          do j=2-mbc,my+mbc-1
@@ -805,7 +799,7 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
             hL = q(i-1,j,1)
             hR = q(i+1,j,1)
             if (h<dry_tol) then
-               aux(i,j,i_fsphi) = 1.d0
+               aux(i,j,i_fsphi) = 1.0
                cycle
             endif
 
@@ -814,8 +808,8 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
             hm = q(i,j,4)
             p  = q(i,j,5)
 
-            if ((hu**2 + hv**2)==0.d0) then
-               aux(i,j,i_fsphi) = 1.d0
+            if ((hu**2 + hv**2)==0.0) then
+               aux(i,j,i_fsphi) = 1.0
                !cycle
             endif
 
@@ -848,8 +842,8 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
             endif
             detadxR = (EtaR-Eta)/dx -tan(theta)
             detadxL = (Eta-EtaL)/dx -tan(theta)
-            if (detadxR*detadxL<=0.d0) then
-               detadx = 0.d0
+            if (detadxR*detadxL<=0.0) then
+               detadx = 0.0
             elseif (abs(detadxR)>abs(detadxL)) then
                detadx = detadxL
             else
@@ -868,8 +862,8 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
             endif
             detadyT = (EtaT-Eta)/dy
             detadyB = (Eta-EtaB)/dy
-            if (detadyT*detadyB<=0.d0) then
-               detady = 0.d0
+            if (detadyT*detadyB<=0.0) then
+               detady = 0.0
             elseif (abs(detadyT)>abs(detadyB)) then
                detady = detadyB
             else
@@ -882,10 +876,10 @@ subroutine calc_tausplit(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,a
             pm = q(i,j,6)/q(i,j,1)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
-            if (tau>0.d0) then
+            if (tau>0.0) then
                aux(i,j,i_fsphi) = min(1.0,grad_eta*rho*gmod*h/tau)
             else
-               aux(i,j,i_fsphi) = 1.d0
+               aux(i,j,i_fsphi) = 1.0
             endif
          enddo
       enddo
@@ -923,7 +917,7 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
       dry_tol = drytolerance
       gmod = grav
-      rho = m0*rho_s + (1.d0-m0)*rho_f
+      rho = m0*rho_s + (1.0-m0)*rho_f
 
       do i=1,mx
          do j=1,my
@@ -932,15 +926,15 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             hL = q(i-1,j,1)
             hR = q(i+1,j,1)
             if (h<dry_tol) then
-               aux(i,j,i_fs) = 10.d0
+               aux(i,j,i_fs) = 10.0
                cycle
             endif
 
             hu = q(i,j,2)
             hv = q(i,j,3)
 
-            if ((hu**2+hv**2)>0.d0) then
-               aux(i,j,i_fs) = 0.d0
+            if ((hu**2+hv**2)>0.0) then
+               aux(i,j,i_fs) = 0.0
                cycle
             endif
 
@@ -949,9 +943,9 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             bL = aux(i-1,j,1)
             phi = aux(i,j,i_phi)
 
-            if ((phi)==0.d0) then
-               aux(i,j,i_fs) = 0.d0
-               init_pmin_ratio = 0.d0
+            if ((phi)==0.0) then
+               aux(i,j,i_fs) = 0.0
+               init_pmin_ratio = 0.0
                cycle
             endif
 
@@ -979,8 +973,8 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             endif
             detadxR = (EtaR-Eta)/dx -tan(theta)
             detadxL = (Eta-EtaL)/dx -tan(theta)
-            if (detadxR*detadxL<=0.d0) then
-               detadx = 0.d0
+            if (detadxR*detadxL<=0.0) then
+               detadx = 0.0
             elseif (abs(detadxR)>abs(detadxL)) then
                detadx = detadxL
             else
@@ -999,8 +993,8 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
             endif
             detadyT = (EtaT-Eta)/dy
             detadyB = (Eta-EtaB)/dy
-            if (detadyT*detadyB<=0.d0) then
-               detady = 0.d0
+            if (detadyT*detadyB<=0.0) then
+               detady = 0.0
             elseif (abs(detadyT)>abs(detadyB)) then
                detady = detadyB
             else
@@ -1009,29 +1003,29 @@ subroutine calc_pmin(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
 
             grad_eta = sqrt(detadx**2 + detady**2)
             grad_eta_ave = grad_eta_ave + grad_eta/tan(phi)
-            eta_cell_count = eta_cell_count + 1.d0
+            eta_cell_count = eta_cell_count + 1.0
 
             grad_eta_max = max(grad_eta_max,grad_eta/tan(phi))
 
-            init_pmin_ratio = min(init_pmin_ratio, 1.d0-grad_eta/tan(phi))
+            init_pmin_ratio = min(init_pmin_ratio, 1.0-grad_eta/tan(phi))
 
-            if (grad_eta>0.d0) then
+            if (grad_eta>0.0) then
                aux(i,j,i_fs) = tan(phi)/grad_eta
             else
-               aux(i,j,i_fs) = 10.d0
+               aux(i,j,i_fs) = 10.0
             endif
          enddo
       enddo
 
       if (init_ptype==2.or.init_ptype==4) then
-         init_pmin_ratio = 1.d0-(grad_eta_ave/eta_cell_count)
+         init_pmin_ratio = 1.0-(grad_eta_ave/eta_cell_count)
       endif
       if (init_ptype>0) then
          write(*,*) '--------------------------------------------'
          write(*,*) 'hydrostatic liquefaction ratio:', rho_f/rho
          write(*,*) 'initiation liquefaction  ratio:',init_pmin_ratio, grad_eta_ave
-         write(*,*) 'maximum surface slope angle:',180.d0*atan(tan(phi)*grad_eta_max)/3.14d0, grad_eta_max
-         write(*,*) 'average failure liquefaction ratio:', 1.d0-(grad_eta_ave/eta_cell_count) , eta_cell_count
+         write(*,*) 'maximum surface slope angle:',180.*atan(tan(phi)*grad_eta_max)/3.14, grad_eta_max
+         write(*,*) 'average failure liquefaction ratio:', 1.0-(grad_eta_ave/eta_cell_count) , eta_cell_count
          write(*,*) '--------------------------------------------'
       endif
    end subroutine calc_pmin
@@ -1052,8 +1046,8 @@ subroutine calc_pmtanh(pm,seg,pmtanh)
       !Locals
 
 
-      pmtanh = seg*(0.5d0*(tanh(40.d0*(pm-0.9d0))+1.d0))
-      !pmtanh = 0.8d0*seg*(0.5d0*(tanh(40.d0*(pm-0.98d0))+1.d0))
+      pmtanh = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
+      !pmtanh = 0.8*seg*(0.5*(tanh(40.0*(pm-0.98))+1.0))
 
       return
 
