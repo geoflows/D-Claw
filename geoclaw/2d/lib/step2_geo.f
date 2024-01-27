@@ -55,7 +55,6 @@ c
       dimension work(mwork)
 
       logical relimit
-      integer ii,jj,mm
       common /comxyt/ dtcom,dxcom,dycom,tcom,icom,jcom
       include "call.i"
 c
@@ -165,9 +164,7 @@ c
                gp(i,j,m) = gp(i,j,m) + gaddp(i,m,1)
                gm(i,j+1,m) = gm(i,j+1,m) + gaddm(i,m,2)
                gp(i,j+1,m) = gp(i,j+1,m) + gaddp(i,m,2)
-
    25          continue
-
    50    continue
 c
 c
@@ -226,7 +223,6 @@ c
                fm(i+1,j,m) = fm(i+1,j,m)+ gaddm(j,m,2)
                fp(i+1,j,m) = fp(i+1,j,m)+ gaddp(j,m,2)
    75          continue
-
   100    continue
 
 c     # relimit correction fluxes if they drive a cell negative

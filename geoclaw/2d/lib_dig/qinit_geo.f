@@ -43,13 +43,13 @@ c      # been strored in qinitwork.
 
             xintlow = dmax1(xlower,xlowqinit(mf))
             xinthi  = dmin1(xhigher,xhiqinit(mf))
-            istart  = max(1-mbc,int(0.5d0 + (xintlow-xlower)/dx)-mbc)
-            iend    = min(mx+mbc,int(1.0d0 + (xinthi-xlower)/dx)+mbc)
+            istart  = max(1-mbc,int(0.5 + (xintlow-xlower)/dx)-mbc)
+            iend    = min(mx+mbc,int(1.0 + (xinthi-xlower)/dx)+mbc)
 
             yintlow = dmax1(ylower,ylowqinit(mf))
             yinthi  = dmin1(yhigher,yhiqinit(mf))
-            jstart  = max(1-mbc,int(0.5d0 + (yintlow-ylower)/dy)-mbc)
-            jend    = min(my+mbc,int(1.0d0 + (yinthi-ylower)/dy)+mbc)
+            jstart  = max(1-mbc,int(0.5 + (yintlow-ylower)/dy)-mbc)
+            jend    = min(my+mbc,int(1.0 + (yinthi-ylower)/dy)+mbc)
 
             do i=istart,iend
                x = xlower + (i-0.5d0)*dx
@@ -125,7 +125,7 @@ c      # been strored in qinitwork.
                   q(i,j,5) = q(i,j,1)*q(i,j,5)
                endif
                if (q(i,j,1).le.drytolerance) then
-                  do m = 1,meqn
+                  do m = 2,meqn
                      q(i,j,m) = 0.d0
                   enddo
                endif

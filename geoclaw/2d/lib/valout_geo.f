@@ -111,12 +111,12 @@ c  old        ycorn = rnode(cornylo,mptr) - .5d0*hyposs(level)
             endif
             surface = alloc(iadd(i,j,1)) + alloc(iaddaux(i,j,1))
      &              - alloc(iadd(i,j,7))
-            write(matunit1,109) i, j, (alloc(iadd(i,j,ivar)), ivar=1,1),
+            write(matunit1,109) (alloc(iadd(i,j,ivar)), ivar=1,nvar),
      &         surface
          enddo
          write(matunit1,*) ' '
       enddo
-  109       format(2i5, 9e26.16)
+  109       format(9e26.16)
 
 
             mptr = node(levelptr, mptr)
@@ -197,7 +197,7 @@ c                 # output in 1d format if ny=1:
                      alloc(iaddaux(i,j,ivar)) = 0.d0
                   endif
                enddo
-               write(matunit3,109) i, j, (alloc(iaddaux(i,j,ivar)),
+               write(matunit3,109) (alloc(iaddaux(i,j,ivar)),
      &                              ivar=1,naux)
             enddo
             write(matunit3,*) ' '

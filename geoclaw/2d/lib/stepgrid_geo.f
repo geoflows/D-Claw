@@ -57,14 +57,14 @@ c     # needed there.
       level = node(nestlevel,mptr)
 
       if (dump) then
-         write(outunit,*)" at start of stepgrid: dumping grid ",mptr
+         write(*,*)" dumping grid ",mptr
          do i = 1, mitot
          do j = 1, mjtot
-            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar),
-     .            aux(i,j,1),aux(i,j,8),aux(i,j,9)
- 545        format(2i4,4e15.7,/,8x,3e15.7,/,8x,3e15.7)
-          end do
-          end do
+c            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)
+            write(*,545) i,j,(q(i,j,ivar),ivar=1,nvar)
+ 545        format(2i4,4e15.7)
+         end do
+         end do
       endif
 c
       meqn   = nvar
@@ -370,17 +370,6 @@ c
      &              '  is larger than input cfl_max = ', d12.4,
      &              '  on grid ',i3, ' level ',i3)
             endif
-
-      if (dump) then
-            write(outunit,*)" at end of stepgrid: dumping grid ",mptr
-            do i = 1, mitot
-            do j = 1, mjtot
-                  write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar),
-     .            aux(i,j,1),aux(i,j,8),aux(i,j,9)
-            end do
-            end do
-      endif
-
 c
 !--      if (dump) then
 !--         write(*,*)" at end of stepgrid: dumping grid ",mptr
