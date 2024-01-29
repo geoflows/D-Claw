@@ -673,6 +673,8 @@ subroutine calc_taudir(maxmx,maxmy,meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux
             endif
 
             pm = 0.5d0 !does not effect tau. only need tau in different cells
+            ! DIG: pm does impact rho, so it should be calculated here, consistently. should it be q(6,i,j)/h
+
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call admissibleq(hL,huL,hvL,hmL,pL,uL,vL,mL,theta)
             call admissibleq(hB,huB,hvB,hmL,pB,uB,vB,mB,theta)
