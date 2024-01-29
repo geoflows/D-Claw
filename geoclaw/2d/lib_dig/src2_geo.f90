@@ -60,6 +60,7 @@
 
       do i=1-mbc+1,mx+mbc-1
          do j=1-mbc+1,my+mbc-1
+
             theta = 0.d0
             dtheta = 0.d0
             if (bed_normal==1) then
@@ -214,9 +215,9 @@
                   !write(*,*) '------------'
                   !write(*,*) 'vu',t1bot
                   beta = 1.0d0-m!tanh(10.d0*m) !tan(1.5d0*p/(rho*gmod*h))/14.0d0
-                  gamma= rho*beta2*(vnorm**2)*(beta*gmod*coeff**2)/(tanh(h+1.d0-2.d0)**(1.0d0/3.0d0))
+                  !! DIG not used. segfault.gamma= rho*beta2*(vnorm**2)*(beta*gmod*coeff**2)/(tanh(h+1.d0-2.d0)**(1.0d0/3.0d0))
                   !write(*,*) 'gamma', gamma
-                  t1bot = t1bot + gamma
+                  !! DIG not used. segfault.t1bot = t1bot + gamma
                   t1bot = t1bot + tau!+p*tan(phi)
                   !write(*,*) 'tau',tau
                   t2top = min(t1bot,(1.d0-beta*entrainment_rate)*(tau))
@@ -323,7 +324,7 @@
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
-                     beta = 1.0d0-m 
+                     beta = 1.0d0-m
                      gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.d0/3.d0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
