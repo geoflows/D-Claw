@@ -1594,7 +1594,7 @@ class DigclawInputData(Data):
         self.add_attribute("chi_init_val", 0.0, _DIG_ATTRS["chi_init_val"])
         self.add_attribute("kappita_diff", 1.0, _DIG_ATTRS["kappita_diff"])
         self.add_attribute("outaux", False, _DIG_ATTRS["outaux"])
-        self.add_attribute("curvature", 1, _DIG_ATTRS["curvature"])
+        self.add_attribute("curvature", 0, _DIG_ATTRS["curvature"])
         self.add_attribute("momlevel", 1, _DIG_ATTRS["momlevel"])
 
         # self.add_attribute('m_crit2', 0.62, 'critical state value of m (#) for different size species')
