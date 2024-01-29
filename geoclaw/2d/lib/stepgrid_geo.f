@@ -46,7 +46,7 @@ c :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
       dimension work(mwork)
 
       logical    debug,  dump
-      data       debug/.false./,  dump/.false./
+      data       debug/.true./,  dump/.true./
 c
 c     # set tcom = time.  This is in the common block comxyt that could
 c     # be included in the Riemann solver, for example, if t is explicitly
@@ -60,9 +60,8 @@ c     # needed there.
          write(outunit,*)" at start of stepgrid: dumping grid ",mptr
          do i = 1, mitot
          do j = 1, mjtot
-            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar),
-     .            aux(i,j,1),aux(i,j,8),aux(i,j,9)
- 545        format(2i4,4e15.7,/,8x,3e15.7,/,8x,3e15.7)
+            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)
+ 545        format(2i4,7e15.7)
           end do
           end do
       endif
@@ -375,23 +374,11 @@ c
             write(outunit,*)" at end of stepgrid: dumping grid ",mptr
             do i = 1, mitot
             do j = 1, mjtot
-                  write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar),
-     .            aux(i,j,1),aux(i,j,8),aux(i,j,9)
+                  write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)
             end do
             end do
       endif
 
-c
-!--      if (dump) then
-!--         write(*,*)" at end of stepgrid: dumping grid ",mptr
-!--         do i = 1, mitot
-!--         do j = 1, mjtot
-!--c            write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)
-!--            write(*,545) i,j,(q(i,j,ivar),ivar=1,nvar)
-!--         end do
-!--         end do
-!--      endif
-c
       return
       end
 
