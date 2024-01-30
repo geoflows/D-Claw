@@ -151,6 +151,7 @@ c   # Set fadd for the donor-cell upwind method (Godunov)
             faddp(i,m) = faddp(i,m) - apdq(i,m)
             faddm(i,m) = faddm(i,m) + amdq(i,m)
          enddo
+
          if (relimit) then
             faddp(i,1) = faddp(i,1) + dxdc*q1d(i,mu)
             faddm(i,1) = faddp(i,1)
@@ -194,6 +195,7 @@ c
   119          continue
             faddm(i,m) = faddm(i,m) + 0.5d0 * cqxx(i,m)
             faddp(i,m) = faddp(i,m) + 0.5d0 * cqxx(i,m)
+
   120       continue
 c
 c

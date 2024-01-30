@@ -272,9 +272,17 @@ def output2maxval(
     coarse_dy = (yhi - ylow) / amrdata["my"]
     fine_dx = coarse_dx
     fine_dy = coarse_dy
-    for factor in amrdata["inratx"]:
+    
+    if isinstance(amrdata["inratx"], (int, float)):
+        inratx = [amrdata["inratx"]]
+        inraty = [amrdata["inraty"]]
+    else:
+        inratx = amrdata["inratx"]
+        inraty = amrdata["inraty"]
+
+    for factor in inratx:
         fine_dx /= factor
-    for factor in amrdata["inraty"]:
+    for factor in inraty:
         fine_dy /= factor
 
     mx = int((xhi - xlow) / fine_dx)

@@ -77,8 +77,8 @@
             p =  q(i,j,5)
             phi = aux(i,j,i_phi)
             pm = q(i,j,6)/h
-            pm = max(0.0,pm)
-            pm = min(1.0,pm)
+            pm = max(0.0d0,pm)
+            pm = min(1.0d0,pm)
             fsphi = aux(i,j,i_fsphi)
 
             jjend = 1
@@ -94,30 +94,30 @@
 
             !tau = max(tau*(1.0-fsphi),0.0)
 
-            vnorm = sqrt(u**2.0 + v**2.0)
-            hvnorm = sqrt(hu**2.0 + hv**2.0)
+            vnorm = sqrt(u**2 + v**2)
+            hvnorm = sqrt(hu**2 + hv**2)
             hvnorm0 = hvnorm
 
             !integrate friction
             hvnorm = dmax1(0.d0,hvnorm - dti*tau/rho)
-            hvnorm = hvnorm*exp(-(1.d0-m)*2.0d0*mu*dti/(rho*h**2.0))
-            !hvnorm = hvnorm*exp(-(1.d0-m)*2.0d0*0.1*dti/(rho*h**2.0))
-            if (hvnorm<1.e-16) hvnorm = 0.0
+            hvnorm = hvnorm*exp(-(1.d0-m)*2.0d0*mu*dti/(rho*h**2))
+            !hvnorm = hvnorm*exp(-(1.d0-m)*2.0d0*0.1*dti/(rho*h**2))
+            if (hvnorm<1.d-16) hvnorm = 0.d0
 
 
             if (hvnorm>0.0.and.curvature==1) then
                b_xx=(aux(i+1,j,1)-2.d0*aux(i,j,1)+aux(i-1,j,1))/(dx**2)
                b_yy=(aux(i,j+1,1)-2.d0*aux(i,j,1)+aux(i,j-1,1))/(dy**2)
-               b_xy=(aux(i+1,j+1,1)-aux(i-1,j+1,1) -aux(i+1,j-1,1)+aux(i-1,j-1,1))/(4.0*dx*dy)
-               chi = (u**2*b_xx + v**2*b_yy + 2.0*u*v*b_xy)/gmod
-               chi = max(chi,-1.0)
+               b_xy=(aux(i+1,j+1,1)-aux(i-1,j+1,1) -aux(i+1,j-1,1)+aux(i-1,j-1,1))/(4.d0*dx*dy)
+               chi = (u**2*b_xx + v**2*b_yy + 2*u*v*b_xy)/gmod
+               chi = max(chi,-1.0d0)
                taucf = chi*tau
                hvnorm = dmax1(0.d0,hvnorm - dti*taucf/rho)
-               taucf = u**2.0*dtheta*tau/gmod
+               taucf = u**2*dtheta*tau/gmod
                hvnorm = dmax1(0.d0,hvnorm - dti*taucf/rho)
             endif
 
-            if (hvnorm0>0.0) then
+            if (hvnorm0>0.0d0) then
                hu = hvnorm*hu/hvnorm0
                hv = hvnorm*hv/hvnorm0
             endif
@@ -128,28 +128,28 @@
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
 
-            vnorm = sqrt(u**2.0 + v**2.0)
+            vnorm = sqrt(u**2 + v**2)
 
             !integrate shear-induced dilatancy
-            sigebar = rho*gmod*h - p + sigma_0
-            shear = 2.0*vnorm/h
-            krate = 1.5*shear*m*tanpsi/alpha
-            sigebar = sigebar*exp(krate*dti)
+            !sigebar = rho*gmod*h - p + sigma_0
+            shear = 2.0d0*vnorm/h
+            krate = 1.5d0*shear*m*tanpsi/alpha
+            !sigebar = sigebar*exp(krate*dti)
             !p = rho*gmod*h + sigma_0 - sigebar
             if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
-               p = p - dti*3.0*vnorm*tanpsi/(h*compress)
+               p = p - dti*3.0d0*vnorm*tanpsi/(h*compress)
             endif
 
             !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
             if (dabs(alpha_seg-1.0)<1.d-6) then
-               seg = 0.0
+               seg = 0.0d0
                rho_fp = rho_f
-               pmtanh01=0.0
+               pmtanh01=0.0d0
             else
-               seg = 1.0
+               seg = 1.0d0
                call calc_pmtanh(pm,seg,pmtanh01)
-               rho_fp = max(0.d0,(1.0-pmtanh01))*rho_f
+               rho_fp = max(0.d0,(1.0d0-pmtanh01))*rho_f
             endif
             !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
             !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
@@ -160,8 +160,8 @@
             !else
             !   zeta = (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
             !endif
-            zeta = ((m*(sigbed +  sigma_0))/alpha)*3.d0/(h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
-            krate=-zeta*2.0*kperm/(h*max(mu,1.d-16))
+            zeta = ((m*(sigbed +  sigma_0))/alpha)*3.d0/(h*2.0d0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
+            krate=-zeta*2.0d0*kperm/(h*max(mu,1.d-16))
             p_hydro = h*rho_fp*gmod
             p_litho = (rho_s*m + (1.d0-m)*rho_fp)*gmod*h
 
@@ -196,10 +196,10 @@
 
             !======================mass entrainment===========================
 
-            vnorm = sqrt(u**2.0 + v**2.0)
+            vnorm = sqrt(u**2 + v**2)
             vlow = 0.1d0
 
-            if (ent.and.vnorm.gt.vlow.and.(aux(i,j,i_theta)>0.0)) then
+            if (ent.and.vnorm.gt.vlow.and.(aux(i,j,i_theta)>0.d0)) then
                b_x = (aux(i+1,j,1)+q(i+1,j,7)-aux(i-1,j,1)-q(i-1,j,7))/(2.d0*dx)
                b_y = (aux(i,j+1,1)+q(i,j+1,7)-aux(i,j-1,1)-q(i,j-1,7))/(2.d0*dy)
                dbdv = (u*b_x+v*b_y)/vnorm
@@ -210,11 +210,11 @@
                   m2 = 0.6d0
                   rho2 = m2*2700.d0 + (1.d0-m2)*1000.d0
                   beta2 = 0.66d0
-                  t1bot = beta2*vnorm*2.d0*mu*(1.d0-m)/(tanh(h+1.d-2))
+                  t1bot = beta2*vnorm*2.d0*mu*(1.d0-m)/(tanh(h+1.d0-2.d0))
                   !write(*,*) '------------'
                   !write(*,*) 'vu',t1bot
-                  beta = 1.0-m!tanh(10.d0*m) !tan(1.5*p/(rho*gmod*h))/14.0
-                  gamma= rho*beta2*(vnorm**2)*(beta*gmod*coeff**2)/(tanh(h+1.d-2)**(1.0/3.0))
+                  beta = 1.0d0-m!tanh(10.d0*m) !tan(1.5d0*p/(rho*gmod*h))/14.0d0
+                  gamma= rho*beta2*(vnorm**2)*(beta*gmod*coeff**2)/(tanh(h+1.d0-2.d0)**(1.0d0/3.0d0))
                   !write(*,*) 'gamma', gamma
                   t1bot = t1bot + gamma
                   t1bot = t1bot + tau!+p*tan(phi)
@@ -261,17 +261,17 @@
       do i=1,mx
          do j=1,my
          if (q(i,j,1)<=drytolerance) cycle
-            p = 0.0
+            p = 0.0d0
             icount = 0
             do ii=-1,1
                do jj=-1,1
                   !cell weights
                   if ((abs(ii)+abs(jj))==0) then
-                     w = 0.5
+                     w = 0.5d0
                   elseif((abs(ii)+abs(jj))==1) then
-                     w = 0.3/4.0
+                     w = 0.3d0/4.0d0
                   else
-                     w = 0.2/4.0
+                     w = 0.2d0/4.0d0
                   endif
                   if (q(i+ii,j+jj,1)>drytolerance) then
                      p = p + w*q(i+ii,j+jj,5)/q(i+ii,j+jj,1)
@@ -314,8 +314,8 @@
                   call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
                   if (h<tol) cycle
                   pm = q(i,j,6)/h
-                  pm = max(0.0,pm)
-                  pm = min(1.0,pm)
+                  pm = max(0.0d0,pm)
+                  pm = min(1.0d0,pm)
                   call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
                   if (h.lt.tol) then
@@ -323,7 +323,7 @@
                      q(i,j,2)=0.d0
                      q(i,j,3)=0.d0
                   else
-                     beta = 1.0-m !tan(1.5*p/(rho*gmod*h))/14.0
+                     beta = 1.0d0-m 
                      gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeff**2)/(h**(7.d0/3.d0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma

@@ -616,8 +616,8 @@ c
  904  format('number of cells advanced for time integration = ',f20.6)
  905  format(3x,'# cells advanced on level ',i4,' = ',f20.2)
  906  format('number of cells advanced for error estimation = ',f20.6,/)
- 907  format(' percentage of cells advanced in time  = ', f10.2)
- 908  format(' maximum Courant number seen = ', f10.2)
+ 907  format(' percentage of cells advanced in time  = ', f10.5)
+ 908  format(' maximum Courant number seen = ', f10.5)
 c
       write(outunit,909)
  909  format(//,' ------  end of AMRCLAW integration --------  ')
