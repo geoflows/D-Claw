@@ -57,7 +57,7 @@ c     # needed there.
       level = node(nestlevel,mptr)
 
       if (dump) then
-         write(outunit,*)" at start of stepgrid: dumping grid ",mptr
+         write(*,*)" dumping grid ",mptr
          do i = 1, mitot
          do j = 1, mjtot
             write(outunit,545) i,j,(q(i,j,ivar),ivar=1,nvar)

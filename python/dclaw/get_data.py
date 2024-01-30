@@ -21,10 +21,7 @@ def get_dig_data(project_path, output="_output", file="setdig.data"):
 
 
 def get_amr2ez_data(project_path, output="_output", file="amr2ez.data"):
-    try:
-        data = Data(os.path.join(project_path, output, file))
-    except:
-        data = Data(os.path.join(project_path, output, "amr.data"))
+    data = Data(os.path.join(project_path, output, file))
     return {key: data.__dict__[key] for key in data.attributes}
 
 

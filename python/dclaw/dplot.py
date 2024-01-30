@@ -350,38 +350,6 @@ def sigma_e_over_lithostatic(current_data):
     # this is the same as the liquifaction ratio.
     return sigma_e(current_data) / lithostaticP(current_data)
 
-def nondimentional_c(current_data):
-    """
-    Return a masked array containing factor of safety.
-    """
-
-    rho_f = current_data.plotdata.rho_f
-    kappita = current_data.plotdata.kappita # could change this to kperm (spatially variable)
-    U = velocity_magnitude(current_data)
-    mu = current_data.plotdata.mu
-    g = gmod(current_data)
-
-    c = np.array((rho_f*g*kappita)/(mu*U), dtype=float)
-
-    drytol = current_data.plotdata.drytolerance
-    q = current_data.q
-    h = q[:, :, 0]
-
-    #set to zero if nan or inf
-    c[np.isnan(c)] = 0
-    c[np.isinf(c)] = 0
-    c_out = ma.masked_where(h <= drytol, c)
-    return c_out
-
-def static_angle(current_data):
-    se_over_sl = sigma_e_over_lithostatic(current_data)
-    # phi is in radians
-    # static limit, so choose psi = 0
-    
-    deta_dx = se_over_sl * np.tan(0.+phi(current_data))
-    theta = np.arctan(deta_dx)
-    theta_deg = np.rad2deg(theta)
-    return theta_deg
 
 def Iv(current_data):
     # inertial number
@@ -512,47 +480,6 @@ def psi(current_data):
     return np.arctan(
         m_minus_meqn(current_data)
     )  # maybe this should be arctan of tanpsi (with the regularization as is discussed for tanpsi
-
-def local_slope(current_data):
-    h = depth(current_data)
-
-    # gravitational driving force per unit area.
-    bed_normal = current_data.plotdata.bed_normal
-    eta = surface(current_data)
-
-    drytol = current_data.plotdata.drytolerance
-    
-
-    if bed_normal == 1:
-        q = current_data.q
-        theta = q[:, :, i_theta]
-        sintheta = np.sin(theta)
-    else:
-        sintheta = 0.0
-
-    dx = current_data.dx
-    dy = current_data.dy
-
-    etaL = np.roll(eta.copy(), 1, axis=1)
-    etaL[:, 0] = np.nan
-    etaR = np.roll(eta.copy(), -1, axis=1)
-    etaR[:, -1] = np.nan
-    etaB = np.roll(eta.copy(), 1, axis=0)
-    etaB[0, :] = np.nan
-    etaT = np.roll(eta.copy(), -1, axis=0)
-    etaT[-1, :] = np.nan
-
-    row, col = eta.shape
-    detadx = np.zeros((row, col, 4))
-    detadx[:, :, 0] = np.abs((eta - etaL) / (dx))
-    detadx[:, :, 1] = np.abs((eta - etaB) / (dy))
-    detadx[:, :, 2] = np.abs((etaR - eta) / (dx))
-    detadx[:, :, 3] = np.abs((etaT - eta) / (dy))
-
-    maxdetadx=np.max(detadx, axis=-1)
-    slope = np.rad2deg(np.arctan(maxdetadx))
-
-    return ma.masked_where(h <= drytol, slope)
 
 
 def Fgravitational(current_data):
@@ -720,9 +647,8 @@ def phi(current_data):
         mu_bf[mu_static] = mu_sf[mu_static]
 
     else:
-        mu_bf = np.tan(np.deg2rad(phi_bed))
+        mu_bf = phi_bed
 
-    # results are returned in radians. 
     return np.arctan(mu_bf)
 
 
