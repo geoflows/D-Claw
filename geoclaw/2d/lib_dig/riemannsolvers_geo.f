@@ -67,10 +67,10 @@ c-----------------------------------------------------------------------
 
       pmL = chiL
       pmR = chiR
-      pm = 0.5*(chiL + chiR)
+      pm = 0.5d0*(chiL + chiR)
       pm = min(1.0d0,pm)
       pm = max(0.0d0,pm)
-      if (alpha_seg==1.0d0) then
+      if (dabs(alpha_seg-1.d0)<1.d-6) then
          seg = 0.0d0
       else
          seg = 1.0d0
@@ -78,7 +78,7 @@ c-----------------------------------------------------------------------
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
       call calc_pmtanh(pm,seg,pmtanh01)
-      rho_fp = (1.0-pmtanh01)*rho_f
+      rho_fp = (1.0d0-pmtanh01)*rho_f
 
 
       if (hL.ge.drytol.and.hR.ge.drytol) then
@@ -114,9 +114,9 @@ c-----------------------------------------------------------------------
       rho = 0.5d0*(rhoL + rhoR)
       tau = 0.5d0*(tauL + tauR)
       theta = 0.5d0*(thetaL + thetaR)
-      gamma = 0.25*(rho_fp + 3.0*rho)/rho
-      gammaL = 0.25*(rho_fp + 3.0*rhoL)/rhoL
-      gammaR = 0.25*(rho_fp + 3.0*rhoR)/rhoR
+      gamma = 0.25d0*(rho_fp + 3.0d0*rho)/rho
+      gammaL = 0.25d0*(rho_fp + 3.0d0*rhoL)/rhoL
+      gammaR = 0.25d0*(rho_fp + 3.0d0*rhoR)/rhoR
 
       eps = kappa + (1.d0-kappa)*gamma
 
