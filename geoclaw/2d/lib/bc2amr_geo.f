@@ -117,11 +117,12 @@ c     # user-specified boundary conditions go here in place of error output
 c
   110 continue
 c     # zero-order extrapolation:
-      do 115 m=1,meqn
+      ! do 115 m=1,meqn
          do 115 i=1,nxl
             do 115 j = 1,ncol
-               aux(i,j,1) = aux(nxl+1,j,1)  !inserted for bc2amr_noslope
-               val(i,j,m) = val(nxl+1,j,m)
+               ! aux(i,j,1) = aux(nxl+1,j,1)  !inserted for bc2amr_noslope
+               aux(i,j,:) = aux(nxl+1,j,:)
+               val(i,j,:) = val(nxl+1,j,:)
   115       continue
       go to 199
 
@@ -171,11 +172,11 @@ c     # user-specified boundary conditions go here in place of error output
 
   210 continue
 c     # zero-order extrapolation:
-      do 215 m=1,meqn
+      ! do 215 m=1,meqn
          do 215 i=ibeg,nrow
             do 215 j = 1,ncol
-               aux(i,j,1) = aux(ibeg-1,j,1) !inserted for bc2amr_noslope
-               val(i,j,m) = val(ibeg-1,j,m)
+               aux(i,j,:) = aux(ibeg-1,j,:) !inserted for bc2amr_noslope
+               val(i,j,:) = val(ibeg-1,j,:)
   215       continue
       go to 299
 
@@ -224,11 +225,11 @@ c     # user-specified boundary conditions go here in place of error output
 c
   310 continue
 c     # zero-order extrapolation:
-      do 315 m=1,meqn
+      ! do 315 m=1,meqn
          do 315 j=1,nyb
             do 315 i=1,nrow
-                aux(i,j,1) = aux(i,nyb+1,1) !inserted for bc2amr_noslope
-                val(i,j,m) = val(i,nyb+1,m)
+                aux(i,j,:) = aux(i,nyb+1,:) !inserted for bc2amr_noslope
+                val(i,j,:) = val(i,nyb+1,:)
   315       continue
       go to 399
 
@@ -278,11 +279,11 @@ c     # user-specified boundary conditions go here in place of error output
 
   410 continue
 c     # zero-order extrapolation:
-      do 415 m=1,meqn
+      ! do 415 m=1,meqn
          do 415 j=jbeg,ncol
             do 415 i=1,nrow
-               aux(i,j,1) = aux(i,jbeg-1,1)  !inserted for bc2amr_noslope
-               val(i,j,m) =  val(i,jbeg-1,m)
+               aux(i,j,:) = aux(i,jbeg-1,:)  !inserted for bc2amr_noslope
+               val(i,j,:) =  val(i,jbeg-1,:)
   415       continue
       go to 499
 
