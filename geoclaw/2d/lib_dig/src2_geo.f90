@@ -16,10 +16,10 @@
       integer :: maxmx,maxmy,meqn,mbc,mx,my,maux
 
       !local
-      double precision :: gmod,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx
-      double precision :: D,tau,sigbed,kperm,compress,pm
-      double precision :: zeta,p_hydro,p_litho,p_eq,krate,gamma,dgamma
-      double precision :: vnorm,hvnorm,theta,dtheta,w,taucf,hvnorm0
+      double precision :: gacc,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx
+      double precision :: D,tau,sigbed,kperm,compress,pm,p_exc,sig_0
+      double precision :: zeta,p_eq,mkrate,pkrate,gamma,dgamma,c_dil,alphainv
+      double precision :: vnorm,hvnorm,theta,dtheta,w,hvnorm0
       double precision :: shear,sigebar,pmtanh01,rho_fp,seg
       double precision :: b_xx,b_yy,b_xy,chi,beta
       double precision :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
@@ -82,7 +82,7 @@
                b_yy=(aux(i,j+1,1)-2.d0*aux(i,j,1)+aux(i,j-1,1))/(dy**2)
                b_xy=(aux(i+1,j+1,1)-aux(i-1,j+1,1) -aux(i+1,j-1,1)+aux(i-1,j-1,1))/(4.0*dx*dy)
                dtheta = -(aux(i+1,j,6) - theta)/dx
-               gacc = max((u**2*b_xx + v**2*b_yy + 2.0*u*v*b_xy + u**2*dtheta,0.d0)!max:currently only consider enhancement not reduction of gz (ie. basin not a hump)
+               gacc = max(u**2*b_xx + v**2*b_yy + 2.0*u*v*b_xy + u**2*dtheta,0.d0)!max:currently only consider enhancement not reduction of gz (ie. basin not a hump)
                gz = gz + gacc
             endif
 
@@ -113,26 +113,39 @@
             ! u,v change need new aux vals
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
-            !integrate m and p, keep rhoh
+            !integrate m and p, keep rhoh ------------------------------------------------------------
             p_eq = rho_f*gz*h
             p_exc = p - p_eq
+
             !determine relaxation portion rhs of dp_exc/dt
-            sig_0 = sigma_0  !0.5d0*alpha*p_eq*(rho_s-rho_f)/rho
+            sig_0 = sigma_0  !0.5d0*alpha*p_eq*(rho_s-rho_f)/rho !latter possibly needed to ensure krate>0.
             alphainv = m*(rhoh*gz-p + sig_0)
-            krate = (2.d0*kperm/(h*mu))*(((3.d0*alphainv*rho)/(2.d0*rhoh))- ((3.d0*rho_f*(gz*rhoh-p_eq))/(4.d0*rhoh)))
+            pkrate = (2.d0*kperm/(h*mu))*(((3.d0*alphainv*rho)/(2.d0*rhoh)) &
+               - ((3.d0*rho_f*(gz*rhoh-p_eq))/(4.d0*rhoh)))
             !integrate shear induced dilatancy: dp_exc/dt = c_dil * (m-m_eq)
             c_dil = 3.d0*(alphainv*vnorm/h)*tanpsi
+            p_exc = p_exc - dt*c_dil
+            !relax p_exc
+            p_exc = p_exc*exp(-dt*pkrate)
 
-            shear = 2.0d0*vnorm/h
-            krate = 1.5d0*shear*m*tanpsi/alpha
-            !sigebar = sigebar*exp(krate*dti)
-            !p = rho*gmod*h + sigma_0 - sigebar
-            if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
-               p = p - dti*3.0d0*vnorm*tanpsi/(h*compress)
-            endif
+            !integrate m
+            mkrate = p_exc*(2.d0*kperm)/(mu*h**2)
+            m = m*exp(dt*mkrate)
+            m = min(1.d0,m)
+            !determine new rho then h
+            rho = m*rho_s + (1.d0-m)*rho_f
+            h = rhoh/rho
+            !recapture p
+            p = rho_f*gz*h + p_exc
+            !recapture hu,hv,hm
+            hu = h*u
+            hv = h*v
+            hm = h*m
 
-            !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
-            !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            !--------------------------------------------------------------------------------------------
+            
             if (dabs(alpha_seg-1.0)<1.d-6) then
                seg = 0.0d0
                rho_fp = rho_f
@@ -142,43 +155,6 @@
                call calc_pmtanh(pm,seg,pmtanh01)
                rho_fp = max(0.d0,(1.0d0-pmtanh01))*rho_f
             endif
-            !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
-            !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
-
-            !integrate pressure relaxation
-            !if (compress<1.d15) then !elasticity is = 0.0 but compress is given 1d16 in auxeval
-            !   zeta = 3.d0/(compress*h*2.0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
-            !else
-            !   zeta = (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
-            !endif
-            zeta = ((m*(sigbed +  sigma_0))/alpha)*3.d0/(h*2.0d0)  + (rho-rho_fp)*rho_fp*gmod/(4.d0*rho)
-            krate=-zeta*2.0d0*kperm/(h*max(mu,1.d-16))
-            p_hydro = h*rho_fp*gmod
-            p_litho = (rho_s*m + (1.d0-m)*rho_fp)*gmod*h
-
-            !if (abs(compress*krate)>0.0) then
-            !   p_eq = p_hydro + 3.0*vnorm*tanpsi/(compress*h*krate)
-            !else
-            !   p_eq = p_hydro
-            !endif
-            !if (abs(pm-.5)>.49) then
-            !pmtanh01 = 0.5*(tanh(20.0*(pm-0.80))+1.0)
-            p_eq = p_hydro !*(1.0-pmtanh01)
-            !p_eq = max(p_eq,0.0)
-            !p_eq = min(p_eq,p_litho)
-
-            p = p_eq + (p-p_eq)*exp(krate*dti)
-
-
-            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
-            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
-
-            krate = D*(rho-rho_fp)/rho
-            hu = hu*exp(dti*krate/h)
-            hv = hv*exp(dti*krate/h)
-            hm = hm*exp(-dti*D*rho_fp/(h*rho))
-            h = h + krate*dti
 
             !enddo
 
@@ -250,47 +226,7 @@
          enddo
       enddo
 
-      !mollification
-      if (.false.) then !mollification ?
-      if (.not.allocated(moll)) then
-         allocate(moll(mx,my))
-      endif
-      do i=1,mx
-         do j=1,my
-         if (q(i,j,1)<=drytolerance) cycle
-            p = 0.0d0
-            icount = 0
-            do ii=-1,1
-               do jj=-1,1
-                  !cell weights
-                  if ((abs(ii)+abs(jj))==0) then
-                     w = 0.5d0
-                  elseif((abs(ii)+abs(jj))==1) then
-                     w = 0.3d0/4.0d0
-                  else
-                     w = 0.2d0/4.0d0
-                  endif
-                  if (q(i+ii,j+jj,1)>drytolerance) then
-                     p = p + w*q(i+ii,j+jj,5)/q(i+ii,j+jj,1)
-                  else
-                     p = p + w*q(i,j,5)/q(i,j,1)
-                     icount = icount + 1
-                  endif
-               enddo
-            enddo
-            moll(i,j) = p !/icount
-         enddo
-      enddo
-      do i=1,mx
-         do j=1,my
-            if (q(i,j,1)<=drytolerance) cycle
-            q(i,j,5) = moll(i,j)*q(i,j,1)
-         enddo
-      enddo
-      if (allocated(moll)) then
-         deallocate(moll)
-      endif
-      endif
+
 
       ! Manning friction------------------------------------------------
       if (ifriction==0) return
@@ -298,7 +234,6 @@
          do i=1,mx
             do j=1,my
 
-               if (bed_normal==1) gmod = grav*cos(aux(i,j,i_theta))
                h=q(i,j,1)
                if (h<=frictiondepth) then
                   !# apply friction source term only in shallower water
@@ -321,7 +256,7 @@
                      q(i,j,3)=0.d0
                   else
                      beta = 1.0d0-m
-                     gamma= beta*dsqrt(hu**2 + hv**2)*(gmod*coeffmanning**2)/(h**(7.d0/3.d0))
+                     gamma= beta*dsqrt(hu**2 + hv**2)*(gz*coeffmanning**2)/(h**(7.d0/3.d0))
                      dgamma=1.d0 + dt*gamma
                      q(i,j,2)= q(i,j,2)/dgamma
                      q(i,j,3)= q(i,j,3)/dgamma
