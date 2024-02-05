@@ -61,6 +61,7 @@ if PlotType == 13
     theta(X(:,1)>=D2,:) = theta2;
     theta(X(:,1)>flumelen&X(:,1)<D2,:) = theta1 - (X(X(:,1)>flumelen&X(:,1)<D2,:) - flumelen)/(deg2rad*flumerad);
     theta = deg2rad*theta;
+    theta = 0.0*theta;
     if mq == 5
         eta2color = p2./(cos(theta).*9.81.*rho.*h2);
         %eta2color = (p2 - 9.81*1000.0*h2)./(9.81*rho.*h2 - 9.81*1000.0.*h2);
