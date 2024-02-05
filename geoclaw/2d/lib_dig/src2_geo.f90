@@ -128,8 +128,8 @@
             !relax p_exc
             p_exc = p_exc*exp(-dt*pkrate)
 
-            !integrate m
-            mkrate = p_exc*(2.d0*kperm)/(mu*h**2)
+            !integrate m explicitly
+            mkrate = (p-p_eq)*(2.d0*kperm)/(mu*h**2)
             m = m*exp(dt*mkrate)
             m = min(1.d0,m)
             !determine new rho then h
