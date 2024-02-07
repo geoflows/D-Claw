@@ -117,16 +117,7 @@
             !integrate m and p, keep rhoh ------------------------------------------------------------
            
             !explicit integration
-            !if (rhoh<1.d10) then
-            !   write(*,*) '--------------------------------------'
-            !   write(*,*) 'above: rhoh,rho,h',rhoh,rho,h
-            !   write(*,*) 'out:dt,h,u,v,m,p,rhoh,gz,phi,theta,pm',dt,h,u,v,m,p,rhoh,gz,phi,theta,pm
-            !endif
             call mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
-            !if (rhoh<1.d10) then
-            !   write(*,*) 'below: rhoh,rho,h',rhoh,rho,h
-            !   write(*,*) '--------------------------------------'
-            !endif
             hu = h*u
             hv = h*v
             hm = h*m
@@ -144,8 +135,6 @@
                call calc_pmtanh(pm,seg,pmtanh01)
                rho_fp = max(0.d0,(1.0d0-pmtanh01))*rho_f
             endif
-
-            !enddo
 
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
@@ -390,8 +379,6 @@
       real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
       real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1
 
-      !write(*,*) 'tic: rhoh,rho,h',rhoh,rho,h
-      !write(*,*) 'in:dt,h,u,v,m,p,rhoh,gz,phi,theta,pm',dt,h,u,v,m,p,rhoh,gz,phi,theta,pm
       call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
       vnorm = sqrt(u**2 + v**2)
@@ -399,7 +386,10 @@
       p0 = p
       p_eq0 = rho_f*gz*h
       p_exc0 = p0 - p_eq0
-      sig_0 = sigma_0  !sig_0 = 0.5d0*alpha*p_eq*(rho_s-rho_f)/rho !later possibly needed to ensure stability of dp_exc/dt.
+      !sig_0 = sigma_0  !
+      !sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+      sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
+       !later possibly needed to ensure stability of dp_exc/dt.
       sig_eff = rhoh*gz-p0
 
       !explicit integration (hybrid FE and explicit exponential solution)
@@ -417,7 +407,7 @@
       p_exc1 = p_exc0 + dtk*c_dil
       plambda = (2.d0*kperm/(h*mu))*(((3.d0*alphainv*rho)/(2.d0*rhoh)) &
                - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !always >= 0.d0
-      !if (plambda<0.d0) write(*,*) 'plambda,rhoh,rho,h:',plambda,rhoh,rho,h
+      if (plambda<0.d0) write(*,*) 'plambda,rhoh,rho,h,sig_eff:',plambda,rhoh,rho,h,sig_eff
       p_exc1 = p_exc1*exp(-plambda*dtk)
 
       m = min(1.d0,m1)
