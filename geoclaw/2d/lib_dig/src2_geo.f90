@@ -10,40 +10,41 @@
 
 
       !i/o
-      double precision :: q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, meqn)
-      double precision :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
-      double precision :: xlower,ylower,dx,dy,t,dt
+      real(kind=8) :: q(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, meqn)
+      real(kind=8) :: aux(1-mbc:maxmx+mbc,1-mbc:maxmy+mbc, maux)
+      real(kind=8) :: xlower,ylower,dx,dy,t,dt
       integer :: maxmx,maxmy,meqn,mbc,mx,my,maux
 
       !local
-      double precision :: gacc,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx
-      double precision :: D,tau,sigbed,kperm,compress,pm,p_exc,sig_0
-      double precision :: zeta,p_eq,mkrate,pkrate,gamma,dgamma,c_dil,alphainv
-      double precision :: vnorm,hvnorm,theta,dtheta,w,hvnorm0
-      double precision :: shear,sigebar,pmtanh01,rho_fp,seg
-      double precision :: b_xx,b_yy,b_xy,chi,beta
-      double precision :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
-      double precision :: vlow,m2,vreg,slopebound
-      double precision :: b_eroded,b_remaining,dtcoeff
+      real(kind=8) :: gacc,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx
+      real(kind=8) :: D,tau,sigbed,kperm,compress,pm,sig_0
+      real(kind=8) :: zeta,gamma,dgamma,c_dil,alphainv
+      real(kind=8) :: vnorm,hvnorm,theta,dtheta,w,hvnorm0
+      real(kind=8) :: shear,sigebar,pmtanh01,rho_fp,seg
+      real(kind=8) :: b_xx,b_yy,b_xy,chi,beta
+      real(kind=8) :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
+      real(kind=8) :: vlow,m2,vreg,slopebound
+      real(kind=8) :: b_eroded,b_remaining,dtcoeff
+      real(kind=8) :: p_exc,p_eq,p_exc0,p_eq0,mlambda,plambda,m_0,p_eq1,p_exc1,m1,rhoh
       integer :: i,j,ii,jj,jjend,icount
       logical :: ent
 
       !source fountain
-      integer :: numCellsX,numCellsY,numCells,rhoh
+      integer :: numCellsX,numCellsY,numCells
       integer :: numCellsHalfX,numCellsHalfY,numCellsHalf
       integer :: srcI,srcJ,srcJlo,srcIlo,srcIhi,srcJhi
-      double precision :: src_xloc, src_yloc
-      double precision :: s_xloclo,s_yloclo
-      double precision :: s_xlochi,s_ylochi
-      double precision :: s_m0,s_q,s_Qp
-      double precision :: s_tend,s_Vtot,s_xloc,s_yloc
-      double precision :: srcXComp,srcYComp,x,y
+      real(kind=8) :: src_xloc, src_yloc
+      real(kind=8) :: s_xloclo,s_yloclo
+      real(kind=8) :: s_xlochi,s_ylochi
+      real(kind=8) :: s_m0,s_q,s_Qp
+      real(kind=8) :: s_tend,s_Vtot,s_xloc,s_yloc
+      real(kind=8) :: srcXComp,srcYComp,x,y
 
       ! level awareness
-      double precision :: dxmin, dymin
+      real(kind=8) :: dxmin, dymin
       common /comfine/ dxmin,dymin
 
-      double precision, allocatable :: moll(:,:)
+      
 
       ! check for NANs in solution:
       call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
@@ -104,7 +105,7 @@
                u = hu/h
                v = hv/h
                vnorm = sqrt(u**2 + v**2)
-               ! velocity now constant for remainder of src2
+               ! velocity now constant for remainder of src2. hu,hv adjusted due to change in h
             endif
 
             if (p_initialized==0) cycle !# dlg: I can't remember why we don't just return in this case but don't want to change now
@@ -114,30 +115,18 @@
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
             !integrate m and p, keep rhoh ------------------------------------------------------------
-            p_eq = rho_f*gz*h
-            p_exc = p - p_eq
-
-            !determine relaxation portion rhs of dp_exc/dt
-            sig_0 = sigma_0  !0.5d0*alpha*p_eq*(rho_s-rho_f)/rho !latter possibly needed to ensure krate>0.
-            alphainv = m*(rhoh*gz-p + sig_0)
-            pkrate = (2.d0*kperm/(h*mu))*(((3.d0*alphainv*rho)/(2.d0*rhoh)) &
-               - ((3.d0*rho_f*(gz*rhoh-p_eq))/(4.d0*rhoh)))
-            !integrate shear induced dilatancy: dp_exc/dt = c_dil * (m-m_eq)
-            c_dil = 3.d0*(alphainv*vnorm/h)*tanpsi
-            p_exc = p_exc - dt*c_dil
-            !relax p_exc
-            p_exc = p_exc*exp(-dt*pkrate)
-
-            !integrate m explicitly
-            mkrate = (p-p_eq)*(2.d0*kperm)/(mu*h**2)
-            m = m*exp(dt*mkrate)
-            m = min(1.d0,m)
-            !determine new rho then h
-            rho = m*rho_s + (1.d0-m)*rho_f
-            h = rhoh/rho
-            !recapture p
-            p = rho_f*gz*h + p_exc
-            !recapture hu,hv,hm
+           
+            !explicit integration
+            !if (rhoh<1.d10) then
+            !   write(*,*) '--------------------------------------'
+            !   write(*,*) 'above: rhoh,rho,h',rhoh,rho,h
+            !   write(*,*) 'out:dt,h,u,v,m,p,rhoh,gz,phi,theta,pm',dt,h,u,v,m,p,rhoh,gz,phi,theta,pm
+            !endif
+            call mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
+            !if (rhoh<1.d10) then
+            !   write(*,*) 'below: rhoh,rho,h',rhoh,rho,h
+            !   write(*,*) '--------------------------------------'
+            !endif
             hu = h*u
             hv = h*v
             hm = h*m
@@ -377,4 +366,81 @@
       endif ! source fountain active
 
       return
-      end
+      end subroutine src2
+
+   !====================================================================
+   ! subroutine mp_update_FEexp: integrate dp/dt,dm/dt by a hybrid 
+   ! FE and exponential integration
+   !====================================================================
+
+      subroutine mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
+
+      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,auxeval
+      use geoclaw_module, only: grav,drytolerance
+
+      implicit none
+
+      !i/o
+      real(kind=8), intent(inout) :: h,m,p,pm
+      real(kind=8), intent(in)  :: u,v,rhoh,dt
+      real(kind=8), intent(in)  :: gz,phi,theta
+
+      !local
+      real(kind=8) :: p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
+      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
+      real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1
+
+      !write(*,*) 'tic: rhoh,rho,h',rhoh,rho,h
+      !write(*,*) 'in:dt,h,u,v,m,p,rhoh,gz,phi,theta,pm',dt,h,u,v,m,p,rhoh,gz,phi,theta,pm
+      call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+
+      vnorm = sqrt(u**2 + v**2)
+      m_0 = m
+      p0 = p
+      p_eq0 = rho_f*gz*h
+      p_exc0 = p0 - p_eq0
+      sig_0 = sigma_0  !sig_0 = 0.5d0*alpha*p_eq*(rho_s-rho_f)/rho !later possibly needed to ensure stability of dp_exc/dt.
+      sig_eff = rhoh*gz-p0
+
+      !explicit integration (hybrid FE and explicit exponential solution)
+      ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
+      dtk = dt
+      mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc0
+      if (mkrate<=0.d0) then !integrate exponential 1/2 dt
+         m1 = m_0*exp(mkrate*dtk)
+      else 
+         m1 = m_0 + dtk*mkrate
+      endif
+      !dp_eq/dt = see George & Iverson 2014
+      alphainv = m_0*(sig_eff + sig_0)/alpha
+      c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+      p_exc1 = p_exc0 + dtk*c_dil
+      plambda = (2.d0*kperm/(h*mu))*(((3.d0*alphainv*rho)/(2.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !always >= 0.d0
+      !if (plambda<0.d0) write(*,*) 'plambda,rhoh,rho,h:',plambda,rhoh,rho,h
+      p_exc1 = p_exc1*exp(-plambda*dtk)
+
+      m = min(1.d0,m1)
+      !determine new rho then h
+      rho = m*rho_s + (1.d0-m)*rho_f
+      h = rhoh/rho
+      !recapture p
+      p = rho_f*gz*h + p_exc1
+
+      return
+      end subroutine mp_update_FEexp
+
+   !====================================================================
+   ! subroutine mp_update_trapezoid: integrate dp/dt,dm/dt by a hybrid 
+   ! trapezoid rule. 
+   ! rationale: A-stability is only desired in relaxation cases cases.
+   !====================================================================
+
+   !subroutine mp_update_trapezoid(
+
+
+
+   !return
+   !end subroutine mp_update_trapezoid
+
+
