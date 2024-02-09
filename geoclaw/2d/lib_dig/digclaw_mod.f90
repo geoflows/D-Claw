@@ -280,18 +280,20 @@ contains
 
       rho = rho_s*m + (1.d0-m)*rho_f
       pmax = rho*gmod*h
-      plo = rho_f*dry_tol*gmod*dry_tol
-      phi = pmax - plo
-      if (p.lt.plo) then
-         if ((u**2+v**2)>0.d0) then
-            p = dmax1(0.d0,p)
-         endif
+      plo = 0.d0!rho_f*dry_tol*gmod*dry_tol
+      p = dmax1(0.d0,p)
+      p = dmin1(pmax,p)
+      !phi = pmax - plo
+      !if (p.lt.plo) then
+      !   if ((u**2+v**2)>0.d0) then
+      !      p = dmax1(0.d0,p)
+      !   endif
          !p = dmax1(-5.0*pmax,p)
          !p = (p**2 + plo**2)/(2.d0*plo)
-      elseif (p.gt.phi) then
-         p = dmin1(pmax,p)
+      !elseif (p.gt.phi) then
+      !   p = dmin1(pmax,p)
          !p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
-      endif
+      !endif
 
       return
 

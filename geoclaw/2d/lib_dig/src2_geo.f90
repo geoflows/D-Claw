@@ -87,10 +87,10 @@
                gz = gz + gacc
             endif
 
-            !integrate momentum source term
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
             rhoh = h*rho !this is invariant in src and always >0 below
+            
+            !integrate momentum source term
             hvnorm0 = sqrt(hu**2 + hv**2)
             vnorm = hvnorm0/h
 
@@ -377,7 +377,7 @@
       !local
       real(kind=8) :: p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
       real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
-      real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1
+      real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1,alphainvtmp
 
       call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
@@ -387,30 +387,29 @@
       p_eq0 = rho_f*gz*h
       p_exc0 = p0 - p_eq0
       !sig_0 = sigma_0  !
-      !sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
-      sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
+      sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+      !sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
        !later possibly needed to ensure stability of dp_exc/dt.
-      sig_eff = rhoh*gz-p0
+      sig_eff = max(rhoh*gz-p0,0.d0) !max is fix small rounding error for double precision problems
 
       !explicit integration (hybrid FE and explicit exponential solution)
       ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
       dtk = dt
       mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc0
-      if (mkrate<=0.d0) then !integrate exponential 1/2 dt
+      if (mkrate<=0.d0) then !integrate exponential
          m1 = m_0*exp(mkrate*dtk)
       else 
-         m1 = m_0 + dtk*mkrate
+         m1 = max(m_0 + dtk*mkrate,1.d0)
       endif
       !dp_eq/dt = see George & Iverson 2014
       alphainv = m_0*(sig_eff + sig_0)/alpha
       c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
       p_exc1 = p_exc0 + dtk*c_dil
-      plambda = (2.d0*kperm/(h*mu))*(((3.d0*alphainv*rho)/(2.d0*rhoh)) &
-               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !always >= 0.d0
-      if (plambda<0.d0) write(*,*) 'plambda,rhoh,rho,h,sig_eff:',plambda,rhoh,rho,h,sig_eff
-      p_exc1 = p_exc1*exp(-plambda*dtk)
+      plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+      p_exc1 = p_exc1*exp(-max(plambda,0.d0)*dtk)
 
-      m = min(1.d0,m1)
+      
       !determine new rho then h
       rho = m*rho_s + (1.d0-m)*rho_f
       h = rhoh/rho
