@@ -409,7 +409,8 @@
                - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
       p_exc1 = p_exc1*exp(-max(plambda,0.d0)*dtk)
 
-      
+      !new m
+      m = m1
       !determine new rho then h
       rho = m*rho_s + (1.d0-m)*rho_f
       h = rhoh/rho
@@ -421,15 +422,70 @@
 
    !====================================================================
    ! subroutine mp_update_trapezoid: integrate dp/dt,dm/dt by a hybrid 
-   ! trapezoid rule. 
-   ! rationale: A-stability is only desired in relaxation cases cases.
+   ! trapezoid rule - some FE, some exponential, some implicit
+   ! rationale: A-stability is only desired in relaxation cases I think.
    !====================================================================
 
-   !subroutine mp_update_trapezoid(
+   !====================================================================
+   ! subroutine mp_update_FEexp: integrate dp/dt,dm/dt by a hybrid 
+   ! FE and exponential integration
+   !====================================================================
 
+      subroutine mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
 
+      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,auxeval
+      use geoclaw_module, only: grav,drytolerance
 
-   !return
-   !end subroutine mp_update_trapezoid
+      implicit none
+
+      !i/o
+      real(kind=8), intent(inout) :: h,m,p,pm
+      real(kind=8), intent(in)  :: u,v,rhoh,dt
+      real(kind=8), intent(in)  :: gz,phi,theta
+
+      !local
+      real(kind=8) :: p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
+      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
+      real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1,alphainvtmp
+
+      call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+
+      vnorm = sqrt(u**2 + v**2)
+      m_0 = m
+      p0 = p
+      p_eq0 = rho_f*gz*h
+      p_exc0 = p0 - p_eq0
+      !sig_0 = sigma_0  !
+      sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+      !sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
+       !later possibly needed to ensure stability of dp_exc/dt.
+      sig_eff = max(rhoh*gz-p0,0.d0) !max is fix small rounding error for double precision problems
+
+      !explicit integration (hybrid FE and explicit exponential solution)
+      ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
+      dtk = dt
+      mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc0
+      if (mkrate<=0.d0) then !integrate exponential
+         m1 = m_0*exp(mkrate*dtk)
+      else 
+         m1 = max(m_0 + dtk*mkrate,1.d0)
+      endif
+      !dp_eq/dt = see George & Iverson 2014
+      alphainv = m_0*(sig_eff + sig_0)/alpha
+      c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+      p_exc1 = p_exc0 + dtk*c_dil
+      plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+      p_exc1 = p_exc1*exp(-max(plambda,0.d0)*dtk)
+
+      
+      !determine new rho then h
+      rho = m*rho_s + (1.d0-m)*rho_f
+      h = rhoh/rho
+      !recapture p
+      p = rho_f*gz*h + p_exc1
+
+      return
+      end subroutine mp_update_trapezoid
 
 
