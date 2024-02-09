@@ -386,8 +386,8 @@
       p0 = p
       p_eq0 = rho_f*gz*h
       p_exc0 = p0 - p_eq0
-      !sig_0 = sigma_0  !
-      sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+      sig_0 = sigma_0  !
+      !sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
       !sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
        !later possibly needed to ensure stability of dp_exc/dt.
       sig_eff = max(rhoh*gz-p0,0.d0) !max is fix small rounding error for double precision problems
@@ -399,7 +399,8 @@
       if (mkrate<=0.d0) then !integrate exponential
          m1 = m_0*exp(mkrate*dtk)
       else 
-         m1 = max(m_0 + dtk*mkrate,1.d0)
+         !m1 = m_0*exp(mkrate*dtk)
+         m1 = min(m_0 + dtk*mkrate,1.d0)
       endif
       !dp_eq/dt = see George & Iverson 2014
       alphainv = m_0*(sig_eff + sig_0)/alpha
