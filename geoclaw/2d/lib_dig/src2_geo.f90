@@ -376,13 +376,14 @@
       real(kind=8), intent(in)  :: gz,phi,theta
 
       !local
-      real(kind=8) :: p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
+      real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
       real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
       real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1,alphainvtmp
 
       call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
       vnorm = sqrt(u**2 + v**2)
+      h0 = h
       m_0 = m
       p0 = p
       p_eq0 = rho_f*gz*h
@@ -544,23 +545,25 @@
          !solve q^{n+1} = q0 + dt*f(qstar)
          call auxeval(hstar,u,v,mstar,pstar,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
          p_eq = rho_f*gz*hstar
-         p_exc = pstar - p_eq
+         !p_exc = pstar - p_eq
          sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
-         sig_eff = max(rhoh*gz-p,0.d0) !max is fix small rounding error for double precision problems
+         sig_eff = max(rhoh*gz-pstar,0.d0) !max is fix small rounding error for double precision problems
          ! dm/dt = f_m(m,p) = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
-         mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
+         mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_excstar
+         m = m_0 + dtk*mkrate*mstar
+         h = rhoh/(m*(rho_s-rho_f)+rho_f)
          !dp_eq/dt = f_p(m,p)  (see George & Iverson 2014 for f_p(m,p))
-         alphainv = m*(sig_eff + sig_0)/alpha
+         alphainv = mstar*(sig_eff + sig_0)/alpha
          c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
          p_exc = p_exc_star + dtk*c_dil
-         plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+         plambda = (2.d0*kperm/(hstar*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*hstar*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
          
-         m_n = mstar + dtk*mkrate*m
-         p_exc_n = p_exc_star -dtk*max(plambda,0.d0)*p_exc
+         p_exc = p_exc0 -dtk*max(plambda,0.d0)*p_excstar
+         p = rho_f*gz*h + p_exc
 
       else
-         if(iter>1) write(*,*) 'iter ', iter
+         !if(iter>1) write(*,*) 'iter ', iter
       endif
 
       return
