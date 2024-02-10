@@ -474,7 +474,7 @@
       if (mkrate<=0.d0) then !integrate exponential
          mstar = m_0*exp(mkrate*dtk)
       else 
-         mstar = min(m_0 + dtk*mkrate,1.d0)
+         mstar = min(m_0 + dtk*mkrate*m_0,1.d0)
       endif
       !dp_eq/dt = see George & Iverson 2014
       alphainv = m_0*(sig_eff + sig_0)/alpha
