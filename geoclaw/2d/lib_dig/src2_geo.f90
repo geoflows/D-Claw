@@ -500,7 +500,7 @@
       exitstatus = 0
       do iter = 1,maxiter
          
-         call auxeval(h_n,u,v,m,p_n,phi,theta,kappa,S,rho_n,tanpsi,D,tau,sigbed,kperm,compress,pm)
+         call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
          p_eq = rho_f*gz*h
          p_exc = p - p_eq
          sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
@@ -537,11 +537,30 @@
 
       !if fixed point fails
       if (exitstatus==0) then
-         write(*,*) 'fixed-point fail'
-         write(*,*) 'delta: ',delta
-         write(*,*) 'h0,h,m:',h0,h,m
+         !write(*,*) 'fixed-point fail'
+         !write(*,*) 'delta: ',delta
+         !write(*,*) 'h0,h,m:',h0,h,m
+         !trapezoid failed use midpoint
+         !solve q^{n+1} = q0 + dt*f(qstar)
+         call auxeval(hstar,u,v,mstar,pstar,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+         p_eq = rho_f*gz*hstar
+         p_exc = pstar - p_eq
+         sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+         sig_eff = max(rhoh*gz-p,0.d0) !max is fix small rounding error for double precision problems
+         ! dm/dt = f_m(m,p) = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
+         mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
+         !dp_eq/dt = f_p(m,p)  (see George & Iverson 2014 for f_p(m,p))
+         alphainv = m*(sig_eff + sig_0)/alpha
+         c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+         p_exc = p_exc_star + dtk*c_dil
+         plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+         
+         m_n = mstar + dtk*mkrate*m
+         p_exc_n = p_exc_star -dtk*max(plambda,0.d0)*p_exc
+
       else
-         write(*,*) 'iter ', iter
+         if(iter>1) write(*,*) 'iter ', iter
       endif
 
       return
