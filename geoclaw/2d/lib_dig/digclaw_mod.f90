@@ -304,9 +304,9 @@ contains
       pmax = rhoh*gz
       pmin = 0.d0
       p = max(0.d0,p)
-      p = dmin(pmax,p)
+      p = min(pmax,p)
 
-      rho = m*(rho_s + rho_f) + rho_f
+      rho = m*(rho_s - rho_f) + rho_f
       h = rhoh/rho
 
       return
