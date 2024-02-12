@@ -16,8 +16,8 @@
       integer :: maxmx,maxmy,meqn,mbc,mx,my,maux
 
       !local
-      real(kind=8) :: gacc,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx
-      real(kind=8) :: D,tau,sigbed,kperm,compress,pm,sig_0
+      real(kind=8) :: gacc,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx,dtk
+      real(kind=8) :: D,tau,sigbed,kperm,compress,pm,sig_0,dtremaining
       real(kind=8) :: zeta,gamma,dgamma,c_dil,alphainv
       real(kind=8) :: vnorm,hvnorm,theta,dtheta,w,hvnorm0
       real(kind=8) :: shear,sigebar,pmtanh01,rho_fp,seg
@@ -26,7 +26,7 @@
       real(kind=8) :: vlow,m2,vreg,slopebound
       real(kind=8) :: b_eroded,b_remaining,dtcoeff
       real(kind=8) :: p_exc,p_eq,p_exc0,p_eq0,mlambda,plambda,m_0,p_eq1,p_exc1,m1,rhoh
-      integer :: i,j,ii,jj,jjend,icount
+      integer :: i,j,ii,jj,jjend,icount,itercount
       logical :: ent
 
       !source fountain
@@ -117,8 +117,21 @@
             !integrate m and p, keep rhoh ------------------------------------------------------------
            
             !explicit integration
-            !call mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
-            call mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
+            dtremaining = dt
+            itercount=0
+            do while (dtremaining>1.d-16)
+               call mp_update_FEexp(dtremaining,h,u,v,m,p,rhoh,gz,phi,dtk)
+               dtremaining = dtremaining-dtk
+               hu = h*u
+               hv = h*v
+               hm = h*m
+               call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
+               if (h<drytolerance) exit
+               itercount = itercount + 1
+               !write(*,*) 'itercount: ',itercount
+               !write(*,*) 'dt,dtremaining,dtk ', dt,dtremaining,dtk
+            enddo
+            !call mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
             hu = h*u
             hv = h*v
             hm = h*m
@@ -363,63 +376,96 @@
    ! FE and exponential integration
    !====================================================================
 
-      subroutine mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
+      subroutine mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,dtk)
 
-      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,auxeval
+      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars
       use geoclaw_module, only: grav,drytolerance
 
       implicit none
 
       !i/o
-      real(kind=8), intent(inout) :: h,m,p,pm
+      real(kind=8), intent(inout) :: h,m,p
       real(kind=8), intent(in)  :: u,v,rhoh,dt
-      real(kind=8), intent(in)  :: gz,phi,theta
+      real(kind=8), intent(in)  :: gz,phi
+      real(kind=8), intent(out) :: dtk
 
       !local
-      real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
-      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
-      real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1,alphainvtmp
+      real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
+      real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm
+      real(kind=8) :: mkrate,plambda,alphainv,c_dil,p_exc,dtm,dtp
 
-      call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
       vnorm = sqrt(u**2 + v**2)
+
+      !explicit integration (hybrid FE and explicit exponential solution)---------------------------------------------------
+      ! q1 = q0 + dt*f(q0)
+      call setvars(h,u,v,m,p,phi,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
       h0 = h
       m_0 = m
+      rho0 = m_0*(rho_s-rho_f)+rho_f
       p0 = p
-      p_eq0 = rho_f*gz*h
+      p_eq0 = rho_f*gz*h0
       p_exc0 = p0 - p_eq0
-      !sig_0 = sigma_0  !
-      sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
-      !sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
-       !later possibly needed to ensure stability of dp_exc/dt.
-      sig_eff = max(rhoh*gz-p0,0.d0) !max is fix small rounding error for double precision problems
 
-      !explicit integration (hybrid FE and explicit exponential solution)
+      !determine coefficients for update
       ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
+      ! dp_eq/dt = -plamda*p_eq + c_dil see George & Iverson 2014
+      mkrate = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))*p_exc0
+      c_dil = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
+      plambda = (2.d0*kperm/(h0*mu))*(((6.d0*alphainv*rho0)/(4.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*h0*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+      
+      !calculate stable dt and update 
       dtk = dt
-      mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc0
-      if (mkrate<=0.d0) then !integrate exponential
-         m1 = m_0*exp(mkrate*dtk)
-      else 
-         !m1 = m_0*exp(mkrate*dtk)
-         m1 = min(m_0 + dtk*mkrate,1.d0)
+      if (mkrate*m_0>0.d0) then
+         dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate*m_0))
       endif
-      !dp_eq/dt = see George & Iverson 2014
-      alphainv = m_0*(sig_eff + sig_0)/alpha
-      c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-      p_exc1 = p_exc0 + dtk*c_dil
-      plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-               - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
-      p_exc1 = p_exc1*exp(-max(plambda,0.d0)*dtk)
+      if (c_dil>0.d0) then
+         dtp = min(dt,max(rhoh*gz - p0,0.d0)/c_dil)
+      elseif (c_dil<0.d0) then
+         dtp = min(dt,max(p0,0.d0)/(-c_dil))
+      endif
 
-      !new m
-      m = m1
-      !determine new rho then h
-      rho = m*rho_s + (1.d0-m)*rho_f
+      if (dtm==0.d0) then !m_0 = 1.d0 and mkrate >0, adjust pressure if possible
+         if (dtp>0.d0) then !integrate pressure for dtp=dtk
+            dtk = dtp
+            p_exc = p_exc0 + dtk*c_dil
+            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+         else !pressure is zero or lithostatic. Only physical response is relaxation
+              !(flow wants to dilate and p=0 or contract and p=rhogh)
+            dtk = dt
+            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+         endif
+      elseif (dtp==0.d0) then
+         dtk = dtm
+         if (mkrate<=0.d0) then !integrate exponential
+            m = m_0*exp(mkrate*dtk)
+         else 
+            m = min(m_0 + dtk*mkrate*m_0,1.d0)
+         endif
+         p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      else !dtm,dtp>0
+         dtk = min(dtm,dtp)
+         if (mkrate<=0.d0) then !integrate exponential
+            m = m_0*exp(mkrate*dtk)
+         else 
+            m = min(m_0 + dtk*mkrate*m_0,1.d0)
+         endif
+         p_exc = p_exc0 + dtk*c_dil
+         p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      endif
+
+      !recapture p, rho, h
+      rho = m*(rho_s-rho_f)+rho_f
       h = rhoh/rho
-      !recapture p
-      p = rho_f*gz*h + p_exc1
+      p = rho_f*gz*h + p_exc
+      if (dtk<dt/100.d0) then !integration stalled at boundary of physical space move on.
+         dtk = dt
+         write(*,*) 'exiting src integration:'
+         write(*,*) 'h,m,p,rho: ', h,m,p,rho
+      endif
 
+      
       return
       end subroutine mp_update_FEexp
 
@@ -429,45 +475,44 @@
    ! rationale: A-stability is only desired in relaxation cases I think.
    !====================================================================
 
-      subroutine mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi,theta,pm)
+      subroutine mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
 
-      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,auxeval
+      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars
       use geoclaw_module, only: grav,drytolerance
 
       implicit none
 
       !i/o
-      real(kind=8), intent(inout) :: h,m,p,pm
+      real(kind=8), intent(inout) :: h,m,p
       real(kind=8), intent(in)  :: u,v,rhoh,dt
-      real(kind=8), intent(in)  :: gz,phi,theta
+      real(kind=8), intent(in)  :: gz,phi
       
 
       !local
-      real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm
-      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress
+      real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
+      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm
       real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1
       real(kind=8) :: mstar,hstar,pstar,rhostar,h_n,m_n,p_n,p_eq,rho_n
       real(kind=8) :: p_exc_star,p_exc_n,p_exc,p_excstar
 
-      real(kind=8) :: convtol,delta
+      real(kind=8) :: convtol,deltaiter
       integer :: maxiter,iter,exitstatus
-
-      call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
 
       vnorm = sqrt(u**2 + v**2)
 
       !explicit integration (hybrid FE and explicit exponential solution)---------------------------------------------------
       ! q* = q0 + 1/2dt*f(q0)
+      call setvars(h,u,v,m,p,phi,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
       h0 = h
       m_0 = m
       p0 = p
-      p_eq0 = rho_f*gz*h
+      p_eq0 = rho_f*gz*h0
       p_exc0 = p0 - p_eq0
       !sig_0 = sigma_0  !
-      sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+      !sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
       !sig_0 = 0.5d0*alpha*gz*rhoh*(rho_s-rho_f)/(rho)
        !later possibly needed to ensure stability of dp_exc/dt.
-      sig_eff = max(rhoh*gz-p0,0.d0) !max is fix small rounding error for double precision problems
+      !sig_eff = max(rhoh*gz-p0,0.d0) !max is fix small rounding error for double precision problems
 
       ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
       dtk = 0.5d0*dt
@@ -478,53 +523,52 @@
          mstar = min(m_0 + dtk*mkrate*m_0,1.d0)
       endif
       !dp_eq/dt = see George & Iverson 2014
-      alphainv = m_0*(sig_eff + sig_0)/alpha
+      !alphainv = m_0*(sig_eff + sig_0)/alpha
       c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
       p_excstar = p_exc0 + dtk*c_dil
       plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
                - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
       p_excstar = p_excstar*exp(-max(plambda,0.d0)*dtk)
-
-      !determine new rho then h
-      rhostar = m*rho_s + (1.d0-m)*rho_f
-      hstar = rhoh/rho
-      !recapture p
-      pstar = rho_f*gz*h + p_exc
-      
+      rhostar = mstar*(rho_s-rho_f)+rho_f
+      hstar = rhoh/rhostar
+      !recapture p for fix
+      pstar = rho_f*gz*hstar + p_excstar
+      call qfix_cmass(mstar,pstar,hstar,rhostar,u,v,rhoh,gz)
       !implicit integration ---------------------------------------------------------------------------------------------
       ! q* = q0 + 1/2dt*f(q0)
       ! q^n+1 = q^* +  1/2dt*f(q^n+1)
-      !note: h,m,p = h*,m*,p* 
+      !note: h,m,p = h*,m*,p* ```````````````
       dtk = 0.5d0*dt
       maxiter = 1000
       convtol = 1.d-3
       exitstatus = 0
       do iter = 1,maxiter
          
-         call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+         call setvars(h,u,v,m,p,phi,gz,rho,kperm, &
+                        alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
          p_eq = rho_f*gz*h
          p_exc = p - p_eq
-         sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
-         sig_eff = max(rhoh*gz-p,0.d0) !max is fix small rounding error for double precision problems
+         !sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+         !sig_eff = max(rhoh*gz-p,0.d0) !max is fix small rounding error for double precision problems
          ! dm/dt = f_m(m,p) = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
          mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
          !dp_eq/dt = f_p(m,p)  (see George & Iverson 2014 for f_p(m,p))
-         alphainv = m*(sig_eff + sig_0)/alpha
+         !alphainv = m*(sig_eff + sig_0)/alpha
          c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-         p_exc = p_exc_star + dtk*c_dil
          plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
                - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
          
-         m_n = mstar + dtk*mkrate*m
-         p_exc_n = p_exc_star -dtk*max(plambda,0.d0)*p_exc
+         m_n = mstar + dtk*mkrate*m  
+         p_exc_n = p_exc_star -dtk*max(plambda,0.d0)*p_exc + dtk*c_dil
          !check for convergence of fixed-point iteration
-         delta = (m-m_n)**2 + ((p_exc-p_exc_n)/(rho_f*gz*h))**2
-         if (delta<convtol) then
+         deltaiter = (m-m_n)**2 + ((p_exc-p_exc_n)/(rho_f*gz*h))**2
+         if (deltaiter<convtol) then
             m = min(m_n,1.d0)
             m = max(m_n,0.d0)
             rho = m*(rho_s-rho_f) + rho_f
             h = rhoh/rho
-            p = rho_f*gz*h + p_exc_n
+            p = min(rho_f*gz*h + p_exc_n,rhoh*gz)
+            p = max(p,0.d0)
             exitstatus = 1
             exit
          else
@@ -538,29 +582,38 @@
 
       !if fixed point fails
       if (exitstatus==0) then
-         !write(*,*) 'fixed-point fail'
-         !write(*,*) 'delta: ',delta
+         dtk = dt
+         write(*,*) 'fixed-point fail'
+         write(*,*) 'delta: ',deltaiter
          !write(*,*) 'h0,h,m:',h0,h,m
          !trapezoid failed use midpoint
          !solve q^{n+1} = q0 + dt*f(qstar)
-         call auxeval(hstar,u,v,mstar,pstar,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+         call setvars(hstar,u,v,mstar,pstar,phi,gz,rhostar, &
+                  kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
          p_eq = rho_f*gz*hstar
          !p_exc = pstar - p_eq
-         sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
-         sig_eff = max(rhoh*gz-pstar,0.d0) !max is fix small rounding error for double precision problems
+         !sig_0 = 0.5d0*alpha*rho_f*gz*rhoh*(rho_s-rho_f)/(rho**2)
+         !sig_eff = max(rhoh*gz-pstar,0.d0) !max is fix small rounding error for double precision problems
          ! dm/dt = f_m(m,p) = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
-         mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_excstar
+         mkrate = ((2.d0*kperm*rhostar**2)/(mu*rhoh**2))*p_excstar
          m = m_0 + dtk*mkrate*mstar
          h = rhoh/(m*(rho_s-rho_f)+rho_f)
          !dp_eq/dt = f_p(m,p)  (see George & Iverson 2014 for f_p(m,p))
-         alphainv = mstar*(sig_eff + sig_0)/alpha
-         c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-         p_exc = p_exc_star + dtk*c_dil
-         plambda = (2.d0*kperm/(hstar*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-               - ((3.d0*rho_f*gz*hstar*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+         !alphainv = mstar*(sig_eff + sig_0)/alpha
+         c_dil = -3.d0*vnorm*(alphainv*rhostar/(rhoh))*tanpsi
+         p_exc = p_exc0 + dtk*c_dil
+         plambda = (2.d0*kperm/(hstar*mu))*(((6.d0*alphainv*rhostar)/(4.d0*rhoh)) &
+               - ((3.d0*rho_f*gz*hstar*(rhostar-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
          
-         p_exc = p_exc0 -dtk*max(plambda,0.d0)*p_excstar
+         p_exc = p_exc0 -dtk*max(plambda,0.d0)*p_excstar + c_dil*dtk
          p = rho_f*gz*h + p_exc
+
+         m = min(m_n,1.d0)
+         m = max(m_n,0.d0)
+         rho = m*(rho_s-rho_f) + rho_f
+         h = rhoh/rho
+         p = min(rho_f*gz*h + p_exc_n,rhoh*gz)
+         p = max(p,0.d0)
 
       else
          !if(iter>1) write(*,*) 'iter ', iter
