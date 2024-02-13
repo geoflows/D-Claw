@@ -26,7 +26,7 @@
       real(kind=8) :: vlow,m2,vreg,slopebound
       real(kind=8) :: b_eroded,b_remaining,dtcoeff
       real(kind=8) :: p_exc,p_eq,p_exc0,p_eq0,mlambda,plambda,m_0,p_eq1,p_exc1,m1,rhoh
-      integer :: i,j,ii,jj,jjend,icount,itercount
+      integer :: i,j,ii,jj,jjend,itercount,itercountmax
       logical :: ent
 
       !source fountain
@@ -118,25 +118,32 @@
            
             !explicit integration
             dtremaining = dt
+            itercountmax=10
             itercount=0
             do while (dtremaining>1.d-16)
                call mp_update_FEexp(dtremaining,h,u,v,m,p,rhoh,gz,phi,dtk)
                dtremaining = dtremaining-dtk
-               hu = h*u
-               hv = h*v
-               hm = h*m
-               call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
-               if (h<drytolerance) exit
+               call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
+               !if (h<drytolerance) exit
                itercount = itercount + 1
-               !write(*,*) 'itercount: ',itercount
+               if (itercount>=itercountmax) then
+                  if ((rhoh*gz-p)>0.d0) then
+                     write(*,*) 'src2 aborting m,p integration in cell, i,j: ', i,j
+                     write(*,*) 'dt, dtremaining: ', dt, dtremaining
+                     write(*,*) 'h,m,p,rhohg: ', h,m,rhoh*gz-p
+                  endif
+                  exit
+               endif
                !write(*,*) 'dt,dtremaining,dtk ', dt,dtremaining,dtk
             enddo
             !call mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
             hu = h*u
             hv = h*v
             hm = h*m
+            call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
+            if (h<=drytolerance) cycle
 
-            call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
             !--------------------------------------------------------------------------------------------
             
@@ -378,7 +385,7 @@
 
       subroutine mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,dtk)
 
-      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars
+      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass
       use geoclaw_module, only: grav,drytolerance
 
       implicit none
@@ -417,6 +424,8 @@
       
       !calculate stable dt and update 
       dtk = dt
+      dtm = dt
+      dtp = dt
       if (mkrate*m_0>0.d0) then
          dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate*m_0))
       endif
@@ -426,25 +435,25 @@
          dtp = min(dt,max(p0,0.d0)/(-c_dil))
       endif
 
-      if (dtm==0.d0) then !m_0 = 1.d0 and mkrate >0, adjust pressure if possible
-         if (dtp>0.d0) then !integrate pressure for dtp=dtk
-            dtk = dtp
-            p_exc = p_exc0 + dtk*c_dil
-            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-         else !pressure is zero or lithostatic. Only physical response is relaxation
-              !(flow wants to dilate and p=0 or contract and p=rhogh)
-            dtk = dt
-            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-         endif
-      elseif (dtp==0.d0) then
-         dtk = dtm
-         if (mkrate<=0.d0) then !integrate exponential
-            m = m_0*exp(mkrate*dtk)
-         else 
-            m = min(m_0 + dtk*mkrate*m_0,1.d0)
-         endif
-         p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-      else !dtm,dtp>0
+      !if (dtm==0.d0) then !m_0 = 1.d0 and mkrate >0, adjust pressure if possible
+      !   if (dtp>0.d0) then !integrate pressure for dtp=dtk
+      !      dtk = dtp
+      !      p_exc = p_exc0 + dtk*c_dil
+      !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      !   else !pressure is zero or lithostatic. Only physical response is relaxation
+      !        !(flow wants to dilate and p=0 or contract and p=rhogh)
+      !      dtk = dt
+      !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      !   endif
+      !elseif (dtp==0.d0) then
+      !   dtk = dtm
+      !   if (mkrate<=0.d0) then !integrate exponential
+      !      m = m_0*exp(mkrate*dtk)
+      !   else 
+      !      m = min(m_0 + dtk*mkrate*m_0,1.d0)
+      !   endif
+      !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      !else !dtm,dtp>0
          dtk = min(dtm,dtp)
          if (mkrate<=0.d0) then !integrate exponential
             m = m_0*exp(mkrate*dtk)
@@ -453,18 +462,23 @@
          endif
          p_exc = p_exc0 + dtk*c_dil
          p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-      endif
+      !endif
 
       !recapture p, rho, h
       rho = m*(rho_s-rho_f)+rho_f
       h = rhoh/rho
       p = rho_f*gz*h + p_exc
-      if (dtk<dt/100.d0) then !integration stalled at boundary of physical space move on.
-         dtk = dt
-         write(*,*) 'exiting src integration:'
-         write(*,*) 'h,m,p,rho: ', h,m,p,rho
-      endif
 
+      call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
+      
+      !if (dtk<dt/1000.d0) then !integration stalled at boundary of physical space move on.
+      !   dtk = dt
+      !   write(*,*) 'exiting src integration:'
+      !   write(*,*) 'h0,h,m0,m,rho0, rho,rhoh', h0,h,m_0,m,rho0,rho,rhoh
+      !   write(*,*) 'dt,dtm,dtp', dt,dtm,dtp
+      !   write(*,*) 'mkrate',mkrate
+      !endif
+      
       
       return
       end subroutine mp_update_FEexp
@@ -477,7 +491,7 @@
 
       subroutine mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
 
-      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars
+      use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass
       use geoclaw_module, only: grav,drytolerance
 
       implicit none
