@@ -462,8 +462,12 @@
             dtk = min(dtp,dtm)
             m = m_0 + dtk*mkrate*m_0
             p_exc = p_exc0 + dtk*(c_dil - lambda*p_exc0)
-            if (dtm<dt) then !at right boundary
-
+            if (dtk<dt) then !hit boundary of quadrant
+               if (dtm<dtp) then !right boundary: exit for next substep
+                  rho = m*(rho_s-rho_f)+rho_f
+                  h = rhoh/rho
+                  p = rho_f*gz*h + p_exc
+               elseif (dtp<dtm) then 
 
          !calculate stable dt and update 
          dtk = dt
