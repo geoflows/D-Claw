@@ -394,7 +394,7 @@ contains
    !                     functions of the solution vector q
    !====================================================================
 
-   subroutine setvars(h,u,v,m,p,phi,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+   subroutine setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
 
       implicit none
 
@@ -441,7 +441,7 @@ contains
       ! Note: for v=0, bounds on tau for static friction are determined in Riemann solver
       !        because the bounds are due to gradients in q. This routine determines vars
       !        from pointwise cell-centered value q(i).
-      tau = sig_eff*tan(phi+psi)
+      tau = sig_eff*tan(phi_bed+psi)
       ! Note:  for water (m=0) sig_eff=0.0 and so tau=0.         
       !        However, for v=0 and 0<m<eps (stationary dilute suspensions), 
       !        static coulomb friction is unphysical and we make o(m) not O(m))
