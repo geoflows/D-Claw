@@ -87,7 +87,7 @@
                gz = gz + gacc
             endif
 
-            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
             rhoh = h*rho !this is invariant in src and always >0 below
             
             !integrate momentum source term
@@ -123,7 +123,7 @@
             do while (dtremaining>1.d-16)
                call mp_update_FEexp(dtremaining,h,u,v,m,p,rhoh,gz,phi,dtk)
                dtremaining = dtremaining-dtk
-               call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
+               call qfix_cmass(m,p,h,rho,hu,hv,hm,u,v,rhoh,gz)
                !if (h<drytolerance) exit
                itercount = itercount + 1
                if (itercount>=itercountmax) then
@@ -137,9 +137,7 @@
                !write(*,*) 'dt,dtremaining,dtk ', dt,dtremaining,dtk
             enddo
             !call mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
-            hu = h*u
-            hv = h*v
-            hm = h*m
+            
             call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
             if (h<=drytolerance) cycle
 
@@ -432,14 +430,14 @@
       if (c_dil>0.d0) then
          dtp = min(dt,max(rhoh*gz - p0,0.d0)/c_dil)
       elseif (c_dil<0.d0) then
-         dtp = min(dt,max(p0,0.d0)/(-c_dil))
+         dtp = min(dt,max(p0,0.d0)/abs(c_dil))
       endif
 
       !if (dtm==0.d0) then !m_0 = 1.d0 and mkrate >0, adjust pressure if possible
       !   if (dtp>0.d0) then !integrate pressure for dtp=dtk
       !      dtk = dtp
-      !      p_exc = p_exc0 + dtk*c_dil
-      !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      !      p_exc = p_exc0 + dtp*c_dil
+      !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtp)
       !   else !pressure is zero or lithostatic. Only physical response is relaxation
       !        !(flow wants to dilate and p=0 or contract and p=rhogh)
       !      dtk = dt
@@ -454,23 +452,33 @@
       !   endif
       !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
       !else !dtm,dtp>0
-         dtk = min(dtm,dtp)
-         if (mkrate<=0.d0) then !integrate exponential
-            m = m_0*exp(mkrate*dtk)
-         else 
-            m = min(m_0 + dtk*mkrate*m_0,1.d0)
-         endif
-         p_exc = p_exc0 + dtk*c_dil
-         p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+      !   dtk = min(dtm,dtp)
+      !   if (mkrate<=0.d0) then !integrate exponential
+      !      m = m_0*exp(mkrate*dtk)
+      !   else 
+      !      m = min(m_0 + dtk*mkrate*m_0,1.d0)
+      !   endif
+      !   p_exc = p_exc0 + dtk*c_dil
+      !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
       !endif
+
+      dtk = min(dtm,dtp)
+      if (mkrate<=0.d0) then !integrate exponential
+            m = m_0*exp(mkrate*dtk)
+      else 
+            m = min(m_0 + dtk*mkrate*m_0,1.d0)
+      endif
+      p_exc = p_exc0 + dtk*c_dil
+      p_exc = p_exc*exp(-max(plambda,0.d0)*dt)
 
       !recapture p, rho, h
       rho = m*(rho_s-rho_f)+rho_f
       h = rhoh/rho
       p = rho_f*gz*h + p_exc
 
-      call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
+      !call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
       
+      dtk = dt
       !if (dtk<dt/1000.d0) then !integration stalled at boundary of physical space move on.
       !   dtk = dt
       !   write(*,*) 'exiting src integration:'
