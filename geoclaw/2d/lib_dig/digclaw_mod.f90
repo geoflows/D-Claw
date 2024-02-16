@@ -284,14 +284,14 @@ contains
    !find physically admissible values of h,m,p,rho while holding rhoh,u,v const.
    !====================================================================
 
-   subroutine qfix_cmass(m,p,h,rho,hu,hv,hm,u,v,rhoh,gz)
+   subroutine qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
 
       implicit none
 
       !i/o
       double precision, intent(in) :: u,v,rhoh,gz
-      double precision, intent(inout) :: h,m,p,rho,hu,hv,hv
-
+      double precision, intent(inout) :: h,m,p,rho,p_exc
+      double precision, intent(out):: p,hu,hv,hm
       !Locals
       double precision :: mmin,mmax,pmax,pmin
 
@@ -300,14 +300,15 @@ contains
       m = max(m,mmin)
       m = min(m,mmax)
       
-
-      pmax = rhoh*gz
-      pmin = 0.d0
-      p = max(0.d0,p)
-      p = min(pmax,p)
-
       rho = m*(rho_s - rho_f) + rho_f
       h = rhoh/rho
+
+      p_exc_max = rhoh*gz-rho_f*h*gz
+      p_exc_min = -rho_f*h*gz
+      p_exc = max(0.d0,p_exc)
+      p_exc = min(pmax,p_exc)
+
+      p = rho_f*gz*h + p_exc
 
       hu = h*u
       hv = h*v
