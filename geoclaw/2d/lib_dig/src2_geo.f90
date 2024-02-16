@@ -121,7 +121,7 @@
             itercountmax=10
             itercount=0
             do while (dtremaining>1.d-16)
-               call mp_update_FEexp(dtremaining,h,u,v,m,p,rhoh,gz,phi,dtk)
+               call mp_update_FEexp(dtremaining,h,u,v,m,p,rhoh,gz,dtk)
                dtremaining = dtremaining-dtk
                call qfix_cmass(m,p,h,rho,hu,hv,hm,u,v,rhoh,gz)
                !if (h<drytolerance) exit
@@ -377,11 +377,175 @@
       end subroutine src2
 
    !====================================================================
+   ! subroutine mp_update_FE_4quad: integrate dp/dt,dm/dt by a hybrid 
+   ! FEuler integration that depends on the initial quadrant of phase space.
+   ! Basic idea: for each quadrant of phase space (divided by p=p_eq and m=m_eq)
+   ! there is only one interior (physically admissible) boundary that can be crossed.
+   ! these boundaries are such that a physically admissible solution must proceed clockwise
+   ! (m horizontal axis, p vertical) if it changes quadrants. 1 (UL)-> 2(UR)-> 3 (LR)-> 4(LL).
+   ! FE is used with dtk<=dt such that only the admissible boundary can be crossed in
+   ! a given substep. For a given substep, either (a) sol remains interior to quadrant (dtk=dt),
+   ! (b) sol. reaches physically inadmissible boundary (c) solution interior in next quadrant (dtk=dt)
+   !====================================================================
+
+      subroutine mp_update_FE_4quad(dt,h,u,v,m,p,rhoh,gz,dtk)
+
+         use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass,phi_bed
+         use geoclaw_module, only: grav,drytolerance
+   
+         implicit none
+   
+         !i/o
+         real(kind=8), intent(inout) :: h,m,p
+         real(kind=8), intent(in)  :: u,v,rhoh,dt
+         real(kind=8), intent(in)  :: gz
+         real(kind=8), intent(out) :: dtk
+   
+         !local
+         real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
+         real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm,phi
+         real(kind=8) :: mkrate,plambda,alphainv,c_dil,p_exc,dtm,dtp
+         integer :: quad0
+   
+         phi = phi_bed
+         vnorm = sqrt(u**2 + v**2)
+   
+         !explicit integration (hybrid FE and explicit exponential solution)---------------------------------------------------
+         ! q1 = q0 + dtk*f(q0)
+         call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+         h0 = h
+         m_0 = m
+         rho0 = m_0*(rho_s-rho_f)+rho_f
+         p0 = p
+         p_eq0 = rho_f*gz*h0
+         p_exc0 = p0 - p_eq0
+   
+         !determine coefficients for update
+         ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
+         ! dp_eq/dt = -plamda*p_eq + c_dil see George & Iverson 2014
+         mkrate = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))*p_exc0
+         c_dil = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
+         plambda = (2.d0*kperm/(h0*mu))*(((6.d0*alphainv*rho0)/(4.d0*rhoh)) &
+                  - ((3.d0*rho_f*gz*h0*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+         
+         dtk = dt
+         dtm = dt
+         dtp = dt
+         ! if at critical point p_exc0=0 and m=0 do nothing for full dt
+         if ((p_exc0==0.d0).and.(m==0.d0.or.m==m_eq)) return
+
+         quad0 = 0
+         if ((m<m_eq).and.(p_exc0>=0.d0)) then
+            quad0=1
+         elseif ((m>=m_eq).and.(p_exc0>0.d0)) then
+            quad0=2
+         elseif  ((m>m_eq).and.(p_exc0<=0.d0)) then
+            quad0=3
+         elseif ((m<=m_eq).and.(p_exc0<0.d0)) then
+            quad0=4
+         endif
+
+         select case (quad0)
+         !determine quadrant
+         case(1) !UL quadrant, contractive material, pressure>=p_eq
+            !integration can only cross right boundary (m=m_eq)
+            !note that p_eq0>=p_eq1 because m increasing => p_eq decreasing
+            ! therefore p_eq0 is sufficient bound to remain in quad 1.
+            if (mkrate*m_0>0.d0) then !interior/bound on m
+               dtm = min(dt,max(m_eq-m_0,0.d0)/(mkrate*m_0))
+            endif
+            if ((c_dil - lambda*p_exc0)>0.d0) then !pressure increase, bound by rhogh
+               dtp = min(dt, sig_eff/(c_dil- lambda*p_exc0))
+            elseif ((c_dil - lambda*p_exc0)<0.d0) then !pressure decrease, bound by p_eq0
+               dtp = min(dt, p_exc0/abs(c_dil - lambda*p_exc0))
+            endif
+            dtk = min(dtp,dtm)
+            m = m_0 + dtk*mkrate*m_0
+            p_exc = p_exc0 + dtk*(c_dil - lambda*p_exc0)
+            if (dtk<dt) then !hit boundary of quadrant
+               if (dtm<dtp) then !right boundary: exit for next substep
+                  rho = m*(rho_s-rho_f)+rho_f
+                  h = rhoh/rho
+                  p = rho_f*gz*h + p_exc
+               elseif (dtp<dtm) then 
+
+         !calculate stable dt and update 
+         dtk = dt
+         dtm = dt
+         dtp = dt
+         if (mkrate*m_0>0.d0) then
+            dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate*m_0))
+         endif
+         if (c_dil>0.d0) then
+            dtp = min(dt,max(rhoh*gz - p0,0.d0)/c_dil)
+         elseif (c_dil<0.d0) then
+            dtp = min(dt,max(p0,0.d0)/abs(c_dil))
+         endif
+   
+         !if (dtm==0.d0) then !m_0 = 1.d0 and mkrate >0, adjust pressure if possible
+         !   if (dtp>0.d0) then !integrate pressure for dtp=dtk
+         !      dtk = dtp
+         !      p_exc = p_exc0 + dtp*c_dil
+         !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtp)
+         !   else !pressure is zero or lithostatic. Only physical response is relaxation
+         !        !(flow wants to dilate and p=0 or contract and p=rhogh)
+         !      dtk = dt
+         !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+         !   endif
+         !elseif (dtp==0.d0) then
+         !   dtk = dtm
+         !   if (mkrate<=0.d0) then !integrate exponential
+         !      m = m_0*exp(mkrate*dtk)
+         !   else 
+         !      m = min(m_0 + dtk*mkrate*m_0,1.d0)
+         !   endif
+         !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+         !else !dtm,dtp>0
+         !   dtk = min(dtm,dtp)
+         !   if (mkrate<=0.d0) then !integrate exponential
+         !      m = m_0*exp(mkrate*dtk)
+         !   else 
+         !      m = min(m_0 + dtk*mkrate*m_0,1.d0)
+         !   endif
+         !   p_exc = p_exc0 + dtk*c_dil
+         !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+         !endif
+   
+         dtk = min(dtm,dtp)
+         if (mkrate<=0.d0) then !integrate exponential
+               m = m_0*exp(mkrate*dtk)
+         else 
+               m = min(m_0 + dtk*mkrate*m_0,1.d0)
+         endif
+         p_exc = p_exc0 + dtk*c_dil
+         p_exc = p_exc*exp(-max(plambda,0.d0)*dt)
+   
+         !recapture p, rho, h
+         rho = m*(rho_s-rho_f)+rho_f
+         h = rhoh/rho
+         p = rho_f*gz*h + p_exc
+   
+         !call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
+         
+         dtk = dt
+         !if (dtk<dt/1000.d0) then !integration stalled at boundary of physical space move on.
+         !   dtk = dt
+         !   write(*,*) 'exiting src integration:'
+         !   write(*,*) 'h0,h,m0,m,rho0, rho,rhoh', h0,h,m_0,m,rho0,rho,rhoh
+         !   write(*,*) 'dt,dtm,dtp', dt,dtm,dtp
+         !   write(*,*) 'mkrate',mkrate
+         !endif
+         
+         
+         return
+         end subroutine mp_update_FE_4quad
+
+   !====================================================================
    ! subroutine mp_update_FEexp: integrate dp/dt,dm/dt by a hybrid 
    ! FE and exponential integration
    !====================================================================
 
-      subroutine mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,phi,dtk)
+      subroutine mp_update_FEexp(dt,h,u,v,m,p,rhoh,gz,dtk)
 
       use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass
       use geoclaw_module, only: grav,drytolerance
@@ -404,7 +568,7 @@
 
       !explicit integration (hybrid FE and explicit exponential solution)---------------------------------------------------
       ! q1 = q0 + dt*f(q0)
-      call setvars(h,u,v,m,p,phi,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+      call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
       h0 = h
       m_0 = m
       rho0 = m_0*(rho_s-rho_f)+rho_f
@@ -497,7 +661,7 @@
    ! rationale: A-stability is only desired in relaxation cases I think.
    !====================================================================
 
-      subroutine mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
+      subroutine mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz)
 
       use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass
       use geoclaw_module, only: grav,drytolerance
@@ -524,7 +688,7 @@
 
       !explicit integration (hybrid FE and explicit exponential solution)---------------------------------------------------
       ! q* = q0 + 1/2dt*f(q0)
-      call setvars(h,u,v,m,p,phi,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+      call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
       h0 = h
       m_0 = m
       p0 = p
@@ -566,7 +730,7 @@
       exitstatus = 0
       do iter = 1,maxiter
          
-         call setvars(h,u,v,m,p,phi,gz,rho,kperm, &
+         call setvars(h,u,v,m,p,gz,rho,kperm, &
                         alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
          p_eq = rho_f*gz*h
          p_exc = p - p_eq
@@ -610,7 +774,7 @@
          !write(*,*) 'h0,h,m:',h0,h,m
          !trapezoid failed use midpoint
          !solve q^{n+1} = q0 + dt*f(qstar)
-         call setvars(hstar,u,v,mstar,pstar,phi,gz,rhostar, &
+         call setvars(hstar,u,v,mstar,pstar,gz,rhostar, &
                   kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
          p_eq = rho_f*gz*hstar
          !p_exc = pstar - p_eq
