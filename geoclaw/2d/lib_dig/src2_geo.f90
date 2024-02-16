@@ -419,21 +419,23 @@
          p0 = p
          p_eq0 = rho_f*gz*h0
          p_exc0 = p0 - p_eq0
+
+         dtk = 0.d0
+         dtm = dt
+         dtp = dt
+         dtdil = dt
+         ! if at critical point dq/dt = 0
+         if ((p_exc0==0.d0).and.(m==0.d0.or.m==m_eq)) return
    
          !determine coefficients for update
          ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
          ! dp_eq/dt = -plamda*p_eq + c_dil see George & Iverson 2014
-         mkrate = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))*p_exc0
-         c_dil = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
-         plambda = (2.d0*kperm/(h0*mu))*(((6.d0*alphainv*rho0)/(4.d0*rhoh)) &
+         mkrate0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))*p_exc0
+         c_dil0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
+         plambda0 = (2.d0*kperm/(h0*mu))*(((6.d0*alphainv*rho0)/(4.d0*rhoh)) &
                   - ((3.d0*rho_f*gz*h0*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
-         
-         dtk = dt
-         dtm = dt
-         dtp = dt
-         ! if at critical point p_exc0=0 and m=0 do nothing for full dt
-         if ((p_exc0==0.d0).and.(m==0.d0.or.m==m_eq)) return
 
+         !determine quadrant of initial solution in state space
          quad0 = 0
          if ((m<m_eq).and.(p_exc0>=0.d0)) then
             quad0=1
@@ -446,28 +448,61 @@
          endif
 
          select case (quad0)
-         !determine quadrant
-         case(1) !UL quadrant, contractive material, pressure>=p_eq
+         
+         case(1) !UL quadrant, loose material contracting, p>=p_eq
             !integration can only cross right boundary (m=m_eq)
             !note that p_eq0>=p_eq1 because m increasing => p_eq decreasing
-            ! therefore p_eq0 is sufficient bound to remain in quad 1.
-            if (mkrate*m_0>0.d0) then !interior/bound on m
-               dtm = min(dt,max(m_eq-m_0,0.d0)/(mkrate*m_0))
+            ! therefore p_eq0 is sufficient bound to remain in quad 1 or 2.
+            if (mkrate0*m_0>0.d0) then !interior/upper bound on m (else on boundary, no change in m for all dt)
+               dtm = min(dt,max(m_eq-m_0,0.d0)/(mkrate0*m_0))
             endif
-            if ((c_dil - lambda*p_exc0)>0.d0) then !pressure increase, bound by rhogh
-               dtp = min(dt, sig_eff/(c_dil- lambda*p_exc0))
-            elseif ((c_dil - lambda*p_exc0)<0.d0) then !pressure decrease, bound by p_eq0
-               dtp = min(dt, p_exc0/abs(c_dil - lambda*p_exc0))
+            if (c_dil0>0.d0) then !pressure increase, bound by rhogh (else c_dil==0)
+               dtp = min(dt, sig_eff/c_dil0)
             endif
-            dtk = min(dtp,dtm)
-            m = m_0 + dtk*mkrate*m_0
-            p_exc = p_exc0 + dtk*(c_dil - lambda*p_exc0)
-            if (dtk<dt) then !hit boundary of quadrant
-               if (dtm<dtp) then !right boundary: exit for next substep
-                  rho = m*(rho_s-rho_f)+rho_f
-                  h = rhoh/rho
-                  p = rho_f*gz*h + p_exc
-               elseif (dtp<dtm) then 
+            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
+            p_exc = p_exc0 + 0.5*dtdil*c_dil0
+            m = m_0 + 0.5*dtdil*mkrate*m_0
+            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
+            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
+            p_exc = p_exc + 0.5*dtdil*c_dil
+            m = m + 0.5*dtdil*mkrate*m
+
+            dtk = min(dtm,dt)
+            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+
+         case(2) !UR quadrant, dense or equilibrium material, p>p_eq
+            !intertially contracting
+            !integration can only cross lower boundary (p=p_eq)
+            !p is strictly decreasing, m strictly increasing
+            if (mkrate0*m_0>0.d0) then !should always be true (?) interior/upper bound at m=1.
+               dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate0*m_0))
+            endif
+            if (c_dil0<0.d0) then !pressure decrease, bound by 0 (else c_dil==0)
+               dtp = min(dt, abs(p_exc0/c_dil0))
+            endif
+            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
+            p_exc = p_exc0 + 0.5*dtdil*c_dil0
+            m = m_0 + 0.5*dtdil*mkrate*m_0
+            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
+            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
+            p_exc = p_exc + 0.5*dtdil*c_dil
+            m = m + 0.5*dtdil*mkrate*m
+
+            dtk = min(dtm,dt)
+            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+
+         case(3) !LR quadrant, dilative material, p<=p_eq
+            !integration can only cross left boundary (m=m_eq)
 
          !calculate stable dt and update 
          dtk = dt
