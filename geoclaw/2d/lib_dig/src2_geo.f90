@@ -482,7 +482,7 @@
             if (mkrate0*m_0>0.d0) then !should always be true (?) interior/upper bound at m=1.
                dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate0*m_0))
             endif
-            if (c_dil0<0.d0) then !pressure decrease, bound by 0 (else c_dil==0)
+            if (c_dil0<0.d0) then !pressure decrease, bound p_exc by 0 (else c_dil==0)
                dtp = min(dt, abs(p_exc0/c_dil0))
             endif
             dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
@@ -503,6 +503,25 @@
 
          case(3) !LR quadrant, dilative material, p<=p_eq
             !integration can only cross left boundary (m=m_eq)
+            if (mkrate0*m_0<0.d0) then !should always be true unless p_exc0=0.
+               dtm = min(dt,max(m_0-m_eq,0.d0)/abs(mkrate0*m_0))
+            endif
+            if (c_dil0<0.d0) then !pressure decrease, bound p_exc by -rho_f g h (else c_dil==0)
+               dtp = min(dt, abs(p0/c_dil0))
+            endif
+            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
+            p_exc = p_exc0 + 0.5*dtdil*c_dil0
+            m = m_0 + 0.5*dtdil*mkrate*m_0
+            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
+            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
+            p_exc = p_exc + 0.5*dtdil*c_dil
+            m = m + 0.5*dtdil*mkrate*m
+
+
 
          !calculate stable dt and update 
          dtk = dt
