@@ -238,7 +238,7 @@ contains
       !i/o
       double precision, intent(in) :: gz
       double precision, intent(inout) :: h,hu,hv,hm,p
-      double precision, intent(out) :: u,v,m,rho
+      double precision, intent(inout) :: u,v,m,rho
 
       !Locals
       double precision :: mmin,mmax,pmax,pmin
@@ -272,8 +272,8 @@ contains
       rho = rho_s*m + (1.d0-m)*rho_f
       pmax = rho*gz*h
       pmin = 0.d0
-      p = dmax1(0.d0,p)
-      p = dmin1(pmax,p)
+      p = max(0.d0,p)
+      p = min(pmax,p)
 
       return
 
@@ -289,11 +289,12 @@ contains
       implicit none
 
       !i/o
-      double precision, intent(in) :: u,v,rhoh,gz
-      double precision, intent(inout) :: h,m,p,rho,p_exc
-      double precision, intent(out):: p,hu,hv,hm
+      double precision, intent(in) :: gz
+      double precision, intent(in) :: u,v,rhoh
+      double precision, intent(inout) :: h,m,rho,p_exc,p
+      double precision, intent(out):: hu,hv,hm
       !Locals
-      double precision :: mmin,mmax,pmax,pmin
+      double precision :: mmin,mmax,p_exc_max,p_exc_min
 
       mmin = 0.0d0
       mmax = 1.d0 
@@ -304,9 +305,9 @@ contains
       h = rhoh/rho
 
       p_exc_max = rhoh*gz-rho_f*h*gz
-      p_exc_min = -rho_f*h*gz
-      p_exc = max(0.d0,p_exc)
-      p_exc = min(pmax,p_exc)
+      p_exc_min = 0.d0-rho_f*h*gz
+      p_exc = max(p_exc_min,p_exc)
+      p_exc = min(p_exc_max,p_exc)
 
       p = rho_f*gz*h + p_exc
 
@@ -401,7 +402,7 @@ contains
 
       !i/o
       double precision, intent(inout) :: rho
-      double precision, intent(in)  :: h,u,v,m,p,phi,gz
+      double precision, intent(in)  :: h,u,v,m,p,gz
       double precision, intent(out) :: alphainv,sig_0,sig_eff
       double precision, intent(out) :: tau,m_eq,tanpsi,kperm
 
