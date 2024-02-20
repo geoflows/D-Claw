@@ -17,16 +17,16 @@
 
       !local
       real(kind=8) :: gacc,h,hu,hv,hm,u,v,m,p,phi,kappa,S,rho,tanpsi,dti,gz,gx,dtk
-      real(kind=8) :: D,tau,sigbed,kperm,compress,pm,sig_0,dtremaining
-      real(kind=8) :: zeta,gamma,dgamma,c_dil,alphainv
+      real(kind=8) :: D,tau,sigbed,kperm,compress,pm,dtremaining
+      real(kind=8) :: zeta,gamma,dgamma,alphainv
       real(kind=8) :: vnorm,hvnorm,theta,dtheta,w,hvnorm0
       real(kind=8) :: shear,sigebar,pmtanh01,rho_fp,seg
       real(kind=8) :: b_xx,b_yy,b_xy,chi,beta
       real(kind=8) :: t1bot,t2top,beta2,dh,rho2,prat,b_x,b_y,dbdv
       real(kind=8) :: vlow,m2,vreg,slopebound
       real(kind=8) :: b_eroded,b_remaining,dtcoeff
-      real(kind=8) :: p_exc,p_eq,p_exc0,p_eq0,mlambda,plambda,m_0,p_eq1,p_exc1,m1,rhoh
-      integer :: i,j,ii,jj,jjend,itercount,itercountmax
+      real(kind=8) :: rhoh,sig_0,sig_eff,m_eq,m_0,m_eq_0,sig_eff_0
+      integer :: i,j,ii,jj,jjend,itercount,itercountmax,quad0,quad1
       logical :: ent
 
       !source fountain
@@ -87,7 +87,7 @@
                gz = gz + gacc
             endif
 
-            !call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
+            call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
             rhoh = h*rho !this is invariant in src and always >0 below
             
             !integrate momentum source term
@@ -118,30 +118,46 @@
            
             !explicit integration
             dtremaining = dt
-            itercountmax=10
+            itercountmax=4
             itercount=0
             do while (dtremaining>1.d-16)
-               call mp_update_FEexp(dtremaining,h,u,v,m,p,rhoh,gz,dtk)
+               !write(*,*) '=============================='
+               !write(*,*) '0--------i,j--------: ', i,j
+               !write(*,*) 'intercount: ', itercount
+               !write(*,*) 'h,m,p,rhoh: ', h,m,p,rhoh
+               !write(*,*) 'dtremaining/dt: ', dtremaining/dt
+               call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+               m_eq_0 = m_eq
+               m_0 = m
+               sig_eff_0 = sig_eff
+               call mp_update_FE_4quad(dt,h,u,v,m,p,rhoh,gz,dtk,quad0,quad1)
                dtremaining = dtremaining-dtk
-               call qfix_cmass(m,p,h,rho,hu,hv,hm,u,v,rhoh,gz)
-               !if (h<drytolerance) exit
                itercount = itercount + 1
+               if (quad0/=quad1) then
+               call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+               write(*,*) '1--------i,j--------: ', i,j
+               write(*,*) 'quad0,quad1: ', quad0,quad1
+               write(*,*) 'h,m_0,m_eq_0,sig_eff_0: ', h,m_0,m_eq_0,sig_eff_0
+               write(*,*) 'h,m,m_eq,p,sig_eff: ', h,m,m_eq,p,sig_eff
+               write(*,*) 'intercount: ', itercount
+               write(*,*) 'dtk: ', dtk
+               write(*,*) 'dtremaining/dt: ', dtremaining/dt
+               write(*,*) '=============================='
+               endif
+               if (h<drytolerance) exit
                if (itercount>=itercountmax) then
-                  if ((rhoh*gz-p)>0.d0) then
-                     write(*,*) 'src2 aborting m,p integration in cell, i,j: ', i,j
-                     write(*,*) 'dt, dtremaining: ', dt, dtremaining
-                     write(*,*) 'h,m,p,rhohg: ', h,m,rhoh*gz-p
-                  endif
                   exit
                endif
-               !write(*,*) 'dt,dtremaining,dtk ', dt,dtremaining,dtk
             enddo
-            !call mp_update_trapezoid(dt,h,u,v,m,p,rhoh,gz,phi)
-            
-            call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
-            if (h<=drytolerance) cycle
-
+            if (h<=drytolerance) then
+               call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
+               cycle
+            endif
+            hu = h*u
+            hv = h*v
+            hm = h*m
             !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+            call qfix(h,hu,hv,hm,p,u,v,m,rho,gz)
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
             !--------------------------------------------------------------------------------------------
             
@@ -378,17 +394,21 @@
 
    !====================================================================
    ! subroutine mp_update_FE_4quad: integrate dp/dt,dm/dt by a hybrid 
-   ! FEuler integration that depends on the initial quadrant of phase space.
-   ! Basic idea: for each quadrant of phase space (divided by p=p_eq and m=m_eq)
-   ! there is only one interior (physically admissible) boundary that can be crossed.
+   ! FEuler/RK integration that depends on the initial quadrant of phase space.
+   ! Basic idea which conforms to phase space vector field given
+   ! for each quadrant of phase space (divided by p=p_eq(m_crit) and m=m_crit)
+   ! there is only one open interior (physically admissible) boundary that can be crossed.
    ! these boundaries are such that a physically admissible solution must proceed clockwise
    ! (m horizontal axis, p vertical) if it changes quadrants. 1 (UL)-> 2(UR)-> 3 (LR)-> 4(LL).
-   ! FE is used with dtk<=dt such that only the admissible boundary can be crossed in
+   ! an open boundary in 1 quadrant is a closed boundary in then next, 
+   ! ie. m=m_crit belongs to quads 2 & 4, p=p_eq belongs to 1 & 3.
+   ! RK is used with dtk<=dt such that only the open/admissible boundary can be crossed in
    ! a given substep. For a given substep, either (a) sol remains interior to quadrant (dtk=dt),
-   ! (b) sol. reaches physically inadmissible boundary (c) solution interior in next quadrant (dtk=dt)
+   ! (b) sol. reaches physically inadmissible boundary dtk<=dt 
+   ! (c) solution reaches open quadrant boundary (dtk<=dt) that belongs to next quadrant
    !====================================================================
 
-      subroutine mp_update_FE_4quad(dt,h,u,v,m,p,rhoh,gz,dtk)
+      subroutine mp_update_FE_4quad(dt,h,u,v,m,p,rhoh,gz,dtk,quad0,quad1)
 
          use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass,phi_bed
          use geoclaw_module, only: grav,drytolerance
@@ -400,13 +420,18 @@
          real(kind=8), intent(in)  :: u,v,rhoh,dt
          real(kind=8), intent(in)  :: gz
          real(kind=8), intent(out) :: dtk
-   
+         integer, intent(out) :: quad0,quad1
+
          !local
          real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
          real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm,phi
-         real(kind=8) :: mkrate,plambda,alphainv,c_dil,p_exc,dtm,dtp
-         integer :: quad0
+         real(kind=8) :: mkrate,plambda,alphainv,c_dil,p_exc,dtm,dtp,dtdil
+         real(kind=8) :: mkrate0,plambda0,alphainv0,c_dil0,dtfrac1,dtfrac2
+         real(kind=8) :: hu,hv,hm
+         real(kind=8) :: rho_crit,h_crit
+         logical :: outquad
    
+         outquad = .true.
          phi = phi_bed
          vnorm = sqrt(u**2 + v**2)
    
@@ -420,10 +445,17 @@
          p_eq0 = rho_f*gz*h0
          p_exc0 = p0 - p_eq0
 
+         rho_crit = m_crit*(rho_s-rho_f) + rho_f
+         h_crit = rhoh/rho_crit
+         p_eq_crit = rho_f*gz*h_crit
+         
+
          dtk = 0.d0
          dtm = dt
          dtp = dt
          dtdil = dt
+         dtfrac1 = 0.5d0
+         dtfrac2 = 0.5d0
          ! if at critical point dq/dt = 0
          if ((p_exc0==0.d0).and.(m==0.d0.or.m==m_eq)) return
    
@@ -437,44 +469,54 @@
 
          !determine quadrant of initial solution in state space
          quad0 = 0
-         if ((m<m_eq).and.(p_exc0>=0.d0)) then
+         if ((m<m_crit).and.(p>=p_eq_crit)) then
             quad0=1
-         elseif ((m>=m_eq).and.(p_exc0>0.d0)) then
+         elseif ((m>=m_crit).and.(p>p_eq_crit)) then
             quad0=2
-         elseif  ((m>m_eq).and.(p_exc0<=0.d0)) then
+         elseif  ((m>m_crit).and.(p<=p_eq_crit)) then
             quad0=3
-         elseif ((m<=m_eq).and.(p_exc0<0.d0)) then
+         elseif ((m<=m_crit).and.(p<p_eq_crit)) then
             quad0=4
          endif
-
+         !write(*,*) 'quad0,p_exc0 ', quad0,p_exc0
          select case (quad0)
          
-         case(1) !UL quadrant, loose material contracting, p>=p_eq
-            !integration can only cross right boundary (m=m_eq)
-            !note that p_eq0>=p_eq1 because m increasing => p_eq decreasing
-            ! therefore p_eq0 is sufficient bound to remain in quad 1 or 2.
-            if (mkrate0*m_0>0.d0) then !interior/upper bound on m (else on boundary, no change in m for all dt)
+         case(1) !UL quadrant, variable material and p_exc
+            !statically loose
+            !integration can only cross right boundary (m=m_crit)
+            !m is strictly increasing
+            !p can increase or decrease depending on sign(m-m_eq)
+            ! therefore p_eq_crit is sufficient bound to remain in quad 1 or 2.
+            if (mkrate0*m_0>0.d0) then !interior/upper bound on m (else on boundary, no change in m for first step)
                dtm = min(dt,max(m_eq-m_0,0.d0)/(mkrate0*m_0))
             endif
             if (c_dil0>0.d0) then !pressure increase, bound by rhogh (else c_dil==0)
                dtp = min(dt, sig_eff/c_dil0)
             endif
+            !write(*,*) 'dtm,dtp: ', dtm,dtp
             dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            p_exc = p_exc0 + 0.5*dtdil*c_dil0
-            m = m_0 + 0.5*dtdil*mkrate*m_0
-            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            !integrate dilatancy feedback for 0.5dtdil 
+            !  full step of dtdil=dtp<dt, pressure hits physical boundary
+            !  full step of dtdil=dtm<dt, solution reaches open boundary m=m_eq
+            !  change in m_eq should imply crossing into quad 2.
+            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
+            m = m_0 + dtfrac1*0.5d0*dtdil*mkrate0*m_0
+            !write(*,*) 'm_0, m1, mkrate0,kperm,rho0,rhoh,h: ', m_0, m, mkrate0,kperm,rho0,rhoh,h
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
             mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
             c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
             plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
                   - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + 0.5*dtdil*c_dil
-            m = m + 0.5*dtdil*mkrate*m
-
-            dtk = min(dtm,dt)
+            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
+            m = m + dtfrac2*0.5d0*dtdil*mkrate*m
+            !write(*,*) 'm_0, m2: ', m_0, m
+            !if dtdil = dtp < dtm then p=rhogh is reached: relax for dtm>dtp
+            !elseif dtdil = dtm < dtp then open boundary is reached
+            dtk = dtm
             p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            !write(*,*) 'm_0, m2 after qfix: ', m_0, m
          case(2) !UR quadrant, dense or equilibrium material, p>p_eq
             !intertially contracting
             !integration can only cross lower boundary (p=p_eq)
@@ -486,23 +528,30 @@
                dtp = min(dt, abs(p_exc0/c_dil0))
             endif
             dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            p_exc = p_exc0 + 0.5*dtdil*c_dil0
-            m = m_0 + 0.5*dtdil*mkrate*m_0
-            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            !integrate dilatancy feedback for 0.5dtdil 
+            !  full step if dtdil=dtm<dt, sol. hits physical boundary m=1.
+            !  full step if dtdil=dtp<dt, solution reaches exit boundary p_exc=0
+            !  exit boundary belongs to quad 3.
+            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
+            m = m_0 + dtfrac1*0.5d0*dtdil*mkrate0*m_0
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
             mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
             c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
             plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
                   - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + 0.5*dtdil*c_dil
-            m = m + 0.5*dtdil*mkrate*m
-
-            dtk = min(dtm,dt)
+            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
+            m = m + dtfrac2*0.5d0*dtdil*mkrate*m
+            !if dtdil = dtp < dtm then open boundary is reached (or nearly reached)
+            !elseif dtdil = dtm < dtp then m=1 is hit (should be rare). relax pressure for remainder
+            dtk = dtp
             p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
 
          case(3) !LR quadrant, dilative material, p<=p_eq
             !integration can only cross left boundary (m=m_eq)
+            !m is strictly decreasing
+            !note that p_eq0<=p_eq1 because m decreasing => h,p_eq increasing => bound prevents quad 2
             if (mkrate0*m_0<0.d0) then !should always be true unless p_exc0=0.
                dtm = min(dt,max(m_0-m_eq,0.d0)/abs(mkrate0*m_0))
             endif
@@ -510,87 +559,69 @@
                dtp = min(dt, abs(p0/c_dil0))
             endif
             dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            p_exc = p_exc0 + 0.5*dtdil*c_dil0
-            m = m_0 + 0.5*dtdil*mkrate*m_0
-            qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            !integrate dilatancy feedback for 0.5dtdil 
+            !  full step if dtdil=dtp<dt, pressure hits physical boundary
+            !  full step if dtdil=dtm<dt, solution reaches exit boundary m=m_eq
+            !  change in m_eq should imply crossing into quad 4.
+            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
+            m = m_0 + dtfrac1*0.5d0*dtdil*mkrate0*m_0
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
             mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
             c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
             plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
                   - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + 0.5*dtdil*c_dil
-            m = m + 0.5*dtdil*mkrate*m
+            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
+            m = m + dtfrac2*0.5d0*dtdil*mkrate*m
+            !if dtdil = dtp < dtm then p=0 is reached: relax for dtm>dtp
+            !elseif dtdil = dtm < dtp then open boundary is reached
+            dtk = dtm
+            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
 
+         case(4) !LL quadrant
+            ! m is strictly decreasing, p strictly increasing
+            dtm = dt !(exponential decay of m in this quadrant only)
+            if (c_dil0>0.d0) then !pressure increase, bound p_exc by 0 (else c_dil==0)
+               dtp = min(dt, -p_exc0/c_dil0)
+            endif
+            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
+            !integrate dilatancy feedback for 0.5dtdil 
+            !  full step if dtdil=dtp<dt, solution reaches exit boundary p_exc=0
+            !  open exit boundary belongs to quad 1.
+            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
+            m = m_0*exp(mkrate0*dtfrac1*0.5d0*dtdil)
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
+            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
+            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
+                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
+            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
+            m = m*exp(mkrate*dtfrac2*0.5d0*dtdil)
+            !if dtdil = dtp < dt then p=p_eq is reached: relax for dtp
+            !elseif dtdil = dt = dtp then dt remains in quadrant
+            dtk = dtp
+            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
 
+         end select
 
-         !calculate stable dt and update 
-         dtk = dt
-         dtm = dt
-         dtp = dt
-         if (mkrate*m_0>0.d0) then
-            dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate*m_0))
+         quad1 = 0
+         if (outquad) then
+            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+            if ((m<m_eq).and.(p_exc0>=0.d0)) then
+               quad1=1
+            elseif ((m>=m_eq).and.(p_exc0>0.d0)) then
+               quad1=2
+            elseif  ((m>m_eq).and.(p_exc0<=0.d0)) then
+               quad1=3
+            elseif ((m<=m_eq).and.(p_exc0<0.d0)) then
+               quad1=4
+            endif
+
          endif
-         if (c_dil>0.d0) then
-            dtp = min(dt,max(rhoh*gz - p0,0.d0)/c_dil)
-         elseif (c_dil<0.d0) then
-            dtp = min(dt,max(p0,0.d0)/abs(c_dil))
-         endif
-   
-         !if (dtm==0.d0) then !m_0 = 1.d0 and mkrate >0, adjust pressure if possible
-         !   if (dtp>0.d0) then !integrate pressure for dtp=dtk
-         !      dtk = dtp
-         !      p_exc = p_exc0 + dtp*c_dil
-         !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtp)
-         !   else !pressure is zero or lithostatic. Only physical response is relaxation
-         !        !(flow wants to dilate and p=0 or contract and p=rhogh)
-         !      dtk = dt
-         !      p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-         !   endif
-         !elseif (dtp==0.d0) then
-         !   dtk = dtm
-         !   if (mkrate<=0.d0) then !integrate exponential
-         !      m = m_0*exp(mkrate*dtk)
-         !   else 
-         !      m = min(m_0 + dtk*mkrate*m_0,1.d0)
-         !   endif
-         !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-         !else !dtm,dtp>0
-         !   dtk = min(dtm,dtp)
-         !   if (mkrate<=0.d0) then !integrate exponential
-         !      m = m_0*exp(mkrate*dtk)
-         !   else 
-         !      m = min(m_0 + dtk*mkrate*m_0,1.d0)
-         !   endif
-         !   p_exc = p_exc0 + dtk*c_dil
-         !   p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-         !endif
-   
-         dtk = min(dtm,dtp)
-         if (mkrate<=0.d0) then !integrate exponential
-               m = m_0*exp(mkrate*dtk)
-         else 
-               m = min(m_0 + dtk*mkrate*m_0,1.d0)
-         endif
-         p_exc = p_exc0 + dtk*c_dil
-         p_exc = p_exc*exp(-max(plambda,0.d0)*dt)
-   
-         !recapture p, rho, h
-         rho = m*(rho_s-rho_f)+rho_f
-         h = rhoh/rho
-         p = rho_f*gz*h + p_exc
-   
-         !call qfix_cmass(m,p,h,rho,u,v,rhoh,gz)
-         
-         dtk = dt
-         !if (dtk<dt/1000.d0) then !integration stalled at boundary of physical space move on.
-         !   dtk = dt
-         !   write(*,*) 'exiting src integration:'
-         !   write(*,*) 'h0,h,m0,m,rho0, rho,rhoh', h0,h,m_0,m,rho0,rho,rhoh
-         !   write(*,*) 'dt,dtm,dtp', dt,dtm,dtp
-         !   write(*,*) 'mkrate',mkrate
-         !endif
-         
-         
+        
          return
          end subroutine mp_update_FE_4quad
 
@@ -609,12 +640,12 @@
       !i/o
       real(kind=8), intent(inout) :: h,m,p
       real(kind=8), intent(in)  :: u,v,rhoh,dt
-      real(kind=8), intent(in)  :: gz,phi
+      real(kind=8), intent(in)  :: gz
       real(kind=8), intent(out) :: dtk
 
       !local
       real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
-      real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm
+      real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm,phi
       real(kind=8) :: mkrate,plambda,alphainv,c_dil,p_exc,dtm,dtp
 
 
@@ -725,15 +756,15 @@
       !i/o
       real(kind=8), intent(inout) :: h,m,p
       real(kind=8), intent(in)  :: u,v,rhoh,dt
-      real(kind=8), intent(in)  :: gz,phi
+      real(kind=8), intent(in)  :: gz
       
 
       !local
       real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
-      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm
+      real(kind=8) :: kappa,S,rho,tanpsi,D,tau,sigbed,kperm,phi
       real(kind=8) :: mkrate,plambda,dtk,alphainv,c_dil,p_exc1,m1
       real(kind=8) :: mstar,hstar,pstar,rhostar,h_n,m_n,p_n,p_eq,rho_n
-      real(kind=8) :: p_exc_star,p_exc_n,p_exc,p_excstar
+      real(kind=8) :: p_exc_star,p_exc_n,p_exc,p_excstar,hu,hv,hm
 
       real(kind=8) :: convtol,deltaiter
       integer :: maxiter,iter,exitstatus
@@ -773,7 +804,7 @@
       hstar = rhoh/rhostar
       !recapture p for fix
       pstar = rho_f*gz*hstar + p_excstar
-      call qfix_cmass(mstar,pstar,hstar,rhostar,u,v,rhoh,gz)
+      call qfix_cmass(hstar,mstar,p,rhostar,p_excstar,hu,hv,hm,u,v,rhoh,gz)
       !implicit integration ---------------------------------------------------------------------------------------------
       ! q* = q0 + 1/2dt*f(q0)
       ! q^n+1 = q^* +  1/2dt*f(q^n+1)
