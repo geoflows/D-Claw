@@ -392,23 +392,27 @@
       return
       end subroutine src2
 
-   !====================================================================
-   ! subroutine mp_update_FE_4quad: integrate dp/dt,dm/dt by a hybrid 
-   ! FEuler/RK integration that depends on the initial quadrant of phase space.
-   ! Basic idea which conforms to phase space vector field given
-   ! for each quadrant of phase space (divided by p=p_eq(m_crit) and m=m_crit)
-   ! there is only one open interior (physically admissible) boundary that can be crossed.
-   ! these boundaries are such that a physically admissible solution must proceed clockwise
-   ! (m horizontal axis, p vertical) if it changes quadrants. 1 (UL)-> 2(UR)-> 3 (LR)-> 4(LL).
-   ! an open boundary in 1 quadrant is a closed boundary in then next, 
-   ! ie. m=m_crit belongs to quads 2 & 4, p=p_eq belongs to 1 & 3.
-   ! RK is used with dtk<=dt such that only the open/admissible boundary can be crossed in
-   ! a given substep. For a given substep, either (a) sol remains interior to quadrant (dtk=dt),
-   ! (b) sol. reaches physically inadmissible boundary dtk<=dt 
-   ! (c) solution reaches open quadrant boundary (dtk<=dt) that belongs to next quadrant
-   !====================================================================
-
       subroutine mp_update_FE_4quad(dt,h,u,v,m,p,rhoh,gz,dtk,quad0,quad1)
+      !====================================================================
+      ! subroutine mp_update_FE_4quad: integrate dp_exc/dt,dm/dt by a hybrid 
+      ! explicit integration that depends on the initial quadrant of phase space.
+      ! Basic idea which conforms to phase space vector field:
+      ! for each quadrant of phase space (divided by p=p_eq(m_crit) and m=m_crit)
+      ! there is only one open interior (physically admissible) boundary that can be crossed.
+      ! these boundaries are such that a physically admissible solution must proceed clockwise
+      ! (m horizontal axis, p vertical) if it changes quadrants. 1 (UL)-> 2(UR)-> 3 (LR)-> 4(LL).
+      ! An open boundary in 1 quadrant is a closed boundary in then next, 
+      ! ie. m=m_crit belongs to quads 2 & 4, p=p_eq belongs to 1 & 3.
+      ! Explicit solution to non-homogeneous exponential ode d/dt(m,p_exc) is used with dtk<=dt 
+      ! such that only the open/admissible boundary can be crossed in
+      ! a given substep. For a given substep dt, either (a) sol remains interior to quadrant (dtk=dt),
+      ! (b) sol. reaches physically inadmissible boundary dtk<=dt 
+      ! (c) solution reaches open quadrant boundary (dtk<=dt) that belongs to next quadrant for next substep.
+      ! Quadrants 1 & 3 contain the p and m nullclines. Substeps are taken based on the initial position
+      ! wrt these nullclines, because solution is most prone to oscillations if a substep overshoots a nullcline
+      ! significantly. Solution converges to p-nullcline envelope as it should, 
+      ! except when between p-nullcline and m_eq, the most problematic regions.
+      !====================================================================
 
          use digclaw_module, only: rho_f,rho_s,sigma_0,mu,alpha,setvars,qfix,qfix_cmass,phi_bed
          use geoclaw_module, only: grav,drytolerance
@@ -425,8 +429,8 @@
          !local
          real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
          real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm,phi
-         real(kind=8) :: mkrate,plambda,alphainv,c_dil,p_exc,dtm,dtp,dtdil
-         real(kind=8) :: mkrate0,plambda0,alphainv0,c_dil0,dtfrac1,dtfrac2
+         real(kind=8) :: km,kp,alphainv,c_d,p_exc,dtm,dtp,dtdil
+         real(kind=8) :: km0,kp0,alphainv0,c_d0,dtfrac1,dtfrac2
          real(kind=8) :: hu,hv,hm
          real(kind=8) :: rho_crit,h_crit
          logical :: outquad
@@ -451,21 +455,33 @@
          
 
          dtk = 0.d0
-         dtm = dt
-         dtp = dt
-         dtdil = dt
-         dtfrac1 = 0.5d0
-         dtfrac2 = 0.5d0
+         dtr = dt
+         
          ! if at critical point dq/dt = 0
          if ((p_exc0==0.d0).and.(m==0.d0.or.m==m_eq)) return
+
+         if (m==0.d0) then
+            p_exc = p_exc0*exp(-kp0*dtr)
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            dtk = dtr
+            return
+         endif
    
          !determine coefficients for update
          ! dm/dt = (2*k*rho^2/mu(rhoh)^2)*p_exc*m
-         ! dp_eq/dt = -plamda*p_eq + c_dil see George & Iverson 2014
-         mkrate0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))*p_exc0
-         c_dil0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
-         plambda0 = (2.d0*kperm/(h0*mu))*(((6.d0*alphainv*rho0)/(4.d0*rhoh)) &
+         ! dp_eq/dt = -plamda*p_eq + c_d see George & Iverson 2014
+         km0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))
+         c_d0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
+         kp0 = (2.d0*kperm/(h0*mu))*(((6.d0*alphainv*rho0)/(4.d0*rhoh)) &
                   - ((3.d0*rho_f*gz*h0*(rho-rho_f))/(4.d0*rhoh))) !should be always >= 0.d0, but fix if small rounding error below
+
+         if (c_d0==0.d0) then
+            p_exc = p_exc0*exp(-kp0*dtr)
+            m = m_0*exp(km0*p_exc0*dtr)
+            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            dtk = dtr
+            return
+         endif
 
          !determine quadrant of initial solution in state space
          quad0 = 0
@@ -484,127 +500,104 @@
          case(1) !UL quadrant, variable material and p_exc
             !statically loose
             !integration can only cross right boundary (m=m_crit)
-            !m is strictly increasing
-            !p can increase or decrease depending on sign(m-m_eq)
-            ! therefore p_eq_crit is sufficient bound to remain in quad 1 or 2.
-            if (mkrate0*m_0>0.d0) then !interior/upper bound on m (else on boundary, no change in m for first step)
-               dtm = min(dt,max(m_eq-m_0,0.d0)/(mkrate0*m_0))
+            !p can increase or decrease depending if below/above p-nullcline (which is left of m=m_eq)
+            !m can increase or decrease if above/below m-nullcline (p=p_eq)
+            if (p_exc0<-1.d-3*rhoh*gz) then !p increasing, m decreasing
+               dts = dtr
+               if (c_d0>0.d0) then !don't exceed p_exc = 0 until next substep
+                  dts = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0))
+               endif
+               !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
+               p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
+               m = m_0*exp(dts*km0*0.5d0*(p_exc0+p_exc))
+               call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+               dtk = dts
+               dtr = dtr-dts
+               return      
+            elseif ((-kp0*p_exc0+c_d0)>0) then !p_exc is increasing/below nullcline
+               !any time step p_exc remains below nullcline
+               p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dtr) +c_d0/kp0
+               p_excm = 0.5d0(p_exc0+p_exc)
+               if (p_excm<=0.d0) then
+                  dts =  dtr
+                  m = m*exp(km*p_excm*dts)
+               else
+                  dts = min(dtr,(m_eq-m_0)/(km0*p_excm*m_0)
+                  m = m_0 + km0*m_0*p_excm*dts
+                  p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
+                  
+               endif
+               call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+               dtk = dts
+               dtr = dtr-dts
+               return
+            else !-kp0*p_exc0+c_d0)<0
+               !p_exc is decreasing/above nullcline or static on nullcline
+               ! m strictly increasing
+               if (c_d0>0.d0) then !p remains below nullcline for any dt
+                  ! only m can take solution beyond nullcline
+                  p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
+                  p_excm = 0.5d0(p_exc0+p_exc)
+                  dts = min(dtr,(m_crit-m_0)/(km0*p_excm*m_0)
+                  m = m_0 + km0*m_0*p_excm*dts
+                  p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
+               else !p_exc is to the right of m_eq
+                  ! true solution should remain right of m_eq
+                  ! FE gives lowest slope of dp/dm
+                  dts = min(dtr,(m_crit-m_0)/(km0*p_exc0*m_0)
+                  dtp = min(dtr,-(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0)))
+                  if (dtp<dts) write(*,*) 'ERROR: QUAD 1: WRONG DIRECTION ACROSS m=m_eq'
+                  dts = min(dts,dtp)
+                  m = m_0 + km0*m_0*p_exc0*dts
+                  p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
+               endif
             endif
-            if (c_dil0>0.d0) then !pressure increase, bound by rhogh (else c_dil==0)
-               dtp = min(dt, sig_eff/c_dil0)
-            endif
-            !write(*,*) 'dtm,dtp: ', dtm,dtp
-            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            !integrate dilatancy feedback for 0.5dtdil 
-            !  full step of dtdil=dtp<dt, pressure hits physical boundary
-            !  full step of dtdil=dtm<dt, solution reaches open boundary m=m_eq
-            !  change in m_eq should imply crossing into quad 2.
-            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
-            m = m_0 + dtfrac1*0.5d0*dtdil*mkrate0*m_0
-            !write(*,*) 'm_0, m1, mkrate0,kperm,rho0,rhoh,h: ', m_0, m, mkrate0,kperm,rho0,rhoh,h
-            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
-            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
-            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
-            m = m + dtfrac2*0.5d0*dtdil*mkrate*m
-            !write(*,*) 'm_0, m2: ', m_0, m
-            !if dtdil = dtp < dtm then p=rhogh is reached: relax for dtm>dtp
-            !elseif dtdil = dtm < dtp then open boundary is reached
-            dtk = dtm
-            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-            !write(*,*) 'm_0, m2 after qfix: ', m_0, m
-         case(2) !UR quadrant, dense or equilibrium material, p>p_eq
+
+         case(2) !UR quadrant, dense or equilibrium material, p>p_eq_crit>p_eq
             !intertially contracting
-            !integration can only cross lower boundary (p=p_eq)
+            !integration can only cross lower boundary (p=p_eq_crit>p_eq)
+            !m>m_crit>m_eq
             !p is strictly decreasing, m strictly increasing
-            if (mkrate0*m_0>0.d0) then !should always be true (?) interior/upper bound at m=1.
-               dtm = min(dt,max(1.d0-m_0,0.d0)/(mkrate0*m_0))
-            endif
-            if (c_dil0<0.d0) then !pressure decrease, bound p_exc by 0 (else c_dil==0)
-               dtp = min(dt, abs(p_exc0/c_dil0))
-            endif
-            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            !integrate dilatancy feedback for 0.5dtdil 
-            !  full step if dtdil=dtm<dt, sol. hits physical boundary m=1.
-            !  full step if dtdil=dtp<dt, solution reaches exit boundary p_exc=0
-            !  exit boundary belongs to quad 3.
-            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
-            m = m_0 + dtfrac1*0.5d0*dtdil*mkrate0*m_0
+            dts = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0)
+            dtp = min(dtr,-(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0)))
+            dts = min(dts,dtp)
+            p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
+            m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
-            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
-            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
-            m = m + dtfrac2*0.5d0*dtdil*mkrate*m
-            !if dtdil = dtp < dtm then open boundary is reached (or nearly reached)
-            !elseif dtdil = dtm < dtp then m=1 is hit (should be rare). relax pressure for remainder
-            dtk = dtp
-            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            dtk = dts
+            dtr = dtr-dts
+            return
 
          case(3) !LR quadrant, dilative material, p<=p_eq
-            !integration can only cross left boundary (m=m_eq)
-            !m is strictly decreasing
-            !note that p_eq0<=p_eq1 because m decreasing => h,p_eq increasing => bound prevents quad 2
-            if (mkrate0*m_0<0.d0) then !should always be true unless p_exc0=0.
-               dtm = min(dt,max(m_0-m_eq,0.d0)/abs(mkrate0*m_0))
-            endif
-            if (c_dil0<0.d0) then !pressure decrease, bound p_exc by -rho_f g h (else c_dil==0)
-               dtp = min(dt, abs(p0/c_dil0))
-            endif
-            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            !integrate dilatancy feedback for 0.5dtdil 
-            !  full step if dtdil=dtp<dt, pressure hits physical boundary
-            !  full step if dtdil=dtm<dt, solution reaches exit boundary m=m_eq
-            !  change in m_eq should imply crossing into quad 4.
-            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
-            m = m_0 + dtfrac1*0.5d0*dtdil*mkrate0*m_0
-            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
-            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
-            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
-            m = m + dtfrac2*0.5d0*dtdil*mkrate*m
-            !if dtdil = dtp < dtm then p=0 is reached: relax for dtm>dtp
-            !elseif dtdil = dtm < dtp then open boundary is reached
-            dtk = dtm
-            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+            !integration can only cross left boundary (m=m_crit)
+            if (p_exc0>-1.d-3*rhoh*gz) then !p decreasing, m increasing
+               !don't descend below p_exc = 0 until next substep
+               dts = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0)
+               dtp = min(dtr,-(1.d0/kp0)*log(c_d0/(-kp0*p_exc0+c_d0))
+               dts = min(dts,dtp)
+               !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
+               p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
+               m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
+               call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
+               dtk = dts
+               dtr = dtr-dts
+               return  
+            elseif ((-kp0*p_exc0+c_d0)<0) then !p_exc is decreasing/above nullcline
+               !no timestep restrction on p.
+               
 
          case(4) !LL quadrant
             ! m is strictly decreasing, p strictly increasing
-            dtm = dt !(exponential decay of m in this quadrant only)
-            if (c_dil0>0.d0) then !pressure increase, bound p_exc by 0 (else c_dil==0)
-               dtp = min(dt, -p_exc0/c_dil0)
-            endif
-            dtdil = min(dtp,dtm) !allowed dilatancy feedback m<-->p
-            !integrate dilatancy feedback for 0.5dtdil 
-            !  full step if dtdil=dtp<dt, solution reaches exit boundary p_exc=0
-            !  open exit boundary belongs to quad 1.
-            p_exc = p_exc0 + dtfrac1*0.5d0*dtdil*c_dil0
-            m = m_0*exp(mkrate0*dtfrac1*0.5d0*dtdil)
+            dts = dtr
+            !don't exceed p_exc = 0 until next substep
+            dts = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0))
+            !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
+            p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
+            m = m_0*exp(dts*km0*0.5d0*(p_exc0+p_exc))
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
-            mkrate = ((2.d0*kperm*rho**2)/(mu*rhoh**2))*p_exc
-            c_dil = -3.d0*vnorm*(alphainv*rho/(rhoh))*tanpsi
-            plambda = (2.d0*kperm/(h*mu))*(((6.d0*alphainv*rho)/(4.d0*rhoh)) &
-                  - ((3.d0*rho_f*gz*h*(rho-rho_f))/(4.d0*rhoh)))
-            p_exc = p_exc + dtfrac2*0.5d0*dtdil*c_dil
-            m = m*exp(mkrate*dtfrac2*0.5d0*dtdil)
-            !if dtdil = dtp < dt then p=p_eq is reached: relax for dtp
-            !elseif dtdil = dt = dtp then dt remains in quadrant
-            dtk = dtp
-            p_exc = p_exc*exp(-max(plambda,0.d0)*dtk)
-            call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
-
+            dtk = dts
+            dtr = dtr-dts
+            return
          end select
 
          quad1 = 0
