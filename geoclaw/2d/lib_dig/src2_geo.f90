@@ -505,7 +505,7 @@
             if (p_exc0<-1.d-3*rhoh*gz) then !p increasing, m decreasing
                dts = dtr
                if (c_d0>0.d0) then !don't exceed p_exc = 0 until next substep
-                  dts = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0))
+                  dts = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0)))
                endif
                !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
                p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
@@ -522,7 +522,7 @@
                   dts =  dtr
                   m = m*exp(km*p_excm*dts)
                else
-                  dts = min(dtr,(m_eq-m_0)/(km0*p_excm*m_0)
+                  dts = min(dtr,(m_eq-m_0)/(km0*p_excm*m_0))
                   m = m_0 + km0*m_0*p_excm*dts
                   p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
                   
@@ -538,13 +538,13 @@
                   ! only m can take solution beyond nullcline
                   p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
                   p_excm = 0.5d0(p_exc0+p_exc)
-                  dts = min(dtr,(m_crit-m_0)/(km0*p_excm*m_0)
+                  dts = min(dtr,(m_crit-m_0)/(km0*p_excm*m_0))
                   m = m_0 + km0*m_0*p_excm*dts
                   p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
                else !p_exc is to the right of m_eq
                   ! true solution should remain right of m_eq
                   ! FE gives lowest slope of dp/dm
-                  dts = min(dtr,(m_crit-m_0)/(km0*p_exc0*m_0)
+                  dts = min(dtr,(m_crit-m_0)/(km0*p_exc0*m_0))
                   dtp = min(dtr,-(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0)))
                   if (dtp<dts) write(*,*) 'ERROR: QUAD 1: WRONG DIRECTION ACROSS m=m_eq'
                   dts = min(dts,dtp)
@@ -558,8 +558,8 @@
             !integration can only cross lower boundary (p=p_eq_crit>p_eq)
             !m>m_crit>m_eq
             !p is strictly decreasing, m strictly increasing
-            dts = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0)
-            dtp = min(dtr,-(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0)))
+            dts = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0))
+            dtp = -(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0))
             dts = min(dts,dtp)
             p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) +c_d0/kp0
             m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
@@ -572,8 +572,8 @@
             !integration can only cross left boundary (m=m_crit)
             if (p_exc0>-1.d-3*rhoh*gz) then !p decreasing, m increasing
                !don't descend below p_exc = 0 until next substep
-               dts = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0)
-               dtp = min(dtr,-(1.d0/kp0)*log(c_d0/(-kp0*p_exc0+c_d0))
+               dts = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0))
+               dtp = min(dtr,-(1.d0/kp0)*log(c_d0/(-kp0*p_exc0+c_d0)))
                dts = min(dts,dtp)
                !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
                p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
@@ -582,15 +582,26 @@
                dtk = dts
                dtr = dtr-dts
                return  
-            elseif ((-kp0*p_exc0+c_d0)<0) then !p_exc is decreasing/above nullcline
-               !no timestep restrction on p.
-               
+            elseif ((-kp0*p_exc0+c_d0)<0) then !p_exc is decreasing above/right of nullcline
+               if (c_d0/kp0<-p_eq_crit) then !assymptotic limit of p<0, bound timestep
+                  dts = min(dtr,(m_eq-m_0)/(km0*p_exc0*m_0))
+                  dtp = -(1.d0/kp0)*log((c_d0+kp*p_eq_crit)/(-kp0*p_exc0+c_d0))
+                  dts = min(dts,dtp)
+                  p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
+                  m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
+               else !limit of p>0, no timestep restriction on p, bound m>m_eq
+                  dts = min(dtr,(m_eq-m_0)/(km0*p_exc0*m_0))
+                  p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
+                  m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
+               endif
+            else !p_exc is increasing below/left of nullcline
 
+            endif
          case(4) !LL quadrant
             ! m is strictly decreasing, p strictly increasing
             dts = dtr
             !don't exceed p_exc = 0 until next substep
-            dts = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0))
+            dts = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0)))
             !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
             p_exc = (p_exc0 - c_d0/kp0)*exp(-kp0*dts) + c_d0/lambda0
             m = m_0*exp(dts*km0*0.5d0*(p_exc0+p_exc))
