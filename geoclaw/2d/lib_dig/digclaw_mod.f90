@@ -338,7 +338,7 @@ contains
 
       gmod = grav
       dry_tol = drytolerance
-      if (bed_normal.eq.1) gmod = grav*dcos(theta)
+      if (bed_normal.eq.1) gmod = grav*cos(theta)
 
       if (h.le.dry_tol) then
          h =  0.d0
@@ -361,11 +361,11 @@ contains
       mhi = 1.d0 - mlo
 
       if (m.lt.mlo) then
-         m = dmax1(m,mlo)
+         m = max(m,mlo)
          !m = (m**2 + mlo**2)/(2.d0*mlo)
          hm = h*m
       elseif (m.gt.mhi) then
-         m = dmin1(m,1.d0)
+         m = min(m,1.d0)
          !m = 1.d0 - ((1.d0-mhi)**2 + (1.d0-m)**2)/(2.d0*(1.d0-mhi))
          hm = h*m
       endif
@@ -373,17 +373,17 @@ contains
       rho = rho_s*m + (1.d0-m)*rho_f
       pmax = rho*gmod*h
       plo = 0.d0!rho_f*dry_tol*gmod*dry_tol
-      p = dmax1(0.d0,p)
-      p = dmin1(pmax,p)
+      p = max(0.d0,p)
+      p = min(pmax,p)
       !phi = pmax - plo
       !if (p.lt.plo) then
       !   if ((u**2+v**2)>0.d0) then
-      !      p = dmax1(0.d0,p)
+      !      p = max(0.d0,p)
       !   endif
-         !p = dmax1(-5.0*pmax,p)
+         !p = max(-5.0*pmax,p)
          !p = (p**2 + plo**2)/(2.d0*plo)
       !elseif (p.gt.phi) then
-      !   p = dmin1(pmax,p)
+      !   p = min(pmax,p)
          !p = pmax - ((pmax-p)**2+ (pmax-phi)**2)/(2.d0*(pmax-phi))
       !endif
 
@@ -420,7 +420,7 @@ contains
       vnorm = sqrt(u**2 + v**2)
       shear = 2.d0*vnorm/h
       sig_eff = max(0.d0,rho*gz*h - p)
-      sig_0 = 0.5d0*alpha*rho_f*gz*rho*h*(rho_s-rho_f)/(rho**2)
+      sig_0 = 0.5d0*alpha*rho_f*gz*h
       alphainv = m*(sig_eff + sig_0)/alpha
 
       !determine m_eq
@@ -428,7 +428,7 @@ contains
       !m_eq = m_crit* sqrt(Nden)/(sqrt(Nden)+sqrt(Nnum))
       Nden = rho_s*(shear*delta)**2 + sig_eff
       Nnum = mu*shear
-      if (Nnum<=0) then
+      if (Nnum<=0.d0) then
          m_eq = m_crit
       else
          m_eq = m_crit*(sqrt(Nden)/(sqrt(Nden)+ sqrt(Nnum)))
@@ -484,7 +484,7 @@ contains
       gmod=grav
       pm = max(0.d0,pm)
       pm = min(1.d0,pm)
-      if (dabs(alpha_seg-1.0d0)<1.d-6) then
+      if (abs(alpha_seg-1.0d0)<1.d-6) then
          seg = 0.d0
          rho_fp = rho_f
          pmtanh01=0.d0
@@ -498,11 +498,11 @@ contains
       !pmtanh01 = seg*(0.5*(tanh(20.0*(pm-0.80))+1.0))
       !pmtanh01 = seg*(0.5*(tanh(40.0*(pm-0.90))+1.0))
 
-      if (bed_normal.eq.1) gmod=grav*dcos(theta)
+      if (bed_normal.eq.1) gmod=grav*cos(theta)
       vnorm = dsqrt(u**2 + v**2)
       rho = rho_s*m + rho_fp*(1.d0-m)
       shear = 2.d0*vnorm/hbounded
-      sigbed = dmax1(0.d0,rho*gmod*h - p)
+      sigbed = max(0.d0,rho*gmod*h - p)
       sigbedc = rho_s*(shear*delta)**2 + sigbed
       if (sigbedc.gt.0.d0) then
          S = (mu*shear/(sigbedc))
@@ -567,7 +567,7 @@ contains
       endif
 
       ! this is now calculated below.
-      tanphi = dtan(phi_bed + datan(tanpsi))  ! + phi_seg_coeff*pmtanh01*dtan(phi_bed)
+      tanphi = tan(phi_bed + datan(tanpsi))  ! + phi_seg_coeff*pmtanh01*tan(phi_bed)
 
       !if (S.gt.0.0) then
       !   tanphi = tanphi + 0.38*mu*shear/(shear + 0.005*sigbedc)
@@ -640,9 +640,9 @@ contains
       ! RPJ reduced tau_solid by m/mcrit to reflect the loss of granular friction for low values of m.
       ! this regularization may be improved.
 
-      !tau = dmax1(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))!*((tanh(100.0*(m-0.05))+1.0)*0.5)
+      !tau = max(0.d0,sigbed*tan(atan(mu_bf)+atan(tanpsi)))!*((tanh(100.0*(m-0.05))+1.0)*0.5)
 
-      tau = dmax1(0.d0,sigbed*tanphi)
+      tau = max(0.d0,sigbed*tanphi)
 
       ! viscosity (depth averaged is vh^(1/2)/2)
       ! in Rocha, Johnson, and Gray, they calculate viscosity.
@@ -650,9 +650,9 @@ contains
       ! viscf = (m/m_crit)*(2*Lf*sqrt(grav)*sin(theta))/(9*betaf*sqrt(cos(theta)))*((mu2f - tan(theta))/(tan(theta)-mu1f))
 
       ! this is the friction calculation before RPJ implemented the mu_bf adjustment. It lacks the m/mcrit term.
-      ! tau = dmax1(0.d0,sigbed*tanphi)
+      ! tau = max(0.d0,sigbed*tanphi)
 
-      !tau = (grav/gmod)*dmax1(0.d0,sigbed*tanphi)
+      !tau = (grav/gmod)*max(0.d0,sigbed*tanphi)
       !kappa: earth pressure coefficient
       !if (phi_int.eq.phi_bed) then
       !   sqrtarg = 0.d0
@@ -687,7 +687,7 @@ contains
       drytol = drytolerance
 
       taushear = (tau/rho)*dsign(1.d0,u)
-      vnorm = dabs(u)
+      vnorm = abs(u)
       if (h.lt.drytol.or..true.) then
          psi(1) = 0.d0
          psi(2) = 0.d0
