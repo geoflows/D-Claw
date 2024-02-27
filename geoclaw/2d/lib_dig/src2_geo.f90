@@ -500,7 +500,7 @@
          ! dp_eq/dt = -plamda*p_eq + c_d see George & Iverson 2014
          km0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))
          c_d0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
-         kp0 = (kperm/(rhoh*h0*mu))*(3.d0*alphainv*rho0 - 1.5d0*rho_f*gz*h0*(rho-rho_f)) !(kp>0)
+         kp0 = (kperm/(h0*mu))*(3.d0*alphainv*rho0/rhoh - 1.5d0*rho_f*gz*h0*(rho-rho_f)/rhoh) !(kp>0)
          if (kp0<0.d0) write(*,*) 'ERROR: kp0:', kp0
          if (c_d0==0.d0) then
             p_exc = p_exc0*exp(-kp0*dtr)
