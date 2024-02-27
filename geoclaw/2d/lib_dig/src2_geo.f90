@@ -501,7 +501,18 @@
          km0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))
          c_d0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
          kp0 = (kperm/(h0*mu))*(3.d0*alphainv*rho0/rhoh - 1.5d0*rho_f*gz*h0*(rho-rho_f)/rhoh) !(kp>0)
-         if (kp0<0.d0) write(*,*) 'ERROR: kp0:', kp0
+         if (kp0<0.d0) then
+            write(*,*) '----------------------------------'
+            write(*,*) 'ERROR: kp0:', kp0
+            write(*,*) 'terms1:', 3.d0*alphainv*rho0/rhoh, 1.5d0*rho_f*gz*h0*(rho-rho_f)/rhoh
+            write(*,*) 'terms2:', 3.d0*alphainv*rho0, 1.5d0*rho_f*gz*h0*(rho-rho_f)
+            write(*,*) 'terms3:', 2.d0*m_0*sig_0*rho0/alpha, rho_f*gz*h0*(rho-rho_f)
+            write(*,*) 'terms4:', 2.d0*sig_0*rho0/alpha, rho_f*gz*h0*(rho_s-rho_f)
+            write(*,*) 'terms5:', sig_0, 0.5d0*alpha*rho_f*gz*h0*(rho_s-rho_f)/rho0
+            
+            write(*,*) '----------------------------------'
+            stop
+         endif
          if (c_d0==0.d0) then
             p_exc = p_exc0*exp(-kp0*dtr)
             m = m_0*exp(km0*p_exc0*dtr)
