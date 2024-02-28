@@ -422,9 +422,10 @@
          real(kind=8) :: rho_c,h_c,p_eq_c,m_c,rho_c1,h_c1,p_eq_c1,m_c1
          real(kind=8) :: m_c0,p_eq_c0,sig_c,Nd,Nn,normc,shear,convtol
          integer :: debugloop,iter,itermax,quad0,quad1
-         logical :: outquad
+         logical :: outquad,debug
    
          debugloop = 0
+         debug = .true.
          outquad = .true.
          phi = phi_bed
          vnorm = sqrt(u**2 + v**2)
@@ -481,10 +482,10 @@
                if (normc<convtol) then
                   exit
                endif
-               if (iter>10) then
-                  write(*,*) 'WARNING: FP for cp iter,normc:', iter,normc 
-                  write(*,*) 'm_0,h0,vnorm:', m_0,h0,vnorm
-                  write(*,*) 'm_c,h_c,p_c - p_eq0:',m_c,h_c,p_eq_c - p_eq0
+               if (iter>10.and.debug) then
+                  write(*,*) '--------------------------------------------------'
+                  write(*,*) 'SRC2 WARNING: fixed point iterations:', iter 
+                  write(*,*) 'norm for convergence:', normc
                endif
             enddo
             if (iter>=itermax) then
@@ -501,21 +502,10 @@
          km0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))
          c_d0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
          kp0 = (kperm/(h0*mu))*(3.d0*alphainv*rho0/rhoh - 1.5d0*rho_f*gz*h0*(rho-rho_f)/rhoh) !(kp>0)
-         if (kp0<0.d0) then
-            write(*,*) '----------------------------------'
-            write(*,*) 'ERROR: kp0:', kp0
-            write(*,*) 'terms1:', 3.d0*alphainv*rho0/rhoh, 1.5d0*rho_f*gz*h0*(rho-rho_f)/rhoh
-            write(*,*) 'terms2:', 3.d0*alphainv*rho0, 1.5d0*rho_f*gz*h0*(rho-rho_f)
-            write(*,*) 'terms3:', 2.d0*m_0*sig_0*rho0/alpha, rho_f*gz*h0*(rho-rho_f)
-            write(*,*) 'terms4:', 2.d0*sig_0*rho0/alpha, rho_f*gz*h0*(rho_s-rho_f)
-            write(*,*) 'terms5:', sig_0, 0.5d0*alpha*rho_f*gz*h0*(rho_s-rho_f)/rho0
-            
-            write(*,*) '----------------------------------'
-            stop
-         endif
+         
          if (c_d0==0.d0) then
             p_exc = p_exc0*exp(-kp0*dtr)
-            m = m_0*exp(km0*p_exc0*dtr)
+            m = m_0*exp(km0*p_exc*dtr)
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             dtk = dtr
             return
@@ -538,10 +528,10 @@
          case(1) !UL quadrant, variable material and p_exc
             debugloop = 1000
             !statically loose
-            !integration can only cross right boundary (m=m_c)
-            !p can increase or decrease depending if below/above p-nullcline (which is left of m=m_eq)
+            !integration should only cross right boundary (m=m_c)
+            !p can increase or decrease if below/above p-nullcline (which is left of m=m_eq, above p=p_eq)
             !m can increase or decrease if above/below m-nullcline (p=p_eq)
-            if (p_exc0<-1.d-3*rhoh*gz) then !p increasing, m decreasing
+            if (p_exc0<-1.d-3*rhoh*gz) then !p increasing, m decreasing, below m-nullcline
                debugloop=debugloop + 100
                dts = dtr
                if (c_d0>0.d0) then !don't exceed p_exc = 0 until next substep
@@ -552,9 +542,11 @@
                m = m_0*exp(dts*km0*0.5d0*(p_exc0+p_exc))    
             elseif ((-kp0*p_exc0+c_d0)>0.d0) then !p_exc is increasing/below nullcline
                debugloop=debugloop + 200
-               !bound time step if nullcline exceeds max allowed pressure (rhoh*g)
+               !bound time step 
+               ! to max allowed (lithostatic,rhoh*g) if nullcline exceeds it
                if ((c_d/kp)>(rhoh*gz-p_eq_c)) then
                   dtp = min(dtr, -(1.d0/kp0)*log((-kp0*rhoh*gz+kp0*p_eq_c+c_d)/(-kp0*p_exc0+c_d0)))
+               !bound time step so not to exceed nullcline 
                else
                   dtp = dtr
                endif
@@ -563,8 +555,10 @@
                   dts =  dtp
                   m = m_0*exp(km*0.5d0*(p_exc+p_exc0)*dts)
                else
-                  dts = min(dtp,(m_eq-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0))
-                  m = m_0 + km0*m_0*0.5d0*(p_exc+p_exc0)*dts
+                  !dts = min(dtp,(m_eq-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0))
+                  dts = min(dtp,(m_eq-m_0)/(km0*p_exc*m_0)) !use new/higher p_exc
+                  !m = m_0 + km0*m_0*0.5d0*(p_exc+p_exc0)*dts
+                  m = m_0 + km0*m_0*p_exc*dts
                   p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
                endif
             else !-kp0*p_exc0+c_d0)<0
@@ -572,19 +566,19 @@
                !p_exc is decreasing/above nullcline or static on nullcline
                ! m strictly increasing
                if (c_d0>0.d0) then !p_exc remains in quad1 for any dt 
-                  ! only m can take solution beyond nullcline
                   debugloop=debugloop + 10
-                  if (dtr<0.d0) write(*,*) 'ERROR: dtr', dtr
+                  ! only m can take solution beyond nullcline
                   dtp = dtr
-                  p_exc1 = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
-                  p_excm = 0.5d0*(p_exc0+p_exc1)
-                  dts = min(dtp,(m_c-m_0)/(km0*p_excm*m_0))
-                  m = m_0 + km0*m_0*p_excm*dts
+                  !p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
+                  !dts = min(dtp,(m_c-m_0)/(km0*0.5d0*(p_exc0+p_exc)*m_0))
+                  !m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
+                  dts = min(dtp,(m_c-m_0)/(km0*p_exc0*m_0))
+                  m = m_0 + km0*m_0*p_exc0*dts
                   p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
                else !p_exc is to the right of m_eq
+                   debugloop=debugloop + 20
                   ! true solution should remain right of m_eq
                   ! FE gives lowest slope of dp/dm
-                  debugloop=debugloop + 20
                   dts = min(dtr,(m_c-m_0)/(km0*p_exc0*m_0))
                   dtp = min(dtr,-(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0)))
                   !if (dtp<dts) write(*,*) 'ERROR: QUAD 1: WRONG DIRECTION ACROSS m=m_eq'
@@ -596,14 +590,6 @@
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             dtk = dts
             dtr = dtr-dts
-            if (dtk<0.d0) then
-               write(*,*) 'ERROR: dtk,dts,dtp,debugloop:', dtk,dts,dtp,debugloop
-               write(*,*) 'm_0,m_c,kp0:',m_0,m_c,kp0
-               write(*,*) 'p_excm,p_exc0,p_exc1,p_exc:',p_excm,p_exc0,p_exc1,p_exc
-               
-               stop
-            endif
-            
 
          case(2) !UR quadrant, dense or equilibrium material, p>p_eq_c>p_eq
             !intertially contracting
@@ -645,7 +631,6 @@
                if (c_d0/kp0<-p_eq_c) then !assymptotic limit of p<0, bound timestep
                   debugloop=debugloop + 10
                   dtp = min(dtr,-(1.d0/kp0)*log((c_d0+kp0*p_eq_c)/(-kp0*p_exc0+c_d0)))
-                  if (dtp<0.d0) write(*,*) 'ERROR1: kp0',kp0
                else
                   debugloop=debugloop + 20
                   dtp = dtr
@@ -654,7 +639,6 @@
                if (0.5d0*(p_exc+p_exc0)<0.d0) then !decreasing m (expected usually)
                   debugloop=debugloop + 1
                   dts = min(dtp,(m_eq-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0))
-                  if (dts<0.d0) write(*,*) 'ERROR2: kp0',kp0
                else !p_exc still above m nullcline (p=p_eq) even though below p_eq_c, m increasing
                   debugloop=debugloop + 2
                   dts = min(dtp,(1.d0-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0)) 
@@ -684,10 +668,6 @@
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             dtk = dts
             dtr = dtr-dts
-            if (dtk<0.d0) then
-               write(*,*) 'ERROR: dtk,dts,dtp,debugloop', dtk,dts,dtp,debugloop
-               stop
-            endif
             
          case(4) !LL quadrant
             ! m is strictly decreasing, p strictly increasing
@@ -703,10 +683,6 @@
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             dtk = dts
             dtr = dtr-dts
-            if (dtk<0.d0) then
-               write(*,*) 'ERROR: dtk,dts,dtp,debugloop', dtk,dts,dtp,debugloop
-               stop
-            endif
          end select
 
          if (outquad) then
@@ -722,14 +698,19 @@
             endif
             if (quad1==0) write(*,*) 'quad1, m,m_c,p,p_eq_c: ', quad1, m,m_c,p,p_eq_c
          endif
-         if (dtk<0.d0) write(*,*) 'dtk,dtp quad0,quad1,debugloop',dtk,dtp,quad0,quad1,debugloop
-         dtk = max(dtk,0.d0)
-         if (quad1-quad0==-1) then
-            write(*,*) 'from update, quad0,quad1',quad0,quad1
-            write(*,*) 'debugloop',debugloop
-            write(*,*) 'm_0,m,m_eq,m_c',m_0,m,m_eq,m_c
-            stop
+
+         if (debug) then
+            if (dtk<0.d0) write(*,*) 'dtk,dtp quad0,quad1,debugloop',dtk,dtp,quad0,quad1,debugloop
+            if (quad1-quad0==-1) then
+               write(*,*) 'SRC WARNING: quad0,quad1',quad0,quad1
+               write(*,*) 'debugloop',debugloop
+               write(*,*) 'm_0,m,m_eq,m_c',m_0,m,m_eq,m_c
+               stop
+            endif
          endif
+         
+         dtk = max(dtk,0.d0)
+         
          return
          end subroutine mp_update_FE_4quad
 
