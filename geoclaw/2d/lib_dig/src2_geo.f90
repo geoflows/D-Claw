@@ -118,11 +118,11 @@
            
             !explicit integration
             dtremaining = dt
-            itercountmax=4
+            itercountmax=1000
             itercount=0
-            do while (dtremaining>1.d-16)
+            do while (dtremaining>1.d-99)
                
-               call mp_update_FE_4quad(dt,h,u,v,m,p,rhoh,gz,dtk)
+               call mp_update_FE_4quad(dtremaining,h,u,v,m,p,rhoh,gz,dtk)
                dtremaining = dtremaining-dtk
                itercount = itercount + 1
                
@@ -130,6 +130,7 @@
                if (itercount>=itercountmax) then
                   exit
                endif
+               !if (itercount>900) write(*,*) 'itercount', itercount,dt,dtremaining
             enddo
             
             hu = h*u
@@ -139,7 +140,7 @@
             if (h<=drytolerance) then
                cycle
             endif
-            
+            !write(*,*) 'itercount', itercount,dt,dtremaining
             !call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             
             call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)

@@ -420,7 +420,7 @@ contains
       vnorm = sqrt(u**2 + v**2)
       shear = 2.d0*vnorm/h
       sig_eff = max(0.d0,rho*gz*h - p)
-      sig_0 = 0.5d0*(rho_s-rho_f)*gz*h
+      sig_0 = 0.5d0*alpha*(rho_s-rho_f)*gz*h
       alphainv = m*(sig_eff + sig_0)/alpha
 
       !determine m_eq
