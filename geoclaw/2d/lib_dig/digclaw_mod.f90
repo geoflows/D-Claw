@@ -265,7 +265,6 @@ contains
       mmax = 1.d0 
 
       m = max(m,mmin)
-      hm = h*m
       m = min(m,mmax)
       hm = h*m
 
@@ -401,13 +400,13 @@ contains
       implicit none
 
       !i/o
-      double precision, intent(inout) :: rho
-      double precision, intent(in)  :: h,u,v,m,p,gz
-      double precision, intent(out) :: alphainv,sig_0,sig_eff
-      double precision, intent(out) :: tau,m_eq,tanpsi,kperm
+      real(kind=8), intent(inout) :: rho
+      real(kind=8), intent(in)  :: h,u,v,m,p,gz
+      real(kind=8), intent(out) :: alphainv,sig_0,sig_eff
+      real(kind=8), intent(out) :: tau,m_eq,tanpsi,kperm
 
       !local
-      double precision :: vnorm,shear,Nden,Nnum,psi
+      real(kind=8) :: vnorm,shear,Nden,Nnum,psi
 
 
       !check rho
@@ -420,7 +419,7 @@ contains
       vnorm = sqrt(u**2 + v**2)
       shear = 2.d0*vnorm/h
       sig_eff = max(0.d0,rho*gz*h - p)
-      sig_0 = 0.5d0*alpha*(rho_s-rho_f)*gz*h
+      sig_0 = alpha*(rho_s-rho_f)*gz*h
       alphainv = m*(sig_eff + sig_0)/alpha
 
       !determine m_eq
