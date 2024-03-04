@@ -72,6 +72,18 @@
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             if (h<=drytolerance) cycle
 
+            !Manning friction
+            if ((ifriction/=0).and.(coeffmanning>0.d0)) then
+               if (h<=frictiondepth) then
+                  beta = 1.0d0-m
+                  gamma= beta*sqrt(hu**2 + hv**2)*(gz*coeffmanning**2)/(h**(7.d0/3.d0))
+                  dgamma=1.d0 + dt*gamma
+                  hu= hu/dgamma
+                  hv= hv/dgamma
+                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+               endif
+            endif
+
             !modified gravity: bed-normal weight and acceleration
             if (bed_normal==1) then
                theta = aux(i,j,6)
@@ -120,9 +132,9 @@
             dtremaining = dt
             itercountmax=100
             itercount=0
-            if (debug.and.m>0.99) then
-                  write(*,*) 'WARNING SRC2: h,hm,m', h,hm,m
-            endif
+            !if (debug.and.m>0.99) then
+            !      write(*,*) 'WARNING SRC2: h,hm,m', h,hm,m
+            !endif
 
             do while (dtremaining>1.d-99)
                call mp_update_FE_4quad(dtremaining,h,u,v,m,p,rhoh,gz,dtk)
@@ -230,45 +242,6 @@
          enddo
       enddo
 
-
-
-      ! Manning friction------------------------------------------------
-      if (ifriction==0) return
-      if (coeffmanning>0.d0.and.frictiondepth>0.d0) then
-         do i=1,mx
-            do j=1,my
-
-               h=q(i,j,1)
-               if (h<=frictiondepth) then
-                  !# apply friction source term only in shallower water
-                  hu=q(i,j,2)
-                  hv=q(i,j,3)
-                  hm = q(i,j,4)
-                  p =  q(i,j,5)
-                  phi = aux(i,j,i_phi)
-                  theta = aux(i,j,i_theta)
-                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
-                  if (h<drytolerance) cycle
-                  pm = q(i,j,6)/h
-                  pm = max(0.0d0,pm)
-                  pm = min(1.0d0,pm)
-                  call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
-                  if (h.lt.drytolerance) then
-                     q(i,j,1)=0.d0
-                     q(i,j,2)=0.d0
-                     q(i,j,3)=0.d0
-                  else
-                     beta = 1.0d0-m
-                     gamma= beta*dsqrt(hu**2 + hv**2)*(gz*coeffmanning**2)/(h**(7.d0/3.d0))
-                     dgamma=1.d0 + dt*gamma
-                     q(i,j,2)= q(i,j,2)/dgamma
-                     q(i,j,3)= q(i,j,3)/dgamma
-                  endif
-               endif
-            enddo
-         enddo
-      endif
       ! ----------------------------------------------------------------
 
 
@@ -280,7 +253,7 @@
       ! assumes triangle hydrograph as several locations
       ! Peak volume and concentration given
       !------------------------------
-
+      if (.false.) then
       if (src_fountain_active .eqv. .TRUE.) then
          if (src_ftn_num .eq. 0) then
             src_fountain_active = .FALSE.
@@ -379,7 +352,7 @@
          enddo ! source number
 
       endif ! source fountain active
-
+      endif
       return
       end subroutine src2
 
