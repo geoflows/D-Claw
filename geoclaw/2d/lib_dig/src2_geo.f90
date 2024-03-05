@@ -72,6 +72,18 @@
             call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
             if (h<=drytolerance) cycle
 
+            !Manning friction
+            if ((ifriction/=0).and.(coeffmanning>0.d0)) then
+               if (h<=frictiondepth) then
+                  beta = 1.0d0-m
+                  gamma= beta*sqrt(hu**2 + hv**2)*(gz*coeffmanning**2)/(h**(7.d0/3.d0))
+                  dgamma=1.d0 + dt*gamma
+                  hu= hu/dgamma
+                  hv= hv/dgamma
+                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
+               endif
+            endif
+
             !modified gravity: bed-normal weight and acceleration
             if (bed_normal==1) then
                theta = aux(i,j,6)
@@ -120,9 +132,9 @@
             dtremaining = dt
             itercountmax=100
             itercount=0
-            if (debug.and.m>0.99) then
-                  write(*,*) 'WARNING SRC2: h,hm,m', h,hm,m
-            endif
+            !if (debug.and.m>0.99) then
+            !      write(*,*) 'WARNING SRC2: h,hm,m', h,hm,m
+            !endif
 
             do while (dtremaining>1.d-99)
                call mp_update_FE_4quad(dtremaining,h,u,v,m,p,rhoh,gz,dtk)
@@ -230,45 +242,6 @@
          enddo
       enddo
 
-
-
-      ! Manning friction------------------------------------------------
-      if (ifriction==0) return
-      if (coeffmanning>0.d0.and.frictiondepth>0.d0) then
-         do i=1,mx
-            do j=1,my
-
-               h=q(i,j,1)
-               if (h<=frictiondepth) then
-                  !# apply friction source term only in shallower water
-                  hu=q(i,j,2)
-                  hv=q(i,j,3)
-                  hm = q(i,j,4)
-                  p =  q(i,j,5)
-                  phi = aux(i,j,i_phi)
-                  theta = aux(i,j,i_theta)
-                  call admissibleq(h,hu,hv,hm,p,u,v,m,theta)
-                  if (h<drytolerance) cycle
-                  pm = q(i,j,6)/h
-                  pm = max(0.0d0,pm)
-                  pm = min(1.0d0,pm)
-                  call auxeval(h,u,v,m,p,phi,theta,kappa,S,rho,tanpsi,D,tau,sigbed,kperm,compress,pm)
-
-                  if (h.lt.drytolerance) then
-                     q(i,j,1)=0.d0
-                     q(i,j,2)=0.d0
-                     q(i,j,3)=0.d0
-                  else
-                     beta = 1.0d0-m
-                     gamma= beta*dsqrt(hu**2 + hv**2)*(gz*coeffmanning**2)/(h**(7.d0/3.d0))
-                     dgamma=1.d0 + dt*gamma
-                     q(i,j,2)= q(i,j,2)/dgamma
-                     q(i,j,3)= q(i,j,3)/dgamma
-                  endif
-               endif
-            enddo
-         enddo
-      endif
       ! ----------------------------------------------------------------
 
 
@@ -280,7 +253,7 @@
       ! assumes triangle hydrograph as several locations
       ! Peak volume and concentration given
       !------------------------------
-
+      if (.false.) then
       if (src_fountain_active .eqv. .TRUE.) then
          if (src_ftn_num .eq. 0) then
             src_fountain_active = .FALSE.
@@ -379,7 +352,7 @@
          enddo ! source number
 
       endif ! source fountain active
-
+      endif
       return
       end subroutine src2
 
@@ -453,7 +426,7 @@
          quad0=0
          quad1=0
          ! if at critical point dq/dt = 0
-         if ((abs(p_exc0/gz*h0)<0.d-12).and.(m==0.d0.or.abs(m-m_eq)<0.d-12)) then
+         if ((abs(p_exc0/gz*h0)<1.d-12).and.(m==0.d0.or.abs(m-m_eq)<1.d-12)) then
             dtk = dtr
             return
          endif
@@ -471,23 +444,6 @@
          km0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))
          c_d0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
          kp0 = (kperm/(h0*mu))*(3.d0*alphainv*rho0/rhoh - 1.5d0*rho_f*gz*h0*(rho0-rho_f)/rhoh) !(kp>0)
-
-         if (debug.and.(kp0<=0.d0)) then
-            write(*,*) '------------SRC WARNING: negative kp0 ---------->>>>>>>>'
-            write(*,*) 'kp0,m_0,sig_eff', kp0,m_0,sig_eff
-            write(*,*) '1 term1,term2', 3.d0*alphainv*rho0/rhoh,1.5d0*rho_f*gz*h0*(rho-rho_f)/rhoh
-            write(*,*) '2 term1,term2', alphainv*rho0,0.5d0*rho_f*gz*h0*(rho-rho_f)
-            write(*,*) '3 term1,term2', alphainv*rho0,0.5d0*rho_f*gz*h0*(rho-rho_f)
-            write(*,*) '4 term1,term2', m_0*(sig_0+sig_eff)*rho0/alpha,0.5d0*rho_f*gz*h0*(rho-rho_f)
-            write(*,*) '5 term1,term2', m_0*sig_0*rho0/alpha,0.5d0*rho_f*gz*h0*(rho0-rho_f)
-            write(*,*) '5 diff', m_0*sig_0*rho0/alpha-0.5d0*rho_f*gz*h0*(rho0-rho_f)
-            write(*,*) '6 term1,term2', 0.5d0*rho0*gz*h0*(rho_s-rho_f),0.5d0*rho_f*gz*h0*(rho_s-rho_f)
-            write(*,*) '6 diff', 0.5d0*rho0*gz*h0*(rho_s-rho_f)-0.5d0*rho_f*gz*h0*(rho_s-rho_f)
-            write(*,*) '7 terms', m_0*sig_0*rho0/alpha,m_0*0.5d0*rho0*gz*h0*(rho_s-rho_f)
-            write(*,*) '7 diff', m_0*sig_0*rho0/alpha-m_0*0.5d0*rho0*gz*h0*(rho_s-rho_f)
-            write(*,*) '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
-            stop
-         endif
          kp0 = max(kp0,1.d0) !shouldn't happen but prevent small rounding error
          if (c_d0==0.d0) then
             p_exc = p_exc0*exp(-kp0*dtr)
@@ -740,7 +696,7 @@
          end select
 
          if (debug) then
-            call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
+            !call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff,m_eq,tanpsi,tau)
             if ((m<m_c).and.(p>=p_eq_c)) then
                quad1=1
             elseif ((m>=m_c).and.(p>p_eq_c)) then
@@ -750,13 +706,12 @@
             elseif ((m<=m_c).and.(p<p_eq_c)) then
                quad1=4
             endif
-            !if (quad1==0) write(*,*) 'quad1, m,m_c,p,p_eq_c: ', quad1, m,m_c,p,p_eq_c
          endif
 
          if (debug) then
             call setvars(h,u,v,m,p,gz,rho,kperm,alphainv,sig_0,sig_eff1,m_eq1,tanpsi,tau)
             
-            if ((dtk/dtr<1.d-6.and.quad0==quad1).and.debugloop/=3100) then
+            if (dtk/dtr<1.d-6.and.quad0==quad1) then
                write(*,*) '---------------SRC WARNING: SMALL TIMESTEP---------->>>>>>'
                write(*,*) 'dtk,dtr:', dtk,dtr
                write(*,*) 'dtm,dtp:', dtm,dtp
@@ -777,6 +732,7 @@
                write(*,*)  'p,p_eq0,diff', p0,p_eq0,p-p_eq0
                write(*,*)  'p,p_eq_c,diff', p0,p_eq_c,p-p_eq_c
                write(*,*)  'p_eq0,p_eq_c,diff', p_eq0,p_eq_c,p_eq0-p_eq_c
+               stop
                write(*,*) '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
                !stop
             endif
@@ -790,7 +746,7 @@
                !stop
             endif
 
-            if (dtk<0.d0) then
+            if (dtm<0.d0.or.dtp<0.d0) then
                write(*,*) '------------SRC WARNING: negative dt ---------->>>>>>>>'
                write(*,*) 'dtk,dtr:', dtk,dtr
                write(*,*) 'dtm,dtp:', dtm,dtp
@@ -808,8 +764,6 @@
                stop
             endif
          endif
-         
-         dtk = max(dtk,0.d0)
          
          return
          end subroutine mp_update_FE_4quad
