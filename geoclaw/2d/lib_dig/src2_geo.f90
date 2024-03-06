@@ -396,10 +396,10 @@
          !local
          real(kind=8) :: h0,p0,m_0,p_eq0,p_exc0,sig_eff,sig_0,vnorm,m_eq
          real(kind=8) :: kappa,S,rho,rho0,tanpsi,D,tau,sigbed,kperm,phi
-         real(kind=8) :: km,kp,alphainv,c_d,p_exc,dtr,dtm,dtp,dts,p_excm,p_exc1
+         real(kind=8) :: km,kp,alphainv,c_d,p_exc,dtr,dtm,dtp,dts,p_excm,p_exc_ave
          real(kind=8) :: km0,kp0,alphainv0,c_d0
          real(kind=8) :: hu,hv,hm
-         real(kind=8) :: rho_c,h_c,p_eq_c,m_c,rho_c1,h_c1,p_eq_c1,m_c1,m_lower
+         real(kind=8) :: rho_c,h_c,p_eq_c,m_c,rho_c1,h_c1,p_eq_c1,m_c1,m_lower,m_upper
          real(kind=8) :: m_c0,p_eq_c0,sig_c,Nd,Nn,normc,shear,convtol,m_eq1,sig_eff1
          integer :: debugloop,iter,itermax,quad0,quad1
          logical :: outquad,debug
@@ -444,6 +444,11 @@
          km0 = ((2.d0*kperm*rho0**2)/(mu*rhoh**2))
          c_d0 = -3.d0*vnorm*(alphainv*rho0/(rhoh))*tanpsi
          kp0 = (kperm/(h0*mu))*(3.d0*alphainv*rho0/rhoh - 1.5d0*rho_f*gz*h0*(rho0-rho_f)/rhoh) !(kp>0)
+         if (debug.and.kp0<0.d0) then
+            write(*,*) '------------SRC WARNING: kp0<0 ---------->>>>>>>>'
+            write(*,*) 'kp0<0:', kp0
+            write(*,*) '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
+         endif
          kp0 = max(kp0,1.d0) !shouldn't happen but prevent small rounding error
          if (c_d0==0.d0) then
             p_exc = p_exc0*exp(-kp0*dtr)
@@ -531,28 +536,27 @@
                ! to max allowed (lithostatic,rhoh*g) if nullcline exceeds it
                if ((c_d/kp)>(rhoh*gz-p_eq_c)) then
                   debugloop=debugloop + 10
-                  dtp = -(1.d0/kp0)*log((-kp0*rhoh*gz+kp0*p_eq_c+c_d)/(-kp0*p_exc0+c_d0))
+                  dtp = min(dtr,-(1.d0/kp0)*log((-kp0*rhoh*gz+kp0*p_eq_c+c_d)/(-kp0*p_exc0+c_d0)))
                !bound time step so not to exceed nullcline 
                else
                   debugloop=debugloop + 20
                   dtp = dtr
                endif
-               dts = min(dtp,dtr)
-               dts = max(dts,0.d0)
-               p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
-               if (0.5d0*(p_exc+p_exc0)<=0.d0) then !should only occur if p_exc0<0 and dt small
+               p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
+               p_exc_ave = 0.5d0*(p_exc+p_exc0)
+               if (p_exc_ave<=0.d0) then !should only occur if p_exc0<0 and dt small
                   debugloop=debugloop + 1
+                  dtm = dtr
                   m = m_0*exp(km*0.5d0*(p_exc+p_exc0)*dts)
                else
                   debugloop=debugloop + 2
-                  dtm = min(dtp,(m_eq-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0))
-                  dts = min(dts,dtm)
-                  dts = max(dts,0.d0)
+                  m_upper = m_eq - max(0.d0,(1.d0/3.d0)*kp0*h0*(p_exc_ave)/(vnorm*alphainv))
+                  dtm = min(dtp,(m_eq-m_0)/(km0*p_exc_ave*m_0))
                   !dts = min(dts,(m_eq-m_0)/(km0*p_exc*m_0)) !use new/higher p_exc
                   !m = m_0 + km0*m_0*0.5d0*(p_exc+p_exc0)*dts
-                  m = m_0 + km0*m_0*p_exc*dts
-                  p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
                endif
+               m = m_0 + km0*m_0*p_exc_ave*dtm
+               dts = dtm
             else !-kp0*p_exc0+c_d0)<0
                debugloop=debugloop + 300
                !p_exc is decreasing/above nullcline or static on nullcline
@@ -592,14 +596,12 @@
             !m>m_c>m_eq
             !p is strictly decreasing, m strictly increasing
             debugloop = 2000
-            dtm = min(dtr,(1.d0-m_0)/(km0*p_exc0*m_0))
-            dtp = -(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0))
-            dts = min(dtr,dtp)
-            dts = max(dts,0.d0)
-            p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
+            dtp = min(dtr,-(1.d0/kp0)*log((c_d0)/(-kp0*p_exc0+c_d0))) 
+            dtm = min(dtp,(1.d0-m_0)/(km0*p_exc0*m_0))
+            p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
             !m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*min(dts,dtm)
-            m = m_0 + km0*m_0*p_exc*min(dts,dtm)
-
+            m = m_0 + km0*m_0*p_exc*dtm
+            dts = max(dtp,dtm)
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             dtk = dts
             dtr = dtr-dts
@@ -610,46 +612,39 @@
             if (p_exc0>1.d-3*rhoh*gz) then !p decreasing, m increasing
                debugloop=debugloop + 100
                !don't descend below p_exc = 0 until next substep
-               dtm = (1.d0-m_0)/(km0*p_exc0*m_0)
-               dtp = -(1.d0/kp0)*log(c_d0/(-kp0*p_exc0+c_d0))
-               dts = min(dtm,dtp)
-               dts = min(dts,dtr)
-               dts = max(dts,0.d0)
+               !if dm/dt hits m=1.d0, follow boundary
+               dtp = min(dtr,-(1.d0/kp0)*log(c_d0/(-kp0*p_exc0+c_d0)))
+               dtm = min(dtp,(1.d0-m_0)/(km0*p_exc0*m_0))
                !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
-               p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
-               m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
+               p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
+               m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dtm
+               dts = dtp
             elseif ((-kp0*p_exc0+c_d0)<0.d0) then !p_exc is decreasing above/right of nullcline
                debugloop=debugloop + 200
-               if (c_d0/kp0<-p_eq_c) then !assymptotic limit of p<0
+               if (c_d0/kp0<-p_eq0) then !assymptotic limit of p<0
                   debugloop=debugloop + 10
-                  dtp = -(1.d0/kp0)*log((c_d0+kp0*p_eq_c)/(-kp0*p_exc0+c_d0))
-                  dtp = min(dtr,dtp)
-                  !above could trap solution at p=0. Should allow m to decrease as if following non-physical trajectory
-                  !bound below gives m such that the p-nullcline returns to p>0
-                  m_lower = m_eq - (1.d0/3.d0)*kp0*h_c*(-p_eq_c)/(vnorm*alphainv)
-                  dtm = max((m_lower-m_0)/(km0*(-p_eq_c)*m_0),dtp)
+                  dtp = min(dtr,-(1.d0/kp0)*log((c_d0+kp0*p_eq0)/(-kp0*p_exc0+c_d0)))
                else
                   debugloop=debugloop + 20
                   dtp = dtr
-                  dtm = dtr
-               endif   
+               endif 
+               !p_exc decrease bounded by p=0 or nullcline if dtp>=dtr
                p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
-               if (0.5d0*(p_exc+p_exc0)<0.d0) then !decreasing m (expected usually)
+               p_exc_ave = 0.5d0*(p_exc+p_exc0)
+               if (p_exc_ave>0.d0) then 
                   debugloop=debugloop + 1
-                  !dtm = (m_eq-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0)
-                  dtm = min(dtm,(m_eq-m_0)/(km0*p_exc*m_0))
-               else !p_exc still above m nullcline (p=p_eq) even though below p_eq_c, m increasing
+                  !p_exc still above m nullcline (p=p_eq) even though below p_eq_c, m increasing
                   !happens only if still near p_exc=0.
-                  debugloop=debugloop + 2 
-                  dtm = min(dtm,(1.d0-m_0)/(km0*0.5d0*(p_exc+p_exc0)*m_0))
+                  dtm = min(dtr,(1.d0-m_0)/(km0*p_exc_ave*m_0))
+               else
+                  debugloop=debugloop + 2  
+                  m_lower = m_eq + max(0.d0,(1.d0/3.d0)*kp0*h0*(-p_exc_ave)/(vnorm*alphainv))
+                  dtm = min(dtr,(m_lower-m_0)/(km0*p_exc_ave*m_0))
                endif
-               dts = min(dtm,dtr)
-               dts = max(dts,0.d0)
                !dts = min(dts,dtr)
                !m = m_0 + km0*m_0*0.5d0*(p_exc0+p_exc)*dts
-               m = m_0 + km0*m_0*p_exc*dts
-               p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
-               
+               m = m_0 + km0*m_0*p_exc_ave*dtm
+               dts = dtm
             else !p_exc is increasing below/left of nullcline
                debugloop=debugloop + 300
                if (c_d0<0.d0) then !between nullcline and m_eq
@@ -682,14 +677,13 @@
             ! m is strictly decreasing, p strictly increasing
             debugloop = 4000
             !don't exceed p_exc = 0 until next substep
-            dtp = -(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0))
+            dtp = min(dtr,-(1.d0/kp0)*log(-c_d0/(kp0*p_exc0-c_d0)))
+            dtm = dtp
             !integrate dp_exc/dt = -kp0 p_exc + c_d with coefficients at t=0.
-            dts = min(dtp,dtr)
-            dts = max(dts,0.d0)
-            p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dts) +c_d0)
-            p_exc = min(p_exc,0.d0) !for small rounding error, should be true
-            !m = m_0*exp(dts*km0*0.5d0*(p_exc0+p_exc))
-            m = m_0*exp(dts*km0*p_exc)
+            p_exc = (1.d0/kp0)*((kp0*p_exc0 - c_d0)*exp(-kp0*dtp) +c_d0)
+            m = m_0*exp(dtm*km0*0.5d0*(p_exc0+p_exc))
+            !m = m_0*exp(dts*km0*p_exc)
+            dts = dtp
             call qfix_cmass(h,m,p,rho,p_exc,hu,hv,hm,u,v,rhoh,gz)
             dtk = dts
             dtr = dtr-dts
@@ -732,7 +726,7 @@
                write(*,*)  'p,p_eq0,diff', p0,p_eq0,p-p_eq0
                write(*,*)  'p,p_eq_c,diff', p0,p_eq_c,p-p_eq_c
                write(*,*)  'p_eq0,p_eq_c,diff', p_eq0,p_eq_c,p_eq0-p_eq_c
-               stop
+               !stop
                write(*,*) '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'
                !stop
             endif
