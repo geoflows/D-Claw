@@ -442,12 +442,12 @@ contains
       ! Note: for v=0, bounds on tau for static friction are determined in Riemann solver
       !        because the bounds are due to gradients in q. This routine determines vars
       !        from pointwise cell-centered value q(i).
-      tau = sig_eff*tan(phi_bed+psi)
+      tau = sig_eff*tan(phi_bed + 0.d0*psi)
       ! Note:  for water (m=0) sig_eff=0.0 and so tau=0.         
-      !        However, for v=0 and 0<m<eps (stationary dilute suspensions), 
-      !        static coulomb friction is unphysical and we make o(m) not O(m))
+      !        However, for dilute suspensions, 
+      !        we make o(m) not O(m))
       if (m<0.55d0) then
-         tau = tau*0.5d0*(1.d0 + tanh(50.d0*(m-0.45d0)+ 100.d0*shear))
+         tau = tau*0.5d0*(1.d0 + tanh(50.d0*(m-0.45d0))) !+ 100.d0*shear))
       endif
 
       return
