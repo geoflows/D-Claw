@@ -333,8 +333,8 @@ c        ! determine momentum
                     ! note: if an adjacent cell has m>0...that will set a higher maximum.
                     ! keeping if clause for now in case we rethink this
                     ! change below 2021-06-24 dlg, kbarnhart, rpjones
-                     velmax(icrse(ic,jc)) = 0.d0 !m0
-                     velmin(icrse(ic,jc)) = 0.d0 !m0
+                     velmax(icrse(ic,jc)) = m0
+                     velmin(icrse(ic,jc)) = m0
                   elseif (ivar.eq.5) then
                      velmax(icrse(ic,jc)) = grav*rho_f
                      velmin(icrse(ic,jc)) = grav*rho_f
