@@ -49,7 +49,7 @@ import string
 import numpy as np
 
 import dclaw.topotools as gt
-import dclaw.netcdf_tools as gn
+#import dclaw.netcdf_tools as gn
 
 
 # ================================================================================
@@ -516,7 +516,7 @@ def fort2uniform(
                 )
 
             elif topotype == "netcdf":
-
+                import dclaw.netcdf_tools as gn
                 outfile = outfortq.replace("fortq.", "fortq_") + ".nc"
                 # this should only change the file name.
 
