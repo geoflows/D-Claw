@@ -44,7 +44,7 @@
       real(kind=8) :: dxmin, dymin
       common /comfine/ dxmin,dymin
 
-      debug=.true.
+      debug=.false.
 
       ! check for NANs in solution:
       call check4nans(maxmx,maxmy,meqn,mbc,mx,my,q,t,2)
@@ -405,7 +405,7 @@
          logical :: outquad,debug
    
          debugloop = 0
-         debug = .true.
+         debug = .false.
          outquad = .true.
          phi = phi_bed
          vnorm = sqrt(u**2 + v**2)
