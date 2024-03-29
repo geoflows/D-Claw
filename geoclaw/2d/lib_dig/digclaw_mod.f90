@@ -446,9 +446,9 @@ contains
       ! Note:  for water (m=0) sig_eff=0.0 and so tau=0.         
       !        However, for dilute suspensions, 
       !        we make o(m) not O(m))
-      if (m<0.55d0) then
-         tau = tau*0.5d0*(1.d0 + tanh(50.d0*(m-0.45d0))) !+ 100.d0*shear))
-      endif
+      !if (m<0.55d0) then
+      tau = tau*0.5d0*(1.d0 + tanh(50.d0*(m-0.40d0))) !+ 100.d0*shear))
+      !endif
 
       return
 
